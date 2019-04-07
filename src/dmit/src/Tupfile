@@ -1,0 +1,4 @@
+include_rules
+
+: foreach $(BIN_FILE_LOADER_CPP) |> !cx |> %B.o <obj>
+: <obj> | $(ROOT)/<lib_dmit_src> |> !cl |> $(BIN_FILE_LOADER_OUT) $(ROOT)/<bin_file_loader>

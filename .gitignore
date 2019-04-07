@@ -1,0 +1,3 @@
+.tup
+bin/*
+!bin/tup.config

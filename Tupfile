@@ -1,0 +1,3 @@
+: <bin_file_loader> \
+  <bin_base64>      \
+  <bin_test> |> |> *

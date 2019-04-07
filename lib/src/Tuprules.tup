@@ -1,0 +1,9 @@
+LIB_SRC = $(ROOT)/lib/src
+
+CXFLAGS += -I $(LIB_SRC)
+
+LX = ld.lld
+
+LXFLAGS += -r
+
+!lx = |> $(LX) $(LXFLAGS) %%%f -o %o |>

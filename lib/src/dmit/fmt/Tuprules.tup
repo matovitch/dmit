@@ -1,0 +1,2 @@
+LIB_DMIT_FMT_CPP = $(LIB_SRC)/dmit/fmt/*.cpp
+LIB_DMIT_FMT_OUT = libdmit_fmt.a

@@ -1,0 +1,8 @@
+include_rules
+
+: foreach $(BIN_TEST_CPP) |> !cx |> %B.o <obj>
+
+: <obj> | $(ROOT)/<lib_dmit_fmt> \
+          $(ROOT)/<lib_dmit_lex> \
+          $(ROOT)/<lib_doctest>  \
+          $(ROOT)/<lib_base64> |> !cl |> $(BIN_TEST_OUT) $(ROOT)/<bin_test>

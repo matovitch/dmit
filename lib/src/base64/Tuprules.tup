@@ -1,0 +1,2 @@
+LIB_BASE64_CPP = $(LIB_SRC)/base64/*.cpp
+LIB_BASE64_OUT = libbase64.a

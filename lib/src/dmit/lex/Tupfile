@@ -1,0 +1,5 @@
+include_rules
+
+: foreach $(LIB_DMIT_LEX_CPP) |> !cx |> %B.o <obj>
+
+: <obj> |> !lx |> $(LIB_DMIT_LEX_OUT) $(ROOT)/<lib_dmit_lex>

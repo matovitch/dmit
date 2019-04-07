@@ -1,0 +1,61 @@
+ROOT = $(TUP_CWD)
+
+##############
+# CPP TO OBJ #
+##############
+
+CX = clang++
+
+CXFLAGS += -std=c++17
+CXFLAGS += -Wall
+
+ifeq (@(IS_DEBUG),y)
+    CXFLAGS += -g
+endif
+
+ifeq (@(O_LEVEL),0)
+    CXFLAGS += -O0
+endif
+ifeq (@(O_LEVEL),1)
+    CXFLAGS += -O1
+endif
+ifeq (@(O_LEVEL),2)
+    CXFLAGS += -O2
+endif
+ifeq (@(O_LEVEL),3)
+    CXFLAGS += -O3
+endif
+
+ifeq (@(IS_ASAN),y)
+    CXFLAGS += -fsanitize=address
+endif
+
+ifeq (@(IS_MSAN),y)
+    CXFLAGS += -fsanitize=memory
+endif
+
+CXFLAGS += -I $(ROOT)/lib/include
+
+!cx = |> $(CX) $(CXFLAGS) -c %f -o %o |>
+
+##############
+# OBJ TO ELF #
+##############
+
+CL = $(CX)
+
+CLFLAGS += -fuse-ld=lld
+
+ifeq (@(IS_ASAN),y)
+    CLFLAGS += -fsanitize=address
+endif
+
+ifeq (@(IS_MSAN),y)
+    CLFLAGS += -fsanitize=memory
+endif
+
+ifeq (@(IS_STATIC),y)
+    CLFLAGS += -static-libstdc++ -static-libgcc
+endif
+
+!cl = |> $(CL) %%%f $(CLFLAGS) -o %o |>

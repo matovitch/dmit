@@ -1,0 +1,4 @@
+include_rules
+
+: foreach $(BIN_BASE64_CPP)    |> !cx |> %B.o <obj>
+: <obj> | $(ROOT)/<lib_base64> |> !cl |> $(BIN_BASE64_OUT) $(ROOT)/<bin_base64>

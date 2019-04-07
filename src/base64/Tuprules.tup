@@ -1,0 +1,9 @@
+BIN_BASE64_CPP = $(ROOT)/src/base64/*.cpp
+
+# Note: There is a bug with tup and the binary cannot be named 'base64'
+#       Not exactly sure as to why... :/
+BIN_BASE64_OUT = base64.bin
+
+# Note: The linker need the libs in topological order
+CLFLAGS += -l base64
+CLFLAGS += -L $(ROOT)/lib/src/base64

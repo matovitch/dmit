@@ -1,0 +1,5 @@
+include_rules
+
+: foreach $(LIB_DOCTEST_CPP) |> !cx |> %B.o <obj>
+
+: <obj> |> !lx |> $(LIB_DOCTEST_OUT) $(ROOT)/<lib_doctest>
