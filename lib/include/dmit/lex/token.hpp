@@ -13,8 +13,14 @@ struct Token
     enum : uint8_t
     {
         UNKNOWN,
-        INT,
-        FLOAT
+        INTEGER,
+        DECIMAL,
+        WHITESPACE,
+        IDENTIFIER,
+        PLUS,
+        MINUS,
+        STAR,
+        SLASH
     };
 
     Token(const uint8_t theValue);

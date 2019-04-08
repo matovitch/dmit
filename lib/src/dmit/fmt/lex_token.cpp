@@ -5,8 +5,14 @@
 static const char* K_TOKEN_AS_CSTR[] =
 {
     "UNKNOWN",
-    "INT",
-    "FLOAT"
+    "INTEGER",
+    "DECIMAL",
+    "WHITESPACE",
+    "IDENTIFIER",
+    "PLUS",
+    "MINUS",
+    "STAR",
+    "SLASH"
 };
 
 namespace dmit

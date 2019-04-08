@@ -16,7 +16,7 @@ Result::Result(const uint8_t*    data,
 {
     Reader reader{data, data + size};
 
-    tGotoState<1>(reader, *this);
+    tGoto<STATE_INITIAL>(reader, *this);
 }
 
 void Result::push(const Token token, const uint32_t offset)

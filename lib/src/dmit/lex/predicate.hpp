@@ -33,6 +33,17 @@ struct TIsIn
 template <uint8_t byte>
 using TIs = TIsIn<byte>;
 
+template <class... Predicates>
+struct TOr
+{
+    bool operator()(const uint8_t byte) const
+    {
+        const auto compare = [byte](const auto predicate) { return predicate(byte); };
+
+        return (compare(Predicates{}) || ...);
+    }
+};
+
 } // namespace lex
 
 } // namespace dmit

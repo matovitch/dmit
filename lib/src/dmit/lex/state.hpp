@@ -12,6 +12,8 @@ namespace dmit
 namespace lex
 {
 
+static constexpr int INITIAL_STATE = 0;
+
 template <int INDEX>
 struct TStateIndex;
 
@@ -19,8 +21,8 @@ template <int INDEX>
 using TGetState = typename TStateIndex<INDEX>::Type;
 
 template <int STATE_INDEX>
-void tGotoState(Reader& reader,
-                Result& result)
+void tGoto(Reader& reader,
+           Result& result)
 {
     TGetState<STATE_INDEX>{}(reader,
                              result);
@@ -41,7 +43,12 @@ struct TState<MATCH>
         
         result.push(MATCH, reader.offset());
         
-        tGotoState<1>(reader, result);
+        if (!reader)
+        {
+            return;
+        }
+
+        tGoto<INITIAL_STATE>(reader, result);
     }
 };
 
@@ -50,12 +57,13 @@ struct TState<MATCH, Goto, Gotos...>
 {
     using Predicate = typename Goto::Predicate;
     
-    static constexpr int NEXT_STATE_INDEX = Goto::NEXT_STATE_INDEX;
+    static constexpr int NEXT_STATE = Goto::NEXT_STATE;
     
     void operator()(Reader& reader, Result& result) const
     {
         if (!reader)
         {
+            result.push(MATCH, reader.offset());
             return;    
         }
         
@@ -66,7 +74,7 @@ struct TState<MATCH, Goto, Gotos...>
         
         ++reader;
         
-        tGotoState<NEXT_STATE_INDEX>(reader, result);
+        tGoto<NEXT_STATE>(reader, result);
     }    
 };
 
