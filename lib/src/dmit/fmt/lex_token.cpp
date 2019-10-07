@@ -7,6 +7,7 @@
 
 static const char* K_TOKEN_AS_CSTR[] =
 {
+    "START_OF_INPUT",
     "UNKNOWN",
     "INTEGER",
     "DECIMAL",
@@ -20,6 +21,11 @@ static const char* K_TOKEN_AS_CSTR[] =
     "PAREN_R",
     "DOT",
     "EQUAL",
+    "FN",
+    "IF",
+    "ELSE",
+    "WHILE",
+    "RETURN",
     "END_OF_INPUT"
 };
 

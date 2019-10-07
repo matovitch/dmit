@@ -34,7 +34,12 @@ private:
 
 std::vector<Token> makeTokens(std::initializer_list<Token> tokens)
 {
-    std::vector<Token> tokenVector{tokens};
+    std::vector<Token> tokenVector;
+
+    tokenVector.push_back(Token::START_OF_INPUT);
+
+    std::copy(tokens.begin(),
+              tokens.end(), std::back_inserter(tokenVector));
 
     tokenVector.push_back(Token::END_OF_INPUT);
 
@@ -69,6 +74,12 @@ TEST_CASE("std::vector<Token> lex(const std::string& toLex)")
     CHECK(lexer("_bAr"    ) == makeTokens({Token::IDENTIFIER}));
     CHECK(lexer("_42"     ) == makeTokens({Token::IDENTIFIER}));
     CHECK(lexer("__bAz5_8") == makeTokens({Token::IDENTIFIER}));
+
+    CHECK(lexer("fn"     ) == makeTokens({Token::FN}));
+    CHECK(lexer("if"     ) == makeTokens({Token::IF}));
+    CHECK(lexer("else"   ) == makeTokens({Token::ELSE}));
+    CHECK(lexer("while"  ) == makeTokens({Token::WHILE}));
+    CHECK(lexer("return" ) == makeTokens({Token::RETURN}));
 
     CHECK(lexer("+") == makeTokens({Token::PLUS  }));
     CHECK(lexer("-") == makeTokens({Token::MINUS }));

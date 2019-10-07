@@ -16,6 +16,7 @@ struct Token : com::TEnum<uint8_t>, fmt::Formatable
 {
     enum : uint8_t
     {
+        START_OF_INPUT,
         UNKNOWN,
         INTEGER,
         DECIMAL,
@@ -29,6 +30,11 @@ struct Token : com::TEnum<uint8_t>, fmt::Formatable
         PAREN_R,
         DOT,
         EQUAL,
+        FN,
+        IF,
+        ELSE,
+        WHILE,
+        RETURN,
         END_OF_INPUT
     };
 

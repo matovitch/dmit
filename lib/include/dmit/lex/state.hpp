@@ -4,6 +4,7 @@
 
 #include "dmit/fmt/formatable.hpp"
 
+#include <cstdint>
 #include <vector>
 
 namespace dmit
@@ -15,6 +16,8 @@ namespace lex
 struct State : fmt::Formatable
 {
     void push(const Token, const uint32_t);
+
+    void matchKeywords(const uint8_t* const data);
 
     void clear();
 
@@ -30,8 +33,8 @@ class Builder
 
 public:
 
-    const State& operator()(const uint8_t*    data,
-                            const std::size_t size);
+    const State& operator()(const uint8_t* const data,
+                            const uint32_t size);
 
     void clearState();
 
