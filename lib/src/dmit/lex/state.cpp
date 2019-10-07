@@ -61,7 +61,7 @@ void State::matchKeywords(const uint8_t* const data)
         {
             for (int j = 0; j < offset - *itOffsets; j++)
             {
-                if (data[size - offset + j] != KEYWORDS[i][j] || KEYWORDS[i][j] == '\0')
+                if (data[size - offset + j] != KEYWORDS[i][j])
                 {
                     goto CONTINUE;
                 }
