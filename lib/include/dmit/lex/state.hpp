@@ -1,0 +1,52 @@
+#pragma once
+
+#include "dmit/lex/token.hpp"
+
+#include "dmit/fmt/formatable.hpp"
+
+#include <vector>
+
+namespace dmit
+{
+
+namespace lex
+{
+
+struct State : fmt::Formatable
+{
+    void push(const Token, const uint32_t);
+
+    void clear();
+
+    std::vector<Token>    _tokens;
+    std::vector<uint32_t> _offsets;
+};
+
+namespace state
+{
+
+class Builder
+{
+
+public:
+
+    const State& operator()(const uint8_t*    data,
+                            const std::size_t size);
+
+    void clearState();
+
+    const std::vector<Token>& tokens() const;
+    const std::vector<uint32_t>& offsets() const;
+
+private:
+
+    void push(const Token token, const uint32_t offset);
+
+    State _state;
+};
+
+} // namespace state
+
+} // namespace lex
+
+} // namespace dmit

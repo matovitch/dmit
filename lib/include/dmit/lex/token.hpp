@@ -1,5 +1,9 @@
 #pragma once
 
+#include "dmit/com/enum.hpp"
+
+#include "dmit/fmt/formatable.hpp"
+
 #include <cstdint>
 
 namespace dmit
@@ -8,7 +12,7 @@ namespace dmit
 namespace lex
 {
 
-struct Token
+struct Token : com::TEnum<uint8_t>, fmt::Formatable
 {
     enum : uint8_t
     {
@@ -20,18 +24,16 @@ struct Token
         PLUS,
         MINUS,
         STAR,
-        SLASH
+        SLASH,
+        PAREN_L,
+        PAREN_R,
+        DOT,
+        EQUAL,
+        END_OF_INPUT
     };
 
-    Token(const uint8_t theValue);
-
-    const uint8_t value;
+    DMIT_COM_ENUM_IMPLICIT_FROM_INT(Token);
 };
-
-bool operator==(const Token,
-                const Token);
-bool operator!=(const Token,
-                const Token);
 
 } // namespace lex
 

@@ -1,14 +1,16 @@
+#pragma once
+
 #include "dmit/lex/token.hpp"
 
-#include <iostream>
+#include <string>
 
 namespace dmit
 {
 
-namespace lex
+namespace fmt
 {
 
-std::ostream& operator<<(std::ostream& os, const Token token);
+std::string asString(const lex::Token);
 
 } // namespace lex
 

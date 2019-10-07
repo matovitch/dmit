@@ -23,7 +23,7 @@ namespace
 
 std::optional<Error> load(const File& file, std::ifstream& ifs, std::vector<uint8_t>& data)
 {
-    const std::size_t fileSize = std::filesystem::file_size(file.path);
+    const std::size_t fileSize = std::filesystem::file_size(file._path);
 
     data.resize(fileSize);
 
@@ -60,38 +60,35 @@ com::ErrorOption<File, Error> make(const std::filesystem::path& path)
         return ifsOpt.error();
     }
 
-    const auto& errOpt = load(file, *(ifsOpt.value()), file._data);
+    const auto& errOpt = load(file, *(ifsOpt.value()), file._content);
 
     if (errOpt)
     {
         return errOpt.value();
     }
 
+    file.initLineIndex();
+
     return file;
 }
 
 } // namespace file
 
-File::File(const std::filesystem::path& filePath) :
-    path{filePath}
+File::File(const std::filesystem::path& path) :
+    _path{path}
 {}
 
-const uint8_t* File::data() const
+const std::vector<uint8_t>& File::content() const
 {
-    return _data.data();
-}
-
-const std::size_t File::size() const
-{
-    return _data.size();
+    return _content;
 }
 
 com::ErrorOption<std::unique_ptr<std::ifstream>, file::Error> File::makeFileStream() const
 {
     auto&& ifsPtr = std::make_unique<std::ifstream>
     (
-        path.string().c_str(), std::ios_base::binary |
-                               std::ios_base::in
+        _path.string().c_str(), std::ios_base::binary |
+                                std::ios_base::in
     );
 
     if (ifsPtr->fail())
@@ -100,6 +97,16 @@ com::ErrorOption<std::unique_ptr<std::ifstream>, file::Error> File::makeFileStre
     }
 
     return std::move(ifsPtr);
+}
+
+void File::initLineIndex()
+{
+    _lineIndex.init(line_index::makeOffsets(_content));
+}
+
+const LineIndex& File::lineIndex() const
+{
+    return _lineIndex;
 }
 
 } // namespace src

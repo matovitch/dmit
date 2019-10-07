@@ -13,14 +13,14 @@ struct StringMaker<std::vector<Type>>
     {
         std::ostringstream oss;
 
-        oss << '[';
+        oss << "{\"array\":[";
 
         for (std::size_t index = 1; index < vector.size(); index++)
         {
             oss << vector[index - 1] << ", ";
         }
 
-        oss << vector.back() << ']';
+        oss << vector.back() << "]}";
 
         return oss.str().c_str();
     }

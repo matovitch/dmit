@@ -1,5 +1,0 @@
-include_rules
-
-: foreach $(LIB_TRMCLR_CPP) |> !cx |> %B.o <obj>
-
-: <obj> |> !lx |> $(LIB_TRMCLR_OUT) $(ROOT)/<lib_trmclr>

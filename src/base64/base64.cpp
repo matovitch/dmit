@@ -1,11 +1,12 @@
-#include "base64/base64.hpp"
+#include "dmit/com/base64.hpp"
+
+#include "dmit/com/logger.hpp"
 
 extern "C"
 {
     #include "ketopt/ketopt.h"
 }
 
-#include <iostream>
 #include <cstdlib>
 #include <cstdint>
 #include <vector>
@@ -30,19 +31,19 @@ static const ko_longopt_t K_OPTIONS_LONG[] =
 
 static const char* K_OPTIONS_SHORT = "hved";
 
-void displayHelp(std::ostream& os)
+void displayHelp()
 {
-    os << "base64\n\n";
-    os << "Usage:\n";
-    os << "    " << "-h --help       Show this screen\n";
-    os << "    " << "-v --version    Display version\n";
-    os << "    " << "-e --encode     Encode STDIN in base64\n";
-    os << "    " << "-d --decode     Decode STDIN in base64\n";
+    DMIT_COM_LOG_OUT << "base64\n\n";
+    DMIT_COM_LOG_OUT << "Usage:\n";
+    DMIT_COM_LOG_OUT << "    " << "-h --help       Show this screen\n";
+    DMIT_COM_LOG_OUT << "    " << "-v --version    Display version\n";
+    DMIT_COM_LOG_OUT << "    " << "-e --encode     Encode STDIN in base64\n";
+    DMIT_COM_LOG_OUT << "    " << "-d --decode     Decode STDIN in base64\n";
 }
 
-void displayVersion(std::ostream& os)
+void displayVersion()
 {
-    os << "base64, version 0.1\n";
+    DMIT_COM_LOG_OUT << "base64, version 0.1\n";
 }
 
 static const std::size_t K_READ_BATCH_SIZE = 0x1000;
@@ -63,40 +64,38 @@ auto makeBytes(std::istream& is)
     return bytes;
 }
 
-void display(const std::vector<uint8_t>& bytes, std::ostream& os)
+void display(const std::vector<uint8_t>& bytes)
 {
     for (const auto byte : bytes)
     {
-        os << byte;
+        DMIT_COM_LOG_OUT << byte;
     }
-
-    os << '\n';
 }
 
-void displayEncode(const std::vector<uint8_t>& srce, std::ostream& os)
+void displayEncode(const std::vector<uint8_t>& srce)
 {
     std::vector<uint8_t> dest;
 
-    dest.resize(base64::encodeBufferSize(srce.size()));
+    dest.resize(dmit::com::base64::encodeBufferSize(srce.size()));
 
-    base64::encode(srce.data(),
-                   srce.size(),
-                   dest.data());
+    dmit::com::base64::encode(srce.data(),
+                              srce.size(),
+                              dest.data());
+    display(dest);
 
-    display(dest, os);
+    DMIT_COM_LOG_OUT << '\n';
 }
 
-void displayDecode(const std::vector<uint8_t>& srce, std::ostream& os)
+void displayDecode(const std::vector<uint8_t>& srce)
 {
     std::vector<uint8_t> dest;
 
-    dest.resize(base64::decodeBufferSize(srce.data(),
+    dest.resize(dmit::com::base64::decodeBufferSize(srce.data(),
                                          srce.size()));
-    base64::decode(srce.data(),
-                   srce.size(),
-                   dest.data());
-
-    display(dest, os);
+    dmit::com::base64::decode(srce.data(),
+                              srce.size(),
+                              dest.data());
+    display(dest);
 }
 
 int main(int argc, char** argv)
@@ -124,34 +123,34 @@ int main(int argc, char** argv)
 
     if (hasHelp)
     {
-        displayHelp(std::cout);
+        displayHelp();
         return EXIT_SUCCESS;
     }
 
     if (hasVersion)
     {
-        displayVersion(std::cout);
+        displayVersion();
         return EXIT_SUCCESS;
     }
 
     if (hasEncode && hasDecode)
     {
-        std::cerr << "error: encode and decode options are mutually exclusives.\n";
-        displayHelp(std::cerr);
+        DMIT_COM_LOG_ERR << "error: encode and decode options are mutually exclusives\n";
+        displayHelp();
+        return EXIT_FAILURE;
+    }
+
+    if (!hasEncode && !hasDecode)
+    {
+        DMIT_COM_LOG_ERR << "error: invalid command line, no encode or decode flag set\n";
+        displayHelp();
         return EXIT_FAILURE;
     }
 
     const auto& bytes = makeBytes(std::cin);
 
-    if (hasEncode)
-    {
-        displayEncode(bytes, std::cout);
-    }
-
-    if (hasDecode)
-    {
-        displayDecode(bytes, std::cout);
-    }
+    if (hasEncode) { displayEncode(bytes); }
+    if (hasDecode) { displayDecode(bytes); }
 
     return EXIT_SUCCESS;
 }

@@ -1,0 +1,2 @@
+LIB_DMIT_PRS_CPP = $(LIB_SRC)/dmit/prs/*.cpp
+LIB_DMIT_PRS_OUT = libdmit_prs.a

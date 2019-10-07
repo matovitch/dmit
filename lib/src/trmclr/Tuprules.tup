@@ -1,2 +1,0 @@
-LIB_TRMCLR_CPP = $(LIB_SRC)/trmclr/*.cpp
-LIB_TRMCLR_OUT = libtrmclr.a

@@ -1,6 +1,10 @@
 #pragma once
 
+#include "dmit/src/line_index.hpp"
+
 #include "dmit/com/error_option.hpp"
+
+#include "dmit/fmt/formatable.hpp"
 
 #include <filesystem>
 #include <optional>
@@ -31,17 +35,17 @@ com::ErrorOption<File, Error> make(const std::filesystem::path& path);
 
 } // namespace file
 
-class File
+class File : fmt::Formatable
 {
     friend com::ErrorOption<File, file::Error> file::make(const std::filesystem::path& path);
 
 public:
 
-    const uint8_t* data() const;
+    const std::vector<uint8_t>& content() const;
 
-    const std::size_t size() const;
+    const LineIndex& lineIndex() const;
 
-    const std::filesystem::path path;
+    const std::filesystem::path _path;
 
 private:
 
@@ -49,7 +53,10 @@ private:
 
     com::ErrorOption<std::unique_ptr<std::ifstream>, file::Error> makeFileStream() const;
 
-    std::vector<uint8_t> _data;
+    void initLineIndex();
+
+    std::vector<uint8_t> _content;
+    LineIndex            _lineIndex;
 };
 
 } // namespace src

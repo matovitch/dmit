@@ -34,6 +34,8 @@ ifeq (@(IS_MSAN),y)
     CXFLAGS += -fsanitize=memory
 endif
 
+#CXFLAGS += -fexperimental-isel
+
 CXFLAGS += -I $(ROOT)/lib/include
 
 !cx = |> $(CX) $(CXFLAGS) -c %f -o %o |>
