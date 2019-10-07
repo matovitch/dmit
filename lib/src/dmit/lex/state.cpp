@@ -27,7 +27,7 @@ void State::clear()
     _offsets.clear();
 }
 
-static const char* KEYWORDS[] =
+static const char* const KEYWORDS[] =
 {
     "fn",
     "if",
@@ -57,15 +57,20 @@ void State::matchKeywords(const uint8_t* const data)
             continue;
         }
 
-        std::string tokenAsString{reinterpret_cast<const char*>(data + size - offset), offset - *itOffsets};
-
         for (int i = 0; i < sizeof(KEYWORDS) / sizeof(char*); i++)
         {
-            if (tokenAsString == KEYWORDS[i])
+            for (int j = 0; j < offset - *itOffsets; j++)
             {
-                token = Token::FN + i;
-                break;
+                if (data[size - offset + j] != KEYWORDS[i][j] || KEYWORDS[i][j] == '\0')
+                {
+                    goto CONTINUE;
+                }
             }
+
+            token = Token::FN + i;
+            break;
+
+            CONTINUE:;
         }
     }
 }
