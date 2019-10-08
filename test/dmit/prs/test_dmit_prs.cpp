@@ -103,5 +103,5 @@ TEST_CASE("bool validParse(const std::string& toParse)")
 
     CHECK(validParse("a = -z + 2.5/(36 + 35 * 8)"));
 
-    CHECK(!validParse("(()"));
+    CHECK(!validParse("((1)"));
 }
