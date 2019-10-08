@@ -89,8 +89,13 @@ void Set::clear()
 
 std::size_t Set::offset() const
 {
-    return _errors.empty() ? std::numeric_limits<std::size_t>::max()
-                           : _errors.back()._offset;
+    return empty() ? std::numeric_limits<std::size_t>::max()
+                   : _errors.back()._offset;
+}
+
+bool Set::empty() const
+{
+    return _errors.empty();
 }
 
 const std::vector<Error>& Set::errors() const

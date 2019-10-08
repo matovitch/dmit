@@ -33,7 +33,8 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
 {
     enum : uint8_t
     {
-        TERM,
+        INVALID,
+        NUMBER,
         OPPOSE,
         INVERSE,
         PRODUCT,
@@ -58,12 +59,14 @@ struct Arity : com::TEnum<uint8_t>
 
 struct Node : fmt::Formatable
 {
+    Node() = default;
+
     Node(const node::Kind,
          const uint32_t,
          const uint32_t,
          const uint32_t);
 
-    node::Kind  _kind;
+    node::Kind  _kind = node::Kind::INVALID;
     uint32_t    _size;
     uint32_t    _start;
     uint32_t    _stop;
@@ -85,6 +88,8 @@ public:
                  const uint32_t,
                  const uint32_t,
                  const uint32_t);
+
+    void resize(const std::size_t);
 
     const std::vector<tree::Node>& nodes() const;
 

@@ -34,13 +34,74 @@ private:
     dmit::lex::state::Builder _lexer;
 };
 
-TEST_CASE("dmit::prs::State parse(const std::string& toParse)")
+using NodeKind = dmit::prs::state::tree::node::Kind;
+
+std::vector<NodeKind> makeNodeKinds(const std::string& toParse)
 {
     Parser parser;
 
-    std::cout << "[{\"tree\":"    << parser("3*(1-9)")._tree
-              << ",\"errorSet\":" << parser("3*(1-9)")._errorSet;
+    const auto& tree = parser(toParse)._tree;
 
-    std::cout << "},{\"tree\":"   << parser("a=5+3")._tree;
-    std::cout << ",\"errorSet\":" << parser("x=6+2")._errorSet << "}]"; 
+    std::vector<NodeKind> nodeKinds;
+
+    for (const auto& node : tree.nodes())
+    {
+        nodeKinds.push_back(node._kind);
+    }
+
+    return nodeKinds;
+}
+
+std::vector<NodeKind> makeNodeKinds(std::initializer_list<NodeKind> nodeKinds)
+{
+    return std::vector<NodeKind>{nodeKinds};
+}
+
+bool validParse(const std::string& toParse)
+{
+    return Parser{}(toParse)._errorSet.empty();
+}
+
+TEST_CASE("std::vector<NodeKind> makeNodeKinds(const std::string& toParse)")
+{
+    CHECK(makeNodeKinds("a + 3") == makeNodeKinds({NodeKind::VARIABLE,
+                                                   NodeKind::NUMBER,
+                                                   NodeKind::SUM}));
+
+    CHECK(makeNodeKinds("a = 3") == makeNodeKinds({NodeKind::VARIABLE,
+                                                   NodeKind::NUMBER,
+                                                   NodeKind::ASSIGNMENT}));
+
+    CHECK(makeNodeKinds("x = y") == makeNodeKinds({NodeKind::VARIABLE,
+                                                   NodeKind::VARIABLE,
+                                                   NodeKind::ASSIGNMENT}));
+
+    CHECK(makeNodeKinds("2 * 3.14") == makeNodeKinds({NodeKind::NUMBER,
+                                                   NodeKind::NUMBER,
+                                                   NodeKind::PRODUCT}));
+
+    CHECK(makeNodeKinds("(((2)))") == makeNodeKinds({NodeKind::NUMBER}));
+
+    CHECK(makeNodeKinds("-5.2") == makeNodeKinds({NodeKind::NUMBER,
+                                                  NodeKind::OPPOSE}));
+
+    CHECK(makeNodeKinds("(a + b) * (a - b)") == makeNodeKinds({NodeKind::VARIABLE,
+                                                               NodeKind::VARIABLE,
+                                                               NodeKind::SUM,
+                                                               NodeKind::VARIABLE,
+                                                               NodeKind::VARIABLE,
+                                                               NodeKind::OPPOSE,
+                                                               NodeKind::SUM,
+                                                               NodeKind::PRODUCT}));
+}
+
+TEST_CASE("bool validParse(const std::string& toParse)")
+{
+    CHECK(validParse("2.4e-8"));
+
+    CHECK(validParse("a = -22"));
+
+    CHECK(validParse("a = -z + 2.5/(36 + 35 * 8)"));
+
+    CHECK(!validParse("(()"));
 }

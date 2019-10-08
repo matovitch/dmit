@@ -47,6 +47,11 @@ uint32_t Tree::size() const
     return _nodes.size();
 }
 
+void Tree::resize(const std::size_t size)
+{
+    _nodes.resize(size);
+}
+
 const std::vector<tree::Node>& Tree::nodes() const
 {
     return _nodes;
@@ -88,6 +93,7 @@ void Writer::onEnd(const std::optional<Reader>& readerOpt, const Stack& stack, S
 {
     if (!readerOpt)
     {
+        state._tree.resize(stack._treeSize);
         return;
     }
 

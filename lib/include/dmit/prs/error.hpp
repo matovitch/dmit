@@ -66,6 +66,8 @@ public:
 
     std::size_t offset() const;
 
+    bool empty() const;
+
 private:
 
     std::vector<Error> _errors;
