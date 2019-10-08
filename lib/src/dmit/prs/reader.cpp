@@ -12,8 +12,8 @@ namespace prs
 {
 
 Reader::Reader(const std::vector<lex::Token>& tokens) :
-    _head{tokens.data()},
-    _tail{tokens.data() + tokens.size() - 1}
+    _head{tokens.data() + 1},
+    _tail{tokens.data() - 1 + tokens.size()}
 {}
 
 void Reader::advance()
