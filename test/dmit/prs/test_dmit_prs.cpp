@@ -77,8 +77,8 @@ TEST_CASE("std::vector<NodeKind> makeNodeKinds(const std::string& toParse)")
                                                    NodeKind::ASSIGNMENT}));
 
     CHECK(makeNodeKinds("2 * 3.14") == makeNodeKinds({NodeKind::NUMBER,
-                                                   NodeKind::NUMBER,
-                                                   NodeKind::PRODUCT}));
+                                                      NodeKind::NUMBER,
+                                                      NodeKind::PRODUCT}));
 
     CHECK(makeNodeKinds("(((2)))") == makeNodeKinds({NodeKind::NUMBER}));
 
