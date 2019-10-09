@@ -29,9 +29,11 @@ void State::clear()
 
 static const char* const KEYWORDS[] =
 {
-    "fn",
     "if",
     "else",
+    "let",
+    "var",
+    "func",
     "while",
     "return"
 };
@@ -67,7 +69,7 @@ void State::matchKeywords(const uint8_t* const data)
                 }
             }
 
-            token = Token::FN + i;
+            token = Token::IF + i;
             break;
 
             CONTINUE:;

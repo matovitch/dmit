@@ -22,8 +22,8 @@ using IsPlus                 = TIs<'+'>;
 using IsMinus                = TIs<'-'>;
 using IsStar                 = TIs<'*'>;
 using IsSlash                = TIs<'/'>;
-using IsParenL               = TIs<'('>;
-using IsParenR               = TIs<')'>;
+using IsParLeft              = TIs<'('>;
+using IsParRight             = TIs<')'>;
 using IsDot                  = TIs<'.'>;
 using IsEqual                = TIs<'='>;
 
@@ -43,8 +43,8 @@ enum
     STATE_MINUS,
     STATE_STAR,
     STATE_SLASH,
-    STATE_PAREN_L,
-    STATE_PAREN_R,
+    STATE_PAR_LEFT,
+    STATE_PAR_RIGHT,
     STATE_DOT,
     STATE_EQUAL,
     STATE_NUMBER,
@@ -66,8 +66,8 @@ struct TStateIndex<STATE_INITIAL>
         TGoto<IsMinus             , STATE_MINUS      >,
         TGoto<IsStar              , STATE_STAR       >,
         TGoto<IsSlash             , STATE_SLASH      >,
-        TGoto<IsParenL            , STATE_PAREN_L    >,
-        TGoto<IsParenR            , STATE_PAREN_R    >,
+        TGoto<IsParLeft           , STATE_PAR_LEFT   >,
+        TGoto<IsParRight          , STATE_PAR_RIGHT  >,
         TGoto<IsDot               , STATE_DOT        >,        
         TGoto<IsEqual             , STATE_EQUAL      >,        
         TGoto<IsDigit             , STATE_NUMBER     >
@@ -131,20 +131,20 @@ struct TStateIndex<STATE_SLASH>
 };
 
 template <>
-struct TStateIndex<STATE_PAREN_L>
+struct TStateIndex<STATE_PAR_LEFT>
 {
     using Type = TState
     <
-        Token::PAREN_L
+        Token::PAR_LEFT
     >;
 };
 
 template <>
-struct TStateIndex<STATE_PAREN_R>
+struct TStateIndex<STATE_PAR_RIGHT>
 {
     using Type = TState
     <
-        Token::PAREN_R
+        Token::PAR_RIGHT
     >;
 };
 

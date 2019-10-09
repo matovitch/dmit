@@ -75,11 +75,13 @@ TEST_CASE("std::vector<Token> lex(const std::string& toLex)")
     CHECK(lexer("_42"     ) == makeTokens({Token::IDENTIFIER}));
     CHECK(lexer("__bAz5_8") == makeTokens({Token::IDENTIFIER}));
 
-    CHECK(lexer("fn"     ) == makeTokens({Token::FN}));
-    CHECK(lexer("if"     ) == makeTokens({Token::IF}));
-    CHECK(lexer("else"   ) == makeTokens({Token::ELSE}));
-    CHECK(lexer("while"  ) == makeTokens({Token::WHILE}));
-    CHECK(lexer("return" ) == makeTokens({Token::RETURN}));
+    CHECK(lexer("if"     ) == makeTokens({Token::IF     }));
+    CHECK(lexer("else"   ) == makeTokens({Token::ELSE   }));
+    CHECK(lexer("let"    ) == makeTokens({Token::LET    }));
+    CHECK(lexer("var"    ) == makeTokens({Token::VAR    }));
+    CHECK(lexer("func"   ) == makeTokens({Token::FUNC   }));
+    CHECK(lexer("while"  ) == makeTokens({Token::WHILE  }));
+    CHECK(lexer("return" ) == makeTokens({Token::RETURN }));
 
     CHECK(lexer("+") == makeTokens({Token::PLUS  }));
     CHECK(lexer("-") == makeTokens({Token::MINUS }));

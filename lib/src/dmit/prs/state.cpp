@@ -36,10 +36,17 @@ Builder::Builder() :
     auto minus      = _poolParser.make(_state);
     auto star       = _poolParser.make(_state);
     auto slash      = _poolParser.make(_state);
-    auto parenL     = _poolParser.make(_state);
-    auto parenR     = _poolParser.make(_state);
+    auto parLeft    = _poolParser.make(_state);
+    auto parRight   = _poolParser.make(_state);
     auto dot        = _poolParser.make(_state);
     auto equal      = _poolParser.make(_state);
+    auto keyIf      = _poolParser.make(_state);
+    auto keyElse    = _poolParser.make(_state);
+    auto keyLet     = _poolParser.make(_state);
+    auto keyVar     = _poolParser.make(_state);
+    auto keyFunc    = _poolParser.make(_state);
+    auto keyWhile   = _poolParser.make(_state);
+    auto keyReturn  = _poolParser.make(_state);
     auto term       = _poolParser.make(_state);
     auto posAtom    = _poolParser.make(_state);
     auto negAtom    = _poolParser.make(_state);
@@ -65,17 +72,24 @@ Builder::Builder() :
     _poolSubscriber.bind<subscriber::tree::Writer>(variable   , state::tree::node::Kind::VARIABLE   , state::tree::node::Arity::ONE      );
     _poolSubscriber.bind<subscriber::tree::Writer>(assignment , state::tree::node::Kind::ASSIGNMENT , state::tree::node::Arity::VARIADIC );
 
-    _poolSubscriber.bind<subscriber::error::TokChecker>(integer    , lex::Token::INTEGER    );
-    _poolSubscriber.bind<subscriber::error::TokChecker>(decimal    , lex::Token::DECIMAL    );
-    _poolSubscriber.bind<subscriber::error::TokChecker>(identifier , lex::Token::IDENTIFIER );
-    _poolSubscriber.bind<subscriber::error::TokChecker>(plus       , lex::Token::PLUS       );
-    _poolSubscriber.bind<subscriber::error::TokChecker>(minus      , lex::Token::MINUS      );
-    _poolSubscriber.bind<subscriber::error::TokChecker>(star       , lex::Token::STAR       );
-    _poolSubscriber.bind<subscriber::error::TokChecker>(slash      , lex::Token::SLASH      );
-    _poolSubscriber.bind<subscriber::error::TokChecker>(parenL     , lex::Token::PAREN_L    );
-    _poolSubscriber.bind<subscriber::error::TokChecker>(parenR     , lex::Token::PAREN_R    );
-    _poolSubscriber.bind<subscriber::error::TokChecker>(dot        , lex::Token::DOT        );
-    _poolSubscriber.bind<subscriber::error::TokChecker>(equal      , lex::Token::EQUAL      );
+    _poolSubscriber.bind<subscriber::error::TokChecker>(integer    , lex::Token::INTEGER     );
+    _poolSubscriber.bind<subscriber::error::TokChecker>(decimal    , lex::Token::DECIMAL     );
+    _poolSubscriber.bind<subscriber::error::TokChecker>(identifier , lex::Token::IDENTIFIER  );
+    _poolSubscriber.bind<subscriber::error::TokChecker>(plus       , lex::Token::PLUS        );
+    _poolSubscriber.bind<subscriber::error::TokChecker>(minus      , lex::Token::MINUS       );
+    _poolSubscriber.bind<subscriber::error::TokChecker>(star       , lex::Token::STAR        );
+    _poolSubscriber.bind<subscriber::error::TokChecker>(slash      , lex::Token::SLASH       );
+    _poolSubscriber.bind<subscriber::error::TokChecker>(parLeft    , lex::Token::PAR_LEFT    );
+    _poolSubscriber.bind<subscriber::error::TokChecker>(parRight   , lex::Token::PAR_RIGHT   );
+    _poolSubscriber.bind<subscriber::error::TokChecker>(dot        , lex::Token::DOT         );
+    _poolSubscriber.bind<subscriber::error::TokChecker>(equal      , lex::Token::EQUAL       );
+    _poolSubscriber.bind<subscriber::error::TokChecker>(keyIf      , lex::Token::IF          );
+    _poolSubscriber.bind<subscriber::error::TokChecker>(keyElse    , lex::Token::ELSE        );
+    _poolSubscriber.bind<subscriber::error::TokChecker>(keyLet     , lex::Token::LET         );
+    _poolSubscriber.bind<subscriber::error::TokChecker>(keyVar     , lex::Token::VAR         );
+    _poolSubscriber.bind<subscriber::error::TokChecker>(keyFunc    , lex::Token::FUNC        );
+    _poolSubscriber.bind<subscriber::error::TokChecker>(keyWhile   , lex::Token::WHILE       );
+    _poolSubscriber.bind<subscriber::error::TokChecker>(keyReturn  , lex::Token::RETURN      );
 
     _poolSubscriber.bind<subscriber::error::Clear>(_parser);
 
@@ -86,16 +100,23 @@ Builder::Builder() :
     minus      = tok(lex::Token::MINUS     );
     star       = tok(lex::Token::STAR      );
     slash      = tok(lex::Token::SLASH     );
-    parenL     = tok(lex::Token::PAREN_L   );
-    parenR     = tok(lex::Token::PAREN_R   );
+    parLeft    = tok(lex::Token::PAR_LEFT  );
+    parRight   = tok(lex::Token::PAR_RIGHT );
     dot        = tok(lex::Token::DOT       );
     equal      = tok(lex::Token::EQUAL     );
+    keyIf      = tok(lex::Token::IF        );
+    keyElse    = tok(lex::Token::ELSE      );
+    keyLet     = tok(lex::Token::LET       );
+    keyVar     = tok(lex::Token::VAR       );
+    keyFunc    = tok(lex::Token::FUNC      );
+    keyWhile   = tok(lex::Token::WHILE     );
+    keyReturn  = tok(lex::Token::RETURN    );
 
     // variable   = identifier;
 
     term   = alt(variable, integer, decimal);
 
-    posAtom = seq(alt(term, seq(parenL, sum, parenR)));
+    posAtom = seq(alt(term, seq(parLeft, sum, parRight)));
 
     negAtom = seq(minus, posAtom);
 
