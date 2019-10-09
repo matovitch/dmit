@@ -10,12 +10,16 @@ static const char* K_TREE_NODE_KIND_AS_CSTR[] =
     "INVALID"    ,
     "INTEGER"    ,
     "DECIMAL"    ,
+    "IDENTIFIER" ,
     "OPPOSE"     ,
     "INVERSE"    ,
     "PRODUCT"    ,
     "SUM"        ,
-    "VARIABLE"   ,
-    "ASSIGNMENT"
+    "TYPE"       ,
+    "ASSIGNMENT" ,
+    "DECLAR_LET" ,
+    "DECLAR_VAR" ,
+    "STA_RETURN"
 };
 
 namespace dmit

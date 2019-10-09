@@ -93,6 +93,26 @@ auto rep(Parser&& parser)
     };
 }
 
+template <class Parser>
+auto opt(Parser&& parser)
+{
+    return [parser](Reader reader) -> std::optional<Reader>
+    {
+        const auto& readerOpt = parser(reader);
+
+        return readerOpt ? readerOpt : reader;
+    };
+}
+
+template <class Parser>
+auto dup(Parser&& parser)
+{
+    return [parser](Reader reader) -> std::optional<Reader>
+    {
+        return parser(reader);
+    };
+}
+
 } // namespace combinators
 
 } // namespace prs

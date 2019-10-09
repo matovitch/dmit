@@ -36,12 +36,16 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
         INVALID,
         INTEGER,
         DECIMAL,
+        IDENTIFIER,
         OPPOSE,
         INVERSE,
         PRODUCT,
         SUM,
-        VARIABLE,
-        ASSIGNMENT
+        TYPE,
+        ASSIGNMENT,
+        DECLAR_LET,
+        DECLAR_VAR,
+        STA_RETURN
     };
 
     DMIT_COM_ENUM_IMPLICIT_FROM_INT(Kind);
@@ -52,6 +56,7 @@ struct Arity : com::TEnum<uint8_t>
     enum : uint8_t
     {
         VARIADIC,
+        UNWRAP,
         ONE
     };
 };

@@ -15,12 +15,14 @@ struct StringMaker<std::vector<Type>>
 
         oss << "{\"array\":[";
 
-        for (std::size_t index = 1; index < vector.size(); index++)
+        for (const auto& elem : vector)
         {
-            oss << vector[index - 1] << ", ";
+            oss << elem << ',';
         }
 
-        oss << vector.back() << "]}";
+        oss.seekp(vector.empty() ? 0 : -1, std::ios_base::end);
+
+        oss << "]}";
 
         return oss.str().c_str();
     }

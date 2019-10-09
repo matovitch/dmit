@@ -63,7 +63,12 @@ void Tree::addNode(const tree::node::Arity arity,
                    const uint32_t start,
                    const uint32_t stop)
 {
-    if (arity == tree::node::Arity::ONE || _nodes.back()._size < size - 1)
+    if (arity == tree::node::Arity::UNWRAP)
+    {
+      _nodes.pop_back();
+    }
+
+    if (arity != tree::node::Arity::VARIADIC || _nodes.back()._size < size - 1)
     {
         _nodes.emplace_back(kind, size, start, stop);
     }

@@ -39,6 +39,7 @@ Builder::Builder() :
     auto parLeft    = _poolParser.make(_state);
     auto parRight   = _poolParser.make(_state);
     auto dot        = _poolParser.make(_state);
+    auto colon      = _poolParser.make(_state);
     auto equal      = _poolParser.make(_state);
     auto keyIf      = _poolParser.make(_state);
     auto keyElse    = _poolParser.make(_state);
@@ -58,9 +59,11 @@ Builder::Builder() :
     auto negative   = _poolParser.make(_state);
     auto sum        = _poolParser.make(_state);
     auto assignment = _poolParser.make(_state);
-
-    auto& variable   = identifier;
-    auto& expression = sum;
+    auto type       = _poolParser.make(_state);
+    auto typAnnot   = _poolParser.make(_state);
+    auto declarLet  = _poolParser.make(_state);
+    auto declarVar  = _poolParser.make(_state);
+    auto expression = _poolParser.make(_state);
 
     _poolSubscriber.bind<subscriber::tree::Writer>(integer    , state::tree::node::Kind::INTEGER    , state::tree::node::Arity::ONE      );
     _poolSubscriber.bind<subscriber::tree::Writer>(decimal    , state::tree::node::Kind::DECIMAL    , state::tree::node::Arity::ONE      );
@@ -69,8 +72,11 @@ Builder::Builder() :
     _poolSubscriber.bind<subscriber::tree::Writer>(product    , state::tree::node::Kind::PRODUCT    , state::tree::node::Arity::VARIADIC );
     _poolSubscriber.bind<subscriber::tree::Writer>(negative   , state::tree::node::Kind::OPPOSE     , state::tree::node::Arity::ONE      );
     _poolSubscriber.bind<subscriber::tree::Writer>(sum        , state::tree::node::Kind::SUM        , state::tree::node::Arity::VARIADIC );
-    _poolSubscriber.bind<subscriber::tree::Writer>(variable   , state::tree::node::Kind::VARIABLE   , state::tree::node::Arity::ONE      );
+    _poolSubscriber.bind<subscriber::tree::Writer>(identifier , state::tree::node::Kind::IDENTIFIER , state::tree::node::Arity::ONE      );
     _poolSubscriber.bind<subscriber::tree::Writer>(assignment , state::tree::node::Kind::ASSIGNMENT , state::tree::node::Arity::VARIADIC );
+    _poolSubscriber.bind<subscriber::tree::Writer>(type       , state::tree::node::Kind::TYPE       , state::tree::node::Arity::UNWRAP   );
+    _poolSubscriber.bind<subscriber::tree::Writer>(declarLet  , state::tree::node::Kind::DECLAR_LET , state::tree::node::Arity::VARIADIC );
+    _poolSubscriber.bind<subscriber::tree::Writer>(declarVar  , state::tree::node::Kind::DECLAR_VAR , state::tree::node::Arity::ONE      );
 
     _poolSubscriber.bind<subscriber::error::TokChecker>(integer    , lex::Token::INTEGER     );
     _poolSubscriber.bind<subscriber::error::TokChecker>(decimal    , lex::Token::DECIMAL     );
@@ -82,6 +88,7 @@ Builder::Builder() :
     _poolSubscriber.bind<subscriber::error::TokChecker>(parLeft    , lex::Token::PAR_LEFT    );
     _poolSubscriber.bind<subscriber::error::TokChecker>(parRight   , lex::Token::PAR_RIGHT   );
     _poolSubscriber.bind<subscriber::error::TokChecker>(dot        , lex::Token::DOT         );
+    _poolSubscriber.bind<subscriber::error::TokChecker>(colon      , lex::Token::COLON       );
     _poolSubscriber.bind<subscriber::error::TokChecker>(equal      , lex::Token::EQUAL       );
     _poolSubscriber.bind<subscriber::error::TokChecker>(keyIf      , lex::Token::IF          );
     _poolSubscriber.bind<subscriber::error::TokChecker>(keyElse    , lex::Token::ELSE        );
@@ -103,6 +110,7 @@ Builder::Builder() :
     parLeft    = tok(lex::Token::PAR_LEFT  );
     parRight   = tok(lex::Token::PAR_RIGHT );
     dot        = tok(lex::Token::DOT       );
+    colon      = tok(lex::Token::COLON     );
     equal      = tok(lex::Token::EQUAL     );
     keyIf      = tok(lex::Token::IF        );
     keyElse    = tok(lex::Token::ELSE      );
@@ -112,9 +120,9 @@ Builder::Builder() :
     keyWhile   = tok(lex::Token::WHILE     );
     keyReturn  = tok(lex::Token::RETURN    );
 
-    // variable   = identifier;
+    // Expression
 
-    term   = alt(variable, integer, decimal);
+    term = alt(identifier, integer, decimal);
 
     posAtom = seq(alt(term, seq(parLeft, sum, parRight)));
 
@@ -133,11 +141,27 @@ Builder::Builder() :
 
     sum = seq(product, rep(alt(additive,
                                negative)));
-    // expression = sum;
+    expression = dup(sum);
 
-    assignment = seq(variable, equal, expression);
+    // Assigment
 
-    _parser = alt(assignment, expression);
+    assignment = seq(identifier, equal, expression);
+
+    // Var declaration
+
+    type = dup(identifier);
+
+    typAnnot = seq(colon, type);
+
+    declarVar = seq(keyVar, identifier, opt(typAnnot), opt(seq(equal, expression)));
+
+    // Let declaration
+
+    declarLet = seq(keyLet, identifier, opt(typAnnot), equal, expression);
+
+    // Full parser
+
+    _parser = alt(declarLet, declarVar, assignment, expression);
 }
 
 const State& Builder::operator()(const std::vector<lex::Token>& tokens)

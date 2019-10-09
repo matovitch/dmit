@@ -25,6 +25,7 @@ using IsSlash                = TIs<'/'>;
 using IsParLeft              = TIs<'('>;
 using IsParRight             = TIs<')'>;
 using IsDot                  = TIs<'.'>;
+using IsColon                = TIs<':'>;
 using IsEqual                = TIs<'='>;
 
 using IsUnderscoreOrAlpha    = TOr<TIsBetween <'A', 'Z'>,
@@ -46,6 +47,7 @@ enum
     STATE_PAR_LEFT,
     STATE_PAR_RIGHT,
     STATE_DOT,
+    STATE_COLON,
     STATE_EQUAL,
     STATE_NUMBER,
     STATE_DECIMAL_0,
@@ -68,8 +70,9 @@ struct TStateIndex<STATE_INITIAL>
         TGoto<IsSlash             , STATE_SLASH      >,
         TGoto<IsParLeft           , STATE_PAR_LEFT   >,
         TGoto<IsParRight          , STATE_PAR_RIGHT  >,
-        TGoto<IsDot               , STATE_DOT        >,        
-        TGoto<IsEqual             , STATE_EQUAL      >,        
+        TGoto<IsDot               , STATE_DOT        >,
+        TGoto<IsColon             , STATE_COLON      >,
+        TGoto<IsEqual             , STATE_EQUAL      >,
         TGoto<IsDigit             , STATE_NUMBER     >
     >;
 };
@@ -155,6 +158,15 @@ struct TStateIndex<STATE_DOT>
     <
         Token::DOT,
         TGoto<IsDigit, STATE_DECIMAL_0>
+    >;
+};
+
+template <>
+struct TStateIndex<STATE_COLON>
+{
+    using Type = TState
+    <
+        Token::COLON
     >;
 };
 
