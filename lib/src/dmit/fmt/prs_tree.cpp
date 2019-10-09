@@ -8,7 +8,8 @@
 static const char* K_TREE_NODE_KIND_AS_CSTR[] =
 {
     "INVALID"    ,
-    "NUMBER"     ,
+    "INTEGER"    ,
+    "DECIMAL"    ,
     "OPPOSE"     ,
     "INVERSE"    ,
     "PRODUCT"    ,

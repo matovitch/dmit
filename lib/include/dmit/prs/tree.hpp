@@ -34,7 +34,8 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
     enum : uint8_t
     {
         INVALID,
-        NUMBER,
+        INTEGER,
+        DECIMAL,
         OPPOSE,
         INVERSE,
         PRODUCT,

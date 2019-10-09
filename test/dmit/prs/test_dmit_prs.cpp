@@ -65,24 +65,24 @@ bool validParse(const std::string& toParse)
 TEST_CASE("std::vector<NodeKind> makeNodeKinds(const std::string& toParse)")
 {
     CHECK(makeNodeKinds("a + 3") == makeNodeKinds({NodeKind::VARIABLE,
-                                                   NodeKind::NUMBER,
+                                                   NodeKind::INTEGER,
                                                    NodeKind::SUM}));
 
     CHECK(makeNodeKinds("a = 3") == makeNodeKinds({NodeKind::VARIABLE,
-                                                   NodeKind::NUMBER,
+                                                   NodeKind::INTEGER,
                                                    NodeKind::ASSIGNMENT}));
 
     CHECK(makeNodeKinds("x = y") == makeNodeKinds({NodeKind::VARIABLE,
                                                    NodeKind::VARIABLE,
                                                    NodeKind::ASSIGNMENT}));
 
-    CHECK(makeNodeKinds("2 * 3.14") == makeNodeKinds({NodeKind::NUMBER,
-                                                      NodeKind::NUMBER,
+    CHECK(makeNodeKinds("2 * 3.14") == makeNodeKinds({NodeKind::INTEGER,
+                                                      NodeKind::DECIMAL,
                                                       NodeKind::PRODUCT}));
 
-    CHECK(makeNodeKinds("(((2)))") == makeNodeKinds({NodeKind::NUMBER}));
+    CHECK(makeNodeKinds("(((2)))") == makeNodeKinds({NodeKind::INTEGER}));
 
-    CHECK(makeNodeKinds("-5.2") == makeNodeKinds({NodeKind::NUMBER,
+    CHECK(makeNodeKinds("-5.2") == makeNodeKinds({NodeKind::DECIMAL,
                                                   NodeKind::OPPOSE}));
 
     CHECK(makeNodeKinds("(a + b) * (a - b)") == makeNodeKinds({NodeKind::VARIABLE,

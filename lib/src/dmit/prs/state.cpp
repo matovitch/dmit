@@ -40,7 +40,6 @@ Builder::Builder() :
     auto parenR     = _poolParser.make(_state);
     auto dot        = _poolParser.make(_state);
     auto equal      = _poolParser.make(_state);
-    auto number     = _poolParser.make(_state);
     auto term       = _poolParser.make(_state);
     auto posAtom    = _poolParser.make(_state);
     auto negAtom    = _poolParser.make(_state);
@@ -56,7 +55,8 @@ Builder::Builder() :
     auto& variable   = identifier;
     auto& expression = sum;
 
-    _poolSubscriber.bind<subscriber::tree::Writer>(number     , state::tree::node::Kind::NUMBER     , state::tree::node::Arity::ONE      );
+    _poolSubscriber.bind<subscriber::tree::Writer>(integer    , state::tree::node::Kind::INTEGER    , state::tree::node::Arity::ONE      );
+    _poolSubscriber.bind<subscriber::tree::Writer>(decimal    , state::tree::node::Kind::DECIMAL    , state::tree::node::Arity::ONE      );
     _poolSubscriber.bind<subscriber::tree::Writer>(negAtom    , state::tree::node::Kind::OPPOSE     , state::tree::node::Arity::ONE      );
     _poolSubscriber.bind<subscriber::tree::Writer>(divitive   , state::tree::node::Kind::INVERSE    , state::tree::node::Arity::ONE      );
     _poolSubscriber.bind<subscriber::tree::Writer>(product    , state::tree::node::Kind::PRODUCT    , state::tree::node::Arity::VARIADIC );
@@ -91,11 +91,9 @@ Builder::Builder() :
     dot        = tok(lex::Token::DOT       );
     equal      = tok(lex::Token::EQUAL     );
 
-    number = alt(integer, decimal);
-
     // variable   = identifier;
 
-    term   = alt(variable, number);
+    term   = alt(variable, integer, decimal);
 
     posAtom = seq(alt(term, seq(parenL, sum, parenR)));
 
