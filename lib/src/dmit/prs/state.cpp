@@ -62,7 +62,6 @@ Builder::Builder() :
     auto typAnnot   = _poolParser.make(_state);
     auto declarLet  = _poolParser.make(_state);
     auto declarVar  = _poolParser.make(_state);
-    auto expression = _poolParser.make(_state);
 
     _poolSubscriber.bind<subscriber::tree::Writer>(integer    , state::tree::node::Kind::INTEGER    , state::tree::node::Arity::ONE      );
     _poolSubscriber.bind<subscriber::tree::Writer>(decimal    , state::tree::node::Kind::DECIMAL    , state::tree::node::Arity::ONE      );
@@ -139,25 +138,23 @@ Builder::Builder() :
 
     sum = seq(product, rep(alt(additive,
                                negative)));
-    expression = dup(sum);
-
     // Assigment
 
-    assignment = seq(identifier, equal, expression);
+    assignment = seq(identifier, equal, sum);
 
     // Var declaration
 
     typAnnot = seq(colon, identifier);
 
-    declarVar = seq(keyVar, identifier, opt(typAnnot), opt(seq(equal, expression)));
+    declarVar = seq(keyVar, identifier, opt(typAnnot), opt(seq(equal, sum)));
 
     // Let declaration
 
-    declarLet = seq(keyLet, identifier, opt(typAnnot), equal, expression);
+    declarLet = seq(keyLet, identifier, opt(typAnnot), equal, sum);
 
     // Full parser
 
-    _parser = alt(declarLet, declarVar, assignment, expression);
+    _parser = alt(declarLet, declarVar, assignment, sum);
 }
 
 const State& Builder::operator()(const std::vector<lex::Token>& tokens)

@@ -104,15 +104,6 @@ auto opt(Parser&& parser)
     };
 }
 
-template <class Parser>
-auto dup(Parser&& parser)
-{
-    return [parser](Reader reader) -> std::optional<Reader>
-    {
-        return parser(reader);
-    };
-}
-
 } // namespace combinators
 
 } // namespace prs
