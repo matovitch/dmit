@@ -40,6 +40,7 @@ Builder::Builder() :
     auto parRight   = _poolParser.make(_state);
     auto dot        = _poolParser.make(_state);
     auto colon      = _poolParser.make(_state);
+    auto semiColon  = _poolParser.make(_state);
     auto equal      = _poolParser.make(_state);
     auto keyIf      = _poolParser.make(_state);
     auto keyElse    = _poolParser.make(_state);
@@ -86,6 +87,7 @@ Builder::Builder() :
     _poolSubscriber.bind<subscriber::error::TokChecker>(parRight   , lex::Token::PAR_RIGHT   );
     _poolSubscriber.bind<subscriber::error::TokChecker>(dot        , lex::Token::DOT         );
     _poolSubscriber.bind<subscriber::error::TokChecker>(colon      , lex::Token::COLON       );
+    _poolSubscriber.bind<subscriber::error::TokChecker>(semiColon  , lex::Token::SEMI_COLON  );
     _poolSubscriber.bind<subscriber::error::TokChecker>(equal      , lex::Token::EQUAL       );
     _poolSubscriber.bind<subscriber::error::TokChecker>(keyIf      , lex::Token::IF          );
     _poolSubscriber.bind<subscriber::error::TokChecker>(keyElse    , lex::Token::ELSE        );
@@ -97,25 +99,26 @@ Builder::Builder() :
 
     _poolSubscriber.bind<subscriber::error::Clear>(_parser);
 
-    integer    = tok(lex::Token::INTEGER   );
-    decimal    = tok(lex::Token::DECIMAL   );
-    identifier = tok(lex::Token::IDENTIFIER);
-    plus       = tok(lex::Token::PLUS      );
-    minus      = tok(lex::Token::MINUS     );
-    star       = tok(lex::Token::STAR      );
-    slash      = tok(lex::Token::SLASH     );
-    parLeft    = tok(lex::Token::PAR_LEFT  );
-    parRight   = tok(lex::Token::PAR_RIGHT );
-    dot        = tok(lex::Token::DOT       );
-    colon      = tok(lex::Token::COLON     );
-    equal      = tok(lex::Token::EQUAL     );
-    keyIf      = tok(lex::Token::IF        );
-    keyElse    = tok(lex::Token::ELSE      );
-    keyLet     = tok(lex::Token::LET       );
-    keyVar     = tok(lex::Token::VAR       );
-    keyFunc    = tok(lex::Token::FUNC      );
-    keyWhile   = tok(lex::Token::WHILE     );
-    keyReturn  = tok(lex::Token::RETURN    );
+    integer    = tok(lex::Token::INTEGER    );
+    decimal    = tok(lex::Token::DECIMAL    );
+    identifier = tok(lex::Token::IDENTIFIER );
+    plus       = tok(lex::Token::PLUS       );
+    minus      = tok(lex::Token::MINUS      );
+    star       = tok(lex::Token::STAR       );
+    slash      = tok(lex::Token::SLASH      );
+    parLeft    = tok(lex::Token::PAR_LEFT   );
+    parRight   = tok(lex::Token::PAR_RIGHT  );
+    dot        = tok(lex::Token::DOT        );
+    colon      = tok(lex::Token::COLON      );
+    semiColon  = tok(lex::Token::SEMI_COLON );
+    equal      = tok(lex::Token::EQUAL      );
+    keyIf      = tok(lex::Token::IF         );
+    keyElse    = tok(lex::Token::ELSE       );
+    keyLet     = tok(lex::Token::LET        );
+    keyVar     = tok(lex::Token::VAR        );
+    keyFunc    = tok(lex::Token::FUNC       );
+    keyWhile   = tok(lex::Token::WHILE      );
+    keyReturn  = tok(lex::Token::RETURN     );
 
     // Expression
 

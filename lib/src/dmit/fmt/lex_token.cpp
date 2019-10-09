@@ -20,7 +20,8 @@ static const char* K_TOKEN_AS_CSTR[] =
     "PAR_LEFT",
     "PAR_RIGHT",
     "DOT",
-    "COLON"
+    "COLON",
+    "SEMI_COLON",
     "EQUAL",
     "IF",
     "ELSE",

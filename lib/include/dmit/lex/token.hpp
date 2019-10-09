@@ -30,6 +30,7 @@ struct Token : com::TEnum<uint8_t>, fmt::Formatable
         PAR_RIGHT,
         DOT,
         COLON,
+        SEMI_COLON,
         EQUAL,
         IF,
         ELSE,
