@@ -41,7 +41,6 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
         INVERSE,
         PRODUCT,
         SUM,
-        TYPE,
         ASSIGNMENT,
         DECLAR_LET,
         DECLAR_VAR,

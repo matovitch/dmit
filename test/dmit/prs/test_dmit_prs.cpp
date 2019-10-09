@@ -99,7 +99,7 @@ TEST_CASE("std::vector<NodeKind> makeNodeKinds(const std::string& toParse)")
                                                            NodeKind::DECLAR_LET}));
 
     CHECK(makeNodeKinds("let pi : f64 = 3.14") == makeNodeKinds({NodeKind::IDENTIFIER,
-                                                                 NodeKind::TYPE,
+                                                                 NodeKind::IDENTIFIER,
                                                                  NodeKind::DECIMAL,
                                                                  NodeKind::DECLAR_LET}));
 

@@ -59,7 +59,6 @@ Builder::Builder() :
     auto negative   = _poolParser.make(_state);
     auto sum        = _poolParser.make(_state);
     auto assignment = _poolParser.make(_state);
-    auto type       = _poolParser.make(_state);
     auto typAnnot   = _poolParser.make(_state);
     auto declarLet  = _poolParser.make(_state);
     auto declarVar  = _poolParser.make(_state);
@@ -74,7 +73,6 @@ Builder::Builder() :
     _poolSubscriber.bind<subscriber::tree::Writer>(sum        , state::tree::node::Kind::SUM        , state::tree::node::Arity::VARIADIC );
     _poolSubscriber.bind<subscriber::tree::Writer>(identifier , state::tree::node::Kind::IDENTIFIER , state::tree::node::Arity::ONE      );
     _poolSubscriber.bind<subscriber::tree::Writer>(assignment , state::tree::node::Kind::ASSIGNMENT , state::tree::node::Arity::VARIADIC );
-    _poolSubscriber.bind<subscriber::tree::Writer>(type       , state::tree::node::Kind::TYPE       , state::tree::node::Arity::UNWRAP   );
     _poolSubscriber.bind<subscriber::tree::Writer>(declarLet  , state::tree::node::Kind::DECLAR_LET , state::tree::node::Arity::VARIADIC );
     _poolSubscriber.bind<subscriber::tree::Writer>(declarVar  , state::tree::node::Kind::DECLAR_VAR , state::tree::node::Arity::ONE      );
 
@@ -149,9 +147,7 @@ Builder::Builder() :
 
     // Var declaration
 
-    type = dup(identifier);
-
-    typAnnot = seq(colon, type);
+    typAnnot = seq(colon, identifier);
 
     declarVar = seq(keyVar, identifier, opt(typAnnot), opt(seq(equal, expression)));
 
