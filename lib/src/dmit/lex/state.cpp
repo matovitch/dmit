@@ -38,6 +38,8 @@ static const char* const KEYWORDS[] =
     "return"
 };
 
+static const auto MAX_KEYWORD_SIZE = sizeof("return");
+
 void State::matchKeywords(const uint8_t* const data)
 {
     auto itTokens  = std::next(_tokens  .begin());
@@ -54,24 +56,26 @@ void State::matchKeywords(const uint8_t* const data)
         itTokens++;
         itOffsets++;
 
-        if (token != Token::IDENTIFIER)
+        const auto tokenSize = offset - *itOffsets;
+
+        if (token != Token::IDENTIFIER || tokenSize > MAX_KEYWORD_SIZE)
         {
             continue;
         }
 
         for (int i = 0; i < sizeof(KEYWORDS) / sizeof(char*); i++)
         {
-            if (KEYWORDS[i][offset - *itOffsets] != '\0')
-            {
-                continue;
-            }
-
-            for (int j = 0; j < offset - *itOffsets; j++)
+            for (int j = 0; j < tokenSize; j++)
             {
                 if (data[size - offset + j] != KEYWORDS[i][j])
                 {
                     goto CONTINUE;
                 }
+            }
+
+            if (KEYWORDS[i][tokenSize] != '\0')
+            {
+                continue;
             }
 
             token = Token::IF + i;
