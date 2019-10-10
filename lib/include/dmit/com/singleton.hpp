@@ -15,7 +15,7 @@ struct Singletonable{};
 template <class Type, DMIT_COM_TYPE_FLAG_CHECK_IS(Singletonable, Type)>
 class TSingleton
 {
-    
+
 public:
 
     static Type& instance()
@@ -24,12 +24,12 @@ public:
         {
             _instancePtr = std::make_unique<Type>();
         }
-        
+
         return *_instancePtr;
     }
-    
+
 private:
-    
+
     thread_local static std::unique_ptr<Type> _instancePtr;
 };
 

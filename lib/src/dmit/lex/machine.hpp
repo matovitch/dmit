@@ -72,7 +72,7 @@ struct TStateIndex<STATE_INITIAL>
         TGoto<IsParRight          , STATE_PAR_RIGHT  >,
         TGoto<IsSemiColon         , STATE_SEMI_COLON >,
         TGoto<IsDot               , STATE_DOT        >,
-        TGoto<IsComma             , STATE_COMMA      >,        
+        TGoto<IsComma             , STATE_COMMA      >,
         TGoto<IsEqual             , STATE_EQUAL      >,
         TGoto<IsColon             , STATE_COLON      >,
         TGoto<IsPlus              , STATE_PLUS       >,

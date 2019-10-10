@@ -25,7 +25,7 @@ public:
 
         return _lexer(reinterpret_cast<const uint8_t*>(toLex.data()),
                                                        toLex.size())._tokens;
-    } 
+    }
 
 private:
 

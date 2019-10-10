@@ -30,13 +30,13 @@ public:
     template <class Type, DMIT_COM_TYPE_FLAG_CHECK_IS(fmt::Formatable, Type)>
     std::ostream& operator<<(const Type& loggable)
     {
-        return _oss << ::dmit::fmt::asString(loggable);    
+        return _oss << ::dmit::fmt::asString(loggable);
     }
-    
+
     template <class Type, DMIT_COM_TYPE_FLAG_CHECK_IS_NOT(fmt::Formatable, Type)>
     std::ostream& operator<<(const Type& notLoggable)
     {
-        return _oss << notLoggable;    
+        return _oss << notLoggable;
     }
 
     const std::ostringstream& stream() const;

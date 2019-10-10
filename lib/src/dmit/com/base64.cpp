@@ -8,7 +8,7 @@ namespace dmit
 namespace com
 {
 
-namespace 
+namespace
 {
 
 static constexpr std::size_t K_DECODED_BATCH_SIZE = 3;
@@ -18,8 +18,8 @@ static constexpr std::size_t K_DECODE_SHIFT       = 2;
 static constexpr std::size_t K_ENCODE_MASK        = 0b111111;
 static constexpr uint8_t     K_PADDING_BYTE       = static_cast<uint8_t>('=');
 
-static constexpr uint8_t ENCODING_MAP[] = 
-{ 
+static constexpr uint8_t ENCODING_MAP[] =
+{
     0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a, 0x4b, 0x4c,
     0x4d, 0x4e, 0x4f, 0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58,
     0x59, 0x5a, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a,
@@ -58,7 +58,7 @@ void encodeBatch(const uint8_t* const srce,
 {
     uint32_t batchAsUInt32 = 0;
 
-    uint8_t* batch = reinterpret_cast<uint8_t*>(&batchAsUInt32); 
+    uint8_t* batch = reinterpret_cast<uint8_t*>(&batchAsUInt32);
 
     for (std::size_t i = 1; i <= K_DECODED_BATCH_SIZE; i++)
     {
@@ -169,7 +169,7 @@ void encode(const uint8_t* const srce,
     if (size % K_DECODED_BATCH_SIZE)
     {
         encodePadding(srce, size, dest);
-    }    
+    }
 }
 
 void decode(const uint8_t* const srce,

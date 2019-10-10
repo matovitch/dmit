@@ -91,7 +91,7 @@ Writer::Writer(const com::TEnumIntegerType<NodeKind> nodeKind,
 void Writer::onStart(const Reader& reader, Stack& stack, State& state) const
 {
     stack._treeSize     = state._tree.size();
-    stack._readerOffset = reader.offset(); 
+    stack._readerOffset = reader.offset();
 }
 
 void Writer::onEnd(const std::optional<Reader>& readerOpt, const Stack& stack, State& state) const

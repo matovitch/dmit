@@ -16,7 +16,7 @@ Reader::Reader(const uint8_t* const head,
 
 Reader::operator bool() const
 {
-    return _head < _tail; 
+    return _head < _tail;
 }
 
 void Reader::operator++()

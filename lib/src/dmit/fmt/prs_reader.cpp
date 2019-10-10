@@ -15,7 +15,7 @@ std::string asString(const prs::Reader& reader)
 {
     std::ostringstream oss;
 
-    oss << "{ \"token\":\"" << reader.look() << ",\"size\":" << reader.offset() << "}"; 
+    oss << "{ \"token\":\"" << reader.look() << ",\"size\":" << reader.offset() << "}";
 
     return oss.str();
 }

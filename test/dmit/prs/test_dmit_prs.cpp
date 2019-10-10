@@ -26,7 +26,7 @@ public:
         const auto& tokens = _lexer(reinterpret_cast<const uint8_t*>(toParse.data()),
                                                                      toParse.size())._tokens;
         return _parser(tokens);
-    } 
+    }
 
 private:
 

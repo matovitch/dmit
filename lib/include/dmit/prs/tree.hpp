@@ -117,7 +117,7 @@ class Writer : public Subscriber
 {
     using NodeArity = state::tree::node::Arity;
     using NodeKind  = state::tree::node::Kind;
-    
+
 public:
 
     Writer(const com::TEnumIntegerType<NodeKind>,

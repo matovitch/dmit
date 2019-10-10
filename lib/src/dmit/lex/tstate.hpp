@@ -38,11 +38,11 @@ struct TState<MATCH>
     {
         if constexpr (MATCH == Token::UNKNOWN)
         {
-            ++reader;    
+            ++reader;
         }
-        
+
         state.push(MATCH, reader.offset());
-        
+
         if (!reader)
         {
             return;
@@ -56,9 +56,9 @@ template <uint8_t MATCH, class Goto, class... Gotos>
 struct TState<MATCH, Goto, Gotos...>
 {
     using Predicate = typename Goto::Predicate;
-    
+
     static constexpr int NEXT_STATE = Goto::NEXT_STATE;
-    
+
     void operator()(Reader& reader, State& state) const
     {
         if (!reader)
@@ -66,16 +66,16 @@ struct TState<MATCH, Goto, Gotos...>
             state.push(MATCH, reader.offset());
             return;
         }
-        
+
         if (!Predicate{}(*reader))
         {
-            return TState<MATCH, Gotos...>{}(reader, state);   
+            return TState<MATCH, Gotos...>{}(reader, state);
         }
-        
+
         ++reader;
-        
+
         tGoto<NEXT_STATE>(reader, state);
-    }    
+    }
 };
 
 } // namespace lex

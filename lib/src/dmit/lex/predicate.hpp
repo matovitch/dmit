@@ -16,7 +16,7 @@ struct TIsBetween
     {
         return byte >= low  &&
                byte <= high;
-    } 
+    }
 };
 
 template <uint8_t... bytes>
@@ -25,7 +25,7 @@ struct TIsIn
     bool operator()(const uint8_t byte) const
     {
         const auto compare = [byte](const uint8_t test) { return byte == test; };
-        
+
         return (compare(bytes) || ...);
     }
 };

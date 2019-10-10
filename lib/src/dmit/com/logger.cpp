@@ -19,12 +19,12 @@ Sub::Sub(std::ostream& os) : _os{os}
 
 void Sub::flush()
 {
-    _oss.flush(); 
+    _oss.flush();
 }
 
 void Sub::clear()
 {
-    _oss.str(""); 
+    _oss.str("");
 }
 
 const std::ostringstream& Sub::stream() const
