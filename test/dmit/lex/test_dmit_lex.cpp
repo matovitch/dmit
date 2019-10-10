@@ -83,10 +83,18 @@ TEST_CASE("std::vector<Token> lex(const std::string& toLex)")
     CHECK(lexer("while"  ) == makeTokens({Token::WHILE  }));
     CHECK(lexer("return" ) == makeTokens({Token::RETURN }));
 
-    CHECK(lexer("+") == makeTokens({Token::PLUS  }));
-    CHECK(lexer("-") == makeTokens({Token::MINUS }));
-    CHECK(lexer("*") == makeTokens({Token::STAR  }));
-    CHECK(lexer("/") == makeTokens({Token::SLASH }));
+    CHECK(lexer("+") == makeTokens({Token::PLUS      }));
+    CHECK(lexer("-") == makeTokens({Token::MINUS     }));
+    CHECK(lexer("*") == makeTokens({Token::STAR      }));
+    CHECK(lexer("/") == makeTokens({Token::SLASH     }));
+    CHECK(lexer("{") == makeTokens({Token::BRA_LEFT  }));
+    CHECK(lexer("<") == makeTokens({Token::KET_LEFT  }));
+    CHECK(lexer("(") == makeTokens({Token::PAR_LEFT  }));
+    CHECK(lexer("}") == makeTokens({Token::BRA_RIGHT }));
+    CHECK(lexer(">") == makeTokens({Token::KET_RIGHT }));
+    CHECK(lexer(")") == makeTokens({Token::PAR_RIGHT }));
+
+    CHECK(lexer("->") == makeTokens({Token::ARROW}));
 
     CHECK(lexer("2 * y") == makeTokens({Token::INTEGER    ,
                                         Token::WHITESPACE ,
@@ -101,6 +109,6 @@ TEST_CASE("std::vector<Token> lex(const std::string& toLex)")
                                                         Token::DECIMAL    }));
 
     CHECK(lexer("A.B") == makeTokens({Token::IDENTIFIER ,
-                                      Token::DOT      ,
+                                      Token::DOT        ,
                                       Token::Token::IDENTIFIER}));
 }

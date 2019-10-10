@@ -95,6 +95,7 @@ TEST_CASE("std::vector<NodeKind> makeNodeKinds(const std::string& toParse)")
                                                                NodeKind::PRODUCT}));
 
     CHECK(makeNodeKinds("let pi = 3.14") == makeNodeKinds({NodeKind::IDENTIFIER,
+                                                           NodeKind::TYP_INFER,
                                                            NodeKind::DECIMAL,
                                                            NodeKind::DECLAR_LET}));
 
@@ -104,6 +105,7 @@ TEST_CASE("std::vector<NodeKind> makeNodeKinds(const std::string& toParse)")
                                                                  NodeKind::DECLAR_LET}));
 
     CHECK(makeNodeKinds("var x") == makeNodeKinds({NodeKind::IDENTIFIER,
+                                                   NodeKind::TYP_INFER,
                                                    NodeKind::DECLAR_VAR}));
 
     CHECK(makeNodeKinds("f(a, b + c)") == makeNodeKinds({NodeKind::IDENTIFIER,
@@ -114,7 +116,8 @@ TEST_CASE("std::vector<NodeKind> makeNodeKinds(const std::string& toParse)")
                                                          NodeKind::LIST_ARG,
                                                          NodeKind::LIST_DISP}));
 
-
+    CHECK(makeNodeKinds("return 42") == makeNodeKinds({NodeKind::INTEGER,
+                                                       NodeKind::STA_RETURN}));
 }
 
 TEST_CASE("bool validParse(const std::string& toParse)")

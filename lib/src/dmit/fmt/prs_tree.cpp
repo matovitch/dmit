@@ -16,6 +16,7 @@ static const char* K_TREE_NODE_KIND_AS_CSTR[] =
     "PRODUCT"    ,
     "SUM"        ,
     "ASSIGNMENT" ,
+    "TYP_INFER"  ,
     "DECLAR_LET" ,
     "DECLAR_VAR" ,
     "LIST_ARG"   ,

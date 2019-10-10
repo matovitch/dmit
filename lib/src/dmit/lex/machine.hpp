@@ -22,7 +22,11 @@ using IsPlus                 = TIs<'+'>;
 using IsMinus                = TIs<'-'>;
 using IsStar                 = TIs<'*'>;
 using IsSlash                = TIs<'/'>;
+using IsBraLeft              = TIs<'{'>;
+using IsKetLeft              = TIs<'<'>;
 using IsParLeft              = TIs<'('>;
+using IsBraRight             = TIs<'}'>;
+using IsKetRight             = TIs<'>'>;
 using IsParRight             = TIs<')'>;
 using IsDot                  = TIs<'.'>;
 using IsComma                = TIs<','>;
@@ -42,18 +46,23 @@ enum
     STATE_INITIAL,
     STATE_WHITESPACE,
     STATE_IDENTIFIER,
+    STATE_BRA_LEFT,
+    STATE_KET_LEFT,
     STATE_PAR_LEFT,
+    STATE_BRA_RIGHT,
+    STATE_KET_RIGHT,
     STATE_PAR_RIGHT,
     STATE_SEMI_COLON,
     STATE_DOT,
     STATE_COMMA,
-    STATE_EQUAL,
     STATE_COLON,
+    STATE_EQUAL,
     STATE_PLUS,
     STATE_MINUS,
     STATE_STAR,
     STATE_SLASH,
     STATE_NUMBER,
+    STATE_ARROW,
     STATE_DECIMAL_0,
     STATE_DECIMAL_1,
     STATE_DECIMAL_2,
@@ -75,13 +84,32 @@ struct TStateIndex<STATE_INITIAL>
         TGoto<IsComma             , STATE_COMMA      >,
         TGoto<IsEqual             , STATE_EQUAL      >,
         TGoto<IsColon             , STATE_COLON      >,
+        TGoto<IsBraLeft           , STATE_BRA_LEFT   >,
+        TGoto<IsBraRight          , STATE_BRA_RIGHT  >,
         TGoto<IsPlus              , STATE_PLUS       >,
         TGoto<IsMinus             , STATE_MINUS      >,
+        TGoto<IsKetLeft           , STATE_KET_LEFT   >,
+        TGoto<IsKetRight          , STATE_KET_RIGHT  >,
         TGoto<IsStar              , STATE_STAR       >,
         TGoto<IsSlash             , STATE_SLASH      >,
         TGoto<IsDigit             , STATE_NUMBER     >
     >;
 };
+
+template <> struct TStateIndex<STATE_SEMI_COLON > { using Type = TState<Token::SEMI_COLON >;};
+template <> struct TStateIndex<STATE_BRA_RIGHT  > { using Type = TState<Token::BRA_RIGHT  >;};
+template <> struct TStateIndex<STATE_KET_RIGHT  > { using Type = TState<Token::KET_RIGHT  >;};
+template <> struct TStateIndex<STATE_PAR_RIGHT  > { using Type = TState<Token::PAR_RIGHT  >;};
+template <> struct TStateIndex<STATE_BRA_LEFT   > { using Type = TState<Token::BRA_LEFT   >;};
+template <> struct TStateIndex<STATE_KET_LEFT   > { using Type = TState<Token::KET_LEFT   >;};
+template <> struct TStateIndex<STATE_PAR_LEFT   > { using Type = TState<Token::PAR_LEFT   >;};
+template <> struct TStateIndex<STATE_COLON      > { using Type = TState<Token::COLON      >;};
+template <> struct TStateIndex<STATE_EQUAL      > { using Type = TState<Token::EQUAL      >;};
+template <> struct TStateIndex<STATE_COMMA      > { using Type = TState<Token::COMMA      >;};
+template <> struct TStateIndex<STATE_SLASH      > { using Type = TState<Token::SLASH      >;};
+template <> struct TStateIndex<STATE_ARROW      > { using Type = TState<Token::ARROW      >;};
+template <> struct TStateIndex<STATE_PLUS       > { using Type = TState<Token::PLUS       >;};
+template <> struct TStateIndex<STATE_STAR       > { using Type = TState<Token::STAR       >;};
 
 template <>
 struct TStateIndex<STATE_WHITESPACE>
@@ -104,65 +132,12 @@ struct TStateIndex<STATE_IDENTIFIER>
 };
 
 template <>
-struct TStateIndex<STATE_PLUS>
-{
-    using Type = TState
-    <
-        Token::PLUS
-    >;
-};
-
-template <>
 struct TStateIndex<STATE_MINUS>
 {
     using Type = TState
     <
-        Token::MINUS
-    >;
-};
-
-template <>
-struct TStateIndex<STATE_STAR>
-{
-    using Type = TState
-    <
-        Token::STAR
-    >;
-};
-
-template <>
-struct TStateIndex<STATE_SLASH>
-{
-    using Type = TState
-    <
-        Token::SLASH
-    >;
-};
-
-template <>
-struct TStateIndex<STATE_PAR_LEFT>
-{
-    using Type = TState
-    <
-        Token::PAR_LEFT
-    >;
-};
-
-template <>
-struct TStateIndex<STATE_PAR_RIGHT>
-{
-    using Type = TState
-    <
-        Token::PAR_RIGHT
-    >;
-};
-
-template <>
-struct TStateIndex<STATE_COMMA>
-{
-    using Type = TState
-    <
-        Token::COMMA
+        Token::MINUS,
+        TGoto<IsKetRight, STATE_ARROW>
     >;
 };
 
@@ -173,33 +148,6 @@ struct TStateIndex<STATE_DOT>
     <
         Token::DOT,
         TGoto<IsDigit, STATE_DECIMAL_0>
-    >;
-};
-
-template <>
-struct TStateIndex<STATE_COLON>
-{
-    using Type = TState
-    <
-        Token::COLON
-    >;
-};
-
-template <>
-struct TStateIndex<STATE_SEMI_COLON>
-{
-    using Type = TState
-    <
-        Token::SEMI_COLON
-    >;
-};
-
-template <>
-struct TStateIndex<STATE_EQUAL>
-{
-    using Type = TState
-    <
-        Token::EQUAL
     >;
 };
 

@@ -61,6 +61,7 @@ Builder::Builder() :
     auto negative   = _poolParser.make(_state);
     auto sum        = _poolParser.make(_state);
     auto assignment = _poolParser.make(_state);
+    auto typInfer   = _poolParser.make(_state);
     auto typAnnot   = _poolParser.make(_state);
     auto declarLet  = _poolParser.make(_state);
     auto declarVar  = _poolParser.make(_state);
@@ -69,7 +70,7 @@ Builder::Builder() :
     auto arg        = _poolParser.make(_state);
     auto args       = _poolParser.make(_state);
     auto listArg    = _poolParser.make(_state);
-
+    auto staReturn  = _poolParser.make(_state);
 
     _poolSubscriber.bind<subscriber::tree::Writer>(integer    , state::tree::node::Kind::INTEGER    , state::tree::node::Arity::ONE      );
     _poolSubscriber.bind<subscriber::tree::Writer>(decimal    , state::tree::node::Kind::DECIMAL    , state::tree::node::Arity::ONE      );
@@ -80,11 +81,12 @@ Builder::Builder() :
     _poolSubscriber.bind<subscriber::tree::Writer>(sum        , state::tree::node::Kind::SUM        , state::tree::node::Arity::VARIADIC );
     _poolSubscriber.bind<subscriber::tree::Writer>(identifier , state::tree::node::Kind::IDENTIFIER , state::tree::node::Arity::ONE      );
     _poolSubscriber.bind<subscriber::tree::Writer>(assignment , state::tree::node::Kind::ASSIGNMENT , state::tree::node::Arity::VARIADIC );
+    _poolSubscriber.bind<subscriber::tree::Writer>(typInfer   , state::tree::node::Kind::TYP_INFER  , state::tree::node::Arity::ONE      );
     _poolSubscriber.bind<subscriber::tree::Writer>(declarLet  , state::tree::node::Kind::DECLAR_LET , state::tree::node::Arity::VARIADIC );
     _poolSubscriber.bind<subscriber::tree::Writer>(declarVar  , state::tree::node::Kind::DECLAR_VAR , state::tree::node::Arity::ONE      );
     _poolSubscriber.bind<subscriber::tree::Writer>(listArg    , state::tree::node::Kind::LIST_ARG   , state::tree::node::Arity::ONE      );
     _poolSubscriber.bind<subscriber::tree::Writer>(listDisp   , state::tree::node::Kind::LIST_DISP  , state::tree::node::Arity::VARIADIC );
-
+    _poolSubscriber.bind<subscriber::tree::Writer>(staReturn  , state::tree::node::Kind::STA_RETURN , state::tree::node::Arity::ONE      );
 
     _poolSubscriber.bind<subscriber::error::TokChecker>(integer    , lex::Token::INTEGER     );
     _poolSubscriber.bind<subscriber::error::TokChecker>(decimal    , lex::Token::DECIMAL     );
@@ -174,16 +176,23 @@ Builder::Builder() :
     // Var declaration
 
     typAnnot = seq(colon, identifier);
+    typInfer = seq();
 
-    declarVar = seq(keyVar, identifier, opt(typAnnot), opt(seq(equal, sum)));
+    declarVar = seq(keyVar, identifier, alt(typAnnot,
+                                            typInfer), opt(seq(equal, sum)));
 
     // Let declaration
 
-    declarLet = seq(keyLet, identifier, opt(typAnnot), equal, sum);
+    declarLet = seq(keyLet, identifier, alt(typAnnot,
+                                            typInfer), equal, sum);
+
+    // Return statement
+
+    staReturn = seq(keyReturn, sum);
 
     // Full parser
 
-    _parser = alt(declarLet, declarVar, assignment, sum);
+    _parser = alt(declarLet, declarVar, staReturn, assignment, sum);
 }
 
 const State& Builder::operator()(const std::vector<lex::Token>& tokens)
