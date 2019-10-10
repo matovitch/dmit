@@ -39,6 +39,7 @@ Builder::Builder() :
     auto parLeft    = _poolParser.make(_state);
     auto parRight   = _poolParser.make(_state);
     auto dot        = _poolParser.make(_state);
+    auto comma      = _poolParser.make(_state);
     auto colon      = _poolParser.make(_state);
     auto semiColon  = _poolParser.make(_state);
     auto equal      = _poolParser.make(_state);
@@ -63,6 +64,12 @@ Builder::Builder() :
     auto typAnnot   = _poolParser.make(_state);
     auto declarLet  = _poolParser.make(_state);
     auto declarVar  = _poolParser.make(_state);
+    auto disp       = _poolParser.make(_state);
+    auto listDisp   = _poolParser.make(_state);
+    auto arg        = _poolParser.make(_state);
+    auto args       = _poolParser.make(_state);
+    auto listArg    = _poolParser.make(_state);
+
 
     _poolSubscriber.bind<subscriber::tree::Writer>(integer    , state::tree::node::Kind::INTEGER    , state::tree::node::Arity::ONE      );
     _poolSubscriber.bind<subscriber::tree::Writer>(decimal    , state::tree::node::Kind::DECIMAL    , state::tree::node::Arity::ONE      );
@@ -75,6 +82,9 @@ Builder::Builder() :
     _poolSubscriber.bind<subscriber::tree::Writer>(assignment , state::tree::node::Kind::ASSIGNMENT , state::tree::node::Arity::VARIADIC );
     _poolSubscriber.bind<subscriber::tree::Writer>(declarLet  , state::tree::node::Kind::DECLAR_LET , state::tree::node::Arity::VARIADIC );
     _poolSubscriber.bind<subscriber::tree::Writer>(declarVar  , state::tree::node::Kind::DECLAR_VAR , state::tree::node::Arity::ONE      );
+    _poolSubscriber.bind<subscriber::tree::Writer>(listArg    , state::tree::node::Kind::LIST_ARG   , state::tree::node::Arity::ONE      );
+    _poolSubscriber.bind<subscriber::tree::Writer>(listDisp   , state::tree::node::Kind::LIST_DISP  , state::tree::node::Arity::VARIADIC );
+
 
     _poolSubscriber.bind<subscriber::error::TokChecker>(integer    , lex::Token::INTEGER     );
     _poolSubscriber.bind<subscriber::error::TokChecker>(decimal    , lex::Token::DECIMAL     );
@@ -86,6 +96,7 @@ Builder::Builder() :
     _poolSubscriber.bind<subscriber::error::TokChecker>(parLeft    , lex::Token::PAR_LEFT    );
     _poolSubscriber.bind<subscriber::error::TokChecker>(parRight   , lex::Token::PAR_RIGHT   );
     _poolSubscriber.bind<subscriber::error::TokChecker>(dot        , lex::Token::DOT         );
+    _poolSubscriber.bind<subscriber::error::TokChecker>(comma      , lex::Token::COMMA       );
     _poolSubscriber.bind<subscriber::error::TokChecker>(colon      , lex::Token::COLON       );
     _poolSubscriber.bind<subscriber::error::TokChecker>(semiColon  , lex::Token::SEMI_COLON  );
     _poolSubscriber.bind<subscriber::error::TokChecker>(equal      , lex::Token::EQUAL       );
@@ -109,6 +120,7 @@ Builder::Builder() :
     parLeft    = tok(lex::Token::PAR_LEFT   );
     parRight   = tok(lex::Token::PAR_RIGHT  );
     dot        = tok(lex::Token::DOT        );
+    comma      = tok(lex::Token::COMMA      );
     colon      = tok(lex::Token::COLON      );
     semiColon  = tok(lex::Token::SEMI_COLON );
     equal      = tok(lex::Token::EQUAL      );
@@ -120,9 +132,23 @@ Builder::Builder() :
     keyWhile   = tok(lex::Token::WHILE      );
     keyReturn  = tok(lex::Token::RETURN     );
 
+    // Argument list
+
+    arg = alt(sum, integer, decimal);
+
+    args = seq(arg, rep(seq(comma, arg)));
+
+    listArg = seq(parLeft, opt(args), parRight);
+
+    // Dispatch list
+
+    disp = seq(identifier, opt(listArg));
+
+    listDisp = seq(disp, rep(seq(dot, disp)));
+
     // Expression
 
-    term = alt(identifier, integer, decimal);
+    term = alt(listDisp, integer, decimal);
 
     posAtom = seq(alt(term, seq(parLeft, sum, parRight)));
 

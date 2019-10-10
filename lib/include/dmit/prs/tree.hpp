@@ -44,6 +44,8 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
         ASSIGNMENT,
         DECLAR_LET,
         DECLAR_VAR,
+        LIST_ARG,
+        LIST_DISP,
         STA_RETURN
     };
 

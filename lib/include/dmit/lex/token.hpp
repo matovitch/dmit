@@ -29,6 +29,7 @@ struct Token : com::TEnum<uint8_t>, fmt::Formatable
         PAR_LEFT,
         PAR_RIGHT,
         DOT,
+        COMMA,
         COLON,
         SEMI_COLON,
         EQUAL,

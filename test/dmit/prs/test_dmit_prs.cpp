@@ -105,6 +105,16 @@ TEST_CASE("std::vector<NodeKind> makeNodeKinds(const std::string& toParse)")
 
     CHECK(makeNodeKinds("var x") == makeNodeKinds({NodeKind::IDENTIFIER,
                                                    NodeKind::DECLAR_VAR}));
+
+    CHECK(makeNodeKinds("f(a, b + c)") == makeNodeKinds({NodeKind::IDENTIFIER,
+                                                         NodeKind::IDENTIFIER,
+                                                         NodeKind::IDENTIFIER,
+                                                         NodeKind::IDENTIFIER,
+                                                         NodeKind::SUM,
+                                                         NodeKind::LIST_ARG,
+                                                         NodeKind::LIST_DISP}));
+
+
 }
 
 TEST_CASE("bool validParse(const std::string& toParse)")

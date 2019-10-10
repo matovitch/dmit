@@ -25,6 +25,7 @@ using IsSlash                = TIs<'/'>;
 using IsParLeft              = TIs<'('>;
 using IsParRight             = TIs<')'>;
 using IsDot                  = TIs<'.'>;
+using IsComma                = TIs<','>;
 using IsColon                = TIs<':'>;
 using IsSemiColon            = TIs<';'>;
 using IsEqual                = TIs<'='>;
@@ -41,16 +42,17 @@ enum
     STATE_INITIAL,
     STATE_WHITESPACE,
     STATE_IDENTIFIER,
+    STATE_PAR_LEFT,
+    STATE_PAR_RIGHT,
+    STATE_SEMI_COLON,
+    STATE_DOT,
+    STATE_COMMA,
+    STATE_EQUAL,
+    STATE_COLON,
     STATE_PLUS,
     STATE_MINUS,
     STATE_STAR,
     STATE_SLASH,
-    STATE_PAR_LEFT,
-    STATE_PAR_RIGHT,
-    STATE_DOT,
-    STATE_COLON,
-    STATE_SEMI_COLON,
-    STATE_EQUAL,
     STATE_NUMBER,
     STATE_DECIMAL_0,
     STATE_DECIMAL_1,
@@ -66,16 +68,17 @@ struct TStateIndex<STATE_INITIAL>
         Token::UNKNOWN,
         TGoto<IsWhitespace        , STATE_WHITESPACE >,
         TGoto<IsUnderscoreOrAlpha , STATE_IDENTIFIER >,
+        TGoto<IsParLeft           , STATE_PAR_LEFT   >,
+        TGoto<IsParRight          , STATE_PAR_RIGHT  >,
+        TGoto<IsSemiColon         , STATE_SEMI_COLON >,
+        TGoto<IsDot               , STATE_DOT        >,
+        TGoto<IsComma             , STATE_COMMA      >,        
+        TGoto<IsEqual             , STATE_EQUAL      >,
+        TGoto<IsColon             , STATE_COLON      >,
         TGoto<IsPlus              , STATE_PLUS       >,
         TGoto<IsMinus             , STATE_MINUS      >,
         TGoto<IsStar              , STATE_STAR       >,
         TGoto<IsSlash             , STATE_SLASH      >,
-        TGoto<IsParLeft           , STATE_PAR_LEFT   >,
-        TGoto<IsParRight          , STATE_PAR_RIGHT  >,
-        TGoto<IsDot               , STATE_DOT        >,
-        TGoto<IsColon             , STATE_COLON      >,
-        TGoto<IsSemiColon         , STATE_SEMI_COLON >,
-        TGoto<IsEqual             , STATE_EQUAL      >,
         TGoto<IsDigit             , STATE_NUMBER     >
     >;
 };
@@ -151,6 +154,15 @@ struct TStateIndex<STATE_PAR_RIGHT>
     using Type = TState
     <
         Token::PAR_RIGHT
+    >;
+};
+
+template <>
+struct TStateIndex<STATE_COMMA>
+{
+    using Type = TState
+    <
+        Token::COMMA
     >;
 };
 

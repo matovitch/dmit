@@ -18,6 +18,8 @@ static const char* K_TREE_NODE_KIND_AS_CSTR[] =
     "ASSIGNMENT" ,
     "DECLAR_LET" ,
     "DECLAR_VAR" ,
+    "LIST_ARG"   ,
+    "LIST_DISP"  ,
     "STA_RETURN"
 };
 
