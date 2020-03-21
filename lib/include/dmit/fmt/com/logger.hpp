@@ -14,7 +14,6 @@ namespace logger
 class Sub;
 
 } // namespace logger
-
 } // namespace com
 
 namespace fmt
@@ -23,5 +22,4 @@ namespace fmt
 std::string asString(const com::logger::Sub&);
 
 } // namespace fmt
-
 } // namespace dmit

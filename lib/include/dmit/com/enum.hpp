@@ -51,8 +51,7 @@ bool operator==(const Type& lhs,
 template <class Type, DMIT_COM_TYPE_FLAG_CHECK_IS(EnumType, Type)>
 using TEnumIntegerType = typename Type::TEnum::IntegerType;
 
-#define DMIT_COM_ENUM_IMPLICIT_FROM_INT(EnumType) EnumType(const typename TEnum::IntegerType asInt) : TEnum{asInt} {}
-
 } // namespace com
-
 } // namespace dmit
+
+#define DMIT_COM_ENUM_IMPLICIT_FROM_INT(EnumType) EnumType(const typename TEnum::IntegerType asInt) : TEnum{asInt} {}

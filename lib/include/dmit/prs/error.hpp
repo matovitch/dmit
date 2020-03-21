@@ -1,21 +1,15 @@
 #pragma once
 
-#include "dmit/prs/subscriber.hpp"
-
-#include "dmit/fmt/formatable.hpp"
-
 #include "dmit/lex/token.hpp"
 
 #include <cstdint>
+#include <vector>
 
 namespace dmit
 {
 
 namespace prs
 {
-
-struct Stack;
-struct State;
 
 namespace state
 {
@@ -74,42 +68,6 @@ private:
 };
 
 } // namespace error
-
 } // namespace state
-
-namespace subscriber
-{
-
-namespace error
-{
-
-class TokChecker : public Subscriber
-{
-
-public:
-
-    TokChecker(const lex::Token);
-
-    void onStart(const Reader&, Stack&, State&) const override;
-
-    void onEnd(const std::optional<Reader>&, const Stack&, State&) const override;
-
-private:
-
-    const lex::Token _expect;
-};
-
-struct Clear : Subscriber
-{
-    void onStart(const Reader&, Stack&, State&) const override {}
-
-    void onEnd(const std::optional<Reader>&, const Stack&, State&) const override;
-};
-
-} // namespace error
-
-} // namespace subscriber
-
 } // namespace prs
-
 } // namespace dmit

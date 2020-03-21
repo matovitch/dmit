@@ -45,5 +45,4 @@ std::size_t Reader::offset() const
 }
 
 } // namespace prs
-
 } // namespace dmit

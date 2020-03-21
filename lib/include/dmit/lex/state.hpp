@@ -49,7 +49,5 @@ private:
 };
 
 } // namespace state
-
 } // namespace lex
-
 } // namespace dmit

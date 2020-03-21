@@ -31,5 +31,4 @@ private:
 };
 
 } // namespace lex
-
 } // namespace dmit

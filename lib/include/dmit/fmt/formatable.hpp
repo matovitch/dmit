@@ -48,7 +48,6 @@ std::string asString(Iterator begin, Iterator end)
 }
 
 } // namespace fmt
-
 } // namespace dmit
 
 #define DMIT_FMT_CONTAINER_AS_STRING(container) asString(container.begin(), \

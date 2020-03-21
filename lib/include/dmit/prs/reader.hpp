@@ -35,5 +35,4 @@ private:
 };
 
 } // namespace prs
-
 } // namespace dmit

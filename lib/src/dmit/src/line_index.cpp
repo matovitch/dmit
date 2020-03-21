@@ -47,5 +47,4 @@ const std::vector<uint32_t>& LineIndex::offsets() const
 }
 
 } // namespace src
-
 } // namespace dmit

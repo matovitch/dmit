@@ -46,5 +46,4 @@ std::string asString(const prs::state::error::Set& errorSet)
 }
 
 } // namespace fmt
-
 } // namespace dmit

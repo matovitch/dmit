@@ -35,5 +35,4 @@ uint32_t Reader::offset() const
 }
 
 } // namespace lex
-
 } // namespace dmit

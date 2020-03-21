@@ -196,5 +196,4 @@ void decode(const uint8_t* const srce,
 } // namespace base64
 
 } // namespace com
-
 } // namespace dmit

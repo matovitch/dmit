@@ -110,5 +110,4 @@ const LineIndex& File::lineIndex() const
 }
 
 } // namespace src
-
 } // namespace dmit

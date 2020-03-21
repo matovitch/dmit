@@ -54,5 +54,4 @@ private:
 };
 
 } // namespace com
-
 } // namespace dmit

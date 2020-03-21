@@ -44,5 +44,4 @@ std::string asString(const src::File& file)
 }
 
 } // namespace fmt
-
 } // namespace dmit

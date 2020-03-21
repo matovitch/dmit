@@ -22,5 +22,4 @@ std::string asString(const src::Location location)
 }
 
 } // namespace fmt
-
 } // namespace dmit

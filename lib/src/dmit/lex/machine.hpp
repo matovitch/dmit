@@ -2,7 +2,7 @@
 
 #include "dmit/lex/predicate.hpp"
 #include "dmit/lex/token.hpp"
-#include "dmit/lex/tstate.hpp"
+#include "dmit/lex/node.hpp"
 #include "dmit/lex/goto.hpp"
 
 namespace dmit
@@ -43,167 +43,166 @@ using IsUnderscoreOrAlphaNum = TOr<IsUnderscoreOrAlpha,
 
 enum
 {
-    STATE_INITIAL,
-    STATE_WHITESPACE,
-    STATE_IDENTIFIER,
-    STATE_BRA_LEFT,
-    STATE_KET_LEFT,
-    STATE_PAR_LEFT,
-    STATE_BRA_RIGHT,
-    STATE_KET_RIGHT,
-    STATE_PAR_RIGHT,
-    STATE_SEMI_COLON,
-    STATE_DOT,
-    STATE_COMMA,
-    STATE_COLON,
-    STATE_EQUAL,
-    STATE_PLUS,
-    STATE_MINUS,
-    STATE_STAR,
-    STATE_SLASH,
-    STATE_NUMBER,
-    STATE_ARROW,
-    STATE_DECIMAL_0,
-    STATE_DECIMAL_1,
-    STATE_DECIMAL_2,
-    STATE_DECIMAL_3
+    NODE_INITIAL,
+    NODE_WHITESPACE,
+    NODE_IDENTIFIER,
+    NODE_BRA_LEFT,
+    NODE_KET_LEFT,
+    NODE_PAR_LEFT,
+    NODE_BRA_RIGHT,
+    NODE_KET_RIGHT,
+    NODE_PAR_RIGHT,
+    NODE_SEMI_COLON,
+    NODE_DOT,
+    NODE_COMMA,
+    NODE_COLON,
+    NODE_EQUAL,
+    NODE_PLUS,
+    NODE_MINUS,
+    NODE_STAR,
+    NODE_SLASH,
+    NODE_NUMBER,
+    NODE_ARROW,
+    NODE_DECIMAL_0,
+    NODE_DECIMAL_1,
+    NODE_DECIMAL_2,
+    NODE_DECIMAL_3
 };
 
 template <>
-struct TStateIndex<STATE_INITIAL>
+struct TNodeIndex<NODE_INITIAL>
 {
-    using Type = TState
+    using Type = TNode
     <
         Token::UNKNOWN,
-        TGoto<IsWhitespace        , STATE_WHITESPACE >,
-        TGoto<IsUnderscoreOrAlpha , STATE_IDENTIFIER >,
-        TGoto<IsParLeft           , STATE_PAR_LEFT   >,
-        TGoto<IsParRight          , STATE_PAR_RIGHT  >,
-        TGoto<IsSemiColon         , STATE_SEMI_COLON >,
-        TGoto<IsDot               , STATE_DOT        >,
-        TGoto<IsComma             , STATE_COMMA      >,
-        TGoto<IsEqual             , STATE_EQUAL      >,
-        TGoto<IsColon             , STATE_COLON      >,
-        TGoto<IsBraLeft           , STATE_BRA_LEFT   >,
-        TGoto<IsBraRight          , STATE_BRA_RIGHT  >,
-        TGoto<IsPlus              , STATE_PLUS       >,
-        TGoto<IsMinus             , STATE_MINUS      >,
-        TGoto<IsKetLeft           , STATE_KET_LEFT   >,
-        TGoto<IsKetRight          , STATE_KET_RIGHT  >,
-        TGoto<IsStar              , STATE_STAR       >,
-        TGoto<IsSlash             , STATE_SLASH      >,
-        TGoto<IsDigit             , STATE_NUMBER     >
+        TGoto<IsWhitespace        , NODE_WHITESPACE >,
+        TGoto<IsUnderscoreOrAlpha , NODE_IDENTIFIER >,
+        TGoto<IsParLeft           , NODE_PAR_LEFT   >,
+        TGoto<IsParRight          , NODE_PAR_RIGHT  >,
+        TGoto<IsSemiColon         , NODE_SEMI_COLON >,
+        TGoto<IsDot               , NODE_DOT        >,
+        TGoto<IsComma             , NODE_COMMA      >,
+        TGoto<IsEqual             , NODE_EQUAL      >,
+        TGoto<IsColon             , NODE_COLON      >,
+        TGoto<IsBraLeft           , NODE_BRA_LEFT   >,
+        TGoto<IsBraRight          , NODE_BRA_RIGHT  >,
+        TGoto<IsPlus              , NODE_PLUS       >,
+        TGoto<IsMinus             , NODE_MINUS      >,
+        TGoto<IsKetLeft           , NODE_KET_LEFT   >,
+        TGoto<IsKetRight          , NODE_KET_RIGHT  >,
+        TGoto<IsStar              , NODE_STAR       >,
+        TGoto<IsSlash             , NODE_SLASH      >,
+        TGoto<IsDigit             , NODE_NUMBER     >
     >;
 };
 
-template <> struct TStateIndex<STATE_SEMI_COLON > { using Type = TState<Token::SEMI_COLON >;};
-template <> struct TStateIndex<STATE_BRA_RIGHT  > { using Type = TState<Token::BRA_RIGHT  >;};
-template <> struct TStateIndex<STATE_KET_RIGHT  > { using Type = TState<Token::KET_RIGHT  >;};
-template <> struct TStateIndex<STATE_PAR_RIGHT  > { using Type = TState<Token::PAR_RIGHT  >;};
-template <> struct TStateIndex<STATE_BRA_LEFT   > { using Type = TState<Token::BRA_LEFT   >;};
-template <> struct TStateIndex<STATE_KET_LEFT   > { using Type = TState<Token::KET_LEFT   >;};
-template <> struct TStateIndex<STATE_PAR_LEFT   > { using Type = TState<Token::PAR_LEFT   >;};
-template <> struct TStateIndex<STATE_COLON      > { using Type = TState<Token::COLON      >;};
-template <> struct TStateIndex<STATE_EQUAL      > { using Type = TState<Token::EQUAL      >;};
-template <> struct TStateIndex<STATE_COMMA      > { using Type = TState<Token::COMMA      >;};
-template <> struct TStateIndex<STATE_SLASH      > { using Type = TState<Token::SLASH      >;};
-template <> struct TStateIndex<STATE_ARROW      > { using Type = TState<Token::ARROW      >;};
-template <> struct TStateIndex<STATE_PLUS       > { using Type = TState<Token::PLUS       >;};
-template <> struct TStateIndex<STATE_STAR       > { using Type = TState<Token::STAR       >;};
+template <> struct TNodeIndex<NODE_SEMI_COLON > { using Type = TNode<Token::SEMI_COLON >;};
+template <> struct TNodeIndex<NODE_BRA_RIGHT  > { using Type = TNode<Token::BRA_RIGHT  >;};
+template <> struct TNodeIndex<NODE_KET_RIGHT  > { using Type = TNode<Token::KET_RIGHT  >;};
+template <> struct TNodeIndex<NODE_PAR_RIGHT  > { using Type = TNode<Token::PAR_RIGHT  >;};
+template <> struct TNodeIndex<NODE_BRA_LEFT   > { using Type = TNode<Token::BRA_LEFT   >;};
+template <> struct TNodeIndex<NODE_KET_LEFT   > { using Type = TNode<Token::KET_LEFT   >;};
+template <> struct TNodeIndex<NODE_PAR_LEFT   > { using Type = TNode<Token::PAR_LEFT   >;};
+template <> struct TNodeIndex<NODE_COLON      > { using Type = TNode<Token::COLON      >;};
+template <> struct TNodeIndex<NODE_EQUAL      > { using Type = TNode<Token::EQUAL      >;};
+template <> struct TNodeIndex<NODE_COMMA      > { using Type = TNode<Token::COMMA      >;};
+template <> struct TNodeIndex<NODE_SLASH      > { using Type = TNode<Token::SLASH      >;};
+template <> struct TNodeIndex<NODE_ARROW      > { using Type = TNode<Token::ARROW      >;};
+template <> struct TNodeIndex<NODE_PLUS       > { using Type = TNode<Token::PLUS       >;};
+template <> struct TNodeIndex<NODE_STAR       > { using Type = TNode<Token::STAR       >;};
 
 template <>
-struct TStateIndex<STATE_WHITESPACE>
+struct TNodeIndex<NODE_WHITESPACE>
 {
-    using Type = TState
+    using Type = TNode
     <
         Token::WHITESPACE,
-        TGoto<IsWhitespace, STATE_WHITESPACE>
+        TGoto<IsWhitespace, NODE_WHITESPACE>
     >;
 };
 
 template <>
-struct TStateIndex<STATE_IDENTIFIER>
+struct TNodeIndex<NODE_IDENTIFIER>
 {
-    using Type = TState
+    using Type = TNode
     <
         Token::IDENTIFIER,
-        TGoto<IsUnderscoreOrAlphaNum, STATE_IDENTIFIER>
+        TGoto<IsUnderscoreOrAlphaNum, NODE_IDENTIFIER>
     >;
 };
 
 template <>
-struct TStateIndex<STATE_MINUS>
+struct TNodeIndex<NODE_MINUS>
 {
-    using Type = TState
+    using Type = TNode
     <
         Token::MINUS,
-        TGoto<IsKetRight, STATE_ARROW>
+        TGoto<IsKetRight, NODE_ARROW>
     >;
 };
 
 template <>
-struct TStateIndex<STATE_DOT>
+struct TNodeIndex<NODE_DOT>
 {
-    using Type = TState
+    using Type = TNode
     <
         Token::DOT,
-        TGoto<IsDigit, STATE_DECIMAL_0>
+        TGoto<IsDigit, NODE_DECIMAL_0>
     >;
 };
 
 template <>
-struct TStateIndex<STATE_NUMBER>
+struct TNodeIndex<NODE_NUMBER>
 {
-    using Type = TState
+    using Type = TNode
     <
         Token::INTEGER,
-        TGoto<IsDigit , STATE_NUMBER    >,
-        TGoto<IsDot   , STATE_DECIMAL_0 >
+        TGoto<IsDigit , NODE_NUMBER    >,
+        TGoto<IsDot   , NODE_DECIMAL_0 >
     >;
 };
 
 template <>
-struct TStateIndex<STATE_DECIMAL_0>
+struct TNodeIndex<NODE_DECIMAL_0>
 {
-    using Type = TState
+    using Type = TNode
     <
         Token::DECIMAL,
-        TGoto<IsDigit    , STATE_DECIMAL_0>,
-        TGoto<IsExponent , STATE_DECIMAL_1>
+        TGoto<IsDigit    , NODE_DECIMAL_0>,
+        TGoto<IsExponent , NODE_DECIMAL_1>
     >;
 };
 
 template <>
-struct TStateIndex<STATE_DECIMAL_1>
+struct TNodeIndex<NODE_DECIMAL_1>
 {
-    using Type = TState
+    using Type = TNode
     <
         Token::UNKNOWN,
-        TGoto<IsPlusOrMinus , STATE_DECIMAL_2>,
-        TGoto<IsDigit       , STATE_DECIMAL_3>
+        TGoto<IsPlusOrMinus , NODE_DECIMAL_2>,
+        TGoto<IsDigit       , NODE_DECIMAL_3>
     >;
 };
 
 template <>
-struct TStateIndex<STATE_DECIMAL_2>
+struct TNodeIndex<NODE_DECIMAL_2>
 {
-    using Type = TState
+    using Type = TNode
     <
         Token::UNKNOWN,
-        TGoto<IsDigit, STATE_DECIMAL_3>
+        TGoto<IsDigit, NODE_DECIMAL_3>
     >;
 };
 
 template <>
-struct TStateIndex<STATE_DECIMAL_3>
+struct TNodeIndex<NODE_DECIMAL_3>
 {
-    using Type = TState
+    using Type = TNode
     <
         Token::DECIMAL,
-        TGoto<IsDigit, STATE_DECIMAL_3>
+        TGoto<IsDigit, NODE_DECIMAL_3>
     >;
 };
 
 } // namespace lex
-
 } // namespace dmit

@@ -21,5 +21,4 @@ std::string asString(const prs::Reader& reader)
 }
 
 } // namespace fmt
-
 } // namespace dmit

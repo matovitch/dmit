@@ -55,5 +55,4 @@ std::string asString(const lex::Token token)
 }
 
 } // namespace fmt
-
 } // namespace dmit

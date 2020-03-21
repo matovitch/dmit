@@ -21,5 +21,4 @@ std::string asString(const src::LineIndex& lineIndex)
 }
 
 } // namespace fmt
-
 } // namespace dmit

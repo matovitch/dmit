@@ -12,27 +12,27 @@ namespace dmit
 namespace lex
 {
 
-static constexpr int INITIAL_STATE = 0;
+static constexpr int INITIAL_NODE = 0;
 
 template <int INDEX>
-struct TStateIndex;
+struct TNodeIndex;
 
 template <int INDEX>
-using TGetState = typename TStateIndex<INDEX>::Type;
+using TGetState = typename TNodeIndex<INDEX>::Type;
 
-template <int STATE_INDEX>
+template <int NODE_INDEX>
 void tGoto(Reader& reader,
            State& state)
 {
-    TGetState<STATE_INDEX>{}(reader,
-                             state);
+    TGetState<NODE_INDEX>{}(reader,
+                            state);
 }
 
 template <uint8_t MATCH, class... GotosOrMatch>
-struct TState;
+struct TNode;
 
 template <uint8_t MATCH>
-struct TState<MATCH>
+struct TNode<MATCH>
 {
     void operator()(Reader& reader, State& state) const
     {
@@ -48,16 +48,16 @@ struct TState<MATCH>
             return;
         }
 
-        tGoto<INITIAL_STATE>(reader, state);
+        tGoto<INITIAL_NODE>(reader, state);
     }
 };
 
 template <uint8_t MATCH, class Goto, class... Gotos>
-struct TState<MATCH, Goto, Gotos...>
+struct TNode<MATCH, Goto, Gotos...>
 {
     using Predicate = typename Goto::Predicate;
 
-    static constexpr int NEXT_STATE = Goto::NEXT_STATE;
+    static constexpr int NEXT_NODE = Goto::NEXT_NODE;
 
     void operator()(Reader& reader, State& state) const
     {
@@ -69,15 +69,14 @@ struct TState<MATCH, Goto, Gotos...>
 
         if (!Predicate{}(*reader))
         {
-            return TState<MATCH, Gotos...>{}(reader, state);
+            return TNode<MATCH, Gotos...>{}(reader, state);
         }
 
         ++reader;
 
-        tGoto<NEXT_STATE>(reader, state);
+        tGoto<NEXT_NODE>(reader, state);
     }
 };
 
 } // namespace lex
-
 } // namespace dmit

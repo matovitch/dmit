@@ -17,5 +17,4 @@ std::string asString(const prs::state::tree::Node&);
 std::string asString(const prs::state::Tree&);
 
 } // namespace fmt
-
 } // namespace dmit

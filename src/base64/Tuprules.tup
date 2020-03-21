@@ -17,4 +17,3 @@ CLFLAGS += -L $(ROOT)/lib/src/dmit/com
 CLFLAGS += -L $(ROOT)/lib/src/dmit/src
 CLFLAGS += -L $(ROOT)/lib/src/dmit/lex
 CLFLAGS += -L $(ROOT)/lib/src/dmit/prs
-

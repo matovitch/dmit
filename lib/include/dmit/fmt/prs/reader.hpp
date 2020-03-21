@@ -13,5 +13,4 @@ namespace fmt
 std::string asString(const prs::Reader&);
 
 } // namespace fmt
-
 } // namespace dmit

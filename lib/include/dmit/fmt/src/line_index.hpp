@@ -13,5 +13,4 @@ namespace fmt
 std::string asString(const src::LineIndex&);
 
 } // namespace fmt
-
 } // namespace dmit

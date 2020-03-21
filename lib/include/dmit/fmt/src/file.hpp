@@ -13,5 +13,4 @@ namespace fmt
 std::string asString(const src::File&);
 
 } // namespace fmt
-
 } // namespace dmit

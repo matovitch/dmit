@@ -52,5 +52,4 @@ struct Token : com::TEnum<uint8_t>, fmt::Formatable
 };
 
 } // namespace lex
-
 } // namespace dmit

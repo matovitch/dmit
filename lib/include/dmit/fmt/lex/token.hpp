@@ -12,6 +12,5 @@ namespace fmt
 
 std::string asString(const lex::Token);
 
-} // namespace lex
-
+} // namespace fmt
 } // namespace dmit

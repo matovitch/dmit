@@ -16,5 +16,4 @@ std::string asString(const com::logger::Sub& subLogger)
 }
 
 } // namespace fmt
-
 } // namespace dmit

@@ -64,7 +64,6 @@ struct Logger : Singletonable
 };
 
 } // namespace dmit
-
 } // namespace com
 
 #define DMIT_COM_LOG_OUT dmit::com::TSingleton<dmit::com::Logger>::instance()._out

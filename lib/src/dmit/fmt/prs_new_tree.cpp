@@ -61,5 +61,4 @@ std::string asString(const prs::state::Tree& tree)
 }
 
 } // namespace fmt
-
 } // namespace dmit

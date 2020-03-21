@@ -25,5 +25,4 @@ uint32_t Location::line   () const { return _line   ; }
 uint32_t Location::column () const { return _column ; }
 
 } // namespace src
-
 } // namespace dmit

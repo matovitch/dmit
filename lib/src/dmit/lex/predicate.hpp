@@ -45,5 +45,4 @@ struct TOr
 };
 
 } // namespace lex
-
 } // namespace dmit

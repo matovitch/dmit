@@ -29,5 +29,4 @@ private:
 };
 
 } // namespace src
-
 } // namespace dmit

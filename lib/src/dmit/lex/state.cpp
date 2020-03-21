@@ -1,9 +1,9 @@
 #include "dmit/lex/state.hpp"
 
 #include "dmit/lex/machine.hpp"
-#include "dmit/lex/tstate.hpp"
 #include "dmit/lex/reader.hpp"
 #include "dmit/lex/token.hpp"
+#include "dmit/lex/node.hpp"
 
 #include <cstdint>
 #include <string>
@@ -96,7 +96,7 @@ const State& Builder::operator()(const uint8_t* const data,
 
     _state.push(lex::Token::START_OF_INPUT, size);
 
-    tGoto<STATE_INITIAL>(reader, _state);
+    tGoto<NODE_INITIAL>(reader, _state);
 
     _state.push(lex::Token::END_OF_INPUT, 0);
 
@@ -111,7 +111,5 @@ void Builder::clearState()
 }
 
 } // namespace state
-
 } // namespace lex
-
 } // namespace dmit

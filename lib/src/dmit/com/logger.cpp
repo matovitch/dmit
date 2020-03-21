@@ -45,5 +45,4 @@ Logger::Logger() :
 {}
 
 } // namespace com
-
 } // namespace dmit

@@ -25,5 +25,4 @@ std::string asString(const lex::State& state)
 }
 
 } // namespace fmt
-
 } // namespace dmit

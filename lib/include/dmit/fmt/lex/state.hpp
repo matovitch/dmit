@@ -13,5 +13,4 @@ namespace fmt
 std::string asString(const lex::State&);
 
 } // namespace fmt
-
 } // namespace dmit

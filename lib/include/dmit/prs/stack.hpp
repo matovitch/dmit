@@ -15,5 +15,4 @@ struct Stack
 };
 
 } // namespace prs
-
 } // namespace dmit

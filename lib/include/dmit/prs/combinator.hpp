@@ -104,8 +104,14 @@ auto opt(Parser&& parser)
     };
 }
 
-} // namespace combinators
+} // namespace combinator
+
+#define USING_COMBINATORS \
+  using combinator::tok;  \
+  using combinator::seq;  \
+  using combinator::rep;  \
+  using combinator::alt;  \
+  using combinator::opt;
 
 } // namespace prs
-
 } // namespace dmit

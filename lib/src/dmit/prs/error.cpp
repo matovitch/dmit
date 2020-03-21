@@ -1,13 +1,5 @@
 #include "dmit/prs/error.hpp"
 
-#include "dmit/prs/reader.hpp"
-#include "dmit/prs/state.hpp"
-#include "dmit/prs/stack.hpp"
-
-#include "dmit/lex/token.hpp"
-
-#include <cstdint>
-
 namespace dmit
 {
 
@@ -104,48 +96,6 @@ const std::vector<Error>& Set::errors() const
 }
 
 } // namespace error
-
 } // namespace state
-
-namespace subscriber
-{
-
-namespace error
-{
-
-TokChecker::TokChecker(const lex::Token expect) :
-    _expect{expect}
-{}
-
-void TokChecker::onStart(const Reader& reader, Stack&, State& state) const
-{
-    if (reader.offset() <= state._errorSet.offset())
-    {
-        state._errorSet.push(_expect, reader.look(), reader.offset());
-    }
-}
-
-void TokChecker::onEnd(const std::optional<Reader>& readerOpt, const Stack&, State& state) const
-{
-    if (readerOpt)
-    {
-        state._errorSet.pop();
-    }
-}
-
-void Clear::onEnd(const std::optional<Reader>& readerOpt, const Stack&, State& state) const
-{
-    if (readerOpt && readerOpt.value().isEoi())
-    {
-        state._errorSet.clear();
-    }
-}
-
-
-} // namespace error
-
-} // namespace subscriber
-
 } // namespace prs
-
 } // namespace dmit
