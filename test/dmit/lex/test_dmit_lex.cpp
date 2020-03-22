@@ -4,6 +4,7 @@
 #include "dmit/fmt/lex/token.hpp"
 
 #include "doctest/doctest_fwd.h"
+#include "doctest/utils.h"
 
 #include <algorithm>
 #include <iostream>
@@ -78,23 +79,51 @@ TEST_CASE("std::vector<Token> lex(const std::string& toLex)")
     CHECK(lexer("if"     ) == makeTokens({Token::IF     }));
     CHECK(lexer("else"   ) == makeTokens({Token::ELSE   }));
     CHECK(lexer("let"    ) == makeTokens({Token::LET    }));
-    CHECK(lexer("var"    ) == makeTokens({Token::VAR    }));
     CHECK(lexer("func"   ) == makeTokens({Token::FUNC   }));
     CHECK(lexer("while"  ) == makeTokens({Token::WHILE  }));
     CHECK(lexer("return" ) == makeTokens({Token::RETURN }));
 
-    CHECK(lexer("+") == makeTokens({Token::PLUS      }));
-    CHECK(lexer("-") == makeTokens({Token::MINUS     }));
-    CHECK(lexer("*") == makeTokens({Token::STAR      }));
-    CHECK(lexer("/") == makeTokens({Token::SLASH     }));
-    CHECK(lexer("{") == makeTokens({Token::BRA_LEFT  }));
-    CHECK(lexer("<") == makeTokens({Token::KET_LEFT  }));
-    CHECK(lexer("(") == makeTokens({Token::PAR_LEFT  }));
-    CHECK(lexer("}") == makeTokens({Token::BRA_RIGHT }));
-    CHECK(lexer(">") == makeTokens({Token::KET_RIGHT }));
-    CHECK(lexer(")") == makeTokens({Token::PAR_RIGHT }));
+    CHECK(lexer("+") == makeTokens({Token::PLUS       }));
+    CHECK(lexer("-") == makeTokens({Token::MINUS      }));
+    CHECK(lexer("*") == makeTokens({Token::STAR       }));
+    CHECK(lexer("/") == makeTokens({Token::SLASH      }));
+    CHECK(lexer("=") == makeTokens({Token::EQUAL      }));
+    CHECK(lexer("{") == makeTokens({Token::BRA_LEFT   }));
+    CHECK(lexer("<") == makeTokens({Token::KET_LEFT   }));
+    CHECK(lexer("(") == makeTokens({Token::PAR_LEFT   }));
+    CHECK(lexer("[") == makeTokens({Token::SQR_LEFT   }));
+    CHECK(lexer("}") == makeTokens({Token::BRA_RIGHT  }));
+    CHECK(lexer(">") == makeTokens({Token::KET_RIGHT  }));
+    CHECK(lexer(")") == makeTokens({Token::PAR_RIGHT  }));
+    CHECK(lexer("]") == makeTokens({Token::SQR_RIGHT  }));
+    CHECK(lexer("!") == makeTokens({Token::BANG       }));
+    CHECK(lexer("?") == makeTokens({Token::QUESTION   }));
+    CHECK(lexer("~") == makeTokens({Token::TILDE      }));
+    CHECK(lexer(":") == makeTokens({Token::COLON      }));
+    CHECK(lexer(";") == makeTokens({Token::SEMI_COLON }));
+    CHECK(lexer("^") == makeTokens({Token::CARET      }));
 
-    CHECK(lexer("->") == makeTokens({Token::ARROW}));
+    CHECK(lexer("->") == makeTokens({Token::MINUS_KET_RIGHT}));
+    CHECK(lexer(">=") == makeTokens({Token::KET_RIGHT_EQUAL}));
+    CHECK(lexer("<=") == makeTokens({Token::KET_LEFT_EQUAL}));
+    CHECK(lexer("<<") == makeTokens({Token::KET_LEFT_BIS}));
+    CHECK(lexer(">>") == makeTokens({Token::KET_RIGHT_BIS}));
+    CHECK(lexer("!=") == makeTokens({Token::BANG_EQUAL}));
+    CHECK(lexer("==") == makeTokens({Token::EQUAL_BIS}));
+    CHECK(lexer("||") == makeTokens({Token::PIPE_BIS}));
+    CHECK(lexer("&&") == makeTokens({Token::AMPERSAND_BIS}));
+    CHECK(lexer("::") == makeTokens({Token::COLON_BIS}));
+    CHECK(lexer("+=") == makeTokens({Token::PLUS_EQUAL}));
+    CHECK(lexer("-=") == makeTokens({Token::MINUS_EQUAL}));
+    CHECK(lexer("*=") == makeTokens({Token::STAR_EQUAL}));
+    CHECK(lexer("/=") == makeTokens({Token::SLASH_EQUAL}));
+    CHECK(lexer("%=") == makeTokens({Token::PERCENT_EQUAL}));
+    CHECK(lexer("&=") == makeTokens({Token::AMPERSAND_EQUAL}));
+    CHECK(lexer("|=") == makeTokens({Token::PIPE_EQUAL}));
+    CHECK(lexer("^=") == makeTokens({Token::CARET_EQUAL}));
+
+    CHECK(lexer("<<=") == makeTokens({Token::KET_LEFT_BIS_EQUAL}));
+    CHECK(lexer(">>=") == makeTokens({Token::KET_RIGHT_BIS_EQUAL}));
 
     CHECK(lexer("2 * y") == makeTokens({Token::INTEGER    ,
                                         Token::WHITESPACE ,

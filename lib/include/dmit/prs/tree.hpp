@@ -36,13 +36,15 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
         INVERSE,
         PRODUCT,
         SUM,
+        COMPARISON,
         ASSIGNMENT,
-        TYP_INFER,
+        FUN_CALL,
+        STATEM_WHILE,
+        STATEM_RETURN,
         DECLAR_LET,
-        DECLAR_VAR,
-        LIST_ARG,
-        LIST_DISP,
-        STA_RETURN
+        DECLAR_FUN,
+        SCOPE,
+        PROGRAM
     };
 
     DMIT_COM_ENUM_IMPLICIT_FROM_INT(Kind);

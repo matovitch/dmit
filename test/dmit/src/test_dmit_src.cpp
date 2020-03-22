@@ -5,6 +5,7 @@
 #include "dmit/fmt/src/location.hpp"
 
 #include "doctest/doctest_fwd.h"
+#include "doctest/utils.h"
 
 dmit::src::Location src(const std::string& sourceAsString, uint32_t offset)
 {

@@ -24,15 +24,15 @@ namespace state
 namespace
 {
 
-auto makeParser(parser::Pool& parserPool, State& state)
+auto makeParser(parser::Pool& pool, State& state)
 {
-    return parserPool.make(state);
+    return pool.make(state);
 }
 
 template <com::TEnumIntegerType<lex::Token> TOKEN>
-auto makeParserToken(parser::Pool& parserPool, State& state)
+auto makeParserToken(parser::Pool& pool, State& state)
 {
-    return parserPool.make
+    return pool.make
     <
         error::token_check::Open<TOKEN>,
         error::token_check::Close
@@ -42,9 +42,9 @@ auto makeParserToken(parser::Pool& parserPool, State& state)
 
 template <com::TEnumIntegerType<lex::Token       > TOKEN,
           com::TEnumIntegerType<tree::node::Kind > TREE_NODE_KIND>
-auto makeParserTokenUnary(parser::Pool& parserPool, State& state)
+auto makeParserTokenUnary(parser::Pool& pool, State& state)
 {
-    return parserPool.make
+    return pool.make
     <
         open::TPipeline
         <
@@ -65,9 +65,9 @@ auto makeParserTokenUnary(parser::Pool& parserPool, State& state)
 }
 
 template <com::TEnumIntegerType<tree::node::Kind > TREE_NODE_KIND>
-auto makeParserUnary(parser::Pool& parserPool, State& state)
+auto makeParserUnary(parser::Pool& pool, State& state)
 {
-    return parserPool.make
+    return pool.make
     <
         tree::writer::Open,
         tree::writer::Close
@@ -79,9 +79,9 @@ auto makeParserUnary(parser::Pool& parserPool, State& state)
 }
 
 template <com::TEnumIntegerType<tree::node::Kind > TREE_NODE_KIND>
-auto makeParserVariadic(parser::Pool& parserPool, State& state)
+auto makeParserVariadic(parser::Pool& pool, State& state)
 {
-    return parserPool.make
+    return pool.make
     <
         tree::writer::Open,
         tree::writer::Close
@@ -97,141 +97,155 @@ auto makeParserVariadic(parser::Pool& parserPool, State& state)
 #define TOKEN_TREE_NODE_KIND_PAIR(x) lex::Token::x, tree::node::Kind::x
 
 Builder::Builder() :
-    _parser{_parserPool.make<open::TPipeline<>, error::clear::Close>(_state)}
+    _parserProgram     {_pool.make<open::TPipeline<>, error::clear::Close>(_state)},
+    _parserFunction    {_pool.make<open::TPipeline<>, error::clear::Close>(_state)},
+    _parserStatement   {_pool.make<open::TPipeline<>, error::clear::Close>(_state)},
+    _parserDeclaration {_pool.make<open::TPipeline<>, error::clear::Close>(_state)},
+    _parserAssignment  {_pool.make<open::TPipeline<>, error::clear::Close>(_state)},
+    _parserExpression  {_pool.make<open::TPipeline<>, error::clear::Close>(_state)}
 {
-    auto integer    = makeParserTokenUnary<TOKEN_TREE_NODE_KIND_PAIR(INTEGER    )> (_parserPool, _state);
-    auto decimal    = makeParserTokenUnary<TOKEN_TREE_NODE_KIND_PAIR(DECIMAL    )> (_parserPool, _state);
-    auto identifier = makeParserTokenUnary<TOKEN_TREE_NODE_KIND_PAIR(IDENTIFIER )> (_parserPool, _state);
-    auto plus       = makeParserToken<lex::Token::PLUS                           > (_parserPool, _state);
-    auto minus      = makeParserToken<lex::Token::MINUS                          > (_parserPool, _state);
-    auto star       = makeParserToken<lex::Token::STAR                           > (_parserPool, _state);
-    auto slash      = makeParserToken<lex::Token::SLASH                          > (_parserPool, _state);
-    auto parLeft    = makeParserToken<lex::Token::PAR_LEFT                       > (_parserPool, _state);
-    auto parRight   = makeParserToken<lex::Token::PAR_RIGHT                      > (_parserPool, _state);
-    auto dot        = makeParserToken<lex::Token::DOT                            > (_parserPool, _state);
-    auto comma      = makeParserToken<lex::Token::COMMA                          > (_parserPool, _state);
-    auto colon      = makeParserToken<lex::Token::COLON                          > (_parserPool, _state);
-    auto semiColon  = makeParserToken<lex::Token::SEMI_COLON                     > (_parserPool, _state);
-    auto equal      = makeParserToken<lex::Token::EQUAL                          > (_parserPool, _state);
-    auto keyIf      = makeParserToken<lex::Token::IF                             > (_parserPool, _state);
-    auto keyElse    = makeParserToken<lex::Token::ELSE                           > (_parserPool, _state);
-    auto keyLet     = makeParserToken<lex::Token::LET                            > (_parserPool, _state);
-    auto keyVar     = makeParserToken<lex::Token::VAR                            > (_parserPool, _state);
-    auto keyFunc    = makeParserToken<lex::Token::FUNC                           > (_parserPool, _state);
-    auto keyWhile   = makeParserToken<lex::Token::WHILE                          > (_parserPool, _state);
-    auto keyReturn  = makeParserToken<lex::Token::RETURN                         > (_parserPool, _state);
-    auto negAtom    = makeParserUnary    <tree::node::Kind::OPPOSE               > (_parserPool, _state);
-    auto divitive   = makeParserUnary    <tree::node::Kind::INVERSE              > (_parserPool, _state);
-    auto product    = makeParserVariadic <tree::node::Kind::PRODUCT              > (_parserPool, _state);
-    auto negative   = makeParserUnary    <tree::node::Kind::OPPOSE               > (_parserPool, _state);
-    auto sum        = makeParserVariadic <tree::node::Kind::SUM                  > (_parserPool, _state);
-    auto assignment = makeParserVariadic <tree::node::Kind::ASSIGNMENT           > (_parserPool, _state);
-    auto typInfer   = makeParserUnary    <tree::node::Kind::TYP_INFER            > (_parserPool, _state);
-    auto declarLet  = makeParserVariadic <tree::node::Kind::DECLAR_LET           > (_parserPool, _state);
-    auto listDisp   = makeParserVariadic <tree::node::Kind::LIST_DISP            > (_parserPool, _state);
-    auto declarVar  = makeParserUnary    <tree::node::Kind::DECLAR_VAR           > (_parserPool, _state);
-    auto listArg    = makeParserUnary    <tree::node::Kind::LIST_ARG             > (_parserPool, _state);
-    auto staReturn  = makeParserUnary    <tree::node::Kind::STA_RETURN           > (_parserPool, _state);
-    auto term       = makeParser                                                   (_parserPool, _state);
-    auto atom       = makeParser                                                   (_parserPool, _state);
-    auto mulitive   = makeParser                                                   (_parserPool, _state);
-    auto additive   = makeParser                                                   (_parserPool, _state);
-    auto posAtom    = makeParser                                                   (_parserPool, _state);
-    auto typAnnot   = makeParser                                                   (_parserPool, _state);
-    auto disp       = makeParser                                                   (_parserPool, _state);
-    auto arg        = makeParser                                                   (_parserPool, _state);
-    auto args       = makeParser                                                   (_parserPool, _state);
+    auto integer       = makeParserTokenUnary <TOKEN_TREE_NODE_KIND_PAIR(INTEGER    )> (_pool, _state);
+    auto decimal       = makeParserTokenUnary <TOKEN_TREE_NODE_KIND_PAIR(DECIMAL    )> (_pool, _state);
+    auto identifier    = makeParserTokenUnary <TOKEN_TREE_NODE_KIND_PAIR(IDENTIFIER )> (_pool, _state);
+    auto plus          = makeParserToken      <lex::Token::PLUS                      > (_pool, _state);
+    auto minus         = makeParserToken      <lex::Token::MINUS                     > (_pool, _state);
+    auto star          = makeParserToken      <lex::Token::STAR                      > (_pool, _state);
+    auto slash         = makeParserToken      <lex::Token::SLASH                     > (_pool, _state);
+    auto percent       = makeParserToken      <lex::Token::PERCENT                   > (_pool, _state);
+    auto parLeft       = makeParserToken      <lex::Token::PAR_LEFT                  > (_pool, _state);
+    auto parRight      = makeParserToken      <lex::Token::PAR_RIGHT                 > (_pool, _state);
+    auto braLeft       = makeParserToken      <lex::Token::BRA_LEFT                  > (_pool, _state);
+    auto braRight      = makeParserToken      <lex::Token::BRA_RIGHT                 > (_pool, _state);
+    auto ketLeft       = makeParserToken      <lex::Token::KET_LEFT                  > (_pool, _state);
+    auto ketRight      = makeParserToken      <lex::Token::KET_RIGHT                 > (_pool, _state);
+    auto ketLeftEqual  = makeParserToken      <lex::Token::KET_LEFT_EQUAL            > (_pool, _state);
+    auto ketRightEqual = makeParserToken      <lex::Token::KET_RIGHT_EQUAL           > (_pool, _state);
+    auto dot           = makeParserToken      <lex::Token::DOT                       > (_pool, _state);
+    auto comma         = makeParserToken      <lex::Token::COMMA                     > (_pool, _state);
+    auto colon         = makeParserToken      <lex::Token::COLON                     > (_pool, _state);
+    auto semiColon     = makeParserToken      <lex::Token::SEMI_COLON                > (_pool, _state);
+    auto equal         = makeParserToken      <lex::Token::EQUAL                     > (_pool, _state);
+    auto keyIf         = makeParserToken      <lex::Token::IF                        > (_pool, _state);
+    auto keyElse       = makeParserToken      <lex::Token::ELSE                      > (_pool, _state);
+    auto keyLet        = makeParserToken      <lex::Token::LET                       > (_pool, _state);
+    auto keyFunc       = makeParserToken      <lex::Token::FUNC                      > (_pool, _state);
+    auto keyWhile      = makeParserToken      <lex::Token::WHILE                     > (_pool, _state);
+    auto keyReturn     = makeParserToken      <lex::Token::RETURN                    > (_pool, _state);
+    auto product       = makeParserVariadic   <tree::node::Kind::PRODUCT             > (_pool, _state);
+    auto sum           = makeParserVariadic   <tree::node::Kind::SUM                 > (_pool, _state);
+    auto comparison    = makeParserVariadic   <tree::node::Kind::COMPARISON          > (_pool, _state);
+    auto assignment    = makeParserVariadic   <tree::node::Kind::ASSIGNMENT          > (_pool, _state);
+    auto funCall       = makeParserUnary      <tree::node::Kind::FUN_CALL            > (_pool, _state);
+    auto negAtom       = makeParserUnary      <tree::node::Kind::OPPOSE              > (_pool, _state);
+    auto statemReturn  = makeParserUnary      <tree::node::Kind::STATEM_RETURN       > (_pool, _state);
+    auto declarLet     = makeParserUnary      <tree::node::Kind::DECLAR_LET          > (_pool, _state);
+    auto declarFun     = makeParserUnary      <tree::node::Kind::DECLAR_FUN          > (_pool, _state);
+    auto scope         = makeParserUnary      <tree::node::Kind::SCOPE               > (_pool, _state);
+    auto program       = makeParserUnary      <tree::node::Kind::PROGRAM             > (_pool, _state);
+    auto atom          = makeParser                                                    (_pool, _state);
+    auto typing        = makeParser                                                    (_pool, _state);
+    auto posAtom       = makeParser                                                    (_pool, _state);
+    auto expression    = makeParser                                                    (_pool, _state);
+
+
+    // Aliases
+    _parserExpression  = expression;
+    _parserAssignment  = assignment;
+    _parserDeclaration = declarLet;
+    _parserStatement   = statemReturn;
+    _parserFunction    = declarFun;
+    _parserProgram     = program;
 
     USING_COMBINATORS;
 
-    integer    = tok(lex::Token::INTEGER    );
-    decimal    = tok(lex::Token::DECIMAL    );
-    identifier = tok(lex::Token::IDENTIFIER );
-    plus       = tok(lex::Token::PLUS       );
-    minus      = tok(lex::Token::MINUS      );
-    star       = tok(lex::Token::STAR       );
-    slash      = tok(lex::Token::SLASH      );
-    parLeft    = tok(lex::Token::PAR_LEFT   );
-    parRight   = tok(lex::Token::PAR_RIGHT  );
-    dot        = tok(lex::Token::DOT        );
-    comma      = tok(lex::Token::COMMA      );
-    colon      = tok(lex::Token::COLON      );
-    semiColon  = tok(lex::Token::SEMI_COLON );
-    equal      = tok(lex::Token::EQUAL      );
-    keyIf      = tok(lex::Token::IF         );
-    keyElse    = tok(lex::Token::ELSE       );
-    keyLet     = tok(lex::Token::LET        );
-    keyVar     = tok(lex::Token::VAR        );
-    keyFunc    = tok(lex::Token::FUNC       );
-    keyWhile   = tok(lex::Token::WHILE      );
-    keyReturn  = tok(lex::Token::RETURN     );
-
-    // Argument list
-
-    arg = alt(sum, integer, decimal);
-
-    args = seq(arg, rep(seq(comma, arg)));
-
-    listArg = seq(parLeft, opt(args), parRight);
-
-    // Dispatch list
-
-    disp = seq(identifier, opt(listArg));
-
-    listDisp = seq(disp, rep(seq(dot, disp)));
+    integer       = tok(lex::Token::INTEGER         );
+    decimal       = tok(lex::Token::DECIMAL         );
+    identifier    = tok(lex::Token::IDENTIFIER      );
+    plus          = tok(lex::Token::PLUS            );
+    minus         = tok(lex::Token::MINUS           );
+    star          = tok(lex::Token::STAR            );
+    slash         = tok(lex::Token::SLASH           );
+    percent       = tok(lex::Token::PERCENT         );
+    parLeft       = tok(lex::Token::PAR_LEFT        );
+    braLeft       = tok(lex::Token::BRA_LEFT        );
+    parRight      = tok(lex::Token::PAR_RIGHT       );
+    braRight      = tok(lex::Token::BRA_RIGHT       );
+    ketLeft       = tok(lex::Token::KET_LEFT        );
+    ketRight      = tok(lex::Token::KET_RIGHT       );
+    ketLeftEqual  = tok(lex::Token::KET_LEFT_EQUAL  );
+    ketRightEqual = tok(lex::Token::KET_RIGHT_EQUAL );
+    dot           = tok(lex::Token::DOT             );
+    comma         = tok(lex::Token::COMMA           );
+    colon         = tok(lex::Token::COLON           );
+    semiColon     = tok(lex::Token::SEMI_COLON      );
+    equal         = tok(lex::Token::EQUAL           );
+    keyIf         = tok(lex::Token::IF              );
+    keyElse       = tok(lex::Token::ELSE            );
+    keyLet        = tok(lex::Token::LET             );
+    keyFunc       = tok(lex::Token::FUNC            );
+    keyWhile      = tok(lex::Token::WHILE           );
+    keyReturn     = tok(lex::Token::RETURN          );
 
     // Expression
 
-    term = alt(listDisp, integer, decimal);
-
-    posAtom = seq(alt(term, seq(parLeft, sum, parRight)));
+    posAtom = seq(opt(plus), alt(identifier, integer, decimal, seq(parLeft, expression, parRight)));
 
     negAtom = seq(minus, posAtom);
 
     atom = alt(posAtom, negAtom);
 
-    mulitive = seq(star  , atom);
-    divitive = seq(slash , atom);
+    product = seq(atom, rep(seq(alt(star  ,
+                                    slash ,
+                                    percent), atom)));
 
-    product = seq(atom, rep(alt(mulitive,
-                                divitive)));
+    sum = seq(product, rep(seq(alt(plus,
+                                   minus), product)));
 
-    additive = seq(plus  , product);
-    negative = seq(minus , product);
+    comparison = seq(sum, opt(seq(alt(ketLeft,
+                                      ketRight,
+                                      ketLeftEqual,
+                                      ketRightEqual), sum)));
 
-    sum = seq(product, rep(alt(additive,
-                               negative)));
+    funCall = seq(identifier, parLeft, opt(seq(expression, rep(seq(comma, expression)))), parRight);
+
+    expression = alt(funCall, comparison);
+
     // Assigment
 
-    assignment = seq(identifier, equal, sum);
-
-    // Var declaration
-
-    typAnnot = seq(colon, identifier);
-    typInfer = seq();
-
-    declarVar = seq(keyVar, identifier, alt(typAnnot,
-                                            typInfer), opt(seq(equal, sum)));
-
-    // Let declaration
-
-    declarLet = seq(keyLet, identifier, alt(typAnnot,
-                                            typInfer), equal, sum);
+    assignment = seq(identifier, equal, expression);
 
     // Return statement
 
-    staReturn = seq(keyReturn, sum);
+    statemReturn = seq(keyReturn, expression);
+
+    // Let declaration
+
+    typing = seq(identifier, colon, identifier);
+
+    declarLet = seq(keyLet, typing);
+
+    // Scope
+
+    scope = seq(braLeft, rep(alt(seq(alt(declarLet,
+                                         statemReturn,
+                                         assignment,
+                                         expression), semiColon), scope)), braRight);
+    // Function declaration
+
+    declarFun = seq(keyFunc, identifier, seq(parLeft, opt(seq(typing, rep(seq(comma, typing)))), parRight), scope);
 
     // Full parser
 
-    _parser = alt(declarLet, declarVar, staReturn, assignment, sum);
+    program = rep(declarFun);
 }
 
-const State& Builder::operator()(const std::vector<lex::Token>& tokens)
+const State& Builder::operator()(const std::vector<lex::Token>& tokens, std::optional<Parser> parserOpt)
 {
+    Parser& parser = parserOpt ? parserOpt.value() : _parserProgram;
+
     Reader reader(tokens);
 
-    _parser(reader);
+    parser(reader);
 
     return _state;
 }

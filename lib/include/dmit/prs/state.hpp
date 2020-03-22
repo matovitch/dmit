@@ -6,6 +6,7 @@
 
 #include "dmit/lex/token.hpp"
 
+#include <optional>
 #include <vector>
 
 namespace dmit
@@ -120,15 +121,23 @@ public:
 
     Builder();
 
-    const State& operator()(const std::vector<lex::Token>&);
+    const State& operator()(const std::vector<lex::Token>&, std::optional<Parser> = std::nullopt);
 
     void clearState();
 
 private:
 
-    parser::Pool     _parserPool;
-    Parser           _parser;
+    parser::Pool     _pool;
     State            _state;
+
+public:
+
+    Parser _parserProgram;
+    Parser _parserFunction;
+    Parser _parserStatement;
+    Parser _parserDeclaration;
+    Parser _parserAssignment;
+    Parser _parserExpression;
 };
 
 } // namespace state

@@ -32,7 +32,6 @@ static const char* const KEYWORDS[] =
     "if",
     "else",
     "let",
-    "var",
     "func",
     "while",
     "return"

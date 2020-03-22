@@ -7,21 +7,23 @@
 
 static const char* K_TREE_NODE_KIND_AS_CSTR[] =
 {
-    "INVALID"    ,
-    "INTEGER"    ,
-    "DECIMAL"    ,
-    "IDENTIFIER" ,
-    "OPPOSE"     ,
-    "INVERSE"    ,
-    "PRODUCT"    ,
-    "SUM"        ,
-    "ASSIGNMENT" ,
-    "TYP_INFER"  ,
-    "DECLAR_LET" ,
-    "DECLAR_VAR" ,
-    "LIST_ARG"   ,
-    "LIST_DISP"  ,
-    "STA_RETURN"
+    "INVALID",
+    "INTEGER",
+    "DECIMAL",
+    "IDENTIFIER",
+    "OPPOSE",
+    "INVERSE",
+    "PRODUCT",
+    "SUM",
+    "COMPARISON",
+    "ASSIGNMENT",
+    "FUN_CALL",
+    "STATEM_WHILE",
+    "STATEM_RETURN",
+    "DECLAR_LET",
+    "DECLAR_FUN",
+    "SCOPE",
+    "PROGRAM"
 };
 
 namespace dmit
