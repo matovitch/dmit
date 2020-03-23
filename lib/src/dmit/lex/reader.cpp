@@ -1,6 +1,9 @@
 #include "dmit/lex/reader.hpp"
 
+#include "dmit/lex/token.hpp"
+
 #include <cstdint>
+#include <vector>
 
 namespace dmit
 {
@@ -8,30 +11,39 @@ namespace dmit
 namespace lex
 {
 
-Reader::Reader(const uint8_t* const head,
-               const uint8_t* const tail) :
-    _head{head},
-    _tail{tail}
-{}
-
-Reader::operator bool() const
+Reader::Reader(const std::vector<Token>& tokens) :
+    _head{tokens.data() + 1},
+    _tail{tokens.data() - 1 + tokens.size()}
 {
-    return _head < _tail;
+    advanceToRawToken();
 }
 
-void Reader::operator++()
+void Reader::advance()
 {
     _head++;
 }
 
-const uint8_t Reader::operator*() const
+void Reader::advanceToRawToken()
+{
+    while (look() == Token::WHITESPACE)
+    {
+        _head++;
+    }
+}
+
+const Token Reader::look() const
 {
     return *_head;
 }
 
-uint32_t Reader::offset() const
+bool Reader::isEoi() const
 {
-    return static_cast<uint32_t>(_tail - _head);
+    return _head == _tail;
+}
+
+std::size_t Reader::offset() const
+{
+    return static_cast<std::size_t>(_tail - _head);
 }
 
 } // namespace lex

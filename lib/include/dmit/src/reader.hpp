@@ -5,7 +5,7 @@
 namespace dmit
 {
 
-namespace lex
+namespace src
 {
 
 class Reader
@@ -30,5 +30,5 @@ private:
     const uint8_t* const _tail;
 };
 
-} // namespace lex
+} // namespace src
 } // namespace dmit

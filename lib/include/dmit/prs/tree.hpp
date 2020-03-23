@@ -38,6 +38,7 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
         SUM,
         COMPARISON,
         ASSIGNMENT,
+        OPERATOR,
         FUN_CALL,
         STATEM_WHILE,
         STATEM_RETURN,

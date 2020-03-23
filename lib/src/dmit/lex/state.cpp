@@ -91,7 +91,7 @@ namespace state
 const State& Builder::operator()(const uint8_t* const data,
                                  const uint32_t size)
 {
-    Reader reader{data, data + size};
+    src::Reader reader{data, data + size};
 
     _state.push(lex::Token::START_OF_INPUT, size);
 

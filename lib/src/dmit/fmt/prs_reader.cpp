@@ -11,7 +11,7 @@ namespace dmit
 namespace fmt
 {
 
-std::string asString(const prs::Reader& reader)
+std::string asString(const lex::Reader& reader)
 {
     std::ostringstream oss;
 

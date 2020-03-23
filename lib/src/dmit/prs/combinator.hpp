@@ -1,7 +1,6 @@
 #pragma once
 
-#include "dmit/prs/reader.hpp"
-
+#include "dmit/lex/reader.hpp"
 #include "dmit/lex/token.hpp"
 
 #include "dmit/com/enum.hpp"
@@ -19,7 +18,7 @@ namespace combinator
 
 auto tok(const com::TEnumIntegerType<lex::Token> token)
 {
-    return [token](Reader reader) -> std::optional<Reader>
+    return [token](lex::Reader reader) -> std::optional<lex::Reader>
     {
         if (reader.look() != token)
         {
@@ -34,13 +33,13 @@ auto tok(const com::TEnumIntegerType<lex::Token> token)
 
 auto seq()
 {
-    return [](Reader reader) -> std::optional<Reader> { return reader; };
+    return [](lex::Reader reader) -> std::optional<lex::Reader> { return reader; };
 }
 
 template <class Parser, class... Parsers>
 auto seq(Parser&& parser, Parsers&&... parsers)
 {
-    return [parser, parsers...](Reader reader) -> std::optional<Reader>
+    return [parser, parsers...](lex::Reader reader) -> std::optional<lex::Reader>
     {
         const auto& readerOpt = parser(reader);
 
@@ -55,7 +54,7 @@ auto seq(Parser&& parser, Parsers&&... parsers)
 
 auto alt()
 {
-    return [](Reader reader) -> std::optional<Reader>
+    return [](lex::Reader reader) -> std::optional<lex::Reader>
     {
         return std::nullopt;
     };
@@ -64,7 +63,7 @@ auto alt()
 template <class Parser, class... Parsers>
 auto alt(Parser&& parser, Parsers&&... parsers)
 {
-    return [parser, parsers...](Reader reader) -> std::optional<Reader>
+    return [parser, parsers...](lex::Reader reader) -> std::optional<lex::Reader>
     {
         const auto& readerOpt = parser(reader);
 
@@ -80,9 +79,9 @@ auto alt(Parser&& parser, Parsers&&... parsers)
 template <class Parser>
 auto rep(Parser&& parser)
 {
-    return [parser](Reader reader) -> std::optional<Reader>
+    return [parser](lex::Reader reader) -> std::optional<lex::Reader>
     {
-        std::optional<Reader> readerOpt{reader};
+        std::optional<lex::Reader> readerOpt{reader};
 
         while ((readerOpt = parser(readerOpt.value())))
         {
@@ -96,7 +95,7 @@ auto rep(Parser&& parser)
 template <class Parser>
 auto opt(Parser&& parser)
 {
-    return [parser](Reader reader) -> std::optional<Reader>
+    return [parser](lex::Reader reader) -> std::optional<lex::Reader>
     {
         const auto& readerOpt = parser(reader);
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "dmit/prs/reader.hpp"
+#include "dmit/lex/reader.hpp"
 
 #include <string>
 
@@ -10,7 +10,7 @@ namespace dmit
 namespace fmt
 {
 
-std::string asString(const prs::Reader&);
+std::string asString(const lex::Reader&);
 
 } // namespace fmt
 } // namespace dmit

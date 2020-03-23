@@ -9,6 +9,7 @@ CLFLAGS += -l dmit_com
 CLFLAGS += -l dmit_lex
 CLFLAGS += -l dmit_src
 CLFLAGS += -l dmit_prs
+CLFLAGS += -l dmit_ast
 CLFLAGS += -l doctest
 CLFLAGS += -l stdc++fs
 
@@ -17,4 +18,5 @@ CLFLAGS += -L $(ROOT)/lib/src/dmit/com
 CLFLAGS += -L $(ROOT)/lib/src/dmit/lex
 CLFLAGS += -L $(ROOT)/lib/src/dmit/src
 CLFLAGS += -L $(ROOT)/lib/src/dmit/prs
+CLFLAGS += -L $(ROOT)/lib/src/dmit/ast
 CLFLAGS += -L $(ROOT)/lib/src/doctest

@@ -1,8 +1,9 @@
 #pragma once
 
-#include "dmit/lex/reader.hpp"
 #include "dmit/lex/token.hpp"
 #include "dmit/lex/state.hpp"
+
+#include "dmit/src/reader.hpp"
 
 #include <cstdint>
 
@@ -21,7 +22,7 @@ template <int INDEX>
 using TGetState = typename TNodeIndex<INDEX>::Type;
 
 template <int NODE_INDEX>
-void tGoto(Reader& reader,
+void tGoto(src::Reader& reader,
            State& state)
 {
     TGetState<NODE_INDEX>{}(reader,
@@ -34,7 +35,7 @@ struct TNode;
 template <uint8_t MATCH>
 struct TNode<MATCH>
 {
-    void operator()(Reader& reader, State& state) const
+    void operator()(src::Reader& reader, State& state) const
     {
         if constexpr (MATCH == Token::UNKNOWN)
         {
@@ -59,7 +60,7 @@ struct TNode<MATCH, Goto, Gotos...>
 
     static constexpr int NEXT_NODE = Goto::NEXT_NODE;
 
-    void operator()(Reader& reader, State& state) const
+    void operator()(src::Reader& reader, State& state) const
     {
         if (!reader)
         {

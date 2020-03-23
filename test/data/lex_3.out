@@ -1,0 +1,1 @@
+{"tokens" :[{"token":"START_OF_INPUT"},{"token":"IF"},{"token":"WHITESPACE"},{"token":"ELSE"},{"token":"WHITESPACE"},{"token":"LET"},{"token":"WHITESPACE"},{"token":"FUNC"},{"token":"WHITESPACE"},{"token":"WHILE"},{"token":"WHITESPACE"},{"token":"RETURN"},{"token":"END_OF_INPUT"}],"offsets":[29,27,26,22,21,18,17,13,12,7,6,0,0]}

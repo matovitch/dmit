@@ -1,9 +1,10 @@
 #pragma once
 
-#include "dmit/lex/token.hpp"
+#include "dmit/prs/tree.hpp"
 
+#include <functional>
+#include <optional>
 #include <cstdint>
-#include <vector>
 
 namespace dmit
 {
@@ -11,27 +12,32 @@ namespace dmit
 namespace prs
 {
 
-class Reader : fmt::Formatable
+namespace reader
+{
+
+struct Head
+{
+    int32_t _offset;
+};
+
+} // namespace reader
+
+class Reader
 {
 
 public:
 
-    Reader(const std::vector<lex::Token>&);
+    Reader(const state::Tree& tree);
 
-    void advance();
+    reader::Head makeHead() const;
 
-    void advanceToRawToken();
+    std::optional<reader::Head> makeHead(const reader::Head head, const int32_t index) const;
 
-    const lex::Token look() const;
-
-    bool isEoi() const;
-
-    std::size_t offset() const;
+    const state::tree::Node& look(const reader::Head head) const;
 
 private:
 
-    const lex::Token* _head;
-    const lex::Token* _tail;
+    const std::reference_wrapper<const std::vector<state::tree::Node>> _nodes;
 };
 
 } // namespace prs

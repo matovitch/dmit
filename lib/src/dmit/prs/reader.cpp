@@ -1,9 +1,8 @@
 #include "dmit/prs/reader.hpp"
 
-#include "dmit/lex/token.hpp"
-
+#include <functional>
+#include <optional>
 #include <cstdint>
-#include <vector>
 
 namespace dmit
 {
@@ -11,37 +10,36 @@ namespace dmit
 namespace prs
 {
 
-Reader::Reader(const std::vector<lex::Token>& tokens) :
-    _head{tokens.data() + 1},
-    _tail{tokens.data() - 1 + tokens.size()}
+Reader::Reader(const state::Tree& tree) :
+    _nodes{tree.nodes()}
 {}
 
-void Reader::advance()
+reader::Head Reader::makeHead() const
 {
-    _head++;
+    return reader::Head{static_cast<int32_t>(_nodes.get().size() - 1)};
 }
 
-void Reader::advanceToRawToken()
+std::optional<reader::Head> Reader::makeHead(const reader::Head head, const int32_t index) const
 {
-    while (look() == lex::Token::WHITESPACE)
+    const int32_t lowerBound = head._offset - _nodes.get()[head._offset]._size;
+          int32_t offset     = head._offset - 1;
+
+    for (int32_t i = 0; i < index; i++)
     {
-        _head++;
+        offset -= (_nodes.get()[offset]._size + 1);
+
+        if (offset < lowerBound)
+        {
+            return std::nullopt;
+        }
     }
+
+    return reader::Head{offset};
 }
 
-const lex::Token Reader::look() const
+const state::tree::Node& Reader::look(const reader::Head head) const
 {
-    return *_head;
-}
-
-bool Reader::isEoi() const
-{
-    return _head == _tail;
-}
-
-std::size_t Reader::offset() const
-{
-    return static_cast<std::size_t>(_tail - _head);
+    return _nodes.get()[head._offset];
 }
 
 } // namespace prs

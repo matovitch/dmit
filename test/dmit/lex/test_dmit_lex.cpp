@@ -1,31 +1,20 @@
 #include "dmit/lex/state.hpp"
-#include "dmit/lex/token.hpp"
 
-#include "dmit/fmt/lex/token.hpp"
-
-#include "doctest/doctest_fwd.h"
-#include "doctest/utils.h"
-
-#include <algorithm>
-#include <iostream>
-#include <cstdint>
-#include <utility>
-#include <string>
-#include <vector>
-
-using Token = dmit::lex::Token;
+#include "dmit/fmt/lex/state.hpp"
 
 class Lexer
 {
 
 public:
 
-    const std::vector<Token>& operator()(const std::string& toLex)
+    const dmit::lex::State& operator()(const char* const filePath)
     {
-        _lexer  .clearState();
+        const auto& toLex = fileAsString(filePath);
+
+        _lexer.clearState();
 
         return _lexer(reinterpret_cast<const uint8_t*>(toLex.data()),
-                                                       toLex.size())._tokens;
+                                                       toLex.size());
     }
 
 private:
@@ -33,111 +22,14 @@ private:
     dmit::lex::state::Builder _lexer;
 };
 
-std::vector<Token> makeTokens(std::initializer_list<Token> tokens)
-{
-    std::vector<Token> tokenVector;
-
-    tokenVector.push_back(Token::START_OF_INPUT);
-
-    std::copy(tokens.begin(),
-              tokens.end(), std::back_inserter(tokenVector));
-
-    tokenVector.push_back(Token::END_OF_INPUT);
-
-    return tokenVector;
-}
-
-TEST_CASE("std::vector<Token> lex(const std::string& toLex)")
+TEST_CASE("dmit::lex")
 {
     Lexer lexer;
 
-    CHECK(lexer(   "1" ) == makeTokens({Token::INTEGER}));
-    CHECK(lexer( "042" ) == makeTokens({Token::INTEGER}));
-
-    CHECK(lexer(  "1."       ) == makeTokens({Token::DECIMAL}));
-    CHECK(lexer(   ".1"      ) == makeTokens({Token::DECIMAL}));
-    CHECK(lexer(  "0.0"      ) == makeTokens({Token::DECIMAL}));
-    CHECK(lexer( "23.1415"   ) == makeTokens({Token::DECIMAL}));
-    CHECK(lexer(  "1.14e0"   ) == makeTokens({Token::DECIMAL}));
-    CHECK(lexer(   ".11e+71" ) == makeTokens({Token::DECIMAL}));
-
-    CHECK(lexer(" "          ) == makeTokens({Token::WHITESPACE}));
-    CHECK(lexer("\t"         ) == makeTokens({Token::WHITESPACE}));
-    CHECK(lexer("\r"         ) == makeTokens({Token::WHITESPACE}));
-    CHECK(lexer("\n"         ) == makeTokens({Token::WHITESPACE}));
-    CHECK(lexer("  \n \r \t" ) == makeTokens({Token::WHITESPACE}));
-
-    CHECK(lexer("_"       ) == makeTokens({Token::IDENTIFIER}));
-    CHECK(lexer("a"       ) == makeTokens({Token::IDENTIFIER}));
-    CHECK(lexer("Z"       ) == makeTokens({Token::IDENTIFIER}));
-    CHECK(lexer("foo"     ) == makeTokens({Token::IDENTIFIER}));
-    CHECK(lexer("_bAr"    ) == makeTokens({Token::IDENTIFIER}));
-    CHECK(lexer("_bAr"    ) == makeTokens({Token::IDENTIFIER}));
-    CHECK(lexer("_42"     ) == makeTokens({Token::IDENTIFIER}));
-    CHECK(lexer("__bAz5_8") == makeTokens({Token::IDENTIFIER}));
-
-    CHECK(lexer("if"     ) == makeTokens({Token::IF     }));
-    CHECK(lexer("else"   ) == makeTokens({Token::ELSE   }));
-    CHECK(lexer("let"    ) == makeTokens({Token::LET    }));
-    CHECK(lexer("func"   ) == makeTokens({Token::FUNC   }));
-    CHECK(lexer("while"  ) == makeTokens({Token::WHILE  }));
-    CHECK(lexer("return" ) == makeTokens({Token::RETURN }));
-
-    CHECK(lexer("+") == makeTokens({Token::PLUS       }));
-    CHECK(lexer("-") == makeTokens({Token::MINUS      }));
-    CHECK(lexer("*") == makeTokens({Token::STAR       }));
-    CHECK(lexer("/") == makeTokens({Token::SLASH      }));
-    CHECK(lexer("=") == makeTokens({Token::EQUAL      }));
-    CHECK(lexer("{") == makeTokens({Token::BRA_LEFT   }));
-    CHECK(lexer("<") == makeTokens({Token::KET_LEFT   }));
-    CHECK(lexer("(") == makeTokens({Token::PAR_LEFT   }));
-    CHECK(lexer("[") == makeTokens({Token::SQR_LEFT   }));
-    CHECK(lexer("}") == makeTokens({Token::BRA_RIGHT  }));
-    CHECK(lexer(">") == makeTokens({Token::KET_RIGHT  }));
-    CHECK(lexer(")") == makeTokens({Token::PAR_RIGHT  }));
-    CHECK(lexer("]") == makeTokens({Token::SQR_RIGHT  }));
-    CHECK(lexer("!") == makeTokens({Token::BANG       }));
-    CHECK(lexer("?") == makeTokens({Token::QUESTION   }));
-    CHECK(lexer("~") == makeTokens({Token::TILDE      }));
-    CHECK(lexer(":") == makeTokens({Token::COLON      }));
-    CHECK(lexer(";") == makeTokens({Token::SEMI_COLON }));
-    CHECK(lexer("^") == makeTokens({Token::CARET      }));
-
-    CHECK(lexer("->") == makeTokens({Token::MINUS_KET_RIGHT}));
-    CHECK(lexer(">=") == makeTokens({Token::KET_RIGHT_EQUAL}));
-    CHECK(lexer("<=") == makeTokens({Token::KET_LEFT_EQUAL}));
-    CHECK(lexer("<<") == makeTokens({Token::KET_LEFT_BIS}));
-    CHECK(lexer(">>") == makeTokens({Token::KET_RIGHT_BIS}));
-    CHECK(lexer("!=") == makeTokens({Token::BANG_EQUAL}));
-    CHECK(lexer("==") == makeTokens({Token::EQUAL_BIS}));
-    CHECK(lexer("||") == makeTokens({Token::PIPE_BIS}));
-    CHECK(lexer("&&") == makeTokens({Token::AMPERSAND_BIS}));
-    CHECK(lexer("::") == makeTokens({Token::COLON_BIS}));
-    CHECK(lexer("+=") == makeTokens({Token::PLUS_EQUAL}));
-    CHECK(lexer("-=") == makeTokens({Token::MINUS_EQUAL}));
-    CHECK(lexer("*=") == makeTokens({Token::STAR_EQUAL}));
-    CHECK(lexer("/=") == makeTokens({Token::SLASH_EQUAL}));
-    CHECK(lexer("%=") == makeTokens({Token::PERCENT_EQUAL}));
-    CHECK(lexer("&=") == makeTokens({Token::AMPERSAND_EQUAL}));
-    CHECK(lexer("|=") == makeTokens({Token::PIPE_EQUAL}));
-    CHECK(lexer("^=") == makeTokens({Token::CARET_EQUAL}));
-
-    CHECK(lexer("<<=") == makeTokens({Token::KET_LEFT_BIS_EQUAL}));
-    CHECK(lexer(">>=") == makeTokens({Token::KET_RIGHT_BIS_EQUAL}));
-
-    CHECK(lexer("2 * y") == makeTokens({Token::INTEGER    ,
-                                        Token::WHITESPACE ,
-                                        Token::STAR       ,
-                                        Token::WHITESPACE ,
-                                        Token::IDENTIFIER }));
-
-    CHECK(lexer("_Test_42-12 10.79e-17") == makeTokens({Token::IDENTIFIER ,
-                                                        Token::MINUS      ,
-                                                        Token::INTEGER    ,
-                                                        Token::WHITESPACE ,
-                                                        Token::DECIMAL    }));
-
-    CHECK(lexer("A.B") == makeTokens({Token::IDENTIFIER ,
-                                      Token::DOT        ,
-                                      Token::Token::IDENTIFIER}));
+    CHECK(dmit::fmt::asString(lexer("test/data/lex_0.in")) == fileAsString("test/data/lex_0.out"));
+    CHECK(dmit::fmt::asString(lexer("test/data/lex_1.in")) == fileAsString("test/data/lex_1.out"));
+    CHECK(dmit::fmt::asString(lexer("test/data/lex_2.in")) == fileAsString("test/data/lex_2.out"));
+    CHECK(dmit::fmt::asString(lexer("test/data/lex_3.in")) == fileAsString("test/data/lex_3.out"));
+    CHECK(dmit::fmt::asString(lexer("test/data/lex_4.in")) == fileAsString("test/data/lex_4.out"));
+    CHECK(dmit::fmt::asString(lexer("test/data/lex_5.in")) == fileAsString("test/data/lex_5.out"));
 }

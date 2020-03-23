@@ -7,4 +7,5 @@ include_rules
           $(ROOT)/<lib_dmit_lex> \
           $(ROOT)/<lib_dmit_src> \
           $(ROOT)/<lib_dmit_prs> \
+          $(ROOT)/<lib_dmit_ast> \
                                  |> !cl |> $(BIN_FILE_LOADER_OUT) $(ROOT)/<bin_file_loader>

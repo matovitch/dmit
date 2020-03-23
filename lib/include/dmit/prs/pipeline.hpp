@@ -1,7 +1,8 @@
 #pragma once
 
-#include "dmit/prs/reader.hpp"
 #include "dmit/prs/stack.hpp"
+
+#include "dmit/lex/reader.hpp"
 
 namespace dmit
 {
@@ -20,13 +21,13 @@ struct TPipeline;
 template <>
 struct TPipeline<>
 {
-    void operator()(const Reader&, Stack&, State&) const {}
+    void operator()(const lex::Reader&, Stack&, State&) const {}
 };
 
 template <class Open, class... Opens>
 struct TPipeline<Open, Opens...>
 {
-    void operator()(const Reader& reader, Stack& stack, State& state) const
+    void operator()(const lex::Reader& reader, Stack& stack, State& state) const
     {
         Open{}(reader, stack, state);
 
@@ -45,13 +46,13 @@ struct TPipeline;
 template <>
 struct TPipeline<>
 {
-    void operator()(const std::optional<Reader>&, const Stack&, State&) const {}
+    void operator()(const std::optional<lex::Reader>&, const Stack&, State&) const {}
 };
 
 template <class Close, class... Closes>
 struct TPipeline<Close, Closes...>
 {
-    void operator()(const std::optional<Reader>& readerOpt, const Stack& stack, State& state) const
+    void operator()(const std::optional<lex::Reader>& readerOpt, const Stack& stack, State& state) const
     {
         Close{}(readerOpt, stack, state);
 

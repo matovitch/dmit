@@ -1,9 +1,10 @@
 #pragma once
 
 #include "dmit/prs/pipeline.hpp"
-#include "dmit/prs/reader.hpp"
 #include "dmit/prs/stack.hpp"
 #include "dmit/prs/state.hpp"
+
+#include "dmit/lex/reader.hpp"
 
 #include <functional>
 #include <optional>
@@ -22,7 +23,7 @@ class TParser
 
 public:
 
-    using Fn = std::function<std::optional<Reader>(Reader)>;
+    using Fn = std::function<std::optional<lex::Reader>(lex::Reader)>;
 
     TParser(std::optional<Fn>& parserFnOpt, State& state) :
         _parserFnOpt{parserFnOpt},
@@ -34,14 +35,18 @@ public:
         _parserFnOpt.get() = parserFn;
     }
 
-    std::optional<Reader> operator()(Reader reader) const
+    std::optional<lex::Reader> operator()(lex::Reader reader) const
     {
         Stack stack;
 
-        reader.advanceToRawToken();
-
         Open{}(reader, stack, _state.get());
-        const auto& readerOpt = (_parserFnOpt.get().value())(reader);
+        auto&& readerOpt = (_parserFnOpt.get().value())(reader);
+
+        if (readerOpt)
+        {
+            readerOpt.value().advanceToRawToken();
+        }
+
         Close{}(readerOpt, stack, _state.get());
 
         return readerOpt;
@@ -58,7 +63,7 @@ namespace parser
 
 class Pool
 {
-    using Fn = std::function<std::optional<Reader>(Reader)>;
+    using Fn = std::function<std::optional<lex::Reader>(lex::Reader)>;
 
 public:
 

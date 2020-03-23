@@ -6,6 +6,8 @@
 
 #include "dmit/lex/token.hpp"
 
+#include "dmit/fmt/formatable.hpp"
+
 #include <optional>
 #include <vector>
 
@@ -15,7 +17,7 @@ namespace dmit
 namespace prs
 {
 
-struct State
+struct State : fmt::Formatable
 {
     void clear();
 
@@ -34,7 +36,7 @@ namespace writer
 
 struct Open
 {
-    void operator()(const Reader& reader, Stack& stack, State& state) const
+    void operator()(const lex::Reader& reader, Stack& stack, State& state) const
     {
         stack._treeSize     = state._tree.size();
         stack._readerOffset = reader.offset();
@@ -45,7 +47,7 @@ template <com::TEnumIntegerType<state::tree::node::Arity > NODE_ARITY,
           com::TEnumIntegerType<state::tree::node::Kind  > NODE_KIND>
 struct Close
 {
-    void operator()(const std::optional<Reader>& readerOpt, const Stack& stack, State& state) const
+    void operator()(const std::optional<lex::Reader>& readerOpt, const Stack& stack, State& state) const
     {
         if (!readerOpt)
         {
@@ -74,7 +76,7 @@ namespace token_check
 template <com::TEnumIntegerType<lex::Token> EXPECTED_TOKEN>
 struct Open
 {
-    void operator()(const Reader& reader, Stack& stack, State& state) const
+    void operator()(const lex::Reader& reader, Stack& stack, State& state) const
     {
         if (reader.offset() <= state._errorSet.offset())
         {
@@ -85,7 +87,7 @@ struct Open
 
 struct Close
 {
-    void operator()(const std::optional<Reader>& readerOpt, const Stack& stack, State& state) const
+    void operator()(const std::optional<lex::Reader>& readerOpt, const Stack& stack, State& state) const
     {
         if (readerOpt)
         {
@@ -101,7 +103,7 @@ namespace clear
 
 struct Close
 {
-    void operator()(const std::optional<Reader>& readerOpt, const Stack& stack, State& state) const
+    void operator()(const std::optional<lex::Reader>& readerOpt, const Stack& stack, State& state) const
     {
         if (readerOpt && readerOpt.value().isEoi())
         {
@@ -121,23 +123,15 @@ public:
 
     Builder();
 
-    const State& operator()(const std::vector<lex::Token>&, std::optional<Parser> = std::nullopt);
+    const State& operator()(const std::vector<lex::Token>&);
 
     void clearState();
 
 private:
 
-    parser::Pool     _pool;
-    State            _state;
-
-public:
-
-    Parser _parserProgram;
-    Parser _parserFunction;
-    Parser _parserStatement;
-    Parser _parserDeclaration;
-    Parser _parserAssignment;
-    Parser _parserExpression;
+    parser::Pool _pool;
+    Parser       _parser;
+    State        _state;
 };
 
 } // namespace state

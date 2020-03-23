@@ -1,7 +1,7 @@
 #include "dmit/prs/combinator.hpp"
-#include "dmit/prs/reader.hpp"
 #include "dmit/prs/state.hpp"
 
+#include "dmit/lex/reader.hpp"
 #include "dmit/lex/token.hpp"
 
 #include <vector>
@@ -97,12 +97,7 @@ auto makeParserVariadic(parser::Pool& pool, State& state)
 #define TOKEN_TREE_NODE_KIND_PAIR(x) lex::Token::x, tree::node::Kind::x
 
 Builder::Builder() :
-    _parserProgram     {_pool.make<open::TPipeline<>, error::clear::Close>(_state)},
-    _parserFunction    {_pool.make<open::TPipeline<>, error::clear::Close>(_state)},
-    _parserStatement   {_pool.make<open::TPipeline<>, error::clear::Close>(_state)},
-    _parserDeclaration {_pool.make<open::TPipeline<>, error::clear::Close>(_state)},
-    _parserAssignment  {_pool.make<open::TPipeline<>, error::clear::Close>(_state)},
-    _parserExpression  {_pool.make<open::TPipeline<>, error::clear::Close>(_state)}
+    _parser{_pool.make<open::TPipeline<>, error::clear::Close>(_state)}
 {
     auto integer       = makeParserTokenUnary <TOKEN_TREE_NODE_KIND_PAIR(INTEGER    )> (_pool, _state);
     auto decimal       = makeParserTokenUnary <TOKEN_TREE_NODE_KIND_PAIR(DECIMAL    )> (_pool, _state);
@@ -131,10 +126,14 @@ Builder::Builder() :
     auto keyFunc       = makeParserToken      <lex::Token::FUNC                      > (_pool, _state);
     auto keyWhile      = makeParserToken      <lex::Token::WHILE                     > (_pool, _state);
     auto keyReturn     = makeParserToken      <lex::Token::RETURN                    > (_pool, _state);
+    auto minusKetRight = makeParserToken      <lex::Token::MINUS_KET_RIGHT           > (_pool, _state);
     auto product       = makeParserVariadic   <tree::node::Kind::PRODUCT             > (_pool, _state);
     auto sum           = makeParserVariadic   <tree::node::Kind::SUM                 > (_pool, _state);
     auto comparison    = makeParserVariadic   <tree::node::Kind::COMPARISON          > (_pool, _state);
     auto assignment    = makeParserVariadic   <tree::node::Kind::ASSIGNMENT          > (_pool, _state);
+    auto opSum         = makeParserUnary      <tree::node::Kind::OPERATOR            > (_pool, _state);
+    auto opProduct     = makeParserUnary      <tree::node::Kind::OPERATOR            > (_pool, _state);
+    auto opComparison  = makeParserUnary      <tree::node::Kind::OPERATOR            > (_pool, _state);
     auto funCall       = makeParserUnary      <tree::node::Kind::FUN_CALL            > (_pool, _state);
     auto negAtom       = makeParserUnary      <tree::node::Kind::OPPOSE              > (_pool, _state);
     auto statemReturn  = makeParserUnary      <tree::node::Kind::STATEM_RETURN       > (_pool, _state);
@@ -146,15 +145,6 @@ Builder::Builder() :
     auto typing        = makeParser                                                    (_pool, _state);
     auto posAtom       = makeParser                                                    (_pool, _state);
     auto expression    = makeParser                                                    (_pool, _state);
-
-
-    // Aliases
-    _parserExpression  = expression;
-    _parserAssignment  = assignment;
-    _parserDeclaration = declarLet;
-    _parserStatement   = statemReturn;
-    _parserFunction    = declarFun;
-    _parserProgram     = program;
 
     USING_COMBINATORS;
 
@@ -185,6 +175,7 @@ Builder::Builder() :
     keyFunc       = tok(lex::Token::FUNC            );
     keyWhile      = tok(lex::Token::WHILE           );
     keyReturn     = tok(lex::Token::RETURN          );
+    minusKetRight = tok(lex::Token::MINUS_KET_RIGHT );
 
     // Expression
 
@@ -194,17 +185,17 @@ Builder::Builder() :
 
     atom = alt(posAtom, negAtom);
 
-    product = seq(atom, rep(seq(alt(star  ,
-                                    slash ,
-                                    percent), atom)));
+    opProduct = alt(star, slash, percent);
 
-    sum = seq(product, rep(seq(alt(plus,
-                                   minus), product)));
+    product = seq(atom, rep(seq(opProduct, atom)));
 
-    comparison = seq(sum, opt(seq(alt(ketLeft,
-                                      ketRight,
-                                      ketLeftEqual,
-                                      ketRightEqual), sum)));
+    opSum = alt(plus, minus);
+
+    sum = seq(product, rep(seq(opSum, product)));
+
+    opComparison = alt(ketLeft, ketRight, ketLeftEqual, ketRightEqual);
+
+    comparison = seq(sum, opt(seq(opComparison, sum)));
 
     funCall = seq(identifier, parLeft, opt(seq(expression, rep(seq(comma, expression)))), parRight);
 
@@ -232,20 +223,20 @@ Builder::Builder() :
                                          expression), semiColon), scope)), braRight);
     // Function declaration
 
-    declarFun = seq(keyFunc, identifier, seq(parLeft, opt(seq(typing, rep(seq(comma, typing)))), parRight), scope);
+    declarFun = seq(keyFunc, identifier, parLeft, opt(seq(typing, rep(seq(comma, typing)))), parRight, opt(seq(minusKetRight, identifier)), scope);
 
     // Full parser
 
     program = rep(declarFun);
+
+    _parser = program;
 }
 
-const State& Builder::operator()(const std::vector<lex::Token>& tokens, std::optional<Parser> parserOpt)
+const State& Builder::operator()(const std::vector<lex::Token>& tokens)
 {
-    Parser& parser = parserOpt ? parserOpt.value() : _parserProgram;
+    lex::Reader reader(tokens);
 
-    Reader reader(tokens);
-
-    parser(reader);
+    _parser(reader);
 
     return _state;
 }
