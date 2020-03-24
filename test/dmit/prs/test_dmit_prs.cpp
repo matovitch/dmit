@@ -60,14 +60,8 @@ TEST_CASE("dmit::prs::Reader")
     headOpt = reader.makeHead(functionOpt.value(), 1); CHECK(headOpt);
     CHECK(reader.look(headOpt.value())._kind == NodeKind::IDENTIFIER);
     headOpt = reader.makeHead(functionOpt.value(), 2); CHECK(headOpt);
-    CHECK(reader.look(headOpt.value())._kind == NodeKind::IDENTIFIER);
+    CHECK(reader.look(headOpt.value())._kind == NodeKind::ARG_LIST);
     headOpt = reader.makeHead(functionOpt.value(), 3); CHECK(headOpt);
     CHECK(reader.look(headOpt.value())._kind == NodeKind::IDENTIFIER);
-    headOpt = reader.makeHead(functionOpt.value(), 4); CHECK(headOpt);
-    CHECK(reader.look(headOpt.value())._kind == NodeKind::IDENTIFIER);
-    headOpt = reader.makeHead(functionOpt.value(), 5); CHECK(headOpt);
-    CHECK(reader.look(headOpt.value())._kind == NodeKind::IDENTIFIER);
-    headOpt = reader.makeHead(functionOpt.value(), 6); CHECK(headOpt);
-    CHECK(reader.look(headOpt.value())._kind == NodeKind::IDENTIFIER);
-    headOpt = reader.makeHead(functionOpt.value(), 7); CHECK(!headOpt);
+    headOpt = reader.makeHead(functionOpt.value(), 4); CHECK(!headOpt);
 }

@@ -40,6 +40,7 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
         ASSIGNMENT,
         OPERATOR,
         FUN_CALL,
+        ARG_LIST,
         STATEM_WHILE,
         STATEM_RETURN,
         DECLAR_LET,
