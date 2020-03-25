@@ -22,7 +22,10 @@ private:
     dmit::lex::state::Builder _lexer;
 };
 
-TEST_CASE("dmit::lex")
+TEST_SUITE("inout")
+{
+
+TEST_CASE("lex")
 {
     Lexer lexer;
 
@@ -33,3 +36,5 @@ TEST_CASE("dmit::lex")
     CHECK(dmit::fmt::asString(lexer("test/data/lex_4.in")) == fileAsString("test/data/lex_4.out"));
     CHECK(dmit::fmt::asString(lexer("test/data/lex_5.in")) == fileAsString("test/data/lex_5.out"));
 }
+
+} // TEST_SUITE("inout")

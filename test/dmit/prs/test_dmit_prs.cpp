@@ -29,13 +29,18 @@ private:
     dmit::lex::state::Builder _lexer;
 };
 
-TEST_CASE("dmit::prs")
+TEST_SUITE("inout")
+{
+
+TEST_CASE("prs")
 {
     Parser parser;
 
     CHECK(dmit::fmt::asString(parser("test/data/prs_0.in")) == fileAsString("test/data/prs_0.out"));
     CHECK(dmit::fmt::asString(parser("test/data/prs_1.in")) == fileAsString("test/data/prs_1.out"));
 }
+
+} // TEST_SUITE("inout")
 
 using NodeKind = dmit::prs::state::tree::node::Kind;
 
