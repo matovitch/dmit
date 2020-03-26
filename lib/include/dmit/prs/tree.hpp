@@ -46,7 +46,8 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
         DECLAR_LET,
         DECLAR_FUN,
         SCOPE,
-        PROGRAM
+        PROGRAM,
+        END_OF_TREE
     };
 
     DMIT_COM_ENUM_IMPLICIT_FROM_INT(Kind);
@@ -70,12 +71,19 @@ struct Node : fmt::Formatable
     Node() = default;
 
     Node(const node::Kind  kind,
-         const uint32_t size,
-         const uint32_t start,
-         const uint32_t stop);
+         const uint32_t size);
 
     node::Kind  _kind = node::Kind::INVALID;
     uint32_t    _size;
+};
+
+struct Range : fmt::Formatable
+{
+    Range() = default;
+
+    Range(const uint32_t start,
+          const uint32_t stop);
+
     uint32_t    _start;
     uint32_t    _stop;
 };
@@ -86,6 +94,8 @@ class Tree : fmt::Formatable
 {
 
 public:
+
+    Tree();
 
     void clear();
 
@@ -99,11 +109,11 @@ public:
     {
         if constexpr (ARITY != tree::node::Arity::VARIADIC)
         {
-            _nodes.emplace_back(KIND, size, start, stop);
+            addNode(KIND, size, start, stop);
         }
         else if (_nodes.back()._size < size - 1)
         {
-            _nodes.emplace_back(KIND, size, start, stop);
+            addNode(KIND, size, start, stop);
         }
     }
 
@@ -111,9 +121,17 @@ public:
 
     const std::vector<tree::Node>& nodes() const;
 
+    const std::vector<tree::Range>& ranges() const;
+
 private:
 
-    std::vector<tree::Node> _nodes;
+    void addNode(const tree::node::Kind kind,
+                 const uint32_t size,
+                 const uint32_t start,
+                 const uint32_t stop);
+
+    std::vector<tree::Node>  _nodes;
+    std::vector<tree::Range> _ranges;
 };
 
 } // namespace state

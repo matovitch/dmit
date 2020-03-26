@@ -29,15 +29,21 @@ public:
 
     Reader(const state::Tree& tree);
 
-    reader::Head makeHead() const;
+    void advance();
 
-    std::optional<reader::Head> makeHead(const reader::Head head, const int32_t index) const;
+    const state::tree::Node& look() const;
 
-    const state::tree::Node& look(const reader::Head head) const;
+    bool isValid() const;
+
+    std::optional<Reader> makeSubReader() const;
 
 private:
 
-    const std::reference_wrapper<const std::vector<state::tree::Node>> _nodes;
+    Reader(const state::tree::Node* const head,
+              const state::tree::Node* const tail);
+
+    const state::tree::Node* _head;
+    const state::tree::Node* _tail;
 };
 
 } // namespace prs

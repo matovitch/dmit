@@ -11,6 +11,7 @@ ENV TO_INSTALL "               \
     libfuse-dev                \
     wget                       \
     jq                         \
+    python-minimal             \
 "
 
 ENV TO_REMOVE "                \
@@ -31,7 +32,7 @@ RUN set -ex                                                                     
     apt-get update                                                                                              &&\
     apt-get install -y $TO_INSTALL                                                                              &&\
     apt-get update                                                                                              &&\
-    llvm_version=9                                                                                              &&\
+    llvm_version=10                                                                                             &&\
     curl https://apt.llvm.org/llvm.sh > llvm.sh                                                                 &&\
     chmod +x llvm.sh                                                                                            &&\
     ./llvm.sh $llvm_version                                                                                     &&\

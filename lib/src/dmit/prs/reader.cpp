@@ -11,35 +11,39 @@ namespace prs
 {
 
 Reader::Reader(const state::Tree& tree) :
-    _nodes{tree.nodes()}
+    _head{&(tree.nodes().back()) - 1},
+    _tail{&(tree.nodes().front())}
 {}
 
-reader::Head Reader::makeHead() const
+Reader::Reader(const state::tree::Node* const head,
+                     const state::tree::Node* const tail) :
+    _head{head},
+    _tail{tail}
+{}
+
+void Reader::advance()
 {
-    return reader::Head{static_cast<int32_t>(_nodes.get().size() - 1)};
+    _head -= _head->_size + 1;
 }
 
-std::optional<reader::Head> Reader::makeHead(const reader::Head head, const int32_t index) const
+const state::tree::Node& Reader::look() const
 {
-    const int32_t lowerBound = head._offset - _nodes.get()[head._offset]._size;
-          int32_t offset     = head._offset - 1;
+    return *_head;
+}
 
-    for (int32_t i = 0; i < index; i++)
+bool Reader::isValid() const
+{
+    return _head > _tail;
+}
+
+std::optional<Reader> Reader::makeSubReader() const
+{
+    if (_head->_size == 0)
     {
-        offset -= (_nodes.get()[offset]._size + 1);
-
-        if (offset < lowerBound)
-        {
-            return std::nullopt;
-        }
+        return std::nullopt;
     }
 
-    return reader::Head{offset};
-}
-
-const state::tree::Node& Reader::look(const reader::Head head) const
-{
-    return _nodes.get()[head._offset];
+    return Reader{ _head - 1, _head - _head->_size - 1};
 }
 
 } // namespace prs

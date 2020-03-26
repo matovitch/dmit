@@ -21,7 +21,6 @@ pushd $ROOT > /dev/null
                                       echo -n $lhs > ${ROOT}/$outputFile
                                       ;;
                                         [nN][oO]|[nN])
-                                      echo "No"
                                       ;;
                                         *)
                                       echo "Invalid input..."

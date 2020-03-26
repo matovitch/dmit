@@ -52,21 +52,28 @@ TEST_CASE("dmit::prs::Reader")
 
     dmit::prs::Reader reader{tree};
 
-    auto program = reader.makeHead();
+    CHECK(reader.look()._kind == NodeKind::DECLAR_FUN);
 
-    CHECK(reader.look(program)._kind == NodeKind::PROGRAM);
+    auto readerOpt_1 = reader.makeSubReader();
 
-    auto functionOpt = reader.makeHead(program, 0); CHECK(functionOpt);
+    reader.advance();
+    CHECK(!reader.isValid());
 
-    CHECK(reader.look(functionOpt.value())._kind == NodeKind::DECLAR_FUN);
+    CHECK(readerOpt_1);
+    auto readerOpt_2 = readerOpt_1.value().makeSubReader();
 
-    auto headOpt = reader.makeHead(functionOpt.value(), 0); CHECK(headOpt);
-    CHECK(reader.look(headOpt.value())._kind == NodeKind::SCOPE);
-    headOpt = reader.makeHead(functionOpt.value(), 1); CHECK(headOpt);
-    CHECK(reader.look(headOpt.value())._kind == NodeKind::IDENTIFIER);
-    headOpt = reader.makeHead(functionOpt.value(), 2); CHECK(headOpt);
-    CHECK(reader.look(headOpt.value())._kind == NodeKind::ARG_LIST);
-    headOpt = reader.makeHead(functionOpt.value(), 3); CHECK(headOpt);
-    CHECK(reader.look(headOpt.value())._kind == NodeKind::IDENTIFIER);
-    headOpt = reader.makeHead(functionOpt.value(), 4); CHECK(!headOpt);
+    CHECK(readerOpt_1.value().look()._kind == NodeKind::SCOPE);
+    readerOpt_1.value().advance();
+    CHECK(readerOpt_1.value().look()._kind == NodeKind::IDENTIFIER);
+    readerOpt_1.value().advance();
+    CHECK(readerOpt_1.value().look()._kind == NodeKind::ARG_LIST);
+    readerOpt_1.value().advance();
+    CHECK(readerOpt_1.value().look()._kind == NodeKind::IDENTIFIER);
+    readerOpt_1.value().advance();
+    CHECK(!readerOpt_1.value().isValid());
+
+    CHECK(readerOpt_2);
+    CHECK(readerOpt_2.value().look()._kind == NodeKind::STATEM_RETURN);
+    readerOpt_2.value().advance();
+    CHECK(!readerOpt_2.value().isValid());
 }
