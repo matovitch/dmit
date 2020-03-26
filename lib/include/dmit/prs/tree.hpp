@@ -123,6 +123,8 @@ public:
 
     const std::vector<tree::Range>& ranges() const;
 
+    const tree::Range& range(const tree::Node& node) const;
+
 private:
 
     void addNode(const tree::node::Kind kind,

@@ -1,3 +1,3 @@
 #!/bin/bash
 
-tup && ./bin/test/test -tse=inout && ./test/diff_test.sh
+tup && ./test/diff_test.sh && ./bin/test/test -tse=inout

@@ -29,8 +29,7 @@ Range::Range(const uint32_t start,
 
 Tree::Tree()
 {
-    addNode<tree::node::Arity::ONE,
-            tree::node::Kind::END_OF_TREE>(0, 0, 0);
+    _nodes.emplace_back(tree::node::Kind::END_OF_TREE, 0);
 }
 
 void Tree::clear()
@@ -38,8 +37,7 @@ void Tree::clear()
     _nodes  .clear();
     _ranges .clear();
 
-    addNode<tree::node::Arity::ONE,
-            tree::node::Kind::END_OF_TREE>(0, 0, 0);
+    _nodes.emplace_back(tree::node::Kind::END_OF_TREE, 0);
 }
 
 uint32_t Tree::size() const
@@ -50,7 +48,7 @@ uint32_t Tree::size() const
 void Tree::resize(const std::size_t size)
 {
     _nodes  .resize(size);
-    _ranges .resize(size);
+    _ranges .resize(size - 1);
 }
 
 const std::vector<tree::Node>& Tree::nodes() const
@@ -70,6 +68,11 @@ void Tree::addNode(const tree::node::Kind kind,
 {
     _nodes  .emplace_back(kind, size);
     _ranges .emplace_back(start, stop);
+}
+
+const tree::Range& Tree::range(const tree::Node& node) const
+{
+    return _ranges[&node - _nodes.data() - 1];
 }
 
 } // namespace state

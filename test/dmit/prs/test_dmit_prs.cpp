@@ -63,6 +63,10 @@ TEST_CASE("dmit::prs::Reader")
     auto readerOpt_2 = readerOpt_1.value().makeSubReader();
 
     CHECK(readerOpt_1.value().look()._kind == NodeKind::SCOPE);
+
+    CHECK(tree.range(readerOpt_1.value().look())._start == 13);
+    CHECK(tree.range(readerOpt_1.value().look())._stop  == 0);
+
     readerOpt_1.value().advance();
     CHECK(readerOpt_1.value().look()._kind == NodeKind::IDENTIFIER);
     readerOpt_1.value().advance();
