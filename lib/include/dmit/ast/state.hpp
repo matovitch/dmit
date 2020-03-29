@@ -30,6 +30,8 @@ public:
 
 private:
 
+    using ParseNodeKind = dmit::prs::state::tree::node::Kind;
+
     void makeScope(const prs::state::Tree& parseTree,
                    dmit::prs::Reader& reader,
                    TNode<node::Kind::SCOPE>& scope);

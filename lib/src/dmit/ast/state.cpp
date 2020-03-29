@@ -25,7 +25,9 @@ void Builder::makeReturnType(const prs::state::Tree& parseTree,
 {}
 
 void Builder::makeReturnTypeVoid(TNode<node::Kind::RETURN_TYPE>& returnType)
-{}
+{
+    returnType._option = std::nullopt;
+}
 
 void Builder::makeArguments(const prs::state::Tree& parseTree,
                             dmit::prs::Reader& reader,
@@ -40,7 +42,7 @@ void Builder::makeFunction(const prs::state::Tree& parseTree,
                            TNode<node::Kind::FUNCTION>& function)
 {
     // Body
-    DMIT_COM_ASSERT(reader.look()._kind == dmit::prs::state::tree::node::Kind::SCOPE);
+    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::SCOPE);
     auto bodyReader = reader.makeSubReader();
     DMIT_COM_ASSERT(bodyReader);
     _state._nodePool.make(function._body);
@@ -48,7 +50,7 @@ void Builder::makeFunction(const prs::state::Tree& parseTree,
     reader.advance();
 
     // Return type
-    DMIT_COM_ASSERT(reader.look()._kind == dmit::prs::state::tree::node::Kind::RETURN_TYPE);
+    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::RETURN_TYPE);
     _state._nodePool.make(function._returnType);
     auto returnTypeReader = reader.makeSubReader();
     returnTypeReader ? makeReturnType     (parseTree,
@@ -58,7 +60,7 @@ void Builder::makeFunction(const prs::state::Tree& parseTree,
     reader.advance();
 
     // Arguments
-    DMIT_COM_ASSERT(reader.look()._kind == dmit::prs::state::tree::node::Kind::ARG_LIST);
+    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::ARG_LIST);
     _state._nodePool.make(function._arguments);
     auto argumentsReader = reader.makeSubReader();
     argumentsReader ? makeArguments      (parseTree,
@@ -69,7 +71,7 @@ void Builder::makeFunction(const prs::state::Tree& parseTree,
 
     // Name
     const auto& parseNode = reader.look();
-    DMIT_COM_ASSERT(reader.look()._kind == dmit::prs::state::tree::node::Kind::IDENTIFIER);
+    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::IDENTIFIER);
     _state._nodePool.make(function._name);
     _state._nodePool.get(function._name)._index = parseTree.range(parseNode)._start;
 }
@@ -79,7 +81,7 @@ const State& Builder::operator()(const prs::state::Tree& parseTree)
     dmit::prs::Reader reader{parseTree};
 
     DMIT_COM_ASSERT(reader.isValid());
-    DMIT_COM_ASSERT(reader.look()._kind == dmit::prs::state::tree::node::Kind::DECLAR_FUN);
+    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::DECLAR_FUN);
 
     _state._nodePool.make(reader.size(), _state._program._functions);
 
@@ -97,6 +99,8 @@ const State& Builder::operator()(const prs::state::Tree& parseTree)
         reader.advance();
         i++;
     }
+
+    return _state;
 }
 
 } // namespace state
