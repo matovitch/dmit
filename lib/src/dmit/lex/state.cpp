@@ -109,6 +109,16 @@ void Builder::clearState()
     _state.clear();
 }
 
+const std::vector<Token>& Builder::tokens() const
+{
+    return _state._tokens;
+}
+
+const std::vector<uint32_t>& Builder::offsets() const
+{
+    return _state._offsets;
+}
+
 } // namespace state
 } // namespace lex
 } // namespace dmit

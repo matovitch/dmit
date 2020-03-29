@@ -18,6 +18,11 @@ Node::Node(const node::Kind  kind,
     _size{size}
 {}
 
+bool Node::isEmpty() const
+{
+    return _size == 0;
+}
+
 Range::Range(const uint32_t start,
              const uint32_t stop) :
     _start{start},

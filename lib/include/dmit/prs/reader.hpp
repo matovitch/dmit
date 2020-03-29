@@ -37,6 +37,8 @@ public:
 
     std::optional<Reader> makeSubReader() const;
 
+    uint32_t size() const;
+
 private:
 
     Reader(const state::tree::Node* const head,

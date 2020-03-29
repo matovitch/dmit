@@ -16,7 +16,7 @@ Reader::Reader(const state::Tree& tree) :
 {}
 
 Reader::Reader(const state::tree::Node* const head,
-                     const state::tree::Node* const tail) :
+               const state::tree::Node* const tail) :
     _head{head},
     _tail{tail}
 {}
@@ -44,6 +44,21 @@ std::optional<Reader> Reader::makeSubReader() const
     }
 
     return Reader{ _head - 1, _head - _head->_size - 1};
+}
+
+uint32_t Reader::size() const
+{
+    uint32_t size = 1;
+
+    auto head = _head - _head->_size - 1;
+
+    while (head > _tail)
+    {
+        head -= head->_size - 1;
+        size++;
+    }
+
+    return size;
 }
 
 } // namespace prs

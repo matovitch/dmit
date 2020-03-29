@@ -20,6 +20,7 @@ static const char* K_TREE_NODE_KIND_AS_CSTR[] =
     "OPERATOR",
     "FUN_CALL",
     "ARG_LIST",
+    "RETURN_TYPE",
     "STATEM_WHILE",
     "STATEM_RETURN",
     "DECLAR_LET",

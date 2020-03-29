@@ -6,11 +6,8 @@
 
 #include "dmit/lex/state.hpp"
 
-class Parser
+struct Parser
 {
-
-public:
-
     const dmit::prs::State& operator()(const char* const filePath)
     {
         const auto& toParse = fileAsString(filePath);
@@ -22,8 +19,6 @@ public:
                                                                      toParse.size())._tokens;
         return _parser(tokens);
     }
-
-private:
 
     dmit::prs::state::Builder _parser;
     dmit::lex::state::Builder _lexer;
@@ -68,7 +63,7 @@ TEST_CASE("dmit::prs::Reader")
     CHECK(tree.range(readerOpt_1.value().look())._stop  == 0);
 
     readerOpt_1.value().advance();
-    CHECK(readerOpt_1.value().look()._kind == NodeKind::IDENTIFIER);
+    CHECK(readerOpt_1.value().look()._kind == NodeKind::RETURN_TYPE);
     readerOpt_1.value().advance();
     CHECK(readerOpt_1.value().look()._kind == NodeKind::ARG_LIST);
     readerOpt_1.value().advance();

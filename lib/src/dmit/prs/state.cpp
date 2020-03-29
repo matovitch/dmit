@@ -137,6 +137,7 @@ Builder::Builder() :
     auto funCall       = makeParserUnary      <tree::node::Kind::FUN_CALL            > (_pool, _state);
     auto negAtom       = makeParserUnary      <tree::node::Kind::OPPOSE              > (_pool, _state);
     auto argList       = makeParserUnary      <tree::node::Kind::ARG_LIST            > (_pool, _state);
+    auto retType       = makeParserUnary      <tree::node::Kind::RETURN_TYPE         > (_pool, _state);
     auto statemReturn  = makeParserUnary      <tree::node::Kind::STATEM_RETURN       > (_pool, _state);
     auto declarLet     = makeParserUnary      <tree::node::Kind::DECLAR_LET          > (_pool, _state);
     auto declarFun     = makeParserUnary      <tree::node::Kind::DECLAR_FUN          > (_pool, _state);
@@ -226,7 +227,9 @@ Builder::Builder() :
 
     argList = seq(parLeft, opt(seq(typing, rep(seq(comma, typing)))), parRight);
 
-    declarFun = seq(keyFunc, identifier, argList, opt(seq(minusKetRight, identifier)), scope);
+    retType = opt(seq(minusKetRight, identifier));
+
+    declarFun = seq(keyFunc, identifier, argList, retType, scope);
 
     // Full parser
 
