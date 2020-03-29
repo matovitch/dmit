@@ -5,6 +5,8 @@
 #include "dmit/fmt/formatable.hpp"
 
 #include <functional>
+#include <optional>
+#include <variant>
 #include <vector>
 
 namespace dmit
@@ -20,13 +22,18 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
 {
     enum : uint8_t
     {
-        PROGRAM,
-        FUNCTION,
-        ARGUMENTS,
-        TYPING_STATEMENT,
-        RETURN_TYPE,
-        SCOPE,
-        LEXEME,
+        ANNOTA_TYPE   ,
+        ARGUMENTS     ,
+        ASSIGNMENT    ,
+        DECLAR_LET    ,
+        EXPRESSION    ,
+        FUNCTION      ,
+        LEXEME        ,
+        RETURN_TYPE   ,
+        SCOPE         ,
+        SCOPE_VARIANT ,
+        STATEM_RETURN ,
+        PROGRAM
     };
 
     DMIT_COM_ENUM_IMPLICIT_FROM_INT(Kind);
@@ -75,11 +82,11 @@ struct TNode<node::Kind::FUNCTION>
 template <>
 struct TNode<node::Kind::ARGUMENTS>
 {
-    node::TRange<node::Kind::TYPING_STATEMENT> _list;
+    node::TRange<node::Kind::ANNOTA_TYPE> _annotaTypes;
 };
 
 template<>
-struct TNode<node::Kind::TYPING_STATEMENT>
+struct TNode<node::Kind::ANNOTA_TYPE>
 {
     node::TIndex<node::Kind::LEXEME > _variable;
     node::TIndex<node::Kind::LEXEME > _type;
@@ -95,6 +102,22 @@ template <>
 struct TNode<node::Kind::LEXEME>
 {
     uint32_t _index;
+};
+
+template <>
+struct TNode<node::Kind::SCOPE>
+{
+    node::TRange<node::Kind::SCOPE_VARIANT> _variants;
+};
+
+template <>
+struct TNode<node::Kind::SCOPE_VARIANT>
+{
+    std::variant<node::TIndex<node::Kind::DECLAR_LET    >,
+                 node::TIndex<node::Kind::STATEM_RETURN >,
+                 node::TIndex<node::Kind::ASSIGNMENT    >,
+                 node::TIndex<node::Kind::EXPRESSION    >,
+                 node::TIndex<node::Kind::SCOPE         >> _value;
 };
 
 } // namespace ast

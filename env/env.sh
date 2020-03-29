@@ -3,6 +3,16 @@
 ROOT_FOLDER="$(readlink -f $(dirname $0)/..)"
 PROJECT_NAME=$(basename $ROOT_FOLDER | perl -pe 's/([^_])([A-Z])/\1_\2/g' | tr '[:upper:]' '[:lower:]')
 
+function build()
+{
+    tup && ./test/diff_test.sh && ./bin/test/test -tse=inout
+}
+
+function cleanSource()
+{
+    find . -type f -name "*.[ch]pp" | while read file; do sed -i 's/ *$//' $file; done
+}
+
 function makeEnv()
 {
     docker build -t ${PROJECT_NAME}:env -f ${ROOT_FOLDER}/env/env.Dockerfile ${ROOT_FOLDER}/env

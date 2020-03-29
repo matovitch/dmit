@@ -12,11 +12,7 @@ namespace dmit
 namespace ast
 {
 
-struct State
-{
-    TNode<node::Kind::PROGRAM> _program;
-    node::TPool<0x10>          _nodePool;
-};
+using State = TNode<node::Kind::PROGRAM>;
 
 namespace state
 {
@@ -51,7 +47,26 @@ private:
     void makeFunction(const prs::state::Tree& parseTree,
                       dmit::prs::Reader& reader,
                       TNode<node::Kind::FUNCTION>& function);
+
+    void makeDeclarLet(const prs::state::Tree& parseTree,
+                       dmit::prs::Reader& reader,
+                       TNode<node::Kind::DECLAR_LET>& declarLet);
+
+    void makeAssignment(const prs::state::Tree& parseTree,
+                        dmit::prs::Reader& reader,
+                        TNode<node::Kind::ASSIGNMENT>& assignment);
+
+    void makeExpression(const prs::state::Tree& parseTree,
+                        const dmit::prs::Reader& reader,
+                        TNode<node::Kind::EXPRESSION>& expression);
+
+    void makeStatemReturn(const prs::state::Tree& parseTree,
+                          dmit::prs::Reader& reader,
+                          TNode<node::Kind::STATEM_RETURN>& statemReturn);
+
+
     State _state;
+    node::TPool<0x10> _nodePool;
 };
 
 } // namespace state
