@@ -17,24 +17,44 @@ namespace ast
 namespace state
 {
 
-void Builder::makeDeclarLet(const prs::state::Tree& parseTree,
-                            dmit::prs::Reader& reader,
-                            TNode<node::Kind::DECLAR_LET>& declarLet)
+namespace
+{
+
+bool isDeclaration(const dmit::prs::state::tree::node::Kind parseNodeKind)
+{
+    return parseNodeKind == dmit::prs::state::tree::node::Kind::DECLAR_LET;
+}
+
+bool isStatement(const dmit::prs::state::tree::node::Kind parseNodeKind)
+{
+    return parseNodeKind == dmit::prs::state::tree::node::Kind::ASSIGNMENT ||
+           parseNodeKind == dmit::prs::state::tree::node::Kind::STATEM_RETURN;
+}
+
+bool isExpression(const dmit::prs::state::tree::node::Kind parseNodeKind)
+{
+    return parseNodeKind == dmit::prs::state::tree::node::Kind::FUN_CALL   ||
+           parseNodeKind == dmit::prs::state::tree::node::Kind::COMPARISON ||
+           parseNodeKind == dmit::prs::state::tree::node::Kind::PRODUCT    ||
+           parseNodeKind == dmit::prs::state::tree::node::Kind::SUM        ||
+           parseNodeKind == dmit::prs::state::tree::node::Kind::IDENTIFIER;
+}
+
+} // namespace
+
+void Builder::makeDeclaration(const prs::state::Tree& parseTree,
+                              const dmit::prs::Reader& reader,
+                              TNode<node::Kind::SCOPE_VARIANT>& declaration)
 {}
 
-void Builder::makeAssignment(const prs::state::Tree& parseTree,
-                            dmit::prs::Reader& reader,
-                            TNode<node::Kind::ASSIGNMENT>& assignment)
+void Builder::makeStatement(const prs::state::Tree& parseTree,
+                            const dmit::prs::Reader& reader,
+                            TNode<node::Kind::SCOPE_VARIANT>& statement)
 {}
 
 void Builder::makeExpression(const prs::state::Tree& parseTree,
                              const dmit::prs::Reader& reader,
-                             TNode<node::Kind::EXPRESSION>& expression)
-{}
-
-void Builder::makeStatemReturn(const prs::state::Tree& parseTree,
-                               dmit::prs::Reader& reader,
-                               TNode<node::Kind::STATEM_RETURN>& statemReturn)
+                             TNode<node::Kind::SCOPE_VARIANT>& expression)
 {}
 
 void Builder::makeScope(const prs::state::Tree& parseTree,
@@ -47,33 +67,21 @@ void Builder::makeScope(const prs::state::Tree& parseTree,
 
     while (reader.isValid())
     {
-        auto variant       = _nodePool.get(scope._variants[i]);
-        auto variantReader = reader.makeSubReader();
+        auto&& variant = _nodePool.get(scope._variants[i]);
 
         auto parseNodeKind = reader.look()._kind;
 
-        if (parseNodeKind == ParseNodeKind::DECLAR_LET)
+        if (isDeclaration(parseNodeKind))
         {
-            DMIT_COM_ASSERT(variantReader);
-            variant._value = node::TIndex<node::Kind::DECLAR_LET>{};
-            makeDeclarLet(parseTree, variantReader.value(), _nodePool.get(std::get<node::TIndex<node::Kind::DECLAR_LET>>(variant._value)));
+            makeDeclaration(parseTree, reader, variant);
         }
-        else if (parseNodeKind == ParseNodeKind::ASSIGNMENT)
+        else if (isStatement(parseNodeKind))
         {
-            DMIT_COM_ASSERT(variantReader);
-            variant._value = node::TIndex<node::Kind::ASSIGNMENT>{};
-            makeAssignment(parseTree, variantReader.value(), _nodePool.get(std::get<node::TIndex<node::Kind::ASSIGNMENT>>(variant._value)));
+            makeStatement(parseTree, reader, variant);
         }
-        else if (parseNodeKind == ParseNodeKind::STATEM_RETURN)
+        else if (isExpression(parseNodeKind))
         {
-            DMIT_COM_ASSERT(variantReader);
-            variant._value = node::TIndex<node::Kind::STATEM_RETURN>{};
-            makeStatemReturn(parseTree, variantReader.value(), _nodePool.get(std::get<node::TIndex<node::Kind::STATEM_RETURN>>(variant._value)));
-        }
-        else
-        {
-            variant._value = node::TIndex<node::Kind::EXPRESSION>{};
-            makeExpression(parseTree, reader, _nodePool.get(std::get<node::TIndex<node::Kind::EXPRESSION>>(variant._value)));
+            makeExpression(parseTree, reader, variant);
         }
 
         reader.advance();
@@ -105,7 +113,7 @@ void Builder::makeArguments(const prs::state::Tree& parseTree,
 
     while (reader.isValid())
     {
-        auto annotaType = _nodePool.get(arguments._annotaTypes[i]);
+        auto&& annotaType = _nodePool.get(arguments._annotaTypes[i]);
 
         // Variable
         DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::IDENTIFIER);
@@ -179,8 +187,8 @@ const State& Builder::operator()(const prs::state::Tree& parseTree)
 
     while (reader.isValid())
     {
-        auto function = _nodePool.get(_state._functions[i]);
-        auto functionReader = reader.makeSubReader();
+        auto&& function = _nodePool.get(_state._functions[i]);
+        auto&& functionReader = reader.makeSubReader();
 
         DMIT_COM_ASSERT(functionReader);
 

@@ -4,6 +4,8 @@
 
 #include "dmit/fmt/formatable.hpp"
 
+#include "dmit/com/variant.hpp"
+
 #include <functional>
 #include <optional>
 #include <variant>
@@ -25,8 +27,8 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
         ANNOTA_TYPE   ,
         ARGUMENTS     ,
         ASSIGNMENT    ,
+        BINOP         ,
         DECLAR_LET    ,
-        EXPRESSION    ,
         FUNCTION      ,
         LEXEME        ,
         RETURN_TYPE   ,
@@ -110,14 +112,15 @@ struct TNode<node::Kind::SCOPE>
     node::TRange<node::Kind::SCOPE_VARIANT> _variants;
 };
 
+using Statement = std::variant<node::TIndex<node::Kind::ASSIGNMENT    >,
+                               node::TIndex<node::Kind::STATEM_RETURN >>;
 template <>
 struct TNode<node::Kind::SCOPE_VARIANT>
 {
-    std::variant<node::TIndex<node::Kind::DECLAR_LET    >,
-                 node::TIndex<node::Kind::STATEM_RETURN >,
-                 node::TIndex<node::Kind::ASSIGNMENT    >,
-                 node::TIndex<node::Kind::EXPRESSION    >,
-                 node::TIndex<node::Kind::SCOPE         >> _value;
+    com::variant::TFlatMerge<Statement,
+                             node::TIndex<node::Kind::DECLAR_LET >,
+                             node::TIndex<node::Kind::BINOP      >,
+                             node::TIndex<node::Kind::SCOPE      >> _value;
 };
 
 } // namespace ast

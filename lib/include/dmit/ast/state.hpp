@@ -48,23 +48,18 @@ private:
                       dmit::prs::Reader& reader,
                       TNode<node::Kind::FUNCTION>& function);
 
-    void makeDeclarLet(const prs::state::Tree& parseTree,
-                       dmit::prs::Reader& reader,
-                       TNode<node::Kind::DECLAR_LET>& declarLet);
+    void makeDeclaration(const prs::state::Tree& parseTree,
+                         const dmit::prs::Reader& reader,
+                         TNode<node::Kind::SCOPE_VARIANT>& declaration);
 
-    void makeAssignment(const prs::state::Tree& parseTree,
-                        dmit::prs::Reader& reader,
-                        TNode<node::Kind::ASSIGNMENT>& assignment);
+    void makeStatement(const prs::state::Tree& parseTree,
+                       const dmit::prs::Reader& reader,
+                       TNode<node::Kind::SCOPE_VARIANT>& statement);
 
     void makeExpression(const prs::state::Tree& parseTree,
                         const dmit::prs::Reader& reader,
-                        TNode<node::Kind::EXPRESSION>& expression);
-
-    void makeStatemReturn(const prs::state::Tree& parseTree,
-                          dmit::prs::Reader& reader,
-                          TNode<node::Kind::STATEM_RETURN>& statemReturn);
-
-
+                        TNode<node::Kind::SCOPE_VARIANT>& expression);
+    
     State _state;
     node::TPool<0x10> _nodePool;
 };
