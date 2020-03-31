@@ -35,6 +35,8 @@ public:
 
     bool isValid() const;
 
+    bool isValidNext() const;
+
     std::optional<Reader> makeSubReader() const;
 
     uint32_t size() const;

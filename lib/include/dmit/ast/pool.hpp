@@ -83,6 +83,7 @@ struct TPool
                pool::TSub<Kind::ASSIGNMENT    , LOG2_SIZE>,
                pool::TSub<Kind::BINOP         , LOG2_SIZE>,
                pool::TSub<Kind::DECLAR_LET    , LOG2_SIZE>,
+               pool::TSub<Kind::FUN_CALL      , LOG2_SIZE>,
                pool::TSub<Kind::FUNCTION      , LOG2_SIZE>,
                pool::TSub<Kind::LEXEME        , LOG2_SIZE>,
                pool::TSub<Kind::RETURN_TYPE   , LOG2_SIZE>,

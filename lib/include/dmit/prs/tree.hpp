@@ -74,8 +74,6 @@ struct Node : fmt::Formatable
     Node(const node::Kind  kind,
          const uint32_t size);
 
-    bool isEmpty() const;
-
     node::Kind  _kind = node::Kind::INVALID;
     uint32_t    _size;
 };

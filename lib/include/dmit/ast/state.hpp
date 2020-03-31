@@ -50,16 +50,28 @@ private:
 
     void makeDeclaration(const prs::state::Tree& parseTree,
                          const dmit::prs::Reader& reader,
-                         TNode<node::Kind::SCOPE_VARIANT>& declaration);
+                         Declaration& declaration);
 
     void makeStatement(const prs::state::Tree& parseTree,
                        const dmit::prs::Reader& reader,
-                       TNode<node::Kind::SCOPE_VARIANT>& statement);
+                       Statement& statement);
 
     void makeExpression(const prs::state::Tree& parseTree,
                         const dmit::prs::Reader& reader,
-                        TNode<node::Kind::SCOPE_VARIANT>& expression);
-    
+                        Expression& expression);
+
+    void makeAssignment(const prs::state::Tree& parseTree,
+                        const dmit::prs::Reader& supReader,
+                        TNode<node::Kind::ASSIGNMENT>& assignment);
+
+    void makeStatemReturn(const prs::state::Tree& parseTree,
+                          const dmit::prs::Reader& supReader,
+                          TNode<node::Kind::STATEM_RETURN>& statemReturn);
+
+    void makeBinop(const prs::state::Tree& parseTree,
+                   dmit::prs::Reader& reader,
+                   TNode<node::Kind::BINOP>& binop);
+
     State _state;
     node::TPool<0x10> _nodePool;
 };

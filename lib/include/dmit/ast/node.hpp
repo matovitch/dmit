@@ -4,8 +4,6 @@
 
 #include "dmit/fmt/formatable.hpp"
 
-#include "dmit/com/variant.hpp"
-
 #include <functional>
 #include <optional>
 #include <variant>
@@ -29,6 +27,7 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
         ASSIGNMENT    ,
         BINOP         ,
         DECLAR_LET    ,
+        FUN_CALL      ,
         FUNCTION      ,
         LEXEME        ,
         RETURN_TYPE   ,
@@ -112,15 +111,37 @@ struct TNode<node::Kind::SCOPE>
     node::TRange<node::Kind::SCOPE_VARIANT> _variants;
 };
 
+using Declaration = std::variant<node::TIndex<node::Kind::DECLAR_LET >>;
+
 using Statement = std::variant<node::TIndex<node::Kind::ASSIGNMENT    >,
                                node::TIndex<node::Kind::STATEM_RETURN >>;
+
+using Expression = std::variant<node::TIndex<node::Kind::LEXEME   >,
+                                node::TIndex<node::Kind::BINOP    >,
+                                node::TIndex<node::Kind::FUN_CALL >>;
+
 template <>
 struct TNode<node::Kind::SCOPE_VARIANT>
 {
-    com::variant::TFlatMerge<Statement,
-                             node::TIndex<node::Kind::DECLAR_LET >,
-                             node::TIndex<node::Kind::BINOP      >,
-                             node::TIndex<node::Kind::SCOPE      >> _value;
+    std::variant<Statement,
+                 Declaration,
+                 Expression,
+                 node::TIndex<node::Kind::SCOPE>> _value;
+};
+
+template <>
+struct TNode<node::Kind::STATEM_RETURN>
+{
+    Expression _expression;
+};
+
+template <>
+struct TNode<node::Kind::BINOP>
+{
+    node::TIndex<node::Kind::LEXEME> _operator;
+
+    Expression _lhs;
+    Expression _rhs;
 };
 
 } // namespace ast
