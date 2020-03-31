@@ -59,7 +59,7 @@ uint32_t Reader::size() const
 
     while (head > _tail)
     {
-        head -= head->_size - 1;
+        head -= head->_size + 1;
         size++;
     }
 

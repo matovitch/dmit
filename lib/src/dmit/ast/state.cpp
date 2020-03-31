@@ -5,8 +5,10 @@
 
 #include "dmit/com/assert.hpp"
 
+#include <type_traits>
 #include <cstdint>
 #include <variant>
+#include <cstring>
 
 namespace dmit
 {
@@ -47,6 +49,13 @@ bool isBinaryOperation(const dmit::prs::state::tree::node::Kind parseNodeKind)
            parseNodeKind == dmit::prs::state::tree::node::Kind::PRODUCT;
 }
 
+template <class Variant, class BlipType>
+void blipVariant(const BlipType& toBlip, Variant& variant)
+{
+    const Variant toBlipAsVariant = toBlip;
+    std::memcpy(&variant, &toBlipAsVariant, sizeof(Variant));
+}
+
 } // namespace
 
 
@@ -58,12 +67,10 @@ void Builder::makeAssignment(const prs::state::Tree& parseTree,
 }
 
 void Builder::makeStatemReturn(const prs::state::Tree& parseTree,
-                               const dmit::prs::Reader& reader,
+                               dmit::prs::Reader& reader,
                                TNode<node::Kind::STATEM_RETURN>& statemReturn)
 {
-    auto subReader = reader.makeSubReader();
-    DMIT_COM_ASSERT(subReader);
-    makeExpression(parseTree, subReader.value(), statemReturn._expression);
+    makeExpression(parseTree, reader, statemReturn._expression);
 }
 
 void Builder::makeDeclaration(const prs::state::Tree& parseTree,
@@ -84,17 +91,17 @@ void Builder::makeStatement(const prs::state::Tree& parseTree,
 
     if (parseNodeKind == ParseNodeKind::ASSIGNMENT)
     {
-        statement = node::TIndex<node::Kind::ASSIGNMENT>{};
-        auto& assignment = std::get<node::TIndex<node::Kind::ASSIGNMENT>>(statement);
+        node::TIndex<node::Kind::ASSIGNMENT> assignment;
         _nodePool.make(assignment);
         makeAssignment(parseTree, subReader.value(), _nodePool.get(assignment));
+        blipVariant(assignment, statement);
     }
     else if (parseNodeKind == ParseNodeKind::STATEM_RETURN)
     {
-        statement = node::TIndex<node::Kind::STATEM_RETURN>{};
-        auto& statemReturn = std::get<node::TIndex<node::Kind::STATEM_RETURN>>(statement);
+        node::TIndex<node::Kind::STATEM_RETURN> statemReturn;
         _nodePool.make(statemReturn);
         makeStatemReturn(parseTree, subReader.value(), _nodePool.get(statemReturn));
+        blipVariant(statemReturn, statement);
     }
     else
     {
@@ -137,19 +144,19 @@ void Builder::makeExpression(const prs::state::Tree& parseTree,
 
     if (parseNodeKind == ParseNodeKind::IDENTIFIER)
     {
-        expression = node::TIndex<node::Kind::LEXEME>{};
-        auto& lexeme = std::get<node::TIndex<node::Kind::LEXEME>>(expression);
+        node::TIndex<node::Kind::LEXEME> lexeme;
         _nodePool.make (lexeme);
         _nodePool.get  (lexeme)._index = parseTree.range(reader.look())._start;
+        blipVariant    (lexeme, expression);
     }
     else if (isBinaryOperation(parseNodeKind))
     {
-        expression = node::TIndex<node::Kind::BINOP>{};
-        auto& binop = std::get<node::TIndex<node::Kind::BINOP>>(expression);
+        node::TIndex<node::Kind::BINOP> binop;
         _nodePool.make(binop);
         auto subReader = reader.makeSubReader();
         DMIT_COM_ASSERT(subReader);
         makeBinop(parseTree, subReader.value(), _nodePool.get(binop));
+        blipVariant(binop, expression);
     }
     else
     {
@@ -173,27 +180,27 @@ void Builder::makeScope(const prs::state::Tree& parseTree,
 
         if (isDeclaration(parseNodeKind))
         {
-            variant._value = Declaration{};
+            blipVariant(Declaration{}, variant._value);
             makeDeclaration(parseTree, reader, std::get<Declaration>(variant._value));
         }
         else if (isStatement(parseNodeKind))
         {
-            variant._value = Statement{};
+            blipVariant(Statement{}, variant._value);
             makeStatement(parseTree, reader, std::get<Statement>(variant._value));
         }
         else if (isExpression(parseNodeKind))
         {
-            variant._value = Expression{};
+            blipVariant(Expression{}, variant._value);
             makeExpression(parseTree, reader, std::get<Expression>(variant._value));
         }
         else if (parseNodeKind == ParseNodeKind::SCOPE)
         {
-            variant._value = node::TIndex<node::Kind::SCOPE>{};
-            auto& subScope = std::get<node::TIndex<node::Kind::SCOPE>>(variant._value);
+            node::TIndex<node::Kind::SCOPE> subScope;
             _nodePool.make(subScope);
             auto subReader = reader.makeSubReader();
             DMIT_COM_ASSERT(subReader);
             makeScope(parseTree, subReader.value(), _nodePool.get(subScope));
+            blipVariant(subScope, variant._value);
         }
         else
         {
@@ -209,9 +216,11 @@ void Builder::makeReturnType(const prs::state::Tree& parseTree,
                              dmit::prs::Reader& reader,
                              TNode<node::Kind::RETURN_TYPE>& returnType)
 {
-    returnType._option = node::TIndex<node::Kind::LEXEME>{};
-    _nodePool.make (returnType._option.value());
-    _nodePool.get  (returnType._option.value())._index = parseTree.range(reader.look())._start;
+    node::TIndex<node::Kind::LEXEME> lexeme;
+    _nodePool.make(lexeme);
+    std::decay_t<decltype(returnType._option)> toBlip = lexeme;
+    std::memcpy(&(returnType._option), &toBlip, sizeof(std::decay_t<decltype(toBlip)>));
+    _nodePool.get(lexeme)._index = parseTree.range(reader.look())._start;
 }
 
 void Builder::makeReturnTypeVoid(TNode<node::Kind::RETURN_TYPE>& returnType)
@@ -277,6 +286,7 @@ void Builder::makeFunction(const prs::state::Tree& parseTree,
     DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::ARG_LIST);
     _nodePool.make(function._arguments);
     auto argumentsReader = reader.makeSubReader();
+    DMIT_COM_ASSERT(argumentsReader);
     argumentsReader ? makeArguments      (parseTree,
                                           argumentsReader.value(),
                                           _nodePool.get(function._arguments))
@@ -295,14 +305,14 @@ const State& Builder::operator()(const prs::state::Tree& parseTree)
     dmit::prs::Reader reader{parseTree};
 
     DMIT_COM_ASSERT(reader.isValid());
-    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::DECLAR_FUN);
-
     _nodePool.make(reader.size(), _state._functions);
 
     uint32_t i = 0;
 
     while (reader.isValid())
     {
+        DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::DECLAR_FUN);
+
         auto& function = _nodePool.get(_state._functions[i]);
         auto  functionReader = reader.makeSubReader();
 
@@ -315,6 +325,11 @@ const State& Builder::operator()(const prs::state::Tree& parseTree)
     }
 
     return _state;
+}
+
+const Builder::NodePool& Builder::nodePool() const
+{
+    return _nodePool;
 }
 
 } // namespace state

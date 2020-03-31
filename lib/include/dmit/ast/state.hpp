@@ -22,7 +22,11 @@ class Builder
 
 public:
 
+    using NodePool = node::TPool<0x10>;
+
     const State& operator()(const prs::state::Tree& parseTree);
+
+    const NodePool& nodePool() const;
 
 private:
 
@@ -65,15 +69,15 @@ private:
                         TNode<node::Kind::ASSIGNMENT>& assignment);
 
     void makeStatemReturn(const prs::state::Tree& parseTree,
-                          const dmit::prs::Reader& supReader,
+                          dmit::prs::Reader& reader,
                           TNode<node::Kind::STATEM_RETURN>& statemReturn);
 
     void makeBinop(const prs::state::Tree& parseTree,
                    dmit::prs::Reader& reader,
                    TNode<node::Kind::BINOP>& binop);
 
-    State _state;
-    node::TPool<0x10> _nodePool;
+    State    _state;
+    NodePool _nodePool;
 };
 
 } // namespace state

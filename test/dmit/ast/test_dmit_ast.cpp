@@ -1,3 +1,4 @@
+#include "dmit/ast/state.hpp"
 #include "dmit/ast/pool.hpp"
 #include "dmit/ast/node.hpp"
 
@@ -9,10 +10,12 @@
 #include "doctest/doctest_fwd.h"
 #include "doctest/utils.h"
 
-struct ParserNew
+#include <variant>
+
+struct Aster
 {
 
-    const dmit::prs::State& operator()(const char* const filePath)
+    const dmit::ast::State& operator()(const char* const filePath)
     {
         const auto& toParse = fileAsString(filePath);
 
@@ -21,62 +24,52 @@ struct ParserNew
 
         const auto& tokens = _lexer(reinterpret_cast<const uint8_t*>(toParse.data()),
                                                                      toParse.size())._tokens;
-        return _parser(tokens);
+        const auto& parseTree = _parser(tokens)._tree;
+
+        return _aster(parseTree);
     }
 
+    dmit::ast::state::Builder _aster;
     dmit::prs::state::Builder _parser;
     dmit::lex::state::Builder _lexer;
 };
 
-void makeFunction(const dmit::prs::state::Tree& tree,
-                  dmit::prs::Reader& reader,
-                  dmit::ast::TNode<dmit::ast::node::Kind::FUNCTION>& function,
-                  dmit::ast::node::TPool<2>& nodePool)
-{
-    CHECK(reader.look()._kind == NodeKind::SCOPE);
-    nodePool.make(function._body);
-    reader.advance();
-    CHECK(reader.look()._kind == NodeKind::RETURN_TYPE);
-    nodePool.make(function._returnType);
-    reader.advance();
-    CHECK(reader.look()._kind == NodeKind::ARG_LIST);
-    nodePool.make(function._arguments);
-    reader.advance();
-    CHECK(reader.look()._kind == NodeKind::IDENTIFIER);
-    nodePool.make(function._name);
-
-    nodePool.get(function._name)._index = tree.range(reader.look())._start;
-}
-
 TEST_CASE("dmit::ast::dummy")
 {
-    Parser parser;
+    Aster aster;
 
-    const auto& tree = parser("test/data/prs_0.in")._tree;
+    const auto& ast = aster("test/data/prs_0.in");
 
-    dmit::prs::Reader reader{tree};
+    const auto& astNodePool = aster._aster.nodePool();
 
-    dmit::ast::node::TPool<2> nodePool;
+    CHECK(ast._functions._size == 1);
 
-    dmit::ast::TNode<dmit::ast::node::Kind::PROGRAM> program;
+    const auto& function = astNodePool.get(ast._functions[0]);
 
-    CHECK(reader.isValid());
-    CHECK(reader.look()._kind == NodeKind::DECLAR_FUN);
+    const auto& functionName       = astNodePool.get(function._name       );
+    const auto& functionArguments  = astNodePool.get(function._arguments  );
+    const auto& functionReturnType = astNodePool.get(function._returnType );
+    const auto& functionBody       = astNodePool.get(function._body       );
 
-    nodePool.make(reader.size(), program._functions);
+    CHECK(functionName._index == 33);
+    CHECK(functionArguments._annotaTypes._size == 2);
+    CHECK(functionReturnType._option);
+    CHECK(functionBody._variants._size == 1);
 
-    uint32_t i = 0;
+    const auto& functionBodyContent = astNodePool.get(functionBody._variants[0]);
 
-    while (reader.isValid())
-    {
-        auto function = nodePool.get(program._functions[i]);
-        auto functionReader = reader.makeSubReader();
+    CHECK(std::holds_alternative<dmit::ast::Statement>(functionBodyContent._value));
 
-        CHECK(functionReader);
+    const auto& statement = std::get<dmit::ast::Statement>(functionBodyContent._value);
 
-        makeFunction(tree, functionReader.value(), function, nodePool);
+    CHECK(std::holds_alternative<dmit::ast::node::TIndex<dmit::ast::node::Kind::STATEM_RETURN>>(statement));
 
-        reader.advance();
-        i++;
-    }
+    const auto& stmReturn = astNodePool.get(std::get<dmit::ast::node::TIndex<dmit::ast::node::Kind::STATEM_RETURN>>(statement));
+
+    CHECK(std::holds_alternative<dmit::ast::node::TIndex<dmit::ast::node::Kind::BINOP>>(stmReturn._expression));
+
+    const auto& binop = astNodePool.get(std::get<dmit::ast::node::TIndex<dmit::ast::node::Kind::BINOP>>(stmReturn._expression));
+
+    CHECK(std::holds_alternative<dmit::ast::node::TIndex<dmit::ast::node::Kind::LEXEME>>(binop._lhs));
+    CHECK(std::holds_alternative<dmit::ast::node::TIndex<dmit::ast::node::Kind::LEXEME>>(binop._rhs));
 }

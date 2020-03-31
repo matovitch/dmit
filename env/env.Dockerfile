@@ -12,6 +12,7 @@ ENV TO_INSTALL "               \
     wget                       \
     jq                         \
     python-minimal             \
+    valgrind                   \
 "
 
 ENV TO_REMOVE "                \
