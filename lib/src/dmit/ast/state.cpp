@@ -331,7 +331,6 @@ void Builder::makeFunction(const prs::state::Tree& parseTree,
     reader.advance();
 
     // Arguments
-    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::FUN_ARGUMENTS);
     _nodePool.make(function._arguments);
     makeArguments(parseTree, reader, _nodePool.get(function._arguments));
     reader.advance();
