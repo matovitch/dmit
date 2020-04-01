@@ -24,29 +24,21 @@ namespace
 
 bool isDeclaration(const dmit::prs::state::tree::node::Kind parseNodeKind)
 {
-    return parseNodeKind == dmit::prs::state::tree::node::Kind::DECLAR_LET;
+    return parseNodeKind == dmit::prs::state::tree::node::Kind::DCL_VARIABLE;
 }
 
 bool isStatement(const dmit::prs::state::tree::node::Kind parseNodeKind)
 {
-    return parseNodeKind == dmit::prs::state::tree::node::Kind::ASSIGNMENT ||
-           parseNodeKind == dmit::prs::state::tree::node::Kind::STATEM_RETURN;
+    return parseNodeKind == dmit::prs::state::tree::node::Kind::STM_ASSIGN ||
+           parseNodeKind == dmit::prs::state::tree::node::Kind::STM_RETURN;
 }
 
 bool isExpression(const dmit::prs::state::tree::node::Kind parseNodeKind)
 {
-    return parseNodeKind == dmit::prs::state::tree::node::Kind::FUN_CALL   ||
-           parseNodeKind == dmit::prs::state::tree::node::Kind::COMPARISON ||
-           parseNodeKind == dmit::prs::state::tree::node::Kind::PRODUCT    ||
-           parseNodeKind == dmit::prs::state::tree::node::Kind::SUM        ||
-           parseNodeKind == dmit::prs::state::tree::node::Kind::IDENTIFIER;
-}
-
-bool isBinaryOperation(const dmit::prs::state::tree::node::Kind parseNodeKind)
-{
-    return parseNodeKind == dmit::prs::state::tree::node::Kind::COMPARISON ||
-           parseNodeKind == dmit::prs::state::tree::node::Kind::SUM        ||
-           parseNodeKind == dmit::prs::state::tree::node::Kind::PRODUCT;
+    return parseNodeKind == dmit::prs::state::tree::node::Kind::FUN_CALL    ||
+           parseNodeKind == dmit::prs::state::tree::node::Kind::EXP_BINOP   ||
+           parseNodeKind == dmit::prs::state::tree::node::Kind::LIT_INTEGER ||
+           parseNodeKind == dmit::prs::state::tree::node::Kind::LIT_IDENTIFIER;
 }
 
 template <class Variant, class BlipType>
@@ -61,23 +53,57 @@ void blitVariant(const BlipType& toBlip, Variant& variant)
 
 void Builder::makeAssignment(const prs::state::Tree& parseTree,
                              const dmit::prs::Reader& supReader,
-                             TNode<node::Kind::ASSIGNMENT>& assignment)
+                             TNode<node::Kind::STM_ASSIGN>& assignment)
 {
     // TODO
 }
 
-void Builder::makeStatemReturn(const prs::state::Tree& parseTree,
+void Builder::makeReturn(const prs::state::Tree& parseTree,
                                dmit::prs::Reader& reader,
-                               TNode<node::Kind::STATEM_RETURN>& statemReturn)
+                               TNode<node::Kind::STM_RETURN>& stmReturn)
 {
-    makeExpression(parseTree, reader, statemReturn._expression);
+    makeExpression(parseTree, reader, stmReturn._expression);
+}
+
+void Builder::makeDclVariable(const prs::state::Tree& parseTree,
+                              dmit::prs::Reader& reader,
+                              TNode<node::Kind::DCL_VARIABLE>& dclVariable)
+{
+    _nodePool.make(dclVariable._typeClaim);
+    makeTypeClaim(parseTree, reader, _nodePool.get(dclVariable._typeClaim));
+}
+
+void Builder::makeTypeClaim(const prs::state::Tree& parseTree,
+                            dmit::prs::Reader& reader,
+                            TNode<node::Kind::TYPE_CLAIM>& typeClaim)
+{
+    // Variable
+    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::LIT_IDENTIFIER);
+    _nodePool.make(typeClaim._variable);
+    makeIdentifier(parseTree, reader, _nodePool.get(typeClaim._variable));
+    reader.advance();
+
+    // Type
+    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::LIT_IDENTIFIER);
+    _nodePool.make(typeClaim._type);
+    makeIdentifier(parseTree, reader, _nodePool.get(typeClaim._type));
+    reader.advance();
 }
 
 void Builder::makeDeclaration(const prs::state::Tree& parseTree,
                               const dmit::prs::Reader& reader,
                               Declaration& declaration)
 {
-    // TODO
+    auto parseNodeKind = reader.look()._kind;
+    DMIT_COM_ASSERT(parseNodeKind == ParseNodeKind::DCL_VARIABLE);
+
+    auto subReader = reader.makeSubReader();
+    DMIT_COM_ASSERT(subReader);
+
+    node::TIndex<node::Kind::DCL_VARIABLE> dclVariable;
+    _nodePool.make(dclVariable);
+    makeDclVariable(parseTree, subReader.value(), _nodePool.get(dclVariable));
+    blitVariant(dclVariable, declaration);
 }
 
 void Builder::makeStatement(const prs::state::Tree& parseTree,
@@ -89,19 +115,19 @@ void Builder::makeStatement(const prs::state::Tree& parseTree,
 
     auto parseNodeKind = reader.look()._kind;
 
-    if (parseNodeKind == ParseNodeKind::ASSIGNMENT)
+    if (parseNodeKind == ParseNodeKind::STM_ASSIGN)
     {
-        node::TIndex<node::Kind::ASSIGNMENT> assignment;
+        node::TIndex<node::Kind::STM_ASSIGN> assignment;
         _nodePool.make(assignment);
         makeAssignment(parseTree, subReader.value(), _nodePool.get(assignment));
         blitVariant(assignment, statement);
     }
-    else if (parseNodeKind == ParseNodeKind::STATEM_RETURN)
+    else if (parseNodeKind == ParseNodeKind::STM_RETURN)
     {
-        node::TIndex<node::Kind::STATEM_RETURN> statemReturn;
-        _nodePool.make(statemReturn);
-        makeStatemReturn(parseTree, subReader.value(), _nodePool.get(statemReturn));
-        blitVariant(statemReturn, statement);
+        node::TIndex<node::Kind::STM_RETURN> stmReturn;
+        _nodePool.make(stmReturn);
+        makeReturn(parseTree, subReader.value(), _nodePool.get(stmReturn));
+        blitVariant(stmReturn, statement);
     }
     else
     {
@@ -111,7 +137,7 @@ void Builder::makeStatement(const prs::state::Tree& parseTree,
 
 void Builder::makeBinop(const prs::state::Tree& parseTree,
                         dmit::prs::Reader& reader,
-                        TNode<node::Kind::BINOP>& binop)
+                        TNode<node::Kind::EXP_BINOP>& binop)
 {
     // RHS
     makeExpression(parseTree, reader, binop._rhs);
@@ -130,8 +156,8 @@ void Builder::makeBinop(const prs::state::Tree& parseTree,
         return makeExpression(parseTree, reader, binop._lhs);
     }
 
-    binop._lhs = node::TIndex<node::Kind::BINOP>{};
-    auto& binopLhs = std::get<node::TIndex<node::Kind::BINOP>>(binop._lhs);
+    binop._lhs = node::TIndex<node::Kind::EXP_BINOP>{};
+    auto& binopLhs = std::get<node::TIndex<node::Kind::EXP_BINOP>>(binop._lhs);
     _nodePool.make(binopLhs);
     makeBinop(parseTree, reader, _nodePool.get(binopLhs));
 }
@@ -142,16 +168,23 @@ void Builder::makeExpression(const prs::state::Tree& parseTree,
 {
     auto parseNodeKind = reader.look()._kind;
 
-    if (parseNodeKind == ParseNodeKind::IDENTIFIER)
+    if (parseNodeKind == ParseNodeKind::LIT_IDENTIFIER)
     {
-        node::TIndex<node::Kind::IDENTIFIER> identifier;
+        node::TIndex<node::Kind::LIT_IDENTIFIER> identifier;
         _nodePool.make(identifier);
         makeIdentifier(parseTree, reader, _nodePool.get(identifier));
         blitVariant(identifier, expression);
     }
-    else if (isBinaryOperation(parseNodeKind))
+    else if (parseNodeKind == ParseNodeKind::LIT_INTEGER)
     {
-        node::TIndex<node::Kind::BINOP> binop;
+        node::TIndex<node::Kind::LIT_INTEGER> integer;
+        _nodePool.make(integer);
+        makeInteger(parseTree, reader, _nodePool.get(integer));
+        blitVariant(integer, expression);
+    }
+    else if (parseNodeKind == ParseNodeKind::EXP_BINOP)
+    {
+        node::TIndex<node::Kind::EXP_BINOP> binop;
         _nodePool.make(binop);
         auto subReader = reader.makeSubReader();
         DMIT_COM_ASSERT(subReader);
@@ -214,63 +247,60 @@ void Builder::makeScope(const prs::state::Tree& parseTree,
 
 void Builder::makeReturnType(const prs::state::Tree& parseTree,
                              dmit::prs::Reader& reader,
-                             TNode<node::Kind::RETURN_TYPE>& returnType)
+                             TNode<node::Kind::FUN_RETURN>& returnType)
 {
-    node::TIndex<node::Kind::IDENTIFIER> identifier;
+    node::TIndex<node::Kind::LIT_IDENTIFIER> identifier;
     _nodePool.make(identifier);
     makeIdentifier(parseTree, reader, _nodePool.get(identifier));
     blitVariant(identifier, returnType._option);
 }
 
-void Builder::makeReturnTypeVoid(TNode<node::Kind::RETURN_TYPE>& returnType)
+void Builder::makeReturnTypeVoid(TNode<node::Kind::FUN_RETURN>& returnType)
 {
     returnType._option = std::nullopt;
 }
 
 void Builder::makeArguments(const prs::state::Tree& parseTree,
                             dmit::prs::Reader& reader,
-                            TNode<node::Kind::ARGUMENTS>& arguments)
+                            TNode<node::Kind::FUN_ARGUMENTS>& arguments)
 {
-    _nodePool.make(reader.size() >> 1, arguments._annotaTypes);
+    _nodePool.make(reader.size() >> 1, arguments._typeClaims);
 
     uint32_t i = 0;
 
     while (reader.isValid())
     {
-        auto& annotaType = _nodePool.get(arguments._annotaTypes[i]);
-
-        // Variable
-        DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::IDENTIFIER);
-        _nodePool.make(annotaType._variable);
-        makeIdentifier(parseTree, reader, _nodePool.get(annotaType._variable));
-        reader.advance();
-
-        // Type
-        DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::IDENTIFIER);
-        _nodePool.make(annotaType._type);
-        makeIdentifier(parseTree, reader, _nodePool.get(annotaType._type));
-        reader.advance();
+        makeTypeClaim(parseTree, reader, _nodePool.get(arguments._typeClaims[i]));
         i++;
     }
 }
 
-void Builder::makeArgumentsEmpty(TNode<node::Kind::ARGUMENTS>& arguments)
+void Builder::makeArgumentsEmpty(TNode<node::Kind::FUN_ARGUMENTS>& arguments)
 {
-    arguments._annotaTypes._size = 0;
+    arguments._typeClaims._size = 0;
+}
+
+void Builder::makeInteger(const prs::state::Tree& parseTree,
+                          const dmit::prs::Reader& reader,
+                          TNode<node::Kind::LIT_INTEGER>& integer)
+{
+    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::LIT_INTEGER);
+    _nodePool.make(integer._lexeme);
+    _nodePool.get (integer._lexeme)._index = parseTree.range(reader.look())._start;
 }
 
 void Builder::makeIdentifier(const prs::state::Tree& parseTree,
                              const dmit::prs::Reader& reader,
-                             TNode<node::Kind::IDENTIFIER>& identifier)
+                             TNode<node::Kind::LIT_IDENTIFIER>& identifier)
 {
-    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::IDENTIFIER);
+    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::LIT_IDENTIFIER);
     _nodePool.make(identifier._lexeme);
     _nodePool.get (identifier._lexeme)._index = parseTree.range(reader.look())._start;
 }
 
 void Builder::makeFunction(const prs::state::Tree& parseTree,
                            dmit::prs::Reader& reader,
-                           TNode<node::Kind::FUNCTION>& function)
+                           TNode<node::Kind::FUN_DEFINITION>& function)
 {
     // Body
     DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::SCOPE);
@@ -281,7 +311,7 @@ void Builder::makeFunction(const prs::state::Tree& parseTree,
     reader.advance();
 
     // Return type
-    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::RETURN_TYPE);
+    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::FUN_RETURN);
     _nodePool.make(function._returnType);
     auto returnTypeReader = reader.makeSubReader();
     returnTypeReader ? makeReturnType     (parseTree,
@@ -291,7 +321,7 @@ void Builder::makeFunction(const prs::state::Tree& parseTree,
     reader.advance();
 
     // Arguments
-    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::ARG_LIST);
+    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::FUN_ARGUMENTS);
     _nodePool.make(function._arguments);
     auto argumentsReader = reader.makeSubReader();
     DMIT_COM_ASSERT(argumentsReader);
@@ -302,7 +332,6 @@ void Builder::makeFunction(const prs::state::Tree& parseTree,
     reader.advance();
 
     // Name
-    const auto& parseNode = reader.look();
     makeIdentifier(parseTree, reader, _nodePool.get(function._name));
 }
 
@@ -317,7 +346,7 @@ const State& Builder::operator()(const prs::state::Tree& parseTree)
 
     while (reader.isValid())
     {
-        DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::DECLAR_FUN);
+        DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::FUN_DEFINITION);
 
         auto& function = _nodePool.get(_state._functions[i]);
         auto  functionReader = reader.makeSubReader();

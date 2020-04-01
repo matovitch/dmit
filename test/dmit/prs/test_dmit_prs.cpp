@@ -33,6 +33,7 @@ TEST_CASE("prs")
 
     CHECK(dmit::fmt::asString(parser("test/data/prs_0.in")) == fileAsString("test/data/prs_0.out"));
     CHECK(dmit::fmt::asString(parser("test/data/prs_1.in")) == fileAsString("test/data/prs_1.out"));
+    CHECK(dmit::fmt::asString(parser("test/data/prs_2.in")) == fileAsString("test/data/prs_2.out"));
 }
 
 } // TEST_SUITE("inout")
@@ -47,7 +48,7 @@ TEST_CASE("dmit::prs::Reader")
 
     dmit::prs::Reader reader{tree};
 
-    CHECK(reader.look()._kind == NodeKind::DECLAR_FUN);
+    CHECK(reader.look()._kind == NodeKind::FUN_DEFINITION);
 
     auto readerOpt_1 = reader.makeSubReader();
 
@@ -63,16 +64,16 @@ TEST_CASE("dmit::prs::Reader")
     CHECK(tree.range(readerOpt_1.value().look())._stop  == 0);
 
     readerOpt_1.value().advance();
-    CHECK(readerOpt_1.value().look()._kind == NodeKind::RETURN_TYPE);
+    CHECK(readerOpt_1.value().look()._kind == NodeKind::FUN_RETURN);
     readerOpt_1.value().advance();
-    CHECK(readerOpt_1.value().look()._kind == NodeKind::ARG_LIST);
+    CHECK(readerOpt_1.value().look()._kind == NodeKind::FUN_ARGUMENTS);
     readerOpt_1.value().advance();
-    CHECK(readerOpt_1.value().look()._kind == NodeKind::IDENTIFIER);
+    CHECK(readerOpt_1.value().look()._kind == NodeKind::LIT_IDENTIFIER);
     readerOpt_1.value().advance();
     CHECK(!readerOpt_1.value().isValid());
 
     CHECK(readerOpt_2);
-    CHECK(readerOpt_2.value().look()._kind == NodeKind::STATEM_RETURN);
+    CHECK(readerOpt_2.value().look()._kind == NodeKind::STM_RETURN);
     readerOpt_2.value().advance();
     CHECK(!readerOpt_2.value().isValid());
 }

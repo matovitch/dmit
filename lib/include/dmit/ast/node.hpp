@@ -22,19 +22,20 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
 {
     enum : uint8_t
     {
-        ANNOTA_TYPE   ,
-        ARGUMENTS     ,
-        ASSIGNMENT    ,
-        BINOP         ,
-        DECLAR_LET    ,
-        FUN_CALL      ,
-        FUNCTION      ,
-        IDENTIFIER    ,
-        LEXEME        ,
-        RETURN_TYPE   ,
-        SCOPE         ,
-        SCOPE_VARIANT ,
-        STATEM_RETURN ,
+        DCL_VARIABLE   ,
+        EXP_BINOP      ,
+        FUN_ARGUMENTS  ,
+        FUN_CALL       ,
+        FUN_DEFINITION ,
+        FUN_RETURN     ,
+        LEXEME         ,
+        LIT_IDENTIFIER ,
+        LIT_INTEGER    ,
+        SCOPE          ,
+        SCOPE_VARIANT  ,
+        STM_ASSIGN     ,
+        STM_RETURN     ,
+        TYPE_CLAIM     ,
         PROGRAM
     };
 
@@ -63,45 +64,61 @@ struct TRange
 
 } // namespace node
 
+using Declaration = std::variant<node::TIndex<node::Kind::DCL_VARIABLE>>;
+
+using Statement = std::variant<node::TIndex<node::Kind::STM_ASSIGN    >,
+                               node::TIndex<node::Kind::STM_RETURN >>;
+
+using Expression = std::variant<node::TIndex<node::Kind::LIT_IDENTIFIER >,
+                                node::TIndex<node::Kind::LIT_INTEGER    >,
+                                node::TIndex<node::Kind::EXP_BINOP      >,
+                                node::TIndex<node::Kind::FUN_CALL       >>;
+
 template <com::TEnumIntegerType<node::Kind> KIND>
 struct TNode {};
 
 template <>
 struct TNode<node::Kind::PROGRAM>
 {
-    node::TRange<node::Kind::FUNCTION> _functions;
+    node::TRange<node::Kind::FUN_DEFINITION> _functions;
 };
 
 template <>
-struct TNode<node::Kind::FUNCTION>
+struct TNode<node::Kind::FUN_DEFINITION>
 {
-    node::TIndex<node::Kind::IDENTIFIER  > _name;
-    node::TIndex<node::Kind::ARGUMENTS   > _arguments;
-    node::TIndex<node::Kind::RETURN_TYPE > _returnType;
-    node::TIndex<node::Kind::SCOPE       > _body;
+    node::TIndex<node::Kind::LIT_IDENTIFIER > _name;
+    node::TIndex<node::Kind::FUN_ARGUMENTS  > _arguments;
+    node::TIndex<node::Kind::FUN_RETURN     > _returnType;
+    node::TIndex<node::Kind::SCOPE          > _body;
 };
 
 template <>
-struct TNode<node::Kind::ARGUMENTS>
+struct TNode<node::Kind::FUN_ARGUMENTS>
 {
-    node::TRange<node::Kind::ANNOTA_TYPE> _annotaTypes;
+    node::TRange<node::Kind::TYPE_CLAIM> _typeClaims;
 };
 
 template<>
-struct TNode<node::Kind::ANNOTA_TYPE>
+struct TNode<node::Kind::TYPE_CLAIM>
 {
-    node::TIndex<node::Kind::IDENTIFIER> _variable;
-    node::TIndex<node::Kind::IDENTIFIER> _type;
+    node::TIndex<node::Kind::LIT_IDENTIFIER> _variable;
+    node::TIndex<node::Kind::LIT_IDENTIFIER> _type;
 };
 
 template <>
-struct TNode<node::Kind::RETURN_TYPE>
+struct TNode<node::Kind::FUN_RETURN>
 {
-    std::optional<node::TIndex<node::Kind::IDENTIFIER>> _option;
+    std::optional<node::TIndex<node::Kind::LIT_IDENTIFIER>> _option;
 };
 
 template <>
-struct TNode<node::Kind::IDENTIFIER>
+struct TNode<node::Kind::LIT_IDENTIFIER>
+{
+    node::TIndex<node::Kind::LEXEME> _lexeme;
+};
+
+template <>
+struct TNode<node::Kind::LIT_INTEGER>
 {
     node::TIndex<node::Kind::LEXEME> _lexeme;
 };
@@ -118,15 +135,6 @@ struct TNode<node::Kind::SCOPE>
     node::TRange<node::Kind::SCOPE_VARIANT> _variants;
 };
 
-using Declaration = std::variant<node::TIndex<node::Kind::DECLAR_LET>>;
-
-using Statement = std::variant<node::TIndex<node::Kind::ASSIGNMENT    >,
-                               node::TIndex<node::Kind::STATEM_RETURN >>;
-
-using Expression = std::variant<node::TIndex<node::Kind::IDENTIFIER >,
-                                node::TIndex<node::Kind::BINOP      >,
-                                node::TIndex<node::Kind::FUN_CALL   >>;
-
 template <>
 struct TNode<node::Kind::SCOPE_VARIANT>
 {
@@ -137,18 +145,31 @@ struct TNode<node::Kind::SCOPE_VARIANT>
 };
 
 template <>
-struct TNode<node::Kind::STATEM_RETURN>
+struct TNode<node::Kind::STM_RETURN>
 {
     Expression _expression;
 };
 
 template <>
-struct TNode<node::Kind::BINOP>
+struct TNode<node::Kind::EXP_BINOP>
 {
     node::TIndex<node::Kind::LEXEME> _operator;
 
     Expression _lhs;
     Expression _rhs;
+};
+
+template<>
+struct TNode<node::Kind::DCL_VARIABLE>
+{
+    node::TIndex<node::Kind::TYPE_CLAIM> _typeClaim;
+};
+
+template<>
+struct TNode<node::Kind::STM_ASSIGN>
+{
+    node::TIndex<node::Kind::LIT_IDENTIFIER> _variable;
+    Expression                               _expression;
 };
 
 } // namespace ast

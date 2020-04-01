@@ -28,26 +28,22 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
 {
     enum : uint8_t
     {
-        INVALID,
-        INTEGER,
-        DECIMAL,
-        IDENTIFIER,
-        OPPOSE,
-        INVERSE,
-        PRODUCT,
-        SUM,
-        COMPARISON,
-        ASSIGNMENT,
-        OPERATOR,
+        DCL_VARIABLE,
+        EXP_BINOP,
+        EXP_OPERATOR,
+        EXP_OPPOSE,
+        FUN_ARGUMENTS,
         FUN_CALL,
-        ARG_LIST,
-        RETURN_TYPE,
-        STATEM_WHILE,
-        STATEM_RETURN,
-        DECLAR_LET,
-        DECLAR_FUN,
-        SCOPE,
+        FUN_DEFINITION,
+        FUN_RETURN,
+        LIT_DECIMAL,
+        LIT_IDENTIFIER,
+        LIT_INTEGER,
         PROGRAM,
+        SCOPE,
+        STM_ASSIGN,
+        STM_RETURN,
+        STM_WHILE,
         END_OF_TREE
     };
 
@@ -74,7 +70,7 @@ struct Node : fmt::Formatable
     Node(const node::Kind  kind,
          const uint32_t size);
 
-    node::Kind  _kind = node::Kind::INVALID;
+    node::Kind  _kind = node::Kind::END_OF_TREE;
     uint32_t    _size;
 };
 

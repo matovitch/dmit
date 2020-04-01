@@ -78,19 +78,20 @@ struct TPool
         std::get<KIND>(_subs).make(size, range);
     }
 
-    std::tuple<pool::TSub<Kind::ANNOTA_TYPE   , LOG2_SIZE>,
-               pool::TSub<Kind::ARGUMENTS     , LOG2_SIZE>,
-               pool::TSub<Kind::ASSIGNMENT    , LOG2_SIZE>,
-               pool::TSub<Kind::BINOP         , LOG2_SIZE>,
-               pool::TSub<Kind::DECLAR_LET    , LOG2_SIZE>,
-               pool::TSub<Kind::FUN_CALL      , LOG2_SIZE>,
-               pool::TSub<Kind::FUNCTION      , LOG2_SIZE>,
-               pool::TSub<Kind::IDENTIFIER    , LOG2_SIZE>,
-               pool::TSub<Kind::LEXEME        , LOG2_SIZE>,
-               pool::TSub<Kind::RETURN_TYPE   , LOG2_SIZE>,
-               pool::TSub<Kind::SCOPE         , LOG2_SIZE>,
-               pool::TSub<Kind::SCOPE_VARIANT , LOG2_SIZE>,
-               pool::TSub<Kind::STATEM_RETURN , LOG2_SIZE>> _subs;
+    std::tuple<pool::TSub<Kind::DCL_VARIABLE   , LOG2_SIZE>,
+               pool::TSub<Kind::EXP_BINOP      , LOG2_SIZE>,
+               pool::TSub<Kind::FUN_ARGUMENTS  , LOG2_SIZE>,
+               pool::TSub<Kind::FUN_CALL       , LOG2_SIZE>,
+               pool::TSub<Kind::FUN_DEFINITION , LOG2_SIZE>,
+               pool::TSub<Kind::FUN_RETURN     , LOG2_SIZE>,
+               pool::TSub<Kind::LEXEME         , LOG2_SIZE>,
+               pool::TSub<Kind::LIT_IDENTIFIER , LOG2_SIZE>,
+               pool::TSub<Kind::LIT_INTEGER    , LOG2_SIZE>,
+               pool::TSub<Kind::SCOPE          , LOG2_SIZE>,
+               pool::TSub<Kind::SCOPE_VARIANT  , LOG2_SIZE>,
+               pool::TSub<Kind::STM_ASSIGN     , LOG2_SIZE>,
+               pool::TSub<Kind::STM_RETURN     , LOG2_SIZE>,
+               pool::TSub<Kind::TYPE_CLAIM     , LOG2_SIZE>> _subs;
 };
 
 } // namespace node

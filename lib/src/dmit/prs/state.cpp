@@ -94,7 +94,7 @@ auto makeParserVariadic(parser::Pool& pool, State& state)
 
 } // namespace
 
-#define TOKEN_TREE_NODE_KIND_PAIR(x) lex::Token::x, tree::node::Kind::x
+#define TOKEN_TREE_NODE_KIND_PAIR(x) lex::Token::x, tree::node::Kind::LIT_##x
 
 Builder::Builder() :
     _parser{_pool.make<open::TPipeline<>, error::clear::Close>(_state)}
@@ -127,24 +127,24 @@ Builder::Builder() :
     auto keyWhile      = makeParserToken      <lex::Token::WHILE                     > (_pool, _state);
     auto keyReturn     = makeParserToken      <lex::Token::RETURN                    > (_pool, _state);
     auto minusKetRight = makeParserToken      <lex::Token::MINUS_KET_RIGHT           > (_pool, _state);
-    auto product       = makeParserVariadic   <tree::node::Kind::PRODUCT             > (_pool, _state);
-    auto sum           = makeParserVariadic   <tree::node::Kind::SUM                 > (_pool, _state);
-    auto comparison    = makeParserVariadic   <tree::node::Kind::COMPARISON          > (_pool, _state);
-    auto assignment    = makeParserVariadic   <tree::node::Kind::ASSIGNMENT          > (_pool, _state);
-    auto opSum         = makeParserUnary      <tree::node::Kind::OPERATOR            > (_pool, _state);
-    auto opProduct     = makeParserUnary      <tree::node::Kind::OPERATOR            > (_pool, _state);
-    auto opComparison  = makeParserUnary      <tree::node::Kind::OPERATOR            > (_pool, _state);
+    auto product       = makeParserVariadic   <tree::node::Kind::EXP_BINOP           > (_pool, _state);
+    auto sum           = makeParserVariadic   <tree::node::Kind::EXP_BINOP           > (_pool, _state);
+    auto comparison    = makeParserVariadic   <tree::node::Kind::EXP_BINOP           > (_pool, _state);
+    auto stmAssign     = makeParserVariadic   <tree::node::Kind::STM_ASSIGN          > (_pool, _state);
+    auto opSum         = makeParserUnary      <tree::node::Kind::EXP_OPERATOR        > (_pool, _state);
+    auto opProduct     = makeParserUnary      <tree::node::Kind::EXP_OPERATOR        > (_pool, _state);
+    auto opComparison  = makeParserUnary      <tree::node::Kind::EXP_OPERATOR        > (_pool, _state);
     auto funCall       = makeParserUnary      <tree::node::Kind::FUN_CALL            > (_pool, _state);
-    auto negAtom       = makeParserUnary      <tree::node::Kind::OPPOSE              > (_pool, _state);
-    auto argList       = makeParserUnary      <tree::node::Kind::ARG_LIST            > (_pool, _state);
-    auto retType       = makeParserUnary      <tree::node::Kind::RETURN_TYPE         > (_pool, _state);
-    auto statemReturn  = makeParserUnary      <tree::node::Kind::STATEM_RETURN       > (_pool, _state);
-    auto declarLet     = makeParserUnary      <tree::node::Kind::DECLAR_LET          > (_pool, _state);
-    auto declarFun     = makeParserUnary      <tree::node::Kind::DECLAR_FUN          > (_pool, _state);
+    auto negAtom       = makeParserUnary      <tree::node::Kind::EXP_OPPOSE          > (_pool, _state);
+    auto funArguments  = makeParserUnary      <tree::node::Kind::FUN_ARGUMENTS       > (_pool, _state);
+    auto funReturn     = makeParserUnary      <tree::node::Kind::FUN_RETURN          > (_pool, _state);
+    auto stmReturn     = makeParserUnary      <tree::node::Kind::STM_RETURN          > (_pool, _state);
+    auto declarLet     = makeParserUnary      <tree::node::Kind::DCL_VARIABLE        > (_pool, _state);
+    auto funDefinition = makeParserUnary      <tree::node::Kind::FUN_DEFINITION      > (_pool, _state);
     auto scope         = makeParserUnary      <tree::node::Kind::SCOPE               > (_pool, _state);
     auto program       = makeParserUnary      <tree::node::Kind::PROGRAM             > (_pool, _state);
     auto atom          = makeParser                                                    (_pool, _state);
-    auto typing        = makeParser                                                    (_pool, _state);
+    auto typeClaim     = makeParser                                                    (_pool, _state);
     auto posAtom       = makeParser                                                    (_pool, _state);
     auto expression    = makeParser                                                    (_pool, _state);
 
@@ -205,35 +205,35 @@ Builder::Builder() :
 
     // Assigment
 
-    assignment = seq(identifier, equal, expression);
+    stmAssign = seq(identifier, equal, expression);
 
     // Return statement
 
-    statemReturn = seq(keyReturn, expression);
+    stmReturn = seq(keyReturn, expression);
 
     // Let declaration
 
-    typing = seq(identifier, colon, identifier);
+    typeClaim = seq(identifier, colon, identifier);
 
-    declarLet = seq(keyLet, typing);
+    declarLet = seq(keyLet, typeClaim);
 
     // Scope
 
     scope = seq(braLeft, rep(alt(seq(alt(declarLet,
-                                         statemReturn,
-                                         assignment,
+                                         stmReturn,
+                                         stmAssign,
                                          expression), semiColon), scope)), braRight);
     // Function declaration
 
-    argList = seq(parLeft, opt(seq(typing, rep(seq(comma, typing)))), parRight);
+    funArguments = seq(parLeft, opt(seq(typeClaim, rep(seq(comma, typeClaim)))), parRight);
 
-    retType = opt(seq(minusKetRight, identifier));
+    funReturn = opt(seq(minusKetRight, identifier));
 
-    declarFun = seq(keyFunc, identifier, argList, retType, scope);
+    funDefinition = seq(keyFunc, identifier, funArguments, funReturn, scope);
 
     // Full parser
 
-    program = rep(declarFun);
+    program = rep(funDefinition);
 
     _parser = program;
 }
