@@ -41,23 +41,21 @@ private:
                         TNode<node::Kind::LIT_IDENTIFIER>& identifier);
 
     void makeScope(const prs::state::Tree& parseTree,
-                   dmit::prs::Reader& reader,
+                   const dmit::prs::Reader& supReader,
                    TNode<node::Kind::SCOPE>& scope);
 
     void makeReturnType(const prs::state::Tree& parseTree,
-                        dmit::prs::Reader& reader,
+                        const dmit::prs::Reader& supReader,
                         TNode<node::Kind::FUN_RETURN>& returnType);
 
-    void makeReturnTypeVoid(TNode<node::Kind::FUN_RETURN>& returnType);
-
     void makeArguments(const prs::state::Tree& parseTree,
-                       dmit::prs::Reader& reader,
+                       const dmit::prs::Reader& supReader,
                        TNode<node::Kind::FUN_ARGUMENTS>& arguments);
 
     void makeArgumentsEmpty(TNode<node::Kind::FUN_ARGUMENTS>& arguments);
 
     void makeFunction(const prs::state::Tree& parseTree,
-                      dmit::prs::Reader& reader,
+                      const dmit::prs::Reader& supReader,
                       TNode<node::Kind::FUN_DEFINITION>& function);
 
     void makeDeclaration(const prs::state::Tree& parseTree,
