@@ -50,7 +50,7 @@ bool isBinaryOperation(const dmit::prs::state::tree::node::Kind parseNodeKind)
 }
 
 template <class Variant, class BlipType>
-void blipVariant(const BlipType& toBlip, Variant& variant)
+void blitVariant(const BlipType& toBlip, Variant& variant)
 {
     const Variant toBlipAsVariant = toBlip;
     std::memcpy(&variant, &toBlipAsVariant, sizeof(Variant));
@@ -94,14 +94,14 @@ void Builder::makeStatement(const prs::state::Tree& parseTree,
         node::TIndex<node::Kind::ASSIGNMENT> assignment;
         _nodePool.make(assignment);
         makeAssignment(parseTree, subReader.value(), _nodePool.get(assignment));
-        blipVariant(assignment, statement);
+        blitVariant(assignment, statement);
     }
     else if (parseNodeKind == ParseNodeKind::STATEM_RETURN)
     {
         node::TIndex<node::Kind::STATEM_RETURN> statemReturn;
         _nodePool.make(statemReturn);
         makeStatemReturn(parseTree, subReader.value(), _nodePool.get(statemReturn));
-        blipVariant(statemReturn, statement);
+        blitVariant(statemReturn, statement);
     }
     else
     {
@@ -147,7 +147,7 @@ void Builder::makeExpression(const prs::state::Tree& parseTree,
         node::TIndex<node::Kind::LEXEME> lexeme;
         _nodePool.make (lexeme);
         _nodePool.get  (lexeme)._index = parseTree.range(reader.look())._start;
-        blipVariant    (lexeme, expression);
+        blitVariant    (lexeme, expression);
     }
     else if (isBinaryOperation(parseNodeKind))
     {
@@ -156,7 +156,7 @@ void Builder::makeExpression(const prs::state::Tree& parseTree,
         auto subReader = reader.makeSubReader();
         DMIT_COM_ASSERT(subReader);
         makeBinop(parseTree, subReader.value(), _nodePool.get(binop));
-        blipVariant(binop, expression);
+        blitVariant(binop, expression);
     }
     else
     {
@@ -180,17 +180,17 @@ void Builder::makeScope(const prs::state::Tree& parseTree,
 
         if (isDeclaration(parseNodeKind))
         {
-            blipVariant(Declaration{}, variant._value);
+            blitVariant(Declaration{}, variant._value);
             makeDeclaration(parseTree, reader, std::get<Declaration>(variant._value));
         }
         else if (isStatement(parseNodeKind))
         {
-            blipVariant(Statement{}, variant._value);
+            blitVariant(Statement{}, variant._value);
             makeStatement(parseTree, reader, std::get<Statement>(variant._value));
         }
         else if (isExpression(parseNodeKind))
         {
-            blipVariant(Expression{}, variant._value);
+            blitVariant(Expression{}, variant._value);
             makeExpression(parseTree, reader, std::get<Expression>(variant._value));
         }
         else if (parseNodeKind == ParseNodeKind::SCOPE)
@@ -200,7 +200,7 @@ void Builder::makeScope(const prs::state::Tree& parseTree,
             auto subReader = reader.makeSubReader();
             DMIT_COM_ASSERT(subReader);
             makeScope(parseTree, subReader.value(), _nodePool.get(subScope));
-            blipVariant(subScope, variant._value);
+            blitVariant(subScope, variant._value);
         }
         else
         {
@@ -217,10 +217,9 @@ void Builder::makeReturnType(const prs::state::Tree& parseTree,
                              TNode<node::Kind::RETURN_TYPE>& returnType)
 {
     node::TIndex<node::Kind::LEXEME> lexeme;
-    _nodePool.make(lexeme);
-    std::decay_t<decltype(returnType._option)> toBlip = lexeme;
-    std::memcpy(&(returnType._option), &toBlip, sizeof(std::decay_t<decltype(toBlip)>));
-    _nodePool.get(lexeme)._index = parseTree.range(reader.look())._start;
+    _nodePool.make (lexeme);
+    _nodePool.get  (lexeme)._index = parseTree.range(reader.look())._start;
+    blitVariant(lexeme, returnType._option);
 }
 
 void Builder::makeReturnTypeVoid(TNode<node::Kind::RETURN_TYPE>& returnType)
