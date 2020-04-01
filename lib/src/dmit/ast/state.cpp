@@ -144,10 +144,10 @@ void Builder::makeExpression(const prs::state::Tree& parseTree,
 
     if (parseNodeKind == ParseNodeKind::IDENTIFIER)
     {
-        node::TIndex<node::Kind::LEXEME> lexeme;
-        _nodePool.make (lexeme);
-        _nodePool.get  (lexeme)._index = parseTree.range(reader.look())._start;
-        blitVariant    (lexeme, expression);
+        node::TIndex<node::Kind::IDENTIFIER> identifier;
+        _nodePool.make(identifier);
+        makeIdentifier(parseTree, reader, _nodePool.get(identifier));
+        blitVariant(identifier, expression);
     }
     else if (isBinaryOperation(parseNodeKind))
     {
@@ -216,10 +216,10 @@ void Builder::makeReturnType(const prs::state::Tree& parseTree,
                              dmit::prs::Reader& reader,
                              TNode<node::Kind::RETURN_TYPE>& returnType)
 {
-    node::TIndex<node::Kind::LEXEME> lexeme;
-    _nodePool.make (lexeme);
-    _nodePool.get  (lexeme)._index = parseTree.range(reader.look())._start;
-    blitVariant(lexeme, returnType._option);
+    node::TIndex<node::Kind::IDENTIFIER> identifier;
+    _nodePool.make(identifier);
+    makeIdentifier(parseTree, reader, _nodePool.get(identifier));
+    blitVariant(identifier, returnType._option);
 }
 
 void Builder::makeReturnTypeVoid(TNode<node::Kind::RETURN_TYPE>& returnType)
@@ -241,14 +241,14 @@ void Builder::makeArguments(const prs::state::Tree& parseTree,
 
         // Variable
         DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::IDENTIFIER);
-        _nodePool.make (annotaType._variable);
-        _nodePool.get  (annotaType._variable)._index = parseTree.range(reader.look())._start;
+        _nodePool.make(annotaType._variable);
+        makeIdentifier(parseTree, reader, _nodePool.get(annotaType._variable));
         reader.advance();
 
         // Type
         DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::IDENTIFIER);
-        _nodePool.make (annotaType._type);
-        _nodePool.get  (annotaType._type)._index = parseTree.range(reader.look())._start;
+        _nodePool.make(annotaType._type);
+        makeIdentifier(parseTree, reader, _nodePool.get(annotaType._type));
         reader.advance();
         i++;
     }
@@ -257,6 +257,15 @@ void Builder::makeArguments(const prs::state::Tree& parseTree,
 void Builder::makeArgumentsEmpty(TNode<node::Kind::ARGUMENTS>& arguments)
 {
     arguments._annotaTypes._size = 0;
+}
+
+void Builder::makeIdentifier(const prs::state::Tree& parseTree,
+                             const dmit::prs::Reader& reader,
+                             TNode<node::Kind::IDENTIFIER>& identifier)
+{
+    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::IDENTIFIER);
+    _nodePool.make(identifier._lexeme);
+    _nodePool.get (identifier._lexeme)._index = parseTree.range(reader.look())._start;
 }
 
 void Builder::makeFunction(const prs::state::Tree& parseTree,
@@ -294,9 +303,7 @@ void Builder::makeFunction(const prs::state::Tree& parseTree,
 
     // Name
     const auto& parseNode = reader.look();
-    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::IDENTIFIER);
-    _nodePool.make (function._name);
-    _nodePool.get  (function._name)._index = parseTree.range(parseNode)._start;
+    makeIdentifier(parseTree, reader, _nodePool.get(function._name));
 }
 
 const State& Builder::operator()(const prs::state::Tree& parseTree)

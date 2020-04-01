@@ -29,6 +29,7 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
         DECLAR_LET    ,
         FUN_CALL      ,
         FUNCTION      ,
+        IDENTIFIER    ,
         LEXEME        ,
         RETURN_TYPE   ,
         SCOPE         ,
@@ -74,7 +75,7 @@ struct TNode<node::Kind::PROGRAM>
 template <>
 struct TNode<node::Kind::FUNCTION>
 {
-    node::TIndex<node::Kind::LEXEME      > _name;
+    node::TIndex<node::Kind::IDENTIFIER  > _name;
     node::TIndex<node::Kind::ARGUMENTS   > _arguments;
     node::TIndex<node::Kind::RETURN_TYPE > _returnType;
     node::TIndex<node::Kind::SCOPE       > _body;
@@ -89,14 +90,20 @@ struct TNode<node::Kind::ARGUMENTS>
 template<>
 struct TNode<node::Kind::ANNOTA_TYPE>
 {
-    node::TIndex<node::Kind::LEXEME > _variable;
-    node::TIndex<node::Kind::LEXEME > _type;
+    node::TIndex<node::Kind::IDENTIFIER> _variable;
+    node::TIndex<node::Kind::IDENTIFIER> _type;
 };
 
 template <>
 struct TNode<node::Kind::RETURN_TYPE>
 {
-    std::optional<node::TIndex<node::Kind::LEXEME >> _option;
+    std::optional<node::TIndex<node::Kind::IDENTIFIER>> _option;
+};
+
+template <>
+struct TNode<node::Kind::IDENTIFIER>
+{
+    node::TIndex<node::Kind::LEXEME> _lexeme;
 };
 
 template <>
@@ -111,14 +118,14 @@ struct TNode<node::Kind::SCOPE>
     node::TRange<node::Kind::SCOPE_VARIANT> _variants;
 };
 
-using Declaration = std::variant<node::TIndex<node::Kind::DECLAR_LET >>;
+using Declaration = std::variant<node::TIndex<node::Kind::DECLAR_LET>>;
 
 using Statement = std::variant<node::TIndex<node::Kind::ASSIGNMENT    >,
                                node::TIndex<node::Kind::STATEM_RETURN >>;
 
-using Expression = std::variant<node::TIndex<node::Kind::LEXEME   >,
-                                node::TIndex<node::Kind::BINOP    >,
-                                node::TIndex<node::Kind::FUN_CALL >>;
+using Expression = std::variant<node::TIndex<node::Kind::IDENTIFIER >,
+                                node::TIndex<node::Kind::BINOP      >,
+                                node::TIndex<node::Kind::FUN_CALL   >>;
 
 template <>
 struct TNode<node::Kind::SCOPE_VARIANT>

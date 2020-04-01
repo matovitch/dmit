@@ -32,6 +32,10 @@ private:
 
     using ParseNodeKind = dmit::prs::state::tree::node::Kind;
 
+    void makeIdentifier(const prs::state::Tree& parseTree,
+                        const dmit::prs::Reader& reader,
+                        TNode<node::Kind::IDENTIFIER>& identifier);
+
     void makeScope(const prs::state::Tree& parseTree,
                    dmit::prs::Reader& reader,
                    TNode<node::Kind::SCOPE>& scope);

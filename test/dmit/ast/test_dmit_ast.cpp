@@ -53,10 +53,10 @@ TEST_CASE("dmit::ast::dummy")
 
     const auto& function = astNodePool.get(ast._functions[0]);
 
-    const auto& functionName       = astNodePool.get(function._name       );
-    const auto& functionArguments  = astNodePool.get(function._arguments  );
-    const auto& functionReturnType = astNodePool.get(function._returnType );
-    const auto& functionBody       = astNodePool.get(function._body       );
+    const auto& functionName       = astNodePool.get(astNodePool.get (function._name       )._lexeme);
+    const auto& functionArguments  = astNodePool.get                 (function._arguments  );
+    const auto& functionReturnType = astNodePool.get                 (function._returnType );
+    const auto& functionBody       = astNodePool.get                 (function._body       );
 
     CHECK(functionName._index == 33);
     CHECK(functionArguments._annotaTypes._size == 2);
@@ -71,6 +71,6 @@ TEST_CASE("dmit::ast::dummy")
 
     const auto& binop = astNodePool.get(checkAndGet<dmit::ast::node::TIndex<dmit::ast::node::Kind::BINOP>>(stmReturn._expression));
 
-    CHECK(std::holds_alternative<dmit::ast::node::TIndex<dmit::ast::node::Kind::LEXEME>>(binop._lhs));
-    CHECK(std::holds_alternative<dmit::ast::node::TIndex<dmit::ast::node::Kind::LEXEME>>(binop._rhs));
+    CHECK(std::holds_alternative<dmit::ast::node::TIndex<dmit::ast::node::Kind::IDENTIFIER>>(binop._lhs));
+    CHECK(std::holds_alternative<dmit::ast::node::TIndex<dmit::ast::node::Kind::IDENTIFIER>>(binop._rhs));
 }
