@@ -5,10 +5,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace dmit
-{
-
-namespace lex
+namespace dmit::lex
 {
 
 Reader::Reader(const std::vector<Token>& tokens) :
@@ -46,5 +43,4 @@ std::size_t Reader::offset() const
     return static_cast<std::size_t>(_tail - _head);
 }
 
-} // namespace lex
-} // namespace dmit
+} // namespace dmit::lex

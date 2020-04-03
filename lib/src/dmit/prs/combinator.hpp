@@ -7,10 +7,7 @@
 
 #include <optional>
 
-namespace dmit
-{
-
-namespace prs
+namespace dmit::prs
 {
 
 namespace combinator
@@ -112,5 +109,4 @@ auto opt(Parser&& parser)
   using combinator::alt;  \
   using combinator::opt;
 
-} // namespace prs
-} // namespace dmit
+} // namespace dmit::prs

@@ -5,10 +5,7 @@
 #include <sstream>
 #include <string>
 
-namespace dmit
-{
-
-namespace fmt
+namespace dmit::fmt
 {
 
 std::string asString(const lex::Reader& reader)
@@ -20,5 +17,4 @@ std::string asString(const lex::Reader& reader)
     return oss.str();
 }
 
-} // namespace fmt
-} // namespace dmit
+} // namespace dmit::fmt

@@ -5,10 +5,7 @@
 #include <sstream>
 #include <string>
 
-namespace dmit
-{
-
-namespace fmt
+namespace dmit::fmt
 {
 
 std::string asString(const src::Location location)
@@ -21,5 +18,4 @@ std::string asString(const src::Location location)
     return oss.str();
 }
 
-} // namespace fmt
-} // namespace dmit
+} // namespace dmit::fmt

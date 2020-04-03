@@ -11,10 +11,7 @@
 #include <optional>
 #include <vector>
 
-namespace dmit
-{
-
-namespace prs
+namespace dmit::prs
 {
 
 struct State : fmt::Formatable
@@ -28,10 +25,7 @@ struct State : fmt::Formatable
 namespace state
 {
 
-namespace tree
-{
-
-namespace writer
+namespace tree::writer
 {
 
 struct Open
@@ -64,8 +58,7 @@ struct Close
     }
 };
 
-} // namespace writer
-} // namespace tree
+} // namespace tree::writer
 
 namespace error
 {
@@ -135,5 +128,4 @@ private:
 };
 
 } // namespace state
-} // namespace prs
-} // namespace dmit
+} // namespace dmit::prs

@@ -5,16 +5,12 @@
 namespace dmit
 {
 
-namespace com
-{
-
-namespace logger
+namespace com::logger
 {
 
 class Sub;
 
-} // namespace logger
-} // namespace com
+} // namespace com::logger
 
 namespace fmt
 {

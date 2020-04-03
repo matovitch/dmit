@@ -2,13 +2,9 @@
 
 #include "dmit/prs/state.hpp"
 
-namespace dmit
-{
-
-namespace fmt
+namespace dmit::fmt
 {
 
 std::string asString(const prs::State& state);
 
-} // namespace fmt
-} // namespace dmit
+} // namespace dmit::fmt

@@ -2,10 +2,7 @@
 
 #include <cstdint>
 
-namespace dmit
-{
-
-namespace lex
+namespace dmit::lex
 {
 
 template <uint8_t low,
@@ -44,5 +41,4 @@ struct TOr
     }
 };
 
-} // namespace lex
-} // namespace dmit
+} // namespace dmit::lex

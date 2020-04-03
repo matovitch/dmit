@@ -5,10 +5,7 @@
 #include <iostream>
 #include <sstream>
 
-namespace dmit
-{
-
-namespace com
+namespace dmit::com
 {
 
 namespace logger
@@ -44,5 +41,4 @@ Logger::Logger() :
     _err{std::cerr}
 {}
 
-} // namespace com
-} // namespace dmit
+} // namespace dmit::com

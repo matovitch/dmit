@@ -26,10 +26,7 @@ static const char* K_TREE_NODE_KIND_AS_CSTR[] =
     "END_OF_TREE"
 };
 
-namespace dmit
-{
-
-namespace fmt
+namespace dmit::fmt
 {
 
 std::string asString(const prs::state::tree::node::Kind treeNodeKind)
@@ -71,5 +68,4 @@ std::string asString(const prs::state::Tree& tree)
     return oss.str();
 }
 
-} // namespace fmt
-} // namespace dmit
+} // namespace dmit::fmt

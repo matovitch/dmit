@@ -9,10 +9,7 @@
 #include <sstream>
 #include <string>
 
-namespace dmit
-{
-
-namespace fmt
+namespace dmit::fmt
 {
 
 std::string asString(const src::File& file)
@@ -43,5 +40,4 @@ std::string asString(const src::File& file)
     return oss.str();
 }
 
-} // namespace fmt
-} // namespace dmit
+} // namespace dmit::fmt

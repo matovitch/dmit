@@ -12,10 +12,7 @@
 #include <memory>
 #include <vector>
 
-namespace dmit
-{
-
-namespace src
+namespace dmit::src
 {
 
 class File;
@@ -59,5 +56,4 @@ private:
     LineIndex            _lineIndex;
 };
 
-} // namespace src
-} // namespace dmit
+} // namespace dmit::src

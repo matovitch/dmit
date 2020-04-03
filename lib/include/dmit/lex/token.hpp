@@ -6,10 +6,7 @@
 
 #include <cstdint>
 
-namespace dmit
-{
-
-namespace lex
+namespace dmit::lex
 {
 
 struct Token : com::TEnum<uint8_t>, fmt::Formatable
@@ -78,5 +75,4 @@ struct Token : com::TEnum<uint8_t>, fmt::Formatable
     DMIT_COM_ENUM_IMPLICIT_FROM_INT(Token);
 };
 
-} // namespace lex
-} // namespace dmit
+} // namespace dmit::lex

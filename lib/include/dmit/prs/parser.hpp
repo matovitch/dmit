@@ -11,10 +11,7 @@
 #include <memory>
 #include <vector>
 
-namespace dmit
-{
-
-namespace prs
+namespace dmit::prs
 {
 
 template <class Open, class Close>
@@ -82,5 +79,4 @@ private:
 };
 
 } // namespace parser
-} // namespace prs
-} // namespace dmit
+} // namespace dmit::prs

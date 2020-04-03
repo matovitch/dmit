@@ -5,10 +5,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace dmit
-{
-
-namespace lex
+namespace dmit::lex
 {
 
 class Reader : fmt::Formatable
@@ -34,5 +31,4 @@ private:
     const Token* _tail;
 };
 
-} // namespace lex
-} // namespace dmit
+} // namespace dmit::lex

@@ -6,10 +6,7 @@
 
 #include <cstdint>
 
-namespace dmit
-{
-
-namespace src
+namespace dmit::src
 {
 
 class Location : fmt::Formatable
@@ -28,5 +25,4 @@ private:
     uint32_t _column;
 };
 
-} // namespace src
-} // namespace dmit
+} // namespace dmit::src

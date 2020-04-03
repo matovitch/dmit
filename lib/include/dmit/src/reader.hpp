@@ -2,10 +2,7 @@
 
 #include <cstdint>
 
-namespace dmit
-{
-
-namespace src
+namespace dmit::src
 {
 
 class Reader
@@ -30,5 +27,4 @@ private:
     const uint8_t* const _tail;
 };
 
-} // namespace src
-} // namespace dmit
+} // namespace dmit::src

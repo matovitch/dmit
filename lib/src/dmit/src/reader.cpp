@@ -2,10 +2,7 @@
 
 #include <cstdint>
 
-namespace dmit
-{
-
-namespace src
+namespace dmit::src
 {
 
 Reader::Reader(const uint8_t* const head,
@@ -34,5 +31,4 @@ uint32_t Reader::offset() const
     return static_cast<uint32_t>(_tail - _head);
 }
 
-} // namespace src
-} // namespace dmit
+} // namespace dmit::src

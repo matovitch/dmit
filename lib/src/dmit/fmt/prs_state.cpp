@@ -3,10 +3,7 @@
 #include "dmit/fmt/prs/error.hpp"
 #include "dmit/fmt/prs/tree.hpp"
 
-namespace dmit
-{
-
-namespace fmt
+namespace dmit::fmt
 {
 
 std::string asString(const prs::State& state)
@@ -20,5 +17,4 @@ std::string asString(const prs::State& state)
 
 }
 
-} // namespace fmt
-} // namespace dmit
+} // namespace dmit::fmt

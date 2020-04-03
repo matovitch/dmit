@@ -7,10 +7,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace dmit
-{
-
-namespace lex
+namespace dmit::lex
 {
 
 struct State : fmt::Formatable
@@ -49,5 +46,4 @@ private:
 };
 
 } // namespace state
-} // namespace lex
-} // namespace dmit
+} // namespace dmit::lex

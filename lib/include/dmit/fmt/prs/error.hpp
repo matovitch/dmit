@@ -4,15 +4,11 @@
 
 #include <string>
 
-namespace dmit
-{
-
-namespace fmt
+namespace dmit::fmt
 {
 
 std::string asString(const prs::state::Error&);
 
 std::string asString(const prs::state::error::Set&);
 
-} // namespace fmt
-} // namespace dmit
+} // namespace dmit::fmt

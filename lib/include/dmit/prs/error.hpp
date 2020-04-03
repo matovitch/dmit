@@ -5,13 +5,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace dmit
-{
-
-namespace prs
-{
-
-namespace state
+namespace dmit::prs::state
 {
 
 struct Error : dmit::fmt::Formatable
@@ -68,6 +62,4 @@ private:
 };
 
 } // namespace error
-} // namespace state
-} // namespace prs
-} // namespace dmit
+} // namespace dmit::prs::state

@@ -4,10 +4,7 @@
 #include <utility>
 #include <vector>
 
-namespace dmit
-{
-
-namespace src
+namespace dmit::src
 {
 
 static const uint8_t K_LINE_DELIMITER = static_cast<uint8_t>('\n');
@@ -46,5 +43,4 @@ const std::vector<uint32_t>& LineIndex::offsets() const
     return _offsets;
 }
 
-} // namespace src
-} // namespace dmit
+} // namespace dmit::src

@@ -5,10 +5,7 @@
 #include "dmit/lex/node.hpp"
 #include "dmit/lex/goto.hpp"
 
-namespace dmit
-{
-
-namespace lex
+namespace dmit::lex
 {
 
 using IsDigit                = TIsBetween<'0', '9'>;
@@ -410,5 +407,4 @@ struct TNodeIndex<NODE_DECIMAL_3>
     >;
 };
 
-} // namespace lex
-} // namespace dmit
+} // namespace dmit::lex

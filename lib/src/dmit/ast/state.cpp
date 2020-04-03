@@ -10,13 +10,7 @@
 #include <variant>
 #include <cstring>
 
-namespace dmit
-{
-
-namespace ast
-{
-
-namespace state
+namespace dmit::ast::state
 {
 
 namespace
@@ -59,6 +53,7 @@ dmit::prs::Reader makeSubReaderFor(const dmit::prs::state::tree::node::Kind pars
 
 } // namespace
 
+Builder::Builder() : _state{}, _nodePool{_state._nodePool} {}
 
 void Builder::makeAssignment(const prs::state::Tree& parseTree,
                              const dmit::prs::Reader& supReader,
@@ -86,16 +81,16 @@ void Builder::makeTypeClaim(const prs::state::Tree& parseTree,
                             dmit::prs::Reader& reader,
                             TNode<node::Kind::TYPE_CLAIM>& typeClaim)
 {
-    // Variable
-    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::LIT_IDENTIFIER);
-    _nodePool.make(typeClaim._variable);
-    makeIdentifier(parseTree, reader, _nodePool.get(typeClaim._variable));
-    reader.advance();
-
     // Type
     DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::LIT_IDENTIFIER);
     _nodePool.make(typeClaim._type);
     makeIdentifier(parseTree, reader, _nodePool.get(typeClaim._type));
+    reader.advance();
+
+    // Variable
+    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::LIT_IDENTIFIER);
+    _nodePool.make(typeClaim._variable);
+    makeIdentifier(parseTree, reader, _nodePool.get(typeClaim._variable));
     reader.advance();
 }
 
@@ -209,10 +204,12 @@ void Builder::makeScope(const prs::state::Tree& parseTree,
 
     _nodePool.make(reader.size(), scope._variants);
 
-    uint32_t i = 0;
+    uint32_t i = scope._variants._size;
 
     while (reader.isValid())
     {
+        i--;
+
         auto& variant = _nodePool.get(scope._variants[i]);
 
         auto parseNodeKind = reader.look()._kind;
@@ -245,7 +242,6 @@ void Builder::makeScope(const prs::state::Tree& parseTree,
         }
 
         reader.advance();
-        i++;
     }
 }
 
@@ -287,12 +283,12 @@ void Builder::makeArguments(const prs::state::Tree& parseTree,
 
     _nodePool.make(reader.size() >> 1, arguments._typeClaims);
 
-    uint32_t i = 0;
+    uint32_t i = arguments._typeClaims._size;
 
     while (reader.isValid())
     {
+        i--;
         makeTypeClaim(parseTree, reader, _nodePool.get(arguments._typeClaims[i]));
-        i++;
     }
 }
 
@@ -343,27 +339,21 @@ void Builder::makeFunction(const prs::state::Tree& parseTree,
 const State& Builder::operator()(const prs::state::Tree& parseTree)
 {
     dmit::prs::Reader reader{parseTree};
+    auto& program = _state._program;
 
     DMIT_COM_ASSERT(reader.isValid());
-    _nodePool.make(reader.size(), _state._functions);
+    _nodePool.make(reader.size(), program._functions);
 
-    uint32_t i = 0;
+    uint32_t i = program._functions._size;
 
     while (reader.isValid())
     {
-        makeFunction(parseTree, reader, _nodePool.get(_state._functions[i]));
+        i--;
+        makeFunction(parseTree, reader, _nodePool.get(program._functions[i]));
         reader.advance();
-        i++;
     }
 
     return _state;
 }
 
-const Builder::NodePool& Builder::nodePool() const
-{
-    return _nodePool;
-}
-
-} // namespace state
-} // namespace ast
-} // namespace dmit
+} // namespace dmit::ast::state

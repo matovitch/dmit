@@ -3,7 +3,7 @@
 ROOT_FOLDER="$(readlink -f $(dirname $0)/..)"
 PROJECT_NAME=$(basename $ROOT_FOLDER | perl -pe 's/([^_])([A-Z])/\1_\2/g' | tr '[:upper:]' '[:lower:]')
 
-function build()
+function make()
 {
     tup && ./test/diff_test.sh && ./bin/test/test -tse=inout
 }

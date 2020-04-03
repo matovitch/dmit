@@ -4,10 +4,7 @@
 
 #include "dmit/lex/reader.hpp"
 
-namespace dmit
-{
-
-namespace prs
+namespace dmit::prs
 {
 
 struct State;
@@ -61,5 +58,4 @@ struct TPipeline<Close, Closes...>
 };
 
 } // namespace close
-} // namespace prs
-} // namespace dmit
+} // namespace dmit::prs

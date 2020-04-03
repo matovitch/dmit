@@ -7,10 +7,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace dmit
-{
-
-namespace prs
+namespace dmit::prs
 {
 
 struct State;
@@ -134,5 +131,4 @@ private:
 };
 
 } // namespace state
-} // namespace prs
-} // namespace dmit
+} // namespace dmit::prs

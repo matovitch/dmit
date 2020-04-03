@@ -6,10 +6,7 @@
 #include <optional>
 #include <cstdint>
 
-namespace dmit
-{
-
-namespace prs
+namespace dmit::prs
 {
 
 namespace reader
@@ -50,5 +47,4 @@ private:
     const state::tree::Node* _tail;
 };
 
-} // namespace prs
-} // namespace dmit
+} // namespace dmit::prs

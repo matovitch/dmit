@@ -2,10 +2,7 @@
 
 #include <cstdint>
 
-namespace dmit
-{
-
-namespace prs
+namespace dmit::prs
 {
 
 struct Stack
@@ -14,5 +11,4 @@ struct Stack
     uint32_t _readerOffset;
 };
 
-} // namespace prs
-} // namespace dmit
+} // namespace dmit::prs

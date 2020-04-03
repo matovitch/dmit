@@ -5,6 +5,8 @@
 #include "dmit/prs/reader.hpp"
 #include "dmit/prs/state.hpp"
 
+#include "dmit/fmt/ast/state.hpp"
+
 #include "dmit/lex/state.hpp"
 
 #include "doctest/doctest_fwd.h"
@@ -47,11 +49,15 @@ TEST_CASE("dmit::ast::dummy")
 
     const auto& ast = aster("test/data/prs_0.in");
 
-    const auto& astNodePool = aster._aster.nodePool();
+    std::cout << ast << '\n';
 
-    CHECK(ast._functions._size == 1);
+    const auto& program = ast._program;
 
-    const auto& function = astNodePool.get(ast._functions[0]);
+    const auto& astNodePool = ast._nodePool;
+
+    CHECK(program._functions._size == 1);
+
+    const auto& function = astNodePool.get(program._functions[0]);
 
     const auto& functionName       = astNodePool.get(astNodePool.get (function._name       )._lexeme);
     const auto& functionArguments  = astNodePool.get                 (function._arguments  );

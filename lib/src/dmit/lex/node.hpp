@@ -7,10 +7,7 @@
 
 #include <cstdint>
 
-namespace dmit
-{
-
-namespace lex
+namespace dmit::lex
 {
 
 static constexpr int INITIAL_NODE = 0;
@@ -79,5 +76,4 @@ struct TNode<MATCH, Goto, Gotos...>
     }
 };
 
-} // namespace lex
-} // namespace dmit
+} // namespace dmit::lex

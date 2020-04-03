@@ -66,10 +66,7 @@ static const char* K_TOKEN_AS_CSTR[] =
     "END_OF_INPUT"
 };
 
-namespace dmit
-{
-
-namespace fmt
+namespace dmit::fmt
 {
 
 std::string asString(const lex::Token token)
@@ -81,5 +78,4 @@ std::string asString(const lex::Token token)
     return oss.str();
 }
 
-} // namespace fmt
-} // namespace dmit
+} // namespace dmit::fmt

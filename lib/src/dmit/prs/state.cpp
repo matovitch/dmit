@@ -6,10 +6,7 @@
 
 #include <vector>
 
-namespace dmit
-{
-
-namespace prs
+namespace dmit::prs
 {
 
 void State::clear()
@@ -253,5 +250,4 @@ void Builder::clearState()
 }
 
 } // namespace state
-} // namespace prs
-} // namespace dmit
+} // namespace dmit::prs

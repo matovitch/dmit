@@ -1,12 +1,6 @@
 #include "dmit/prs/error.hpp"
 
-namespace dmit
-{
-
-namespace prs
-{
-
-namespace state
+namespace dmit::prs::state
 {
 
 Error::Error(const lex::Token expect,
@@ -96,6 +90,4 @@ const std::vector<Error>& Set::errors() const
 }
 
 } // namespace error
-} // namespace state
-} // namespace prs
-} // namespace dmit
+} // namespace dmit::prs::state

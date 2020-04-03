@@ -4,10 +4,7 @@
 
 #include <algorithm>
 
-namespace dmit
-{
-
-namespace src
+namespace dmit::src
 {
 
 Location::Location(const LineIndex& lineIndex, const uint32_t offset)
@@ -24,5 +21,4 @@ Location::Location(const LineIndex& lineIndex, const uint32_t offset)
 uint32_t Location::line   () const { return _line   ; }
 uint32_t Location::column () const { return _column ; }
 
-} // namespace src
-} // namespace dmit
+} // namespace dmit::src

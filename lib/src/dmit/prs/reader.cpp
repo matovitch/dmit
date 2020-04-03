@@ -4,10 +4,7 @@
 #include <optional>
 #include <cstdint>
 
-namespace dmit
-{
-
-namespace prs
+namespace dmit::prs
 {
 
 Reader::Reader(const state::Tree& tree) :
@@ -66,5 +63,4 @@ uint32_t Reader::size() const
     return size;
 }
 
-} // namespace prs
-} // namespace dmit
+} // namespace dmit::prs

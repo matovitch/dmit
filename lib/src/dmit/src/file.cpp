@@ -9,10 +9,7 @@
 #include <memory>
 #include <vector>
 
-namespace dmit
-{
-
-namespace src
+namespace dmit::src
 {
 
 namespace file
@@ -109,5 +106,4 @@ const LineIndex& File::lineIndex() const
     return _lineIndex;
 }
 
-} // namespace src
-} // namespace dmit
+} // namespace dmit::src

@@ -1,9 +1,6 @@
 #pragma once
 
-namespace dmit
-{
-
-namespace lex
+namespace dmit::lex
 {
 
 template <class GotoPredicate, int GOTO_NEXT_NODE>
@@ -14,5 +11,4 @@ struct TGoto
     static constexpr int NEXT_NODE = GOTO_NEXT_NODE;
 };
 
-} // namespace lex
-} // namespace dmit
+} // namespace dmit::lex

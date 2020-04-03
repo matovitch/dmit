@@ -8,10 +8,7 @@
 #include <vector>
 #include <string>
 
-namespace dmit
-{
-
-namespace fmt
+namespace dmit::fmt
 {
 
 struct Formatable {};
@@ -47,8 +44,7 @@ std::string asString(Iterator begin, Iterator end)
     return oss.str();
 }
 
-} // namespace fmt
-} // namespace dmit
+} // namespace dmit::fmt
 
 #define DMIT_FMT_CONTAINER_AS_STRING(container) asString(container.begin(), \
                                                          container.end())

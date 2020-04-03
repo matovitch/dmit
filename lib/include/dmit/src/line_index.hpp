@@ -1,16 +1,11 @@
 #pragma once
 
-//#include "dmit/src/location.hpp"
-
 #include "dmit/fmt/formatable.hpp"
 
 #include <cstdint>
 #include <vector>
 
-namespace dmit
-{
-
-namespace src
+namespace dmit::src
 {
 
 namespace line_index
@@ -36,5 +31,4 @@ private:
     std::vector<uint32_t> _offsets;
 };
 
-} // namespace src
-} // namespace dmit
+} // namespace dmit::src

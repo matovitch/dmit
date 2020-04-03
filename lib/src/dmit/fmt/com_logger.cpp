@@ -4,10 +4,7 @@
 
 #include <string>
 
-namespace dmit
-{
-
-namespace fmt
+namespace dmit::fmt
 {
 
 std::string asString(const com::logger::Sub& subLogger)
@@ -15,5 +12,4 @@ std::string asString(const com::logger::Sub& subLogger)
     return subLogger.stream().str();
 }
 
-} // namespace fmt
-} // namespace dmit
+} // namespace dmit::fmt

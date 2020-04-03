@@ -9,10 +9,7 @@
 #include <string>
 #include <vector>
 
-namespace dmit
-{
-
-namespace lex
+namespace dmit::lex
 {
 
 void State::push(const Token token, const uint32_t offset)
@@ -120,5 +117,4 @@ const std::vector<uint32_t>& Builder::offsets() const
 }
 
 } // namespace state
-} // namespace lex
-} // namespace dmit
+} // namespace dmit::lex

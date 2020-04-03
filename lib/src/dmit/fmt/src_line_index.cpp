@@ -5,10 +5,7 @@
 #include <sstream>
 #include <string>
 
-namespace dmit
-{
-
-namespace fmt
+namespace dmit::fmt
 {
 
 std::string asString(const src::LineIndex& lineIndex)
@@ -20,5 +17,4 @@ std::string asString(const src::LineIndex& lineIndex)
     return oss.str();
 }
 
-} // namespace fmt
-} // namespace dmit
+} // namespace dmit::fmt

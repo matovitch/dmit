@@ -1,12 +1,9 @@
 #include "dmit/prs/tree.hpp"
 
-namespace dmit
-{
+#include <cstdint>
+#include <vector>
 
-namespace prs
-{
-
-namespace state
+namespace dmit::prs::state
 {
 
 namespace tree
@@ -75,6 +72,4 @@ const tree::Range& Tree::range(const tree::Node& node) const
     return _ranges[&node - _nodes.data() - 1];
 }
 
-} // namespace state
-} // namespace prs
-} // namespace dmit
+} // namespace dmit::prs::state

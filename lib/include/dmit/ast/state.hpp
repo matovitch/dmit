@@ -6,13 +6,21 @@
 #include "dmit/prs/reader.hpp"
 #include "dmit/prs/tree.hpp"
 
+#include "dmit/fmt/formatable.hpp"
+
 namespace dmit
 {
 
 namespace ast
 {
 
-using State = TNode<node::Kind::PROGRAM>;
+struct State : fmt::Formatable
+{
+    using NodePool = node::TPool<0x10>;
+
+    TNode<node::Kind::PROGRAM> _program;
+    NodePool                   _nodePool;
+};
 
 namespace state
 {
@@ -22,11 +30,9 @@ class Builder
 
 public:
 
-    using NodePool = node::TPool<0x10>;
+    Builder();
 
     const State& operator()(const prs::state::Tree& parseTree);
-
-    const NodePool& nodePool() const;
 
 private:
 
@@ -90,8 +96,8 @@ private:
                        dmit::prs::Reader& reader,
                        TNode<node::Kind::TYPE_CLAIM>& typeClaim);
 
-    State    _state;
-    NodePool _nodePool;
+    State            _state;
+    State::NodePool& _nodePool;
 };
 
 } // namespace state
