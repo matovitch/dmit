@@ -18,6 +18,10 @@ void toStream(const ast::node::TIndex<ast::node::Kind::LIT_IDENTIFIER>& identifi
               const ast::State::NodePool& nodePool,
               std::ostringstream& oss);
 
+void toStream(const ast::node::TIndex<ast::node::Kind::LIT_INTEGER>& integerIdx,
+              const ast::State::NodePool& nodePool,
+              std::ostringstream& oss);
+
 void toStream(const ast::node::TIndex<ast::node::Kind::TYPE_CLAIM>& typeClaimIdx,
               const ast::State::NodePool& nodePool,
               std::ostringstream& oss);
@@ -39,6 +43,10 @@ void toStream(const ast::node::TIndex<ast::node::Kind::STM_ASSIGN>& stmAssignIdx
               std::ostringstream& oss);
 
 void toStream(const ast::node::TIndex<ast::node::Kind::EXP_BINOP>& expBinopIdx,
+              const ast::State::NodePool& nodePool,
+              std::ostringstream& oss);
+
+void toStream(const ast::node::TIndex<ast::node::Kind::DCL_VARIABLE>& dclVariableIdx,
               const ast::State::NodePool& nodePool,
               std::ostringstream& oss);
 
@@ -69,9 +77,30 @@ struct Base
     std::ostringstream& _oss;
 };
 
+struct Declaration : Base
+{
+    Declaration(const ast::State::NodePool& nodePool, std::ostringstream& oss) : Base{nodePool, oss} {}
+
+    void operator()(const ast::node::TIndex<ast::node::Kind::DCL_VARIABLE>& dclVariableIdx)
+    {
+        toStream(dclVariableIdx, _nodePool, _oss);
+    }
+
+    template <class Type>
+    void operator()(const Type& binopIdx)
+    {
+        _oss << "{}";
+    }
+};
+
 struct Expression : Base
 {
     Expression(const ast::State::NodePool& nodePool, std::ostringstream& oss) : Base{nodePool, oss} {}
+
+    void operator()(const ast::node::TIndex<ast::node::Kind::LIT_INTEGER>& integerIdx)
+    {
+        toStream(integerIdx, _nodePool, _oss);
+    }
 
     void operator()(const ast::node::TIndex<ast::node::Kind::LIT_IDENTIFIER>& identifierIdx)
     {
@@ -111,7 +140,9 @@ struct Scope : Base
 
     void operator()(const ast::Declaration& declaration)
     {
-        _oss << "{}";
+        Declaration visitor{_nodePool, _oss};
+
+        std::visit(visitor, declaration);
     }
 
     void operator()(const ast::Statement& statement)
@@ -134,6 +165,19 @@ struct Scope : Base
 
 } // namespace visitor
 
+void toStream(const ast::node::TIndex<ast::node::Kind::DCL_VARIABLE>& dclVariableIdx,
+              const ast::State::NodePool& nodePool,
+              std::ostringstream& oss)
+{
+    const auto& dclVariable = nodePool.get(dclVariableIdx);
+
+    oss << "{\"node\":\"Variable Declaration\",";
+
+    oss << "\"typeClaim\":"; toStream(dclVariable._typeClaim, nodePool, oss);
+
+    oss << '}';
+}
+
 void toStream(const ast::node::TIndex<ast::node::Kind::STM_RETURN>& stmReturnIdx,
               const ast::State::NodePool& nodePool,
               std::ostringstream& oss)
@@ -142,18 +186,28 @@ void toStream(const ast::node::TIndex<ast::node::Kind::STM_RETURN>& stmReturnIdx
 
     visitor::Expression visitor{nodePool, oss};
 
-    oss << "{\"return\":";
+    oss << "{\"node\":\"Return Statement\",";
 
-    std::visit(visitor, stmReturn._expression);
+    oss << "\"expression\":"; std::visit(visitor, stmReturn._expression);
 
-    oss << "}";
+    oss << '}';
 }
 
 void toStream(const ast::node::TIndex<ast::node::Kind::STM_ASSIGN>& stmAssignIdx,
               const ast::State::NodePool& nodePool,
               std::ostringstream& oss)
 {
-    oss << "{}";
+    const auto& stmAssign = nodePool.get(stmAssignIdx);
+
+    oss << "{\"node\":\"Assignment\",";
+
+    oss << "\"variable\":"; toStream(stmAssign._variable, nodePool, oss); oss << ',';
+
+    visitor::Expression visitor{nodePool, oss};
+
+    oss << "\"expression\":"; std::visit(visitor, stmAssign._expression);
+
+    oss << '}';
 }
 
 void toStream(const ast::node::TIndex<ast::node::Kind::LEXEME>& lexemeIdx,
@@ -162,7 +216,9 @@ void toStream(const ast::node::TIndex<ast::node::Kind::LEXEME>& lexemeIdx,
 {
     const auto& lexeme = nodePool.get(lexemeIdx);
 
-    oss << "{\"lexeme\":" << lexeme._index << "}";
+    oss << "{\"node\":\"Lexeme\",";
+
+    oss << "\"index\":" << lexeme._index << "}";
 }
 
 void toStream(const ast::node::TIndex<ast::node::Kind::LIT_IDENTIFIER>& identifierIdx,
@@ -171,11 +227,24 @@ void toStream(const ast::node::TIndex<ast::node::Kind::LIT_IDENTIFIER>& identifi
 {
     const auto& identifier = nodePool.get(identifierIdx);
 
-    oss << "{";
+    oss << "{\"node\":\"Identifier\",";
 
-    oss << "\"identifier\":"; toStream(identifier._lexeme, nodePool, oss);
+    oss << "\"lexeme\":"; toStream(identifier._lexeme, nodePool, oss);
 
-    oss << "}";
+    oss << '}';
+}
+
+void toStream(const ast::node::TIndex<ast::node::Kind::LIT_INTEGER>& integerIdx,
+              const ast::State::NodePool& nodePool,
+              std::ostringstream& oss)
+{
+    const auto& integer = nodePool.get(integerIdx);
+
+    oss << "{\"node\":\"Integer\",";
+
+    oss << "\"lexeme\":"; toStream(integer._lexeme, nodePool, oss);
+
+    oss << '}';
 }
 
 void toStream(const ast::node::TIndex<ast::node::Kind::TYPE_CLAIM>& typeClaimIdx,
@@ -184,12 +253,12 @@ void toStream(const ast::node::TIndex<ast::node::Kind::TYPE_CLAIM>& typeClaimIdx
 {
     const auto& typeClaim = nodePool.get(typeClaimIdx);
 
-    oss << "{";
+    oss << "{\"node\":\"Type Claim\",";
 
     oss << "\"variable\":" ; toStream(typeClaim._variable , nodePool, oss); oss << ',';
     oss << "\"type\":"     ; toStream(typeClaim._type     , nodePool, oss);
 
-    oss << "}";
+    oss << '}';
 }
 
 void toStream(const ast::node::TIndex<ast::node::Kind::FUN_ARGUMENTS>& funArgumentsIdx,
@@ -231,7 +300,7 @@ void toStream(const ast::node::TIndex<ast::node::Kind::EXP_BINOP>& expBinopIdx,
 {
     const auto& expBinop = nodePool.get(expBinopIdx);
 
-    oss << "{";
+    oss << "{\"node\":\"Binary Operation\",";
 
     oss << "\"operator\":" ; toStream(expBinop._operator , nodePool, oss); oss << ',';
 
@@ -240,7 +309,7 @@ void toStream(const ast::node::TIndex<ast::node::Kind::EXP_BINOP>& expBinopIdx,
     oss << "\"lhs\":"; std::visit(visitor, expBinop._lhs); oss << ',';
     oss << "\"rhs\":"; std::visit(visitor, expBinop._rhs);
 
-    oss << "}";
+    oss << '}';
 }
 
 void toStream(const ast::node::TIndex<ast::node::Kind::SCOPE_VARIANT>& scopeVariantIdx,
@@ -278,21 +347,21 @@ void toStream(const ast::node::TIndex<ast::node::Kind::FUN_DEFINITION>& function
 {
     const auto& function = nodePool.get(functionIdx);
 
-    oss << "{";
+    oss << "{\"node\":\"Function\",";
 
     oss << "\"name\":"       ; toStream(function._name       , nodePool, oss); oss << ',';
     oss << "\"arguments\":"  ; toStream(function._arguments  , nodePool, oss); oss << ',';
     oss << "\"returnType\":" ; toStream(function._returnType , nodePool, oss); oss << ',';
     oss << "\"body\":"       ; toStream(function._body       , nodePool, oss);
 
-    oss << "}";
+    oss << '}';
 }
 
 std::string asString(const ast::State& state)
 {
     std::ostringstream oss;
 
-    oss << "{\"functions\":[";
+    oss << "{\"node\":\"Program\",\"functions\":[";
 
     for (uint32_t i = 0; i < state._program._functions._size; i++)
     {

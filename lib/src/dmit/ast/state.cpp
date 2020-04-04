@@ -56,10 +56,17 @@ dmit::prs::Reader makeSubReaderFor(const dmit::prs::state::tree::node::Kind pars
 Builder::Builder() : _state{}, _nodePool{_state._nodePool} {}
 
 void Builder::makeAssignment(const prs::state::Tree& parseTree,
-                             const dmit::prs::Reader& supReader,
-                             TNode<node::Kind::STM_ASSIGN>& assignment)
+                             dmit::prs::Reader& reader,
+                             TNode<node::Kind::STM_ASSIGN>& stmAssign)
 {
-    // TODO
+    // Expression
+    makeExpression(parseTree, reader, stmAssign._expression);
+    reader.advance();
+
+    // Variable
+    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::LIT_IDENTIFIER);
+    _nodePool.make(stmAssign._variable);
+    makeIdentifier(parseTree, reader, _nodePool.get(stmAssign._variable));
 }
 
 void Builder::makeReturn(const prs::state::Tree& parseTree,

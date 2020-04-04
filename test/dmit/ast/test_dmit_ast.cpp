@@ -44,6 +44,7 @@ TEST_CASE("prs")
     Aster aster;
 
     CHECK(dmit::fmt::asString(aster("test/data/ast_0.in")) == fileAsString("test/data/ast_0.out"));
+    CHECK(dmit::fmt::asString(aster("test/data/ast_1.in")) == fileAsString("test/data/ast_1.out"));
 }
 
 } // TEST_SUITE("inout")
