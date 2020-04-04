@@ -75,6 +75,7 @@ public:
 
 private:
 
+    // TODO: Improve the allocation pattern here.
     std::vector<std::unique_ptr<std::optional<Fn>>> _fnPtrs;
 };
 

@@ -299,8 +299,7 @@ void Builder::makeArguments(const prs::state::Tree& parseTree,
 
     while (reader.isValid())
     {
-        i--;
-        makeTypeClaim(parseTree, reader, _nodePool.get(arguments._typeClaims[i]));
+        makeTypeClaim(parseTree, reader, _nodePool.get(arguments._typeClaims[--i]));
     }
 }
 
