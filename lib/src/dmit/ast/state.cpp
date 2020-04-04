@@ -23,14 +23,14 @@ bool isDeclaration(const dmit::prs::state::tree::node::Kind parseNodeKind)
 
 bool isStatement(const dmit::prs::state::tree::node::Kind parseNodeKind)
 {
-    return parseNodeKind == dmit::prs::state::tree::node::Kind::STM_ASSIGN ||
-           parseNodeKind == dmit::prs::state::tree::node::Kind::STM_RETURN;
+    return parseNodeKind == dmit::prs::state::tree::node::Kind::STM_RETURN;
 }
 
 bool isExpression(const dmit::prs::state::tree::node::Kind parseNodeKind)
 {
     return parseNodeKind == dmit::prs::state::tree::node::Kind::FUN_CALL    ||
            parseNodeKind == dmit::prs::state::tree::node::Kind::EXP_BINOP   ||
+           parseNodeKind == dmit::prs::state::tree::node::Kind::EXP_ASSIGN  ||
            parseNodeKind == dmit::prs::state::tree::node::Kind::LIT_INTEGER ||
            parseNodeKind == dmit::prs::state::tree::node::Kind::LIT_IDENTIFIER;
 }
@@ -57,16 +57,21 @@ Builder::Builder() : _state{}, _nodePool{_state._nodePool} {}
 
 void Builder::makeAssignment(const prs::state::Tree& parseTree,
                              dmit::prs::Reader& reader,
-                             TNode<node::Kind::STM_ASSIGN>& stmAssign)
+                             TNode<node::Kind::EXP_ASSIGN>& expAssign)
 {
-    // Expression
-    makeExpression(parseTree, reader, stmAssign._expression);
+    // RHS
+    makeExpression(parseTree, reader, expAssign._rhs);
     reader.advance();
+    DMIT_COM_ASSERT(reader.isValid());
 
-    // Variable
-    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::LIT_IDENTIFIER);
-    _nodePool.make(stmAssign._variable);
-    makeIdentifier(parseTree, reader, _nodePool.get(stmAssign._variable));
+    // Operator
+    _nodePool.make (expAssign._operator);
+    _nodePool.get  (expAssign._operator)._index = parseTree.range(reader.look())._start;
+    reader.advance();
+    DMIT_COM_ASSERT(reader.isValid());
+
+    // LHS
+    makeExpression(parseTree, reader, expAssign._lhs);
 }
 
 void Builder::makeReturn(const prs::state::Tree& parseTree,
@@ -93,6 +98,7 @@ void Builder::makeTypeClaim(const prs::state::Tree& parseTree,
     _nodePool.make(typeClaim._type);
     makeIdentifier(parseTree, reader, _nodePool.get(typeClaim._type));
     reader.advance();
+    DMIT_COM_ASSERT(reader.isValid());
 
     // Variable
     DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::LIT_IDENTIFIER);
@@ -122,14 +128,7 @@ void Builder::makeStatement(const prs::state::Tree& parseTree,
 
     auto parseNodeKind = reader.look()._kind;
 
-    if (parseNodeKind == ParseNodeKind::STM_ASSIGN)
-    {
-        node::TIndex<node::Kind::STM_ASSIGN> assignment;
-        _nodePool.make(assignment);
-        makeAssignment(parseTree, subReader.value(), _nodePool.get(assignment));
-        blitVariant(assignment, statement);
-    }
-    else if (parseNodeKind == ParseNodeKind::STM_RETURN)
+    if (parseNodeKind == ParseNodeKind::STM_RETURN)
     {
         node::TIndex<node::Kind::STM_RETURN> stmReturn;
         _nodePool.make(stmReturn);
@@ -197,6 +196,14 @@ void Builder::makeExpression(const prs::state::Tree& parseTree,
         makeBinop(parseTree, subReader, _nodePool.get(binop));
         blitVariant(binop, expression);
     }
+    else if (parseNodeKind == ParseNodeKind::EXP_ASSIGN)
+    {
+        node::TIndex<node::Kind::EXP_ASSIGN> assignment;
+        _nodePool.make(assignment);
+        auto subReader = makeSubReaderFor(ParseNodeKind::EXP_ASSIGN, reader);
+        makeAssignment(parseTree, subReader, _nodePool.get(assignment));
+        blitVariant(assignment, expression);
+    }
     else
     {
         DMIT_COM_ASSERT(false); // Should not get there
@@ -215,9 +222,7 @@ void Builder::makeScope(const prs::state::Tree& parseTree,
 
     while (reader.isValid())
     {
-        i--;
-
-        auto& variant = _nodePool.get(scope._variants[i]);
+        auto& variant = _nodePool.get(scope._variants[--i]);
 
         auto parseNodeKind = reader.look()._kind;
 
@@ -355,8 +360,7 @@ const State& Builder::operator()(const prs::state::Tree& parseTree)
 
     while (reader.isValid())
     {
-        i--;
-        makeFunction(parseTree, reader, _nodePool.get(program._functions[i]));
+        makeFunction(parseTree, reader, _nodePool.get(program._functions[--i]));
         reader.advance();
     }
 

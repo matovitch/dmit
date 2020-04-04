@@ -26,6 +26,7 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
     enum : uint8_t
     {
         DCL_VARIABLE,
+        EXP_ASSIGN,
         EXP_BINOP,
         EXP_OPERATOR,
         EXP_OPPOSE,
@@ -38,7 +39,6 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
         LIT_INTEGER,
         PROGRAM,
         SCOPE,
-        STM_ASSIGN,
         STM_RETURN,
         STM_WHILE,
         END_OF_TREE

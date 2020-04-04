@@ -79,6 +79,7 @@ struct TPool
     }
 
     std::tuple<pool::TSub<Kind::DCL_VARIABLE   , LOG2_SIZE>,
+               pool::TSub<Kind::EXP_ASSIGN     , LOG2_SIZE>,
                pool::TSub<Kind::EXP_BINOP      , LOG2_SIZE>,
                pool::TSub<Kind::FUN_ARGUMENTS  , LOG2_SIZE>,
                pool::TSub<Kind::FUN_CALL       , LOG2_SIZE>,
@@ -89,7 +90,6 @@ struct TPool
                pool::TSub<Kind::LIT_INTEGER    , LOG2_SIZE>,
                pool::TSub<Kind::SCOPE          , LOG2_SIZE>,
                pool::TSub<Kind::SCOPE_VARIANT  , LOG2_SIZE>,
-               pool::TSub<Kind::STM_ASSIGN     , LOG2_SIZE>,
                pool::TSub<Kind::STM_RETURN     , LOG2_SIZE>,
                pool::TSub<Kind::TYPE_CLAIM     , LOG2_SIZE>> _subs;
 };

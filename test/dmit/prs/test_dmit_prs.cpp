@@ -31,9 +31,10 @@ TEST_CASE("prs")
 {
     Parser parser;
 
-    CHECK(dmit::fmt::asString(parser("test/data/prs_0.in")) == fileAsString("test/data/prs_0.out"));
+    /*CHECK(dmit::fmt::asString(parser("test/data/prs_0.in")) == fileAsString("test/data/prs_0.out"));
     CHECK(dmit::fmt::asString(parser("test/data/prs_1.in")) == fileAsString("test/data/prs_1.out"));
-    CHECK(dmit::fmt::asString(parser("test/data/prs_2.in")) == fileAsString("test/data/prs_2.out"));
+    CHECK(dmit::fmt::asString(parser("test/data/prs_2.in")) == fileAsString("test/data/prs_2.out"));*/
+    CHECK(dmit::fmt::asString(parser("test/data/prs_3.in")) == fileAsString("test/data/prs_3.out"));
 }
 
 } // TEST_SUITE("inout")

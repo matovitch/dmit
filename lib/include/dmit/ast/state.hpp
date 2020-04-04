@@ -78,7 +78,7 @@ private:
 
     void makeAssignment(const prs::state::Tree& parseTree,
                         dmit::prs::Reader& reader,
-                        TNode<node::Kind::STM_ASSIGN>& assignment);
+                        TNode<node::Kind::EXP_ASSIGN>& assignment);
 
     void makeReturn(const prs::state::Tree& parseTree,
                     dmit::prs::Reader& reader,

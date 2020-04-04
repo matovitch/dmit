@@ -38,7 +38,7 @@ void toStream(const ast::node::TIndex<ast::node::Kind::STM_RETURN>& stmReturnIdx
               const ast::State::NodePool& nodePool,
               std::ostringstream& oss);
 
-void toStream(const ast::node::TIndex<ast::node::Kind::STM_ASSIGN>& stmAssignIdx,
+void toStream(const ast::node::TIndex<ast::node::Kind::EXP_ASSIGN>& expAssignIdx,
               const ast::State::NodePool& nodePool,
               std::ostringstream& oss);
 
@@ -89,7 +89,7 @@ struct Declaration : Base
     template <class Type>
     void operator()(const Type& binopIdx)
     {
-        _oss << "{}";
+        _oss << "{\"declaration\":\"EMPTY\"}";
     }
 };
 
@@ -107,6 +107,11 @@ struct Expression : Base
         toStream(identifierIdx, _nodePool, _oss);
     }
 
+    void operator()(const ast::node::TIndex<ast::node::Kind::EXP_ASSIGN>& expAssign)
+    {
+        toStream(expAssign, _nodePool, _oss);
+    }
+
     void operator()(const ast::node::TIndex<ast::node::Kind::EXP_BINOP>& binopIdx)
     {
         toStream(binopIdx, _nodePool, _oss);
@@ -115,7 +120,7 @@ struct Expression : Base
     template <class Type>
     void operator()(const Type& binopIdx)
     {
-        _oss << "{}";
+        _oss << "{\"expression\":\"EMPTY\"}";
     }
 };
 
@@ -128,9 +133,10 @@ struct Statement : Base
         toStream(funReturn, _nodePool, _oss);
     }
 
-    void operator()(const ast::node::TIndex<ast::node::Kind::STM_ASSIGN>& stmAssign)
+    template <class Type>
+    void operator()(const Type& binopIdx)
     {
-        toStream(stmAssign, _nodePool, _oss);
+        _oss << "{\"statement\":\"EMPTY\"}";
     }
 };
 
@@ -154,7 +160,9 @@ struct Scope : Base
 
     void operator()(const ast::Expression& expression)
     {
-        _oss << "{}";
+        Expression visitor{_nodePool, _oss};
+
+        std::visit(visitor, expression);
     }
 
     void operator()(const ast::node::TIndex<ast::node::Kind::SCOPE>& scopeIdx)
@@ -193,19 +201,20 @@ void toStream(const ast::node::TIndex<ast::node::Kind::STM_RETURN>& stmReturnIdx
     oss << '}';
 }
 
-void toStream(const ast::node::TIndex<ast::node::Kind::STM_ASSIGN>& stmAssignIdx,
+void toStream(const ast::node::TIndex<ast::node::Kind::EXP_ASSIGN>& expAssignIdx,
               const ast::State::NodePool& nodePool,
               std::ostringstream& oss)
 {
-    const auto& stmAssign = nodePool.get(stmAssignIdx);
+    const auto& expAssign = nodePool.get(expAssignIdx);
 
     oss << "{\"node\":\"Assignment\",";
 
-    oss << "\"variable\":"; toStream(stmAssign._variable, nodePool, oss); oss << ',';
+    oss << "\"operator\":"; toStream(expAssign._operator, nodePool, oss); oss << ',';
 
     visitor::Expression visitor{nodePool, oss};
 
-    oss << "\"expression\":"; std::visit(visitor, stmAssign._expression);
+    oss << "\"lhs\":"; std::visit(visitor, expAssign._lhs); oss << ',';
+    oss << "\"rhs\":"; std::visit(visitor, expAssign._rhs);
 
     oss << '}';
 }

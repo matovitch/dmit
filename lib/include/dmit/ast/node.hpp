@@ -23,6 +23,7 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
     enum : uint8_t
     {
         DCL_VARIABLE   ,
+        EXP_ASSIGN     ,
         EXP_BINOP      ,
         FUN_ARGUMENTS  ,
         FUN_CALL       ,
@@ -33,7 +34,6 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
         LIT_INTEGER    ,
         SCOPE          ,
         SCOPE_VARIANT  ,
-        STM_ASSIGN     ,
         STM_RETURN     ,
         TYPE_CLAIM     ,
         PROGRAM
@@ -66,11 +66,11 @@ struct TRange
 
 using Declaration = std::variant<node::TIndex<node::Kind::DCL_VARIABLE>>;
 
-using Statement = std::variant<node::TIndex<node::Kind::STM_ASSIGN    >,
-                               node::TIndex<node::Kind::STM_RETURN >>;
+using Statement = std::variant<node::TIndex<node::Kind::STM_RETURN>>;
 
 using Expression = std::variant<node::TIndex<node::Kind::LIT_IDENTIFIER >,
                                 node::TIndex<node::Kind::LIT_INTEGER    >,
+                                node::TIndex<node::Kind::EXP_ASSIGN     >,
                                 node::TIndex<node::Kind::EXP_BINOP      >,
                                 node::TIndex<node::Kind::FUN_CALL       >>;
 
@@ -166,10 +166,12 @@ struct TNode<node::Kind::DCL_VARIABLE>
 };
 
 template<>
-struct TNode<node::Kind::STM_ASSIGN>
+struct TNode<node::Kind::EXP_ASSIGN>
 {
-    node::TIndex<node::Kind::LIT_IDENTIFIER> _variable;
-    Expression                               _expression;
+    node::TIndex<node::Kind::LEXEME> _operator;
+
+    Expression _lhs;
+    Expression _rhs;
 };
 
 } // namespace ast

@@ -39,7 +39,7 @@ struct Aster
 TEST_SUITE("inout")
 {
 
-TEST_CASE("prs")
+TEST_CASE("ast")
 {
     Aster aster;
 

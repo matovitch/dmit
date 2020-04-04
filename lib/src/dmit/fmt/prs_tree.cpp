@@ -8,6 +8,7 @@
 static const char* K_TREE_NODE_KIND_AS_CSTR[] =
 {
     "DCL_VARIABLE",
+    "EXP_ASSIGN",
     "EXP_BINOP",
     "EXP_OPERATOR",
     "EXP_OPPOSE",
@@ -20,7 +21,6 @@ static const char* K_TREE_NODE_KIND_AS_CSTR[] =
     "LIT_INTEGER",
     "PROGRAM",
     "SCOPE",
-    "STM_ASSIGN",
     "STM_RETURN",
     "STM_WHILE",
     "END_OF_TREE"

@@ -117,6 +117,11 @@ Builder::Builder() :
     auto colon         = makeParserToken      <lex::Token::COLON                     > (_pool, _state);
     auto semiColon     = makeParserToken      <lex::Token::SEMI_COLON                > (_pool, _state);
     auto equal         = makeParserToken      <lex::Token::EQUAL                     > (_pool, _state);
+    auto plusEqual     = makeParserToken      <lex::Token::PLUS_EQUAL                > (_pool, _state);
+    auto minusEqual    = makeParserToken      <lex::Token::MINUS_EQUAL               > (_pool, _state);
+    auto starEqual     = makeParserToken      <lex::Token::STAR_EQUAL                > (_pool, _state);
+    auto slashEqual    = makeParserToken      <lex::Token::SLASH_EQUAL               > (_pool, _state);
+    auto percentEqual  = makeParserToken      <lex::Token::PERCENT_EQUAL             > (_pool, _state);
     auto keyIf         = makeParserToken      <lex::Token::IF                        > (_pool, _state);
     auto keyElse       = makeParserToken      <lex::Token::ELSE                      > (_pool, _state);
     auto keyLet        = makeParserToken      <lex::Token::LET                       > (_pool, _state);
@@ -127,10 +132,11 @@ Builder::Builder() :
     auto product       = makeParserVariadic   <tree::node::Kind::EXP_BINOP           > (_pool, _state);
     auto sum           = makeParserVariadic   <tree::node::Kind::EXP_BINOP           > (_pool, _state);
     auto comparison    = makeParserVariadic   <tree::node::Kind::EXP_BINOP           > (_pool, _state);
-    auto stmAssign     = makeParserVariadic   <tree::node::Kind::STM_ASSIGN          > (_pool, _state);
+    auto assignment    = makeParserVariadic   <tree::node::Kind::EXP_ASSIGN          > (_pool, _state);
     auto opSum         = makeParserUnary      <tree::node::Kind::EXP_OPERATOR        > (_pool, _state);
     auto opProduct     = makeParserUnary      <tree::node::Kind::EXP_OPERATOR        > (_pool, _state);
     auto opComparison  = makeParserUnary      <tree::node::Kind::EXP_OPERATOR        > (_pool, _state);
+    auto opAssign      = makeParserUnary      <tree::node::Kind::EXP_OPERATOR        > (_pool, _state);
     auto funCall       = makeParserUnary      <tree::node::Kind::FUN_CALL            > (_pool, _state);
     auto negAtom       = makeParserUnary      <tree::node::Kind::EXP_OPPOSE          > (_pool, _state);
     auto funArguments  = makeParserUnary      <tree::node::Kind::FUN_ARGUMENTS       > (_pool, _state);
@@ -144,6 +150,7 @@ Builder::Builder() :
     auto typeClaim     = makeParser                                                    (_pool, _state);
     auto posAtom       = makeParser                                                    (_pool, _state);
     auto expression    = makeParser                                                    (_pool, _state);
+    auto binAssign     = makeParser                                                    (_pool, _state);
 
     USING_COMBINATORS;
 
@@ -168,6 +175,11 @@ Builder::Builder() :
     colon         = tok(lex::Token::COLON           );
     semiColon     = tok(lex::Token::SEMI_COLON      );
     equal         = tok(lex::Token::EQUAL           );
+    plusEqual     = tok(lex::Token::PLUS_EQUAL      );
+    minusEqual    = tok(lex::Token::MINUS_EQUAL     );
+    starEqual     = tok(lex::Token::STAR_EQUAL      );
+    slashEqual    = tok(lex::Token::SLASH_EQUAL     );
+    percentEqual  = tok(lex::Token::PERCENT_EQUAL   );
     keyIf         = tok(lex::Token::IF              );
     keyElse       = tok(lex::Token::ELSE            );
     keyLet        = tok(lex::Token::LET             );
@@ -196,13 +208,15 @@ Builder::Builder() :
 
     comparison = seq(sum, opt(seq(opComparison, sum)));
 
+    opAssign = alt(equal, plusEqual, minusEqual, starEqual, slashEqual);
+
+    assignment = seq(comparison, opt(seq(opAssign, binAssign)));
+
+    binAssign = assignment;
+
+    expression = alt(funCall, assignment);
+
     funCall = seq(identifier, parLeft, opt(seq(expression, rep(seq(comma, expression)))), parRight);
-
-    expression = alt(funCall, comparison);
-
-    // Assigment
-
-    stmAssign = seq(identifier, equal, expression);
 
     // Return statement
 
@@ -218,7 +232,7 @@ Builder::Builder() :
 
     scope = seq(braLeft, rep(alt(seq(alt(declarLet,
                                          stmReturn,
-                                         stmAssign,
+                                         assignment,
                                          expression), semiColon), scope)), braRight);
     // Function declaration
 
