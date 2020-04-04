@@ -1,0 +1,1 @@
+{"functions":[{"name":{"identifier":{"lexeme":33}},"arguments":[{"variable":{"identifier":{"lexeme":31}},"type":{"identifier":{"lexeme":27}}},{"variable":{"identifier":{"lexeme":24}},"type":{"identifier":{"lexeme":20}}}],"returnType":{"identifier":{"lexeme":15}},"body":[{"return":{"operator":{"lexeme":7},"lhs":{"identifier":{"lexeme":9}},"rhs":{"identifier":{"lexeme":5}}}}]}]}

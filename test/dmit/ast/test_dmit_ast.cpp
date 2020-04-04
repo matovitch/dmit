@@ -36,47 +36,14 @@ struct Aster
     dmit::lex::state::Builder _lexer;
 };
 
-template <class Type, class Variant>
-const Type& checkAndGet(const Variant& variant)
+TEST_SUITE("inout")
 {
-    CHECK(std::holds_alternative<Type>(variant));
-    return std::get<Type>(variant);
-}
 
-TEST_CASE("dmit::ast::dummy")
+TEST_CASE("prs")
 {
     Aster aster;
 
-    const auto& ast = aster("test/data/prs_0.in");
-
-    std::cout << ast << '\n';
-
-    const auto& program = ast._program;
-
-    const auto& astNodePool = ast._nodePool;
-
-    CHECK(program._functions._size == 1);
-
-    const auto& function = astNodePool.get(program._functions[0]);
-
-    const auto& functionName       = astNodePool.get(astNodePool.get (function._name       )._lexeme);
-    const auto& functionArguments  = astNodePool.get                 (function._arguments  );
-    const auto& functionReturnType = astNodePool.get                 (function._returnType );
-    const auto& functionBody       = astNodePool.get                 (function._body       );
-
-    CHECK(functionName._index == 33);
-    CHECK(functionArguments._typeClaims._size == 2);
-    CHECK(functionReturnType._option);
-    CHECK(functionBody._variants._size == 1);
-
-    const auto& functionBodyContent = astNodePool.get(functionBody._variants[0]);
-
-    const auto& statement = checkAndGet<dmit::ast::Statement>(functionBodyContent._value);
-
-    const auto& stmReturn = astNodePool.get(checkAndGet<dmit::ast::node::TIndex<dmit::ast::node::Kind::STM_RETURN>>(statement));
-
-    const auto& binop = astNodePool.get(checkAndGet<dmit::ast::node::TIndex<dmit::ast::node::Kind::EXP_BINOP>>(stmReturn._expression));
-
-    CHECK(std::holds_alternative<dmit::ast::node::TIndex<dmit::ast::node::Kind::LIT_IDENTIFIER>>(binop._lhs));
-    CHECK(std::holds_alternative<dmit::ast::node::TIndex<dmit::ast::node::Kind::LIT_IDENTIFIER>>(binop._rhs));
+    CHECK(dmit::fmt::asString(aster("test/data/ast_0.in")) == fileAsString("test/data/ast_0.out"));
 }
+
+} // TEST_SUITE("inout")
