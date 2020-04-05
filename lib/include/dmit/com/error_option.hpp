@@ -3,10 +3,7 @@
 #include <variant>
 #include <utility>
 
-namespace dmit
-{
-
-namespace com
+namespace dmit::com
 {
 
 template <class ValueType,
@@ -53,5 +50,4 @@ private:
     std::variant<ValueType, ErrorType> _variant;
 };
 
-} // namespace com
-} // namespace dmit
+} // namespace dmit::com

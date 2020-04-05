@@ -263,7 +263,7 @@ void Builder::makeReturnType(const prs::state::Tree& parseTree,
 {
     DMIT_COM_ASSERT(supReader.look()._kind == ParseNodeKind::FUN_RETURN);
     auto readerOpt = supReader.makeSubReader();
-    
+
     if (!readerOpt)
     {
         blitVariant(std::nullopt, returnType._option);
@@ -284,7 +284,7 @@ void Builder::makeArguments(const prs::state::Tree& parseTree,
 {
     DMIT_COM_ASSERT(supReader.look()._kind == ParseNodeKind::FUN_ARGUMENTS);
     auto readerOpt = supReader.makeSubReader();
-    
+
     if (!readerOpt)
     {
         arguments._typeClaims._size = 0;

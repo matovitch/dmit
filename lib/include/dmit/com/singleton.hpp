@@ -4,10 +4,7 @@
 
 #include <memory>
 
-namespace dmit
-{
-
-namespace com
+namespace dmit::com
 {
 
 struct Singletonable{};
@@ -36,5 +33,4 @@ private:
 template <class Type, type_flag::THas<Singletonable, Type> IS_SINGLETONABLE>
 thread_local std::unique_ptr<Type> TSingleton<Type, IS_SINGLETONABLE>::_instancePtr;
 
-} // namespace com
-} // namespace dmit
+} // namespace dmit::com

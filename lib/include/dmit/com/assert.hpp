@@ -1,5 +1,31 @@
 #pragma once
 
-#include <cassert>
+#include "dmit/com/logger.hpp"
 
-#define DMIT_COM_ASSERT(x) assert(x)
+#include <cstdlib>
+
+template <class Assertion>
+void dmitComAssert(const Assertion& assertion,
+                   const char*      assertionAsCStr,
+                   const char*      file,
+                   const int        line)
+{
+    if (assertion)
+    {
+        return;
+    }
+
+    DMIT_COM_LOG_ERR << "Assert failed : " << assertionAsCStr           << "\n"
+                     << "Source        : " << file << ", line " << line << "\n";
+
+    DMIT_COM_LOG_ERR .~decltype(DMIT_COM_LOG_ERR )();
+    std::cerr        .~decltype(std::cerr        )();
+
+    abort();
+}
+
+#ifdef USE_ASSERTS
+#   define DMIT_COM_ASSERT(assertion) dmitComAssert(assertion, #assertion, __FILE__, __LINE__)
+#else
+#   define DMIT_COM_ASSERT(assertion)
+#endif

@@ -13,6 +13,10 @@ ifeq (@(IS_DEBUG),y)
     CXFLAGS += -g
 endif
 
+ifeq (@(IS_USING_ASSERTS),y)
+    CXFLAGS += -DUSE_ASSERTS
+endif
+
 ifeq (@(O_LEVEL),0)
     CXFLAGS += -O0
 endif

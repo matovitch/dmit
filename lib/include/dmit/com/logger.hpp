@@ -11,10 +11,7 @@
 #include <sstream>
 #include <string>
 
-namespace dmit
-{
-
-namespace com
+namespace dmit::com
 {
 
 namespace logger
@@ -63,8 +60,7 @@ struct Logger : Singletonable
     logger::Sub _err;
 };
 
-} // namespace dmit
-} // namespace com
+} // namespace dmit::com
 
 #define DMIT_COM_LOG_OUT dmit::com::TSingleton<dmit::com::Logger>::instance()._out
 #define DMIT_COM_LOG_ERR dmit::com::TSingleton<dmit::com::Logger>::instance()._err
