@@ -54,7 +54,7 @@ public:
 
     std::size_t offset() const;
 
-    bool empty() const;
+    bool isEmpty() const;
 
 private:
 

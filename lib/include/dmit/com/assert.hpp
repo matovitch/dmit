@@ -5,10 +5,10 @@
 #include <cstdlib>
 
 template <class Assertion>
-void dmitComAssert(const Assertion& assertion,
-                   const char*      assertionAsCStr,
-                   const char*      file,
-                   const int        line)
+void dmitComAssert(const Assertion&  assertion,
+                   const char* const assertionAsCStr,
+                   const char* const file,
+                   const int         line)
 {
     if (assertion)
     {

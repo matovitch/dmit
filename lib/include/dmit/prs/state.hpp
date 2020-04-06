@@ -20,6 +20,8 @@ struct State : fmt::Formatable
 
     state::Tree       _tree;
     state::error::Set _errorSet;
+
+    std::optional<std::reference_wrapper<Stack>> _stackRefOpt;
 };
 
 namespace state
@@ -34,6 +36,9 @@ struct Open
     {
         stack._treeSize     = state._tree.size();
         stack._readerOffset = reader.offset();
+
+        stack._parent = state._stackRefOpt;
+        state._stackRefOpt = stack;
     }
 };
 
@@ -46,15 +51,21 @@ struct Close
         if (!readerOpt)
         {
             state._tree.resize(stack._treeSize);
-            return;
+            goto REVERT_STACK_AND_RETURN;
         }
 
-        const auto size = state._tree.size() - stack._treeSize;
-
         state._tree.addNode<NODE_ARITY,
-                            NODE_KIND>(size,
+                            NODE_KIND>(state._tree.size() - stack._treeSize,
+                                       stack._childCount,
                                        stack._readerOffset,
                                        readerOpt.value().offset());
+        if (stack._parent)
+        {
+            stack._parent.value().get()._childCount++;
+        }
+
+        REVERT_STACK_AND_RETURN:
+            state._stackRefOpt = stack._parent;
     }
 };
 

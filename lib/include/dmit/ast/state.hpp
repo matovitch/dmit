@@ -38,62 +38,48 @@ private:
 
     using ParseNodeKind = dmit::prs::state::tree::node::Kind;
 
-    void makeInteger(const prs::state::Tree& parseTree,
-                     const dmit::prs::Reader& reader,
+    void makeInteger(const dmit::prs::Reader& reader,
                      TNode<node::Kind::LIT_INTEGER>& identifier);
 
-    void makeIdentifier(const prs::state::Tree& parseTree,
-                        const dmit::prs::Reader& reader,
+    void makeIdentifier(const dmit::prs::Reader& reader,
                         TNode<node::Kind::LIT_IDENTIFIER>& identifier);
 
-    void makeScope(const prs::state::Tree& parseTree,
-                   const dmit::prs::Reader& supReader,
+    void makeScope(const dmit::prs::Reader& supReader,
                    TNode<node::Kind::SCOPE>& scope);
 
-    void makeReturnType(const prs::state::Tree& parseTree,
-                        const dmit::prs::Reader& supReader,
+    void makeReturnType(const dmit::prs::Reader& supReader,
                         TNode<node::Kind::FUN_RETURN>& returnType);
 
-    void makeArguments(const prs::state::Tree& parseTree,
-                       const dmit::prs::Reader& supReader,
+    void makeArguments(const dmit::prs::Reader& supReader,
                        TNode<node::Kind::FUN_ARGUMENTS>& arguments);
 
     void makeArgumentsEmpty(TNode<node::Kind::FUN_ARGUMENTS>& arguments);
 
-    void makeFunction(const prs::state::Tree& parseTree,
-                      const dmit::prs::Reader& supReader,
+    void makeFunction(const dmit::prs::Reader& supReader,
                       TNode<node::Kind::FUN_DEFINITION>& function);
 
-    void makeDeclaration(const prs::state::Tree& parseTree,
-                         const dmit::prs::Reader& reader,
+    void makeDeclaration(const dmit::prs::Reader& reader,
                          Declaration& declaration);
 
-    void makeStatement(const prs::state::Tree& parseTree,
-                       const dmit::prs::Reader& reader,
+    void makeStatement(const dmit::prs::Reader& reader,
                        Statement& statement);
 
-    void makeExpression(const prs::state::Tree& parseTree,
-                        const dmit::prs::Reader& reader,
+    void makeExpression(const dmit::prs::Reader& reader,
                         Expression& expression);
 
-    void makeAssignment(const prs::state::Tree& parseTree,
-                        dmit::prs::Reader& reader,
+    void makeAssignment(dmit::prs::Reader& reader,
                         TNode<node::Kind::EXP_ASSIGN>& assignment);
 
-    void makeReturn(const prs::state::Tree& parseTree,
-                    dmit::prs::Reader& reader,
+    void makeReturn(dmit::prs::Reader& reader,
                     TNode<node::Kind::STM_RETURN>& stmReturn);
 
-    void makeBinop(const prs::state::Tree& parseTree,
-                   dmit::prs::Reader& reader,
+    void makeBinop(dmit::prs::Reader& reader,
                    TNode<node::Kind::EXP_BINOP>& binop);
 
-    void makeDclVariable(const prs::state::Tree& parseTree,
-                         dmit::prs::Reader& reader,
+    void makeDclVariable(dmit::prs::Reader& reader,
                          TNode<node::Kind::DCL_VARIABLE>& dclVariable);
 
-    void makeTypeClaim(const prs::state::Tree& parseTree,
-                       dmit::prs::Reader& reader,
+    void makeTypeClaim(dmit::prs::Reader& reader,
                        TNode<node::Kind::TYPE_CLAIM>& typeClaim);
 
     State            _state;

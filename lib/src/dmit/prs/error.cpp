@@ -75,11 +75,11 @@ void Set::clear()
 
 std::size_t Set::offset() const
 {
-    return empty() ? std::numeric_limits<std::size_t>::max()
-                   : _errors.back()._offset;
+    return isEmpty() ? std::numeric_limits<std::size_t>::max()
+                     : _errors.back()._offset;
 }
 
-bool Set::empty() const
+bool Set::isEmpty() const
 {
     return _errors.empty();
 }

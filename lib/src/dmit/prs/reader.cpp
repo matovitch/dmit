@@ -50,17 +50,7 @@ std::optional<Reader> Reader::makeSubReader() const
 
 uint32_t Reader::size() const
 {
-    uint32_t size = 1;
-
-    auto head = _head - _head->_size - 1;
-
-    while (head > _tail)
-    {
-        head -= head->_size + 1;
-        size++;
-    }
-
-    return size;
+    return (_head + 1)->_childCount;
 }
 
 } // namespace dmit::prs

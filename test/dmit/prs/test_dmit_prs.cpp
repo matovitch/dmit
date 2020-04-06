@@ -31,9 +31,9 @@ TEST_CASE("prs")
 {
     Parser parser;
 
-    /*CHECK(dmit::fmt::asString(parser("test/data/prs_0.in")) == fileAsString("test/data/prs_0.out"));
+    CHECK(dmit::fmt::asString(parser("test/data/prs_0.in")) == fileAsString("test/data/prs_0.out"));
     CHECK(dmit::fmt::asString(parser("test/data/prs_1.in")) == fileAsString("test/data/prs_1.out"));
-    CHECK(dmit::fmt::asString(parser("test/data/prs_2.in")) == fileAsString("test/data/prs_2.out"));*/
+    CHECK(dmit::fmt::asString(parser("test/data/prs_2.in")) == fileAsString("test/data/prs_2.out"));
     CHECK(dmit::fmt::asString(parser("test/data/prs_3.in")) == fileAsString("test/data/prs_3.out"));
 }
 
@@ -61,8 +61,8 @@ TEST_CASE("dmit::prs::Reader")
 
     CHECK(readerOpt_1.value().look()._kind == NodeKind::SCOPE);
 
-    CHECK(tree.range(readerOpt_1.value().look())._start == 13);
-    CHECK(tree.range(readerOpt_1.value().look())._stop  == 0);
+    CHECK(readerOpt_1.value().look()._start == 13);
+    CHECK(readerOpt_1.value().look()._stop  == 0);
 
     readerOpt_1.value().advance();
     CHECK(readerOpt_1.value().look()._kind == NodeKind::FUN_RETURN);
