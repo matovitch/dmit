@@ -8,20 +8,20 @@ namespace dmit::com
 
 template <class ValueType,
           class ErrorType>
-class ErrorOption
+class OptionError
 {
 
 public:
 
-    ErrorOption(ValueType&& value) :
+    OptionError(ValueType&& value) :
         _variant{std::move(value)}
     {}
 
-    ErrorOption(const ValueType& value) :
+    OptionError(const ValueType& value) :
         _variant{value}
     {}
 
-    ErrorOption(const ErrorType& error) :
+    OptionError(const ErrorType& error) :
         _variant{error}
     {}
 

@@ -8,6 +8,8 @@
 
 #include "dmit/fmt/formatable.hpp"
 
+#include "dmit/com/option_reference.hpp"
+
 #include <optional>
 #include <vector>
 
@@ -21,7 +23,7 @@ struct State : fmt::Formatable
     state::Tree       _tree;
     state::error::Set _errorSet;
 
-    std::optional<std::reference_wrapper<Stack>> _stackRefOpt;
+    dmit::com::OptionRef<Stack> _stackRefOpt;
 };
 
 namespace state
@@ -46,7 +48,7 @@ template <com::TEnumIntegerType<state::tree::node::Arity > NODE_ARITY,
           com::TEnumIntegerType<state::tree::node::Kind  > NODE_KIND>
 struct Close
 {
-    void operator()(const std::optional<lex::Reader>& readerOpt, const Stack& stack, State& state) const
+    void operator()(const std::optional<lex::Reader>& readerOpt, Stack& stack, State& state) const
     {
         if (!readerOpt)
         {
@@ -91,7 +93,7 @@ struct Open
 
 struct Close
 {
-    void operator()(const std::optional<lex::Reader>& readerOpt, const Stack& stack, State& state) const
+    void operator()(const std::optional<lex::Reader>& readerOpt, Stack& stack, State& state) const
     {
         if (readerOpt)
         {
@@ -107,7 +109,7 @@ namespace clear
 
 struct Close
 {
-    void operator()(const std::optional<lex::Reader>& readerOpt, const Stack& stack, State& state) const
+    void operator()(const std::optional<lex::Reader>& readerOpt, Stack& stack, State& state) const
     {
         if (readerOpt && readerOpt.value().isEoi())
         {

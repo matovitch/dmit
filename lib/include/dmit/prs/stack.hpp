@@ -1,7 +1,7 @@
 #pragma once
 
-#include <functional>
-#include <optional>
+#include "dmit/com/option_reference.hpp"
+
 #include <cstdint>
 
 namespace dmit::prs
@@ -13,7 +13,7 @@ struct Stack
     uint32_t _readerOffset;
     uint32_t _childCount = 0;
 
-    std::optional<std::reference_wrapper<Stack>> _parent;
+    dmit::com::OptionRef<Stack> _parent;
 };
 
 } // namespace dmit::prs

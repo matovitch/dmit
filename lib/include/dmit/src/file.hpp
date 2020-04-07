@@ -2,7 +2,7 @@
 
 #include "dmit/src/line_index.hpp"
 
-#include "dmit/com/error_option.hpp"
+#include "dmit/com/option_error.hpp"
 
 #include "dmit/fmt/formatable.hpp"
 
@@ -28,13 +28,13 @@ enum class Error
     FILE_READ_FAIL
 };
 
-com::ErrorOption<File, Error> make(const std::filesystem::path& path);
+com::OptionError<File, Error> make(const std::filesystem::path& path);
 
 } // namespace file
 
 class File : fmt::Formatable
 {
-    friend com::ErrorOption<File, file::Error> file::make(const std::filesystem::path& path);
+    friend com::OptionError<File, file::Error> file::make(const std::filesystem::path& path);
 
 public:
 
@@ -48,7 +48,7 @@ private:
 
     File(const std::filesystem::path& filePath);
 
-    com::ErrorOption<std::unique_ptr<std::ifstream>, file::Error> makeFileStream() const;
+    com::OptionError<std::unique_ptr<std::ifstream>, file::Error> makeFileStream() const;
 
     void initLineIndex();
 

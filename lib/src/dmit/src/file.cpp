@@ -1,6 +1,6 @@
 #include "dmit/src/file.hpp"
 
-#include "dmit/com/error_option.hpp"
+#include "dmit/com/option_error.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -36,7 +36,7 @@ std::optional<Error> load(const File& file, std::ifstream& ifs, std::vector<uint
 
 } // namespace
 
-com::ErrorOption<File, Error> make(const std::filesystem::path& path)
+com::OptionError<File, Error> make(const std::filesystem::path& path)
 {
     if (!std::filesystem::exists(path))
     {
@@ -80,7 +80,7 @@ const std::vector<uint8_t>& File::content() const
     return _content;
 }
 
-com::ErrorOption<std::unique_ptr<std::ifstream>, file::Error> File::makeFileStream() const
+com::OptionError<std::unique_ptr<std::ifstream>, file::Error> File::makeFileStream() const
 {
     auto&& ifsPtr = std::make_unique<std::ifstream>
     (

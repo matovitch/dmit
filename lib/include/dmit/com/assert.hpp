@@ -24,7 +24,7 @@ void dmitComAssert(const Assertion&  assertion,
     abort();
 }
 
-#ifdef USE_ASSERTS
+#ifdef USE_ASSERT
 #   define DMIT_COM_ASSERT(assertion) dmitComAssert(assertion, #assertion, __FILE__, __LINE__)
 #else
 #   define DMIT_COM_ASSERT(assertion)

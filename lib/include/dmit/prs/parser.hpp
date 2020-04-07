@@ -29,30 +29,30 @@ public:
 
     void operator=(const Fn& parserFn)
     {
-        _parserFnOpt.get() = parserFn;
+        _parserFnOpt = parserFn;
     }
 
     std::optional<lex::Reader> operator()(lex::Reader reader) const
     {
         Stack stack;
 
-        Open{}(reader, stack, _state.get());
-        auto&& readerOpt = (_parserFnOpt.get().value())(reader);
+        Open{}(reader, stack, _state);
+        auto&& readerOpt = (_parserFnOpt.value())(reader);
 
         if (readerOpt)
         {
             readerOpt.value().advanceToRawToken();
         }
 
-        Close{}(readerOpt, stack, _state.get());
+        Close{}(readerOpt, stack, _state);
 
         return readerOpt;
     }
 
 private:
 
-    std::reference_wrapper<std::optional<Fn>> _parserFnOpt;
-    std::reference_wrapper<State>             _state;
+    std::optional<Fn> & _parserFnOpt;
+    State             & _state;
 };
 
 namespace parser

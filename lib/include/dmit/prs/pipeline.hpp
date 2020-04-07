@@ -43,13 +43,13 @@ struct TPipeline;
 template <>
 struct TPipeline<>
 {
-    void operator()(const std::optional<lex::Reader>&, const Stack&, State&) const {}
+    void operator()(const std::optional<lex::Reader>&, Stack&, State&) const {}
 };
 
 template <class Close, class... Closes>
 struct TPipeline<Close, Closes...>
 {
-    void operator()(const std::optional<lex::Reader>& readerOpt, const Stack& stack, State& state) const
+    void operator()(const std::optional<lex::Reader>& readerOpt, Stack& stack, State& state) const
     {
         Close{}(readerOpt, stack, state);
 

@@ -1,6 +1,5 @@
 #include "dmit/src/file.hpp"
 
-#include "dmit/com/error_option.hpp"
 #include "dmit/com/logger.hpp"
 
 extern "C"
