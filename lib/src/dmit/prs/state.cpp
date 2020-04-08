@@ -157,7 +157,6 @@ Builder::Builder() :
     auto scope         = makeParserUnary      <tree::node::Kind::SCOPE               > (_pool, _state);
     auto program       = makeParserUnary      <tree::node::Kind::PROGRAM             > (_pool, _state);
     auto instruction   = makeParserRecover                                             (_pool, _state);
-    auto scopeErr      = makeParserRecover                                             (_pool, _state);
     auto atom          = makeParser                                                    (_pool, _state);
     auto typeClaim     = makeParser                                                    (_pool, _state);
     auto posAtom       = makeParser                                                    (_pool, _state);
@@ -247,8 +246,6 @@ Builder::Builder() :
                               expression), semiColon), tok<lex::Token::SEMI_COLON>());
 
     scope = seq(braLeft, rep(alt(instruction, scope)), braRight);
-
-    scopeErr = err(scope, tok<lex::Token::BRA_RIGHT>());
 
     // Function declaration
 
