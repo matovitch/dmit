@@ -1,5 +1,7 @@
 #pragma once
 
+#include "dmit/prs/tree.hpp"
+
 #include "dmit/lex/token.hpp"
 
 #include <cstdint>
@@ -12,11 +14,13 @@ struct Error : dmit::fmt::Formatable
 {
     Error(const lex::Token,
           const lex::Token,
+          const tree::node::Kind,
           const uint32_t);
 
-    const lex::Token _expect;
-    const lex::Token _actual;
-    const uint32_t   _offset;
+    const lex::Token       _expect;
+    const lex::Token       _actual;
+    const tree::node::Kind _treeNodeKind;
+    const uint32_t         _offset;
 };
 
 namespace error
@@ -44,6 +48,7 @@ public:
 
     bool push(const lex::Token,
               const lex::Token,
+              const tree::node::Kind,
               const uint32_t);
 
     void pop();
@@ -68,13 +73,14 @@ public:
 
     bool push(const lex::Token,
               const lex::Token,
+              const tree::node::Kind,
               const uint32_t);
 
     void pop();
 
-    void clear();
+    void cleanUp();
 
-    void clearFull();
+    void clear();
 
     void recover();
 

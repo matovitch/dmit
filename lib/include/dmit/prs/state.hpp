@@ -23,6 +23,8 @@ struct State : fmt::Formatable
     state::Tree            _tree;
     state::error::SetOfSet _errors;
 
+    std::optional<state::tree::node::Kind> _errorNoteOpt;
+
     dmit::com::OptionRef<Stack> _stackRefOpt;
 };
 
@@ -84,7 +86,10 @@ struct Open
 {
     void operator()(const lex::Reader& reader, Stack& stack, State& state) const
     {
-        stack._isErrorPushed = state._errors.push(EXPECTED_TOKEN, reader.look(), reader.offset());
+        stack._isErrorPushed = state._errors.push(EXPECTED_TOKEN,
+                                                  reader.look(),
+                                                  state._errorNoteOpt.value(),
+                                                  reader.offset());
     }
 };
 
@@ -94,14 +99,14 @@ struct Close
     {
         if (readerOpt && stack._isErrorPushed)
         {
-            state._errors.clear();
+            state._errors.cleanUp();
         }
     }
 };
 
 } // namespace token_check
 
-namespace clear
+namespace clean_up
 {
 
 struct Close
@@ -110,12 +115,12 @@ struct Close
     {
         if (readerOpt && readerOpt.value().isEoi())
         {
-            state._errors.clear();
+            state._errors.cleanUp();
         }
     }
 };
 
-} // namespace clear
+} // namespace clean_up
 
 namespace recover
 {
@@ -145,11 +150,35 @@ struct Close
 };
 
 } // namespace recover
+
+namespace note
+{
+
+template <com::TEnumIntegerType<tree::node::Kind> TREE_NODE_KIND>
+struct Open
+{
+    void operator()(const lex::Reader& reader, Stack& stack, State& state) const
+    {
+        stack._errorNoteOpt = state._errorNoteOpt;
+        state._errorNoteOpt = TREE_NODE_KIND;
+    }
+};
+
+struct Close
+{
+    void operator()(const std::optional<lex::Reader>& readerOpt, Stack& stack, State& state) const
+    {
+        state._errorNoteOpt = stack._errorNoteOpt;
+    }
+};
+
+} // namespace note
+
 } // namespace error
 
 class Builder
 {
-    using Parser = TParser<open::TPipeline<>, error::clear::Close>;
+    using Parser = TParser<error::note::Open<tree::node::Kind::PROGRAM>, error::clean_up::Close>;
 
 public:
 

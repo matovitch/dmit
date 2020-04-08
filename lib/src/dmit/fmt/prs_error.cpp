@@ -2,6 +2,7 @@
 
 #include "dmit/fmt/formatable.hpp"
 #include "dmit/fmt/lex/token.hpp"
+#include "dmit/fmt/prs/tree.hpp"
 
 #include "dmit/prs/error.hpp"
 
@@ -16,9 +17,10 @@ std::string asString(const prs::state::Error& error)
 {
     std::ostringstream oss;
 
-    oss << "{\"expect\":" << error._expect
-        << ",\"actual\":" << error._actual
-        << ",\"offset\":" << error._offset << "}";
+    oss << "{\"expect\":"       << error._expect
+        << ",\"actual\":"       << error._actual
+        << ",\"treeNodeKind\":" << error._treeNodeKind
+        << ",\"offset\":"       << error._offset << "}";
 
     return oss.str();
 }

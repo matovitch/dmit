@@ -12,7 +12,7 @@ namespace dmit::prs
 void State::clear()
 {
     _tree   .clear();
-    _errors .clearFull();
+    _errors .clear();
 }
 
 namespace state
@@ -76,11 +76,19 @@ auto makeParserUnary(parser::Pool& pool, State& state)
 {
     return pool.make
     <
-        tree::writer::Open,
-        tree::writer::Close
+        open::TPipeline
         <
-            tree::node::Arity::ONE,
-            TREE_NODE_KIND
+            tree::writer::Open,
+            error::note::Open<TREE_NODE_KIND>
+        >,
+        close::TPipeline
+        <
+            tree::writer::Close
+            <
+                tree::node::Arity::ONE,
+                TREE_NODE_KIND
+            >,
+            error::note::Close
         >
     >(state);
 }
@@ -90,11 +98,19 @@ auto makeParserVariadic(parser::Pool& pool, State& state)
 {
     return pool.make
     <
-        tree::writer::Open,
-        tree::writer::Close
+        open::TPipeline
         <
-            tree::node::Arity::VARIADIC,
-            TREE_NODE_KIND
+            tree::writer::Open,
+            error::note::Open<TREE_NODE_KIND>
+        >,
+        close::TPipeline
+        <
+            tree::writer::Close
+            <
+                tree::node::Arity::VARIADIC,
+                TREE_NODE_KIND
+            >,
+            error::note::Close
         >
     >(state);
 }
@@ -104,7 +120,7 @@ auto makeParserVariadic(parser::Pool& pool, State& state)
 #define TOKEN_TREE_NODE_KIND_PAIR(x) lex::Token::x, tree::node::Kind::LIT_##x
 
 Builder::Builder() :
-    _parser{_pool.make<open::TPipeline<>, error::clear::Close>(_state)}
+    _parser{_pool.make<error::note::Open<tree::node::Kind::PROGRAM>, error::clean_up::Close>(_state)}
 {
     auto integer       = makeParserTokenUnary <TOKEN_TREE_NODE_KIND_PAIR(INTEGER    )> (_pool, _state);
     auto decimal       = makeParserTokenUnary <TOKEN_TREE_NODE_KIND_PAIR(DECIMAL    )> (_pool, _state);
@@ -156,11 +172,11 @@ Builder::Builder() :
     auto funDefinition = makeParserUnary      <tree::node::Kind::FUN_DEFINITION      > (_pool, _state);
     auto scope         = makeParserUnary      <tree::node::Kind::SCOPE               > (_pool, _state);
     auto program       = makeParserUnary      <tree::node::Kind::PROGRAM             > (_pool, _state);
-    auto instruction   = makeParserRecover                                             (_pool, _state);
+    auto scopeVariant  = makeParserRecover                                             (_pool, _state);
+    auto expression    = makeParser                                                    (_pool, _state);
     auto atom          = makeParser                                                    (_pool, _state);
     auto typeClaim     = makeParser                                                    (_pool, _state);
     auto posAtom       = makeParser                                                    (_pool, _state);
-    auto expression    = makeParser                                                    (_pool, _state);
     auto binAssign     = makeParser                                                    (_pool, _state);
 
     USING_COMBINATORS;
@@ -241,11 +257,11 @@ Builder::Builder() :
 
     // Scope
 
-    instruction = err(seq(alt(declarLet,
-                              stmReturn,
-                              expression), semiColon), tok<lex::Token::SEMI_COLON>());
+    scopeVariant = err(seq(alt(declarLet,
+                               stmReturn,
+                               expression), semiColon), tok<lex::Token::SEMI_COLON>());
 
-    scope = seq(braLeft, rep(alt(instruction, scope)), braRight);
+    scope = seq(braLeft, rep(alt(scopeVariant, scope)), braRight);
 
     // Function declaration
 

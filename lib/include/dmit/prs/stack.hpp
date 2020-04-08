@@ -1,5 +1,7 @@
 #pragma once
 
+#include "dmit/prs/tree.hpp"
+
 #include "dmit/com/option_reference.hpp"
 
 #include <cstdint>
@@ -13,6 +15,7 @@ struct Stack
     uint32_t _treeSize;
     uint32_t _readerOffset;
     uint32_t _childCount = 0;
+    std::optional<state::tree::node::Kind> _errorNoteOpt;
     dmit::com::OptionRef<Stack> _parent;
 };
 

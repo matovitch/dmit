@@ -3,12 +3,14 @@
 namespace dmit::prs::state
 {
 
-Error::Error(const lex::Token expect,
-             const lex::Token actual,
-             const uint32_t   offset) :
-    _expect{expect},
-    _actual{actual},
-    _offset{offset}
+Error::Error(const lex::Token       expect,
+             const lex::Token       actual,
+             const tree::node::Kind treeNodeKind,
+             const uint32_t         offset) :
+    _expect       { expect         },
+    _actual       { actual         },
+    _treeNodeKind { treeNodeKind   },
+    _offset       { offset         }
 {}
 
 namespace error
@@ -17,9 +19,10 @@ namespace error
 bool Comparator::operator()(const Error& lhs,
                             const Error& rhs) const
 {
-    return lhs._expect == rhs._expect &&
-           lhs._actual == rhs._actual &&
-           lhs._offset == rhs._offset;
+    return lhs._expect         == rhs._expect       &&
+           lhs._actual         == rhs._actual       &&
+           lhs._treeNodeKind   == rhs._treeNodeKind &&
+           lhs._offset         == rhs._offset;
 }
 
 std::size_t Hasher::operator()(const Error& error) const
@@ -29,6 +32,8 @@ std::size_t Hasher::operator()(const Error& error) const
     hash ^= error._expect._asInt;
     hash *= FNV1A_PRIME;
     hash ^= error._actual._asInt;
+    hash *= FNV1A_PRIME;
+    hash ^= error._treeNodeKind._asInt;
     hash *= FNV1A_PRIME;
 
     std::size_t offset = error._offset;
@@ -53,6 +58,7 @@ std::size_t Hasher::operator()(const Error& error) const
 
 bool Set::push(const lex::Token expect,
                const lex::Token actual,
+               const tree::node::Kind treeNodeKind,
                const uint32_t   offset)
 {
     if (offset > this->offset())
@@ -65,7 +71,7 @@ bool Set::push(const lex::Token expect,
         _errors.clear();
     }
 
-    _errors.emplace_back(expect, actual, offset);
+    _errors.emplace_back(expect, actual, treeNodeKind, offset);
 
     return true;
 }
@@ -95,9 +101,10 @@ SetOfSet::SetOfSet() : _errors{1} {}
 
 bool SetOfSet::push(const lex::Token expect,
                     const lex::Token actual,
+                    const tree::node::Kind treeNodeKind,
                     const uint32_t   offset)
 {
-    return _errors.back().push(expect, actual, offset);
+    return _errors.back().push(expect, actual, treeNodeKind, offset);
 }
 
 void SetOfSet::pop()
@@ -105,15 +112,15 @@ void SetOfSet::pop()
     _errors.back().pop();
 }
 
-void SetOfSet::clear()
+void SetOfSet::cleanUp()
 {
     _errors.back().clear();
 }
 
-void SetOfSet::clearFull()
+void SetOfSet::clear()
 {
-    _errors.clear();
-    _errors.emplace_back();
+    _errors .clear();
+    _errors .emplace_back();
 }
 
 uint32_t SetOfSet::offset() const
@@ -123,7 +130,7 @@ uint32_t SetOfSet::offset() const
 
 void SetOfSet::recover()
 {
-    _errors.emplace_back();
+    _errors .emplace_back();
 }
 
 const std::vector<Set>& SetOfSet::errors() const
