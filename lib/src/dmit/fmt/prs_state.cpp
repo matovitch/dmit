@@ -10,8 +10,8 @@ std::string asString(const prs::State& state)
 {
     std::ostringstream oss;
 
-    oss << "{\"tree\" :"    << state._tree
-        << ",\"errorSet\":" << state._errorSet << "}";
+    oss << "{\"tree\" :"  << state._tree
+        << ",\"errors\":" << state._errors << "}";
 
     return oss.str();
 

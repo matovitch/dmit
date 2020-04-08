@@ -30,7 +30,7 @@ struct OptionReference
           Type& get()       { return *_ptr; }
     const Type& get() const { return *_ptr; }
 
-    Type* _ptr;
+    Type* _ptr = nullptr;
 };
 
 template <class Type>

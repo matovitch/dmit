@@ -42,4 +42,13 @@ std::string asString(const prs::state::error::Set& errorSet)
     return oss.str();
 }
 
+std::string asString(const prs::state::error::SetOfSet& errorSetOfSet)
+{
+    std::ostringstream oss;
+
+    oss << "{\"errors\":" << DMIT_FMT_CONTAINER_AS_STRING(errorSetOfSet.errors()) << "}";
+
+    return oss.str();
+}
+
 } // namespace dmit::fmt

@@ -11,4 +11,6 @@ std::string asString(const prs::state::Error&);
 
 std::string asString(const prs::state::error::Set&);
 
+std::string asString(const prs::state::error::SetOfSet&);
+
 } // namespace dmit::fmt

@@ -13,11 +13,12 @@ namespace dmit::prs
 namespace combinator
 {
 
-auto tok(const com::TEnumIntegerType<lex::Token> token)
+template <com::TEnumIntegerType<lex::Token> TOKEN>
+auto tok()
 {
-    return [token](lex::Reader reader) -> std::optional<lex::Reader>
+    return [](lex::Reader reader) -> std::optional<lex::Reader>
     {
-        if (reader.look() != token)
+        if (reader.look() != TOKEN)
         {
             return std::nullopt;
         }
@@ -100,6 +101,31 @@ auto opt(Parser&& parser)
     };
 }
 
+template <class ParserTry, class ParserErr>
+auto err(ParserTry&& parserTry, ParserErr parserErr)
+{
+    return [parserTry, parserErr](lex::Reader reader) -> std::optional<lex::Reader>
+    {
+        auto readerOpt = parserTry(reader);
+
+        if (readerOpt)
+        {
+            return readerOpt.value();
+        }
+
+        readerOpt = parserErr(reader);
+
+        while (!readerOpt && !reader.isEoi())
+        {
+            reader.advance();
+            reader.advanceToRawToken();
+            readerOpt = parserErr(reader);
+        }
+
+        return readerOpt;
+    };
+}
+
 } // namespace combinator
 
 #define USING_COMBINATORS \
@@ -107,6 +133,7 @@ auto opt(Parser&& parser)
   using combinator::seq;  \
   using combinator::rep;  \
   using combinator::alt;  \
-  using combinator::opt;
+  using combinator::opt;  \
+  using combinator::err;
 
 } // namespace dmit::prs

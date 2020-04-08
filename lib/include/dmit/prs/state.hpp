@@ -20,8 +20,8 @@ struct State : fmt::Formatable
 {
     void clear();
 
-    state::Tree       _tree;
-    state::error::Set _errorSet;
+    state::Tree            _tree;
+    state::error::SetOfSet _errors;
 
     dmit::com::OptionRef<Stack> _stackRefOpt;
 };
@@ -84,10 +84,7 @@ struct Open
 {
     void operator()(const lex::Reader& reader, Stack& stack, State& state) const
     {
-        if (reader.offset() <= state._errorSet.offset())
-        {
-            state._errorSet.push(EXPECTED_TOKEN, reader.look(), reader.offset());
-        }
+        stack._isErrorPushed = state._errors.push(EXPECTED_TOKEN, reader.look(), reader.offset());
     }
 };
 
@@ -95,9 +92,9 @@ struct Close
 {
     void operator()(const std::optional<lex::Reader>& readerOpt, Stack& stack, State& state) const
     {
-        if (readerOpt)
+        if (readerOpt && stack._isErrorPushed)
         {
-            state._errorSet.pop();
+            state._errors.clear();
         }
     }
 };
@@ -113,12 +110,41 @@ struct Close
     {
         if (readerOpt && readerOpt.value().isEoi())
         {
-            state._errorSet.clear();
+            state._errors.clear();
         }
     }
 };
 
 } // namespace clear
+
+namespace recover
+{
+
+struct Open
+{
+    void operator()(const lex::Reader& reader, Stack& stack, State& state) const
+    {
+        stack._readerOffset = reader.offset();
+    }
+};
+
+struct Close
+{
+    void operator()(const std::optional<lex::Reader>& readerOpt, Stack& stack, State& state) const
+    {
+        if (!readerOpt)
+        {
+            return;
+        }
+
+        if (state._errors.offset() <= stack._readerOffset)
+        {
+            state._errors.recover();
+        }
+    }
+};
+
+} // namespace recover
 } // namespace error
 
 class Builder

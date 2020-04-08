@@ -5,7 +5,7 @@ namespace dmit::prs::state
 
 Error::Error(const lex::Token expect,
              const lex::Token actual,
-             std::size_t offset) :
+             const uint32_t   offset) :
     _expect{expect},
     _actual{actual},
     _offset{offset}
@@ -51,16 +51,23 @@ std::size_t Hasher::operator()(const Error& error) const
     return hash;
 }
 
-void Set::push(const lex::Token expect,
+bool Set::push(const lex::Token expect,
                const lex::Token actual,
-               std::size_t offset)
+               const uint32_t   offset)
 {
+    if (offset > this->offset())
+    {
+        return false;
+    }
+
     if (offset < this->offset())
     {
         _errors.clear();
     }
 
     _errors.emplace_back(expect, actual, offset);
+
+    return true;
 }
 
 void Set::pop()
@@ -73,18 +80,53 @@ void Set::clear()
     _errors.clear();
 }
 
-std::size_t Set::offset() const
+uint32_t Set::offset() const
 {
-    return isEmpty() ? std::numeric_limits<std::size_t>::max()
-                     : _errors.back()._offset;
-}
-
-bool Set::isEmpty() const
-{
-    return _errors.empty();
+    return _errors.empty() ? std::numeric_limits<uint32_t>::max()
+                           : _errors.back()._offset;
 }
 
 const std::vector<Error>& Set::errors() const
+{
+    return _errors;
+}
+
+SetOfSet::SetOfSet() : _errors{1} {}
+
+bool SetOfSet::push(const lex::Token expect,
+                    const lex::Token actual,
+                    const uint32_t   offset)
+{
+    return _errors.back().push(expect, actual, offset);
+}
+
+void SetOfSet::pop()
+{
+    _errors.back().pop();
+}
+
+void SetOfSet::clear()
+{
+    _errors.back().clear();
+}
+
+void SetOfSet::clearFull()
+{
+    _errors.clear();
+    _errors.emplace_back();
+}
+
+uint32_t SetOfSet::offset() const
+{
+    return _errors.back().offset();
+}
+
+void SetOfSet::recover()
+{
+    _errors.emplace_back();
+}
+
+const std::vector<Set>& SetOfSet::errors() const
 {
     return _errors;
 }

@@ -11,8 +11,8 @@ namespace dmit::prs
 
 void State::clear()
 {
-    _tree     .clear();
-    _errorSet .clear();
+    _tree   .clear();
+    _errors .clearFull();
 }
 
 namespace state
@@ -33,6 +33,16 @@ auto makeParserToken(parser::Pool& pool, State& state)
     <
         error::token_check::Open<TOKEN>,
         error::token_check::Close
+    >
+    (state);
+}
+
+auto makeParserRecover(parser::Pool& pool, State& state)
+{
+    return pool.make
+    <
+        error::recover::Open,
+        error::recover::Close
     >
     (state);
 }
@@ -146,6 +156,8 @@ Builder::Builder() :
     auto funDefinition = makeParserUnary      <tree::node::Kind::FUN_DEFINITION      > (_pool, _state);
     auto scope         = makeParserUnary      <tree::node::Kind::SCOPE               > (_pool, _state);
     auto program       = makeParserUnary      <tree::node::Kind::PROGRAM             > (_pool, _state);
+    auto instruction   = makeParserRecover                                             (_pool, _state);
+    auto scopeErr      = makeParserRecover                                             (_pool, _state);
     auto atom          = makeParser                                                    (_pool, _state);
     auto typeClaim     = makeParser                                                    (_pool, _state);
     auto posAtom       = makeParser                                                    (_pool, _state);
@@ -154,39 +166,39 @@ Builder::Builder() :
 
     USING_COMBINATORS;
 
-    integer       = tok(lex::Token::INTEGER         );
-    decimal       = tok(lex::Token::DECIMAL         );
-    identifier    = tok(lex::Token::IDENTIFIER      );
-    plus          = tok(lex::Token::PLUS            );
-    minus         = tok(lex::Token::MINUS           );
-    star          = tok(lex::Token::STAR            );
-    slash         = tok(lex::Token::SLASH           );
-    percent       = tok(lex::Token::PERCENT         );
-    parLeft       = tok(lex::Token::PAR_LEFT        );
-    braLeft       = tok(lex::Token::BRA_LEFT        );
-    parRight      = tok(lex::Token::PAR_RIGHT       );
-    braRight      = tok(lex::Token::BRA_RIGHT       );
-    ketLeft       = tok(lex::Token::KET_LEFT        );
-    ketRight      = tok(lex::Token::KET_RIGHT       );
-    ketLeftEqual  = tok(lex::Token::KET_LEFT_EQUAL  );
-    ketRightEqual = tok(lex::Token::KET_RIGHT_EQUAL );
-    dot           = tok(lex::Token::DOT             );
-    comma         = tok(lex::Token::COMMA           );
-    colon         = tok(lex::Token::COLON           );
-    semiColon     = tok(lex::Token::SEMI_COLON      );
-    equal         = tok(lex::Token::EQUAL           );
-    plusEqual     = tok(lex::Token::PLUS_EQUAL      );
-    minusEqual    = tok(lex::Token::MINUS_EQUAL     );
-    starEqual     = tok(lex::Token::STAR_EQUAL      );
-    slashEqual    = tok(lex::Token::SLASH_EQUAL     );
-    percentEqual  = tok(lex::Token::PERCENT_EQUAL   );
-    keyIf         = tok(lex::Token::IF              );
-    keyElse       = tok(lex::Token::ELSE            );
-    keyLet        = tok(lex::Token::LET             );
-    keyFunc       = tok(lex::Token::FUNC            );
-    keyWhile      = tok(lex::Token::WHILE           );
-    keyReturn     = tok(lex::Token::RETURN          );
-    minusKetRight = tok(lex::Token::MINUS_KET_RIGHT );
+    integer       = tok<lex::Token::INTEGER         >();
+    decimal       = tok<lex::Token::DECIMAL         >();
+    identifier    = tok<lex::Token::IDENTIFIER      >();
+    plus          = tok<lex::Token::PLUS            >();
+    minus         = tok<lex::Token::MINUS           >();
+    star          = tok<lex::Token::STAR            >();
+    slash         = tok<lex::Token::SLASH           >();
+    percent       = tok<lex::Token::PERCENT         >();
+    parLeft       = tok<lex::Token::PAR_LEFT        >();
+    braLeft       = tok<lex::Token::BRA_LEFT        >();
+    parRight      = tok<lex::Token::PAR_RIGHT       >();
+    braRight      = tok<lex::Token::BRA_RIGHT       >();
+    ketLeft       = tok<lex::Token::KET_LEFT        >();
+    ketRight      = tok<lex::Token::KET_RIGHT       >();
+    ketLeftEqual  = tok<lex::Token::KET_LEFT_EQUAL  >();
+    ketRightEqual = tok<lex::Token::KET_RIGHT_EQUAL >();
+    dot           = tok<lex::Token::DOT             >();
+    comma         = tok<lex::Token::COMMA           >();
+    colon         = tok<lex::Token::COLON           >();
+    semiColon     = tok<lex::Token::SEMI_COLON      >();
+    equal         = tok<lex::Token::EQUAL           >();
+    plusEqual     = tok<lex::Token::PLUS_EQUAL      >();
+    minusEqual    = tok<lex::Token::MINUS_EQUAL     >();
+    starEqual     = tok<lex::Token::STAR_EQUAL      >();
+    slashEqual    = tok<lex::Token::SLASH_EQUAL     >();
+    percentEqual  = tok<lex::Token::PERCENT_EQUAL   >();
+    keyIf         = tok<lex::Token::IF              >();
+    keyElse       = tok<lex::Token::ELSE            >();
+    keyLet        = tok<lex::Token::LET             >();
+    keyFunc       = tok<lex::Token::FUNC            >();
+    keyWhile      = tok<lex::Token::WHILE           >();
+    keyReturn     = tok<lex::Token::RETURN          >();
+    minusKetRight = tok<lex::Token::MINUS_KET_RIGHT >();
 
     // Expression
 
@@ -214,9 +226,9 @@ Builder::Builder() :
 
     binAssign = assignment;
 
-    expression = alt(funCall, assignment);
-
     funCall = seq(identifier, parLeft, opt(seq(expression, rep(seq(comma, expression)))), parRight);
+
+    expression = alt(funCall, assignment);
 
     // Return statement
 
@@ -230,10 +242,14 @@ Builder::Builder() :
 
     // Scope
 
-    scope = seq(braLeft, rep(alt(seq(alt(declarLet,
-                                         stmReturn,
-                                         assignment,
-                                         expression), semiColon), scope)), braRight);
+    instruction = err(seq(alt(declarLet,
+                              stmReturn,
+                              expression), semiColon), tok<lex::Token::SEMI_COLON>());
+
+    scope = seq(braLeft, rep(alt(instruction, scope)), braRight);
+
+    scopeErr = err(scope, tok<lex::Token::BRA_RIGHT>());
+
     // Function declaration
 
     funArguments = seq(parLeft, opt(seq(typeClaim, rep(seq(comma, typeClaim)))), parRight);

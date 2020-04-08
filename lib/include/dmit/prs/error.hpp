@@ -12,11 +12,11 @@ struct Error : dmit::fmt::Formatable
 {
     Error(const lex::Token,
           const lex::Token,
-          std::size_t);
+          const uint32_t);
 
     const lex::Token _expect;
     const lex::Token _actual;
-    const std::size_t _offset;
+    const uint32_t   _offset;
 };
 
 namespace error
@@ -42,23 +42,49 @@ class Set : fmt::Formatable
 
 public:
 
-    void push(const lex::Token,
+    bool push(const lex::Token,
               const lex::Token,
-              std::size_t);
+              const uint32_t);
 
     void pop();
 
     void clear();
 
+    uint32_t offset() const;
+
     const std::vector<Error>& errors() const;
-
-    std::size_t offset() const;
-
-    bool isEmpty() const;
 
 private:
 
     std::vector<Error> _errors;
+};
+
+class SetOfSet : fmt::Formatable
+{
+
+public:
+
+    SetOfSet();
+
+    bool push(const lex::Token,
+              const lex::Token,
+              const uint32_t);
+
+    void pop();
+
+    void clear();
+
+    void clearFull();
+
+    void recover();
+
+    uint32_t offset() const;
+
+    const std::vector<Set>& errors() const;
+
+private:
+
+    std::vector<Set> _errors;
 };
 
 } // namespace error
