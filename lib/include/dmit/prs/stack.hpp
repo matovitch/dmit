@@ -17,6 +17,7 @@ struct Stack
     uint32_t _childCount = 0;
     std::optional<state::tree::node::Kind> _treeNodeKindOpt;
     dmit::com::OptionRef<Stack> _parent;
+    bool _isInRecoveryMode = false;
 };
 
 } // namespace dmit::prs

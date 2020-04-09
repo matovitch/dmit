@@ -5,7 +5,10 @@
 
 #include "dmit/com/enum.hpp"
 
+#include <iostream>
 #include <optional>
+
+#include "dmit/fmt/lex/token.hpp"
 
 namespace dmit::prs
 {
@@ -27,6 +30,11 @@ auto tok()
 
         return reader;
     };
+}
+
+auto err()
+{
+    return [](lex::Reader reader) -> std::optional<lex::Reader> { return std::nullopt; };
 }
 
 auto seq()
@@ -101,28 +109,40 @@ auto opt(Parser&& parser)
     };
 }
 
-template <class ParserTry, class ParserErr>
-auto err(ParserTry&& parserTry, ParserErr parserErr)
+template <class ParserRin, class ParserRex>
+auto rvr(ParserRin&& parserRin, ParserRex&& parserRex)
 {
-    return [parserTry, parserErr](lex::Reader reader) -> std::optional<lex::Reader>
+    return [parserRin, parserRex](lex::Reader reader) -> std::optional<lex::Reader>
     {
-        auto readerOpt = parserTry(reader);
+        auto readerOpt = parserRex(reader);
 
         if (readerOpt)
         {
-            return readerOpt.value();
+            return std::nullopt;
         }
 
-        readerOpt = parserErr(reader);
-
-        while (!readerOpt && !reader.isEoi())
+        do
         {
+            readerOpt = parserRin(reader);
+
+            if (readerOpt)
+            {
+                return readerOpt;
+            }
+
+            readerOpt = parserRex(reader);
+
+            if (readerOpt)
+            {
+                return reader;
+            }
+
             reader.advance();
             reader.advanceToRawToken();
-            readerOpt = parserErr(reader);
         }
+        while (!reader.isEoi());
 
-        return readerOpt;
+        return std::nullopt;
     };
 }
 
@@ -134,6 +154,8 @@ auto err(ParserTry&& parserTry, ParserErr parserErr)
   using combinator::rep;  \
   using combinator::alt;  \
   using combinator::opt;  \
+  using combinator::rvr;  \
   using combinator::err;
+
 
 } // namespace dmit::prs

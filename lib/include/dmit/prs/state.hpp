@@ -1,5 +1,6 @@
 #pragma once
 
+#include "dmit/prs/pipeline.hpp"
 #include "dmit/prs/parser.hpp"
 #include "dmit/prs/error.hpp"
 #include "dmit/prs/tree.hpp"
@@ -7,6 +8,7 @@
 #include "dmit/lex/token.hpp"
 
 #include "dmit/fmt/formatable.hpp"
+#include "dmit/fmt/prs/tree.hpp"
 
 #include "dmit/com/option_reference.hpp"
 
@@ -24,8 +26,9 @@ struct State : fmt::Formatable
     state::error::SetOfSet _errors;
 
     std::optional<state::tree::node::Kind> _treeNodeKindOpt;
+    dmit::com::OptionRef<Stack>            _stackRefOpt;
 
-    dmit::com::OptionRef<Stack> _stackRefOpt;
+    bool _isInRecoveryMode = false;
 };
 
 namespace state
@@ -42,7 +45,7 @@ struct Open
         stack._treeSize     = state._tree.size();
         stack._readerOffset = reader.offset();
 
-        stack._parent = state._stackRefOpt;
+        stack._parent      = state._stackRefOpt;
         state._stackRefOpt = stack;
 
         stack._treeNodeKindOpt = state._treeNodeKindOpt;
@@ -73,7 +76,7 @@ struct Close
         }
 
         REVERT_STACK_AND_RETURN:
-            state._stackRefOpt = stack._parent;
+            state._stackRefOpt     = stack._parent;
             state._treeNodeKindOpt = stack._treeNodeKindOpt;
     }
 };
@@ -91,10 +94,10 @@ struct Open
 {
     void operator()(const lex::Reader& reader, Stack& stack, State& state) const
     {
-        stack._isErrorPushed = state._errors.push(EXPECTED_TOKEN,
-                                                  reader.look(),
-                                                  state._treeNodeKindOpt.value(),
-                                                  reader.offset());
+        stack._isErrorPushed = (!state._isInRecoveryMode) && state._errors.push(EXPECTED_TOKEN,
+                                                                                reader.look(),
+                                                                                state._treeNodeKindOpt.value(),
+                                                                                reader.offset());
     }
 };
 
@@ -111,7 +114,7 @@ struct Close
 
 } // namespace token_check
 
-namespace recover
+namespace recoverable
 {
 
 struct Open
@@ -138,7 +141,29 @@ struct Close
     }
 };
 
-} // namespace recover
+} // namespace recoverable
+
+namespace recoverer
+{
+
+struct Open
+{
+    void operator()(const lex::Reader& reader, Stack& stack, State& state) const
+    {
+        stack._isInRecoveryMode = state._isInRecoveryMode;
+        state._isInRecoveryMode = true;
+    }
+};
+
+struct Close
+{
+    void operator()(const std::optional<lex::Reader>& readerOpt, Stack& stack, State& state) const
+    {
+        state._isInRecoveryMode = stack._isInRecoveryMode;
+    }
+};
+
+} // namespace recoverer
 } // namespace error
 
 class Builder
