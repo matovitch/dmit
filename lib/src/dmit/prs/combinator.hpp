@@ -110,7 +110,7 @@ auto opt(Parser&& parser)
 }
 
 template <class ParserRin, class ParserRex>
-auto rvr(ParserRin&& parserRin, ParserRex&& parserRex)
+auto skp(ParserRin&& parserRin, ParserRex&& parserRex)
 {
     return [parserRin, parserRex](lex::Reader reader) -> std::optional<lex::Reader>
     {
@@ -150,12 +150,11 @@ auto rvr(ParserRin&& parserRin, ParserRex&& parserRex)
 
 #define USING_COMBINATORS \
   using combinator::tok;  \
+  using combinator::err;  \
   using combinator::seq;  \
   using combinator::rep;  \
   using combinator::alt;  \
   using combinator::opt;  \
-  using combinator::rvr;  \
-  using combinator::err;
-
+  using combinator::skp;  \
 
 } // namespace dmit::prs

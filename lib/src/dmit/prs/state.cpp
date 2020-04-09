@@ -47,16 +47,6 @@ auto makeParserRecoverable(parser::Pool& pool, State& state)
     (state);
 }
 
-auto makeParserRecoverer(parser::Pool& pool, State& state)
-{
-    return pool.make
-    <
-        error::recoverer::Open,
-        error::recoverer::Close
-    >
-    (state);
-}
-
 template <com::TEnumIntegerType<lex::Token       > TOKEN,
           com::TEnumIntegerType<tree::node::Kind > TREE_NODE_KIND>
 auto makeParserTokenUnary(parser::Pool& pool, State& state)
@@ -166,10 +156,10 @@ Builder::Builder() :
     auto funDefinition = makeParserUnary      <tree::node::Kind::FUN_DEFINITION      > (_pool, _state);
     auto scope         = makeParserUnary      <tree::node::Kind::SCOPE               > (_pool, _state);
     auto program       = makeParserUnary      <tree::node::Kind::PROGRAM             > (_pool, _state);
-    auto rvbScopeElem  = makeParserRecoverable                                         (_pool, _state);
-    auto rvbScope      = makeParserRecoverable                                         (_pool, _state);
-    auto rvrScopeElem  = makeParserRecoverer                                           (_pool, _state);
-    auto rvrScope      = makeParserRecoverer                                           (_pool, _state);
+    auto rcvScopeElem  = makeParserRecoverable                                         (_pool, _state);
+    auto rcvScope      = makeParserRecoverable                                         (_pool, _state);
+    auto skpScopeElem  = makeParser                                                    (_pool, _state);
+    auto skpScope      = makeParser                                                    (_pool, _state);
     auto rawScope      = makeParser                                                    (_pool, _state);
     auto expression    = makeParser                                                    (_pool, _state);
     auto atom          = makeParser                                                    (_pool, _state);
@@ -255,19 +245,21 @@ Builder::Builder() :
 
     // Scope
 
-    rvrScopeElem = rvr(semiColon,
-                       alt(braLeft, braRight, keyFunc));
+    skpScopeElem = skp(tok<lex::Token::SEMI_COLON>(),
+                       alt(tok<lex::Token::BRA_LEFT  >(),
+                           tok<lex::Token::BRA_RIGHT >(),
+                           tok<lex::Token::FUNC      >()));
 
-    rvbScopeElem = alt(seq(alt(declarLet,
+    rcvScopeElem = alt(seq(alt(declarLet,
                                stmReturn,
-                               expression), semiColon), rvrScopeElem);
+                               expression), semiColon), skpScopeElem);
 
-    rawScope = seq(braLeft, rep(alt(rvbScopeElem, rawScope)), braRight);
+    rawScope = seq(braLeft, rep(alt(rcvScopeElem, rawScope)), braRight);
 
-    rvrScope = rvr(err(), keyFunc);
-    rvbScope = alt(rawScope, rvrScope);
+    skpScope = skp(err(), tok<lex::Token::FUNC>());
+    rcvScope = alt(rawScope, skpScope);
 
-    scope = rvbScope;
+    scope = rcvScope;
 
     // Function declaration
 

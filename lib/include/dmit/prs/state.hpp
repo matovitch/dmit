@@ -27,8 +27,6 @@ struct State : fmt::Formatable
 
     std::optional<state::tree::node::Kind> _treeNodeKindOpt;
     dmit::com::OptionRef<Stack>            _stackRefOpt;
-
-    bool _isInRecoveryMode = false;
 };
 
 namespace state
@@ -94,10 +92,10 @@ struct Open
 {
     void operator()(const lex::Reader& reader, Stack& stack, State& state) const
     {
-        stack._isErrorPushed = (!state._isInRecoveryMode) && state._errors.push(EXPECTED_TOKEN,
-                                                                                reader.look(),
-                                                                                state._treeNodeKindOpt.value(),
-                                                                                reader.offset());
+        stack._isErrorPushed = state._errors.push(EXPECTED_TOKEN,
+                                                  reader.look(),
+                                                  state._treeNodeKindOpt.value(),
+                                                  reader.offset());
     }
 };
 
@@ -142,28 +140,6 @@ struct Close
 };
 
 } // namespace recoverable
-
-namespace recoverer
-{
-
-struct Open
-{
-    void operator()(const lex::Reader& reader, Stack& stack, State& state) const
-    {
-        stack._isInRecoveryMode = state._isInRecoveryMode;
-        state._isInRecoveryMode = true;
-    }
-};
-
-struct Close
-{
-    void operator()(const std::optional<lex::Reader>& readerOpt, Stack& stack, State& state) const
-    {
-        state._isInRecoveryMode = stack._isInRecoveryMode;
-    }
-};
-
-} // namespace recoverer
 } // namespace error
 
 class Builder
