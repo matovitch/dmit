@@ -23,7 +23,7 @@ struct State : fmt::Formatable
     state::Tree            _tree;
     state::error::SetOfSet _errors;
 
-    std::optional<state::tree::node::Kind> _errorNoteOpt;
+    std::optional<state::tree::node::Kind> _treeNodeKindOpt;
 
     dmit::com::OptionRef<Stack> _stackRefOpt;
 };
@@ -34,6 +34,7 @@ namespace state
 namespace tree::writer
 {
 
+template <com::TEnumIntegerType<state::tree::node::Kind> NODE_KIND>
 struct Open
 {
     void operator()(const lex::Reader& reader, Stack& stack, State& state) const
@@ -43,6 +44,9 @@ struct Open
 
         stack._parent = state._stackRefOpt;
         state._stackRefOpt = stack;
+
+        stack._treeNodeKindOpt = state._treeNodeKindOpt;
+        state._treeNodeKindOpt = NODE_KIND;
     }
 };
 
@@ -70,6 +74,7 @@ struct Close
 
         REVERT_STACK_AND_RETURN:
             state._stackRefOpt = stack._parent;
+            state._treeNodeKindOpt = stack._treeNodeKindOpt;
     }
 };
 
@@ -88,7 +93,7 @@ struct Open
     {
         stack._isErrorPushed = state._errors.push(EXPECTED_TOKEN,
                                                   reader.look(),
-                                                  state._errorNoteOpt.value(),
+                                                  state._treeNodeKindOpt.value(),
                                                   reader.offset());
     }
 };
@@ -105,22 +110,6 @@ struct Close
 };
 
 } // namespace token_check
-
-namespace clean_up
-{
-
-struct Close
-{
-    void operator()(const std::optional<lex::Reader>& readerOpt, Stack& stack, State& state) const
-    {
-        if (readerOpt && readerOpt.value().isEoi())
-        {
-            state._errors.cleanUp();
-        }
-    }
-};
-
-} // namespace clean_up
 
 namespace recover
 {
@@ -150,35 +139,11 @@ struct Close
 };
 
 } // namespace recover
-
-namespace note
-{
-
-template <com::TEnumIntegerType<tree::node::Kind> TREE_NODE_KIND>
-struct Open
-{
-    void operator()(const lex::Reader& reader, Stack& stack, State& state) const
-    {
-        stack._errorNoteOpt = state._errorNoteOpt;
-        state._errorNoteOpt = TREE_NODE_KIND;
-    }
-};
-
-struct Close
-{
-    void operator()(const std::optional<lex::Reader>& readerOpt, Stack& stack, State& state) const
-    {
-        state._errorNoteOpt = stack._errorNoteOpt;
-    }
-};
-
-} // namespace note
-
 } // namespace error
 
 class Builder
 {
-    using Parser = TParser<error::note::Open<tree::node::Kind::PROGRAM>, error::clean_up::Close>;
+    using Parser = TParser<open::TPipeline<>, close::TPipeline<>>;
 
 public:
 

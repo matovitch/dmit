@@ -55,7 +55,7 @@ auto makeParserTokenUnary(parser::Pool& pool, State& state)
     <
         open::TPipeline
         <
-            tree::writer::Open,
+            tree::writer::Open<TREE_NODE_KIND>,
             error::token_check::Open<TOKEN>
         >,
         close::TPipeline
@@ -76,19 +76,11 @@ auto makeParserUnary(parser::Pool& pool, State& state)
 {
     return pool.make
     <
-        open::TPipeline
+        tree::writer::Open<TREE_NODE_KIND>,
+        tree::writer::Close
         <
-            tree::writer::Open,
-            error::note::Open<TREE_NODE_KIND>
-        >,
-        close::TPipeline
-        <
-            tree::writer::Close
-            <
-                tree::node::Arity::ONE,
-                TREE_NODE_KIND
-            >,
-            error::note::Close
+            tree::node::Arity::ONE,
+            TREE_NODE_KIND
         >
     >(state);
 }
@@ -98,19 +90,11 @@ auto makeParserVariadic(parser::Pool& pool, State& state)
 {
     return pool.make
     <
-        open::TPipeline
+        tree::writer::Open<TREE_NODE_KIND>,
+        tree::writer::Close
         <
-            tree::writer::Open,
-            error::note::Open<TREE_NODE_KIND>
-        >,
-        close::TPipeline
-        <
-            tree::writer::Close
-            <
-                tree::node::Arity::VARIADIC,
-                TREE_NODE_KIND
-            >,
-            error::note::Close
+            tree::node::Arity::VARIADIC,
+            TREE_NODE_KIND
         >
     >(state);
 }
@@ -120,7 +104,7 @@ auto makeParserVariadic(parser::Pool& pool, State& state)
 #define TOKEN_TREE_NODE_KIND_PAIR(x) lex::Token::x, tree::node::Kind::LIT_##x
 
 Builder::Builder() :
-    _parser{_pool.make<error::note::Open<tree::node::Kind::PROGRAM>, error::clean_up::Close>(_state)}
+    _parser{_pool.make(_state)}
 {
     auto integer       = makeParserTokenUnary <TOKEN_TREE_NODE_KIND_PAIR(INTEGER    )> (_pool, _state);
     auto decimal       = makeParserTokenUnary <TOKEN_TREE_NODE_KIND_PAIR(DECIMAL    )> (_pool, _state);
@@ -282,7 +266,12 @@ const State& Builder::operator()(const std::vector<lex::Token>& tokens)
 {
     lex::Reader reader(tokens);
 
-    _parser(reader);
+    const auto& readerOpt = _parser(reader);
+
+    if (readerOpt && readerOpt.value().isEoi())
+    {
+        _state._errors.cleanUp();
+    }
 
     return _state;
 }
