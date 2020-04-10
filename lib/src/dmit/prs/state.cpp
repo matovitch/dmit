@@ -149,7 +149,7 @@ Builder::Builder() :
     auto funReturn     = makeParserUnary      <tree::node::Kind::FUN_RETURN          > (_pool, _state);
     auto stmReturn     = makeParserUnary      <tree::node::Kind::STM_RETURN          > (_pool, _state);
     auto declarLet     = makeParserUnary      <tree::node::Kind::DCL_VARIABLE        > (_pool, _state);
-    auto function      = makeParserUnary      <tree::node::Kind::FUN_DEFINITION      > (_pool, _state);
+    auto rawFunction   = makeParserUnary      <tree::node::Kind::FUN_DEFINITION      > (_pool, _state);
     auto program       = makeParserUnary      <tree::node::Kind::PROGRAM             > (_pool, _state);
     auto rawScope      = makeParserUnary      <tree::node::Kind::SCOPE               > (_pool, _state);
     auto scope         = makeParserVariadic   <tree::node::Kind::SCOPE               > (_pool, _state);
@@ -159,8 +159,10 @@ Builder::Builder() :
     auto assignment    = makeParserVariadic   <tree::node::Kind::EXP_ASSIGN          > (_pool, _state);
     auto rcvScopeElem  = makeParserRecoverable                                         (_pool, _state);
     auto rcvScope      = makeParserRecoverable                                         (_pool, _state);
+    auto rcvFunction   = makeParserRecoverable                                         (_pool, _state);
     auto skpScopeElem  = makeParser                                                    (_pool, _state);
     auto skpScope      = makeParser                                                    (_pool, _state);
+    auto skpFunction   = makeParser                                                    (_pool, _state);
     auto rawScopeElem  = makeParser                                                    (_pool, _state);
     auto expression    = makeParser                                                    (_pool, _state);
     auto atom          = makeParser                                                    (_pool, _state);
@@ -248,13 +250,13 @@ Builder::Builder() :
 
     rawScopeElem = seq(alt(declarLet,
                            stmReturn,
-                           expression), semiColon);
+                           expression, seq()), semiColon);
 
-    skpScopeElem = skp(tok<lex::Token::SEMI_COLON>(),
-                       alt(tok<lex::Token::BRA_RIGHT    >(),
-                           tok<lex::Token::BRA_LEFT     >(),
-                           tok<lex::Token::FUNC         >(),
-                           tok<lex::Token::END_OF_INPUT >()));
+    skpScopeElem = seq(skp(alt(tok<lex::Token::SEMI_COLON   >(),
+                               tok<lex::Token::BRA_LEFT     >(),
+                               tok<lex::Token::BRA_RIGHT    >(),
+                               tok<lex::Token::FUNC         >(),
+                               tok<lex::Token::END_OF_INPUT >())), opt(tok<lex::Token::SEMI_COLON>()));
 
     rcvScopeElem = alt(rawScopeElem, skpScopeElem);
 
@@ -262,8 +264,8 @@ Builder::Builder() :
 
     rawScope = seq(braLeft, rep(alt(rcvScopeElem, rawScope)), braRight);
 
-    skpScope = skp(err(), alt(tok<lex::Token::FUNC         >(),
-                              tok<lex::Token::END_OF_INPUT >()));
+    skpScope = skp(alt(tok<lex::Token::FUNC         >(),
+                       tok<lex::Token::END_OF_INPUT >()));
 
     rcvScope = alt(rawScope, skpScope);
 
@@ -275,11 +277,16 @@ Builder::Builder() :
 
     funReturn = opt(seq(minusKetRight, identifier));
 
-    function = seq(keyFunc, identifier, funArguments, funReturn, scope);
+    rawFunction = seq(keyFunc, identifier, funArguments, funReturn, scope);
+
+    skpFunction = skp(alt(tok<lex::Token::FUNC         >(),
+                          tok<lex::Token::END_OF_INPUT >()));
+
+    rcvFunction = alt(rawFunction, skpFunction);
 
     // Full parser
 
-    program = rep(function);
+    program = rep(rcvFunction);
 
     _parser = program;
 }

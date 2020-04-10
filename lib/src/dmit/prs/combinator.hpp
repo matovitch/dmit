@@ -106,12 +106,12 @@ auto opt(Parser&& parser)
     };
 }
 
-template <class ParserIncl, class ParserExcl>
-auto skp(ParserIncl&& parserIncl, ParserExcl&& parserExcl)
+template <class Parser>
+auto skp(Parser&& parser)
 {
-    return [parserIncl, parserExcl](lex::Reader reader) -> std::optional<lex::Reader>
+    return [parser](lex::Reader reader) -> std::optional<lex::Reader>
     {
-        auto readerOpt = parserExcl(reader);
+        auto readerOpt = parser(reader);
 
         if (readerOpt)
         {
@@ -120,14 +120,7 @@ auto skp(ParserIncl&& parserIncl, ParserExcl&& parserExcl)
 
         do
         {
-            readerOpt = parserIncl(reader);
-
-            if (readerOpt)
-            {
-                return readerOpt;
-            }
-
-            readerOpt = parserExcl(reader);
+            readerOpt = parser(reader);
 
             if (readerOpt)
             {
