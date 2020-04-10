@@ -8,7 +8,6 @@
 #include "dmit/lex/token.hpp"
 
 #include "dmit/fmt/formatable.hpp"
-#include "dmit/fmt/prs/tree.hpp"
 
 #include "dmit/com/option_reference.hpp"
 
@@ -127,12 +126,7 @@ struct Close
 {
     void operator()(const std::optional<lex::Reader>& readerOpt, Stack& stack, State& state) const
     {
-        if (!readerOpt)
-        {
-            return;
-        }
-
-        if (state._errors.offset() <= stack._readerOffset)
+        if (readerOpt && state._errors.offset() <= stack._readerOffset)
         {
             state._errors.recover();
         }

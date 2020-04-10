@@ -101,6 +101,7 @@ public:
         {
             addNode(KIND, size, childCount, start, stop);
         }
+        // Here comparison with underflow is used for scope recovery
         else if (_nodes.back()._size < size - 1)
         {
             addNode(KIND, size, childCount, start, stop);

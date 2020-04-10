@@ -139,10 +139,6 @@ Builder::Builder() :
     auto keyWhile      = makeParserToken      <lex::Token::WHILE                     > (_pool, _state);
     auto keyReturn     = makeParserToken      <lex::Token::RETURN                    > (_pool, _state);
     auto minusKetRight = makeParserToken      <lex::Token::MINUS_KET_RIGHT           > (_pool, _state);
-    auto product       = makeParserVariadic   <tree::node::Kind::EXP_BINOP           > (_pool, _state);
-    auto sum           = makeParserVariadic   <tree::node::Kind::EXP_BINOP           > (_pool, _state);
-    auto comparison    = makeParserVariadic   <tree::node::Kind::EXP_BINOP           > (_pool, _state);
-    auto assignment    = makeParserVariadic   <tree::node::Kind::EXP_ASSIGN          > (_pool, _state);
     auto opSum         = makeParserUnary      <tree::node::Kind::EXP_OPERATOR        > (_pool, _state);
     auto opProduct     = makeParserUnary      <tree::node::Kind::EXP_OPERATOR        > (_pool, _state);
     auto opComparison  = makeParserUnary      <tree::node::Kind::EXP_OPERATOR        > (_pool, _state);
@@ -153,14 +149,19 @@ Builder::Builder() :
     auto funReturn     = makeParserUnary      <tree::node::Kind::FUN_RETURN          > (_pool, _state);
     auto stmReturn     = makeParserUnary      <tree::node::Kind::STM_RETURN          > (_pool, _state);
     auto declarLet     = makeParserUnary      <tree::node::Kind::DCL_VARIABLE        > (_pool, _state);
-    auto funDefinition = makeParserUnary      <tree::node::Kind::FUN_DEFINITION      > (_pool, _state);
-    auto scope         = makeParserUnary      <tree::node::Kind::SCOPE               > (_pool, _state);
+    auto function      = makeParserUnary      <tree::node::Kind::FUN_DEFINITION      > (_pool, _state);
     auto program       = makeParserUnary      <tree::node::Kind::PROGRAM             > (_pool, _state);
+    auto rawScope      = makeParserUnary      <tree::node::Kind::SCOPE               > (_pool, _state);
+    auto scope         = makeParserVariadic   <tree::node::Kind::SCOPE               > (_pool, _state);
+    auto product       = makeParserVariadic   <tree::node::Kind::EXP_BINOP           > (_pool, _state);
+    auto sum           = makeParserVariadic   <tree::node::Kind::EXP_BINOP           > (_pool, _state);
+    auto comparison    = makeParserVariadic   <tree::node::Kind::EXP_BINOP           > (_pool, _state);
+    auto assignment    = makeParserVariadic   <tree::node::Kind::EXP_ASSIGN          > (_pool, _state);
     auto rcvScopeElem  = makeParserRecoverable                                         (_pool, _state);
     auto rcvScope      = makeParserRecoverable                                         (_pool, _state);
     auto skpScopeElem  = makeParser                                                    (_pool, _state);
     auto skpScope      = makeParser                                                    (_pool, _state);
-    auto rawScope      = makeParser                                                    (_pool, _state);
+    auto rawScopeElem  = makeParser                                                    (_pool, _state);
     auto expression    = makeParser                                                    (_pool, _state);
     auto atom          = makeParser                                                    (_pool, _state);
     auto typeClaim     = makeParser                                                    (_pool, _state);
@@ -243,20 +244,27 @@ Builder::Builder() :
 
     declarLet = seq(keyLet, typeClaim);
 
-    // Scope
+    // Scope Element
+
+    rawScopeElem = seq(alt(declarLet,
+                           stmReturn,
+                           expression), semiColon);
 
     skpScopeElem = skp(tok<lex::Token::SEMI_COLON>(),
-                       alt(tok<lex::Token::BRA_LEFT  >(),
-                           tok<lex::Token::BRA_RIGHT >(),
-                           tok<lex::Token::FUNC      >()));
+                       alt(tok<lex::Token::BRA_RIGHT    >(),
+                           tok<lex::Token::BRA_LEFT     >(),
+                           tok<lex::Token::FUNC         >(),
+                           tok<lex::Token::END_OF_INPUT >()));
 
-    rcvScopeElem = alt(seq(alt(declarLet,
-                               stmReturn,
-                               expression), semiColon), skpScopeElem);
+    rcvScopeElem = alt(rawScopeElem, skpScopeElem);
+
+    // Scope
 
     rawScope = seq(braLeft, rep(alt(rcvScopeElem, rawScope)), braRight);
 
-    skpScope = skp(err(), tok<lex::Token::FUNC>());
+    skpScope = skp(err(), alt(tok<lex::Token::FUNC         >(),
+                              tok<lex::Token::END_OF_INPUT >()));
+
     rcvScope = alt(rawScope, skpScope);
 
     scope = rcvScope;
@@ -267,11 +275,11 @@ Builder::Builder() :
 
     funReturn = opt(seq(minusKetRight, identifier));
 
-    funDefinition = seq(keyFunc, identifier, funArguments, funReturn, scope);
+    function = seq(keyFunc, identifier, funArguments, funReturn, scope);
 
     // Full parser
 
-    program = rep(funDefinition);
+    program = rep(function);
 
     _parser = program;
 }

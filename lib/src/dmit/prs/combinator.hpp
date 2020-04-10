@@ -5,10 +5,7 @@
 
 #include "dmit/com/enum.hpp"
 
-#include <iostream>
 #include <optional>
-
-#include "dmit/fmt/lex/token.hpp"
 
 namespace dmit::prs
 {
@@ -109,12 +106,12 @@ auto opt(Parser&& parser)
     };
 }
 
-template <class ParserRin, class ParserRex>
-auto skp(ParserRin&& parserRin, ParserRex&& parserRex)
+template <class ParserIncl, class ParserExcl>
+auto skp(ParserIncl&& parserIncl, ParserExcl&& parserExcl)
 {
-    return [parserRin, parserRex](lex::Reader reader) -> std::optional<lex::Reader>
+    return [parserIncl, parserExcl](lex::Reader reader) -> std::optional<lex::Reader>
     {
-        auto readerOpt = parserRex(reader);
+        auto readerOpt = parserExcl(reader);
 
         if (readerOpt)
         {
@@ -123,14 +120,14 @@ auto skp(ParserRin&& parserRin, ParserRex&& parserRex)
 
         do
         {
-            readerOpt = parserRin(reader);
+            readerOpt = parserIncl(reader);
 
             if (readerOpt)
             {
                 return readerOpt;
             }
 
-            readerOpt = parserRex(reader);
+            readerOpt = parserExcl(reader);
 
             if (readerOpt)
             {
@@ -142,7 +139,7 @@ auto skp(ParserRin&& parserRin, ParserRex&& parserRex)
         }
         while (!reader.isEoi());
 
-        return std::nullopt;
+        return reader;
     };
 }
 
