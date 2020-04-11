@@ -34,14 +34,15 @@ TEST_CASE("prs")
 {
     Parser parser;
 
-    CHECK(dmit::fmt::asString(parser(VALID "function_empty.in")) == fileAsString(VALID "function_empty.out" ));
-    CHECK(dmit::fmt::asString(parser(VALID "function_add.in"  )) == fileAsString(VALID "function_add.out"   ));
-    CHECK(dmit::fmt::asString(parser(VALID "function_incr.in" )) == fileAsString(VALID "function_incr.out"  ));
     CHECK(dmit::fmt::asString(parser(VALID "expression.in"    )) == fileAsString(VALID "expression.out"     ));
+    CHECK(dmit::fmt::asString(parser(VALID "function_add.in"  )) == fileAsString(VALID "function_add.out"   ));
+    CHECK(dmit::fmt::asString(parser(VALID "function_empty.in")) == fileAsString(VALID "function_empty.out" ));
+    CHECK(dmit::fmt::asString(parser(VALID "function_incr.in" )) == fileAsString(VALID "function_incr.out"  ));
     CHECK(dmit::fmt::asString(parser(VALID "scope.in"         )) == fileAsString(VALID "scope.out"          ));
 
-    CHECK(dmit::fmt::asString(parser(INVALID "missing_semicolon.in" )) == fileAsString(INVALID "missing_semicolon.out" ));
     CHECK(dmit::fmt::asString(parser(INVALID "expression.in"        )) == fileAsString(INVALID "expression.out"        ));
+    CHECK(dmit::fmt::asString(parser(INVALID "function.in"          )) == fileAsString(INVALID "function.out"          ));
+    CHECK(dmit::fmt::asString(parser(INVALID "missing_semicolon.in" )) == fileAsString(INVALID "missing_semicolon.out" ));
     CHECK(dmit::fmt::asString(parser(INVALID "scope.in"             )) == fileAsString(INVALID "scope.out"             ));
 }
 

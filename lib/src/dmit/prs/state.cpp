@@ -160,9 +160,9 @@ Builder::Builder() :
     auto rcvScopeElem  = makeParserRecoverable                                         (_pool, _state);
     auto rcvScope      = makeParserRecoverable                                         (_pool, _state);
     auto rcvFunction   = makeParserRecoverable                                         (_pool, _state);
-    auto skpScopeElem  = makeParser                                                    (_pool, _state);
-    auto skpScope      = makeParser                                                    (_pool, _state);
-    auto skpFunction   = makeParser                                                    (_pool, _state);
+    auto tilScopeElem  = makeParser                                                    (_pool, _state);
+    auto tilScope      = makeParser                                                    (_pool, _state);
+    auto up2Function   = makeParser                                                    (_pool, _state);
     auto rawScopeElem  = makeParser                                                    (_pool, _state);
     auto expression    = makeParser                                                    (_pool, _state);
     auto atom          = makeParser                                                    (_pool, _state);
@@ -252,22 +252,22 @@ Builder::Builder() :
                            stmReturn,
                            expression, seq()), semiColon);
 
-    skpScopeElem = seq(skp(alt(tok<lex::Token::SEMI_COLON   >(),
+    tilScopeElem = seq(til(alt(tok<lex::Token::SEMI_COLON   >(),
                                tok<lex::Token::BRA_LEFT     >(),
                                tok<lex::Token::BRA_RIGHT    >(),
                                tok<lex::Token::FUNC         >(),
                                tok<lex::Token::END_OF_INPUT >())), opt(tok<lex::Token::SEMI_COLON>()));
 
-    rcvScopeElem = alt(rawScopeElem, skpScopeElem);
+    rcvScopeElem = alt(rawScopeElem, tilScopeElem);
 
     // Scope
 
     rawScope = seq(braLeft, rep(alt(rcvScopeElem, rawScope)), braRight);
 
-    skpScope = skp(alt(tok<lex::Token::FUNC         >(),
+    tilScope = til(alt(tok<lex::Token::FUNC         >(),
                        tok<lex::Token::END_OF_INPUT >()));
 
-    rcvScope = alt(rawScope, skpScope);
+    rcvScope = alt(rawScope, tilScope);
 
     scope = rcvScope; // Only here to create a fake scope if we could not parse one
 
@@ -279,10 +279,10 @@ Builder::Builder() :
 
     rawFunction = seq(keyFunc, identifier, funArguments, funReturn, scope);
 
-    skpFunction = skp(alt(tok<lex::Token::FUNC         >(),
+    up2Function = up2(alt(tok<lex::Token::FUNC         >(),
                           tok<lex::Token::END_OF_INPUT >()));
 
-    rcvFunction = alt(rawFunction, skpFunction);
+    rcvFunction = alt(rawFunction, up2Function);
 
     // Full parser
 

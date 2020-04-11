@@ -3,6 +3,9 @@
 #include "dmit/lex/reader.hpp"
 #include "dmit/lex/token.hpp"
 
+
+#include "dmit/fmt/lex/token.hpp"
+#include "dmit/com/logger.hpp"
 #include "dmit/com/enum.hpp"
 
 #include <optional>
@@ -111,11 +114,6 @@ auto skp(Parser&& parser)
 {
     return [parser](lex::Reader reader) -> std::optional<lex::Reader>
     {
-        if (parser(reader))
-        {
-            return std::nullopt;
-        }
-
         reader.advance();
         reader.advanceToRawToken();
 
@@ -136,6 +134,43 @@ auto skp(Parser&& parser)
     };
 }
 
+template <class Parser>
+auto til(Parser&& parser)
+{
+    return [parser](lex::Reader reader) -> std::optional<lex::Reader>
+    {
+        if (parser(reader))
+        {
+            return std::nullopt;
+        }
+
+        return skp(parser)(reader);
+    };
+}
+
+template <class Parser>
+auto up2(Parser&& parser)
+{
+    return [parser](lex::Reader reader) -> std::optional<lex::Reader>
+    {
+        if (reader.isEoi())
+        {
+            return std::nullopt;
+        }
+
+        return skp(parser)(reader);
+    };
+}
+
+auto msg(const char* const message)
+{
+    return [message](lex::Reader reader) -> std::optional<lex::Reader>
+    {
+        DMIT_COM_LOG_OUT << message << ':' << reader.look() << ':' << reader.offset() << '\n';
+        return std::nullopt;
+    };
+}
+
 } // namespace combinator
 
 #define USING_COMBINATORS \
@@ -145,6 +180,8 @@ auto skp(Parser&& parser)
   using combinator::rep;  \
   using combinator::alt;  \
   using combinator::opt;  \
-  using combinator::skp;  \
+  using combinator::til;  \
+  using combinator::up2;  \
+  using combinator::msg;  \
 
 } // namespace dmit::prs
