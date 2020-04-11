@@ -46,6 +46,14 @@ void toStream(const ast::node::TIndex<ast::node::Kind::EXP_BINOP>& expBinopIdx,
               const ast::State::NodePool& nodePool,
               std::ostringstream& oss);
 
+void toStream(const ast::node::TIndex<ast::node::Kind::FUN_CALL>& funCallIdx,
+              const ast::State::NodePool& nodePool,
+              std::ostringstream& oss);
+
+void toStream(const ast::node::TIndex<ast::node::Kind::EXPRESSION>& expressionIdx,
+              const ast::State::NodePool& nodePool,
+              std::ostringstream& oss);
+
 void toStream(const ast::node::TIndex<ast::node::Kind::DCL_VARIABLE>& dclVariableIdx,
               const ast::State::NodePool& nodePool,
               std::ostringstream& oss);
@@ -115,6 +123,11 @@ struct Expression : Base
     void operator()(const ast::node::TIndex<ast::node::Kind::EXP_BINOP>& binopIdx)
     {
         toStream(binopIdx, _nodePool, _oss);
+    }
+
+    void operator()(const ast::node::TIndex<ast::node::Kind::FUN_CALL>& funCallIdx)
+    {
+        toStream(funCallIdx, _nodePool, _oss);
     }
 
     template <class Type>
@@ -319,6 +332,30 @@ void toStream(const ast::node::TIndex<ast::node::Kind::EXP_BINOP>& expBinopIdx,
     oss << "\"rhs\":"; std::visit(visitor, expBinop._rhs);
 
     oss << '}';
+}
+
+void toStream(const ast::node::TIndex<ast::node::Kind::FUN_CALL>& funCallIdx,
+              const ast::State::NodePool& nodePool,
+              std::ostringstream& oss)
+{
+    const auto& funCall = nodePool.get(funCallIdx);
+
+    oss << "{\"node\":\"Function Call\",";
+
+    oss << "\"callee\":"; toStream(funCall._callee , nodePool, oss); oss << ',';
+
+    oss << "\"arguments\":[";
+
+    visitor::Expression visitor{nodePool, oss};
+
+    for (uint32_t i = 0; i < funCall._arguments._size; i++)
+    {
+        std::visit(visitor, nodePool.get(funCall._arguments[i])._value); oss << ',';
+    }
+
+    oss.seekp(funCall._arguments._size ? -1 : 0, std::ios_base::end);
+
+    oss << "]}";
 }
 
 void toStream(const ast::node::TIndex<ast::node::Kind::SCOPE_VARIANT>& scopeVariantIdx,

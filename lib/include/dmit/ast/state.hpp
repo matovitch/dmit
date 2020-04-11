@@ -82,6 +82,9 @@ private:
     void makeTypeClaim(dmit::prs::Reader& reader,
                        TNode<node::Kind::TYPE_CLAIM>& typeClaim);
 
+    void makeFunctionCall(dmit::prs::Reader& reader,
+                          TNode<node::Kind::FUN_CALL>& funCall);
+
     State            _state;
     State::NodePool& _nodePool;
 };

@@ -143,8 +143,8 @@ Builder::Builder() :
     auto opProduct     = makeParserUnary      <tree::node::Kind::EXP_OPERATOR        > (_pool, _state);
     auto opComparison  = makeParserUnary      <tree::node::Kind::EXP_OPERATOR        > (_pool, _state);
     auto opAssign      = makeParserUnary      <tree::node::Kind::EXP_OPERATOR        > (_pool, _state);
-    auto funCall       = makeParserUnary      <tree::node::Kind::FUN_CALL            > (_pool, _state);
     auto negAtom       = makeParserUnary      <tree::node::Kind::EXP_OPPOSE          > (_pool, _state);
+    auto funCall       = makeParserUnary      <tree::node::Kind::FUN_CALL            > (_pool, _state);
     auto funArguments  = makeParserUnary      <tree::node::Kind::FUN_ARGUMENTS       > (_pool, _state);
     auto funReturn     = makeParserUnary      <tree::node::Kind::FUN_RETURN          > (_pool, _state);
     auto stmReturn     = makeParserUnary      <tree::node::Kind::STM_RETURN          > (_pool, _state);

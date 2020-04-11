@@ -34,6 +34,7 @@ TEST_CASE("prs")
 {
     Parser parser;
 
+    CHECK(dmit::fmt::asString(parser(VALID "call.in"          )) == fileAsString(VALID "call.out"           ));
     CHECK(dmit::fmt::asString(parser(VALID "expression.in"    )) == fileAsString(VALID "expression.out"     ));
     CHECK(dmit::fmt::asString(parser(VALID "function_add.in"  )) == fileAsString(VALID "function_add.out"   ));
     CHECK(dmit::fmt::asString(parser(VALID "function_empty.in")) == fileAsString(VALID "function_empty.out" ));

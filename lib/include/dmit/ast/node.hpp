@@ -25,6 +25,7 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
         DCL_VARIABLE   ,
         EXP_ASSIGN     ,
         EXP_BINOP      ,
+        EXPRESSION     ,
         FUN_ARGUMENTS  ,
         FUN_CALL       ,
         FUN_DEFINITION ,
@@ -172,6 +173,20 @@ struct TNode<node::Kind::EXP_ASSIGN>
 
     Expression _lhs;
     Expression _rhs;
+};
+
+template<>
+struct TNode<node::Kind::FUN_CALL>
+{
+    node::TIndex<node::Kind::LIT_IDENTIFIER > _callee;
+
+    node::TRange<node::Kind::EXPRESSION> _arguments;
+};
+
+template<>
+struct TNode<node::Kind::EXPRESSION>
+{
+    Expression _value;
 };
 
 } // namespace ast

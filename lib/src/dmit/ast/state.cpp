@@ -161,6 +161,23 @@ void Builder::makeBinop(dmit::prs::Reader& reader,
     makeBinop(reader, _nodePool.get(binopLhs));
 }
 
+void Builder::makeFunctionCall(dmit::prs::Reader& reader,
+                               TNode<node::Kind::FUN_CALL>& funCall)
+{
+    _nodePool.make(reader.size() - 1, funCall._arguments);
+
+    uint32_t i = funCall._arguments._size;
+
+    while (reader.isValidNext())
+    {
+        makeExpression(reader, _nodePool.get(funCall._arguments[--i])._value);
+        reader.advance();
+    }
+
+    _nodePool.make(funCall._callee);
+    makeIdentifier(reader, _nodePool.get(funCall._callee));
+}
+
 void Builder::makeExpression(const dmit::prs::Reader& reader,
                              Expression& expression)
 {
@@ -195,6 +212,14 @@ void Builder::makeExpression(const dmit::prs::Reader& reader,
         auto subReader = makeSubReaderFor(ParseNodeKind::EXP_ASSIGN, reader);
         makeAssignment(subReader, _nodePool.get(assignment));
         blitVariant(assignment, expression);
+    }
+    else if (parseNodeKind == ParseNodeKind::FUN_CALL)
+    {
+        node::TIndex<node::Kind::FUN_CALL> funCall;
+        _nodePool.make(funCall);
+        auto subReader = makeSubReaderFor(ParseNodeKind::FUN_CALL, reader);
+        makeFunctionCall(subReader, _nodePool.get(funCall));
+        blitVariant(funCall, expression);
     }
     else
     {

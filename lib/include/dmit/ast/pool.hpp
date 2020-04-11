@@ -81,6 +81,7 @@ struct TPool
     std::tuple<pool::TSub<Kind::DCL_VARIABLE   , LOG2_SIZE>,
                pool::TSub<Kind::EXP_ASSIGN     , LOG2_SIZE>,
                pool::TSub<Kind::EXP_BINOP      , LOG2_SIZE>,
+               pool::TSub<Kind::EXPRESSION     , LOG2_SIZE>,
                pool::TSub<Kind::FUN_ARGUMENTS  , LOG2_SIZE>,
                pool::TSub<Kind::FUN_CALL       , LOG2_SIZE>,
                pool::TSub<Kind::FUN_DEFINITION , LOG2_SIZE>,

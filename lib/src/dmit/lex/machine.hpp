@@ -223,7 +223,7 @@ struct TNodeIndex<NODE_SLASH>
         Token::SLASH,
         TGoto<IsEqual , NODE_SLASH_EQUAL     >,
         TGoto<IsSlash , NODE_COMMENT_LINE    >,
-        TGoto<IsStar  , NODE_COMMENT_BLOCK_0 >                
+        TGoto<IsStar  , NODE_COMMENT_BLOCK_0 >
     >;
 };
 
