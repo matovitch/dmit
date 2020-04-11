@@ -42,6 +42,7 @@ TEST_CASE("prs")
 
     CHECK(dmit::fmt::asString(parser(INVALID "missing_semicolon.in" )) == fileAsString(INVALID "missing_semicolon.out" ));
     CHECK(dmit::fmt::asString(parser(INVALID "expression.in"        )) == fileAsString(INVALID "expression.out"        ));
+    CHECK(dmit::fmt::asString(parser(INVALID "scope.in"             )) == fileAsString(INVALID "scope.out"             ));
 }
 
 } // TEST_SUITE("inout")
