@@ -36,12 +36,12 @@ struct TNode<MATCH>
     {
         if constexpr (MATCH == Token::UNKNOWN)
         {
-            ++reader;
+            reader.advance();
         }
 
         state.push(MATCH, reader.offset());
 
-        if (!reader)
+        if (!reader.isValid())
         {
             return;
         }
@@ -59,18 +59,18 @@ struct TNode<MATCH, Goto, Gotos...>
 
     void operator()(src::Reader& reader, State& state) const
     {
-        if (!reader)
+        if (!reader.isValid())
         {
             state.push(MATCH, reader.offset());
             return;
         }
 
-        if (!Predicate{}(*reader))
+        if (!Predicate{}(reader.look()))
         {
             return TNode<MATCH, Gotos...>{}(reader, state);
         }
 
-        ++reader;
+        reader.advance();
 
         tGoto<NEXT_NODE>(reader, state);
     }

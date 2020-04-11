@@ -9,7 +9,7 @@ pushd $ROOT > /dev/null
                               | grep -E '(test|CHECK)' \
                               | paste - -              \
                               | while read line; do 
-                                    outputFile=$(echo $line | grep -oE 'test/data/[A-Za-z0-9_]*.out');
+                                    outputFile=$(echo $line | grep -oE 'test/data/[A-Za-z0-9_" /]*\.out' | tr -d ' "');
                                     lhs=$(echo $line | grep -oE '\{.*\} == {' | rev | cut -c 5- | rev);
                                     rhs=$(echo $line | grep -oE '\} == \{.*\} )' | rev | cut -c 3- | rev | cut -c 6-);
                                     clear;

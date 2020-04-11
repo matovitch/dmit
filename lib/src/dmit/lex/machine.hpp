@@ -14,6 +14,7 @@ using IsDigitExceptZero      = TIsBetween<'1', '9'>;
 using IsWhitespace           = TIsIn<' ', '\t', '\r', '\n'>;
 using IsExponent             = TIsIn<'e', 'E'>;
 using IsPlusOrMinus          = TIsIn<'+', '-'>;
+using IsNewLine              = TIs<'\n'>;
 
 using IsPlus                 = TIs<'+'>;
 using IsMinus                = TIs<'-'>;
@@ -100,7 +101,11 @@ enum
     NODE_DECIMAL_0,
     NODE_DECIMAL_1,
     NODE_DECIMAL_2,
-    NODE_DECIMAL_3
+    NODE_DECIMAL_3,
+    NODE_COMMENT,
+    NODE_COMMENT_LINE,
+    NODE_COMMENT_BLOCK_0,
+    NODE_COMMENT_BLOCK_1,
 };
 
 template <>
@@ -166,6 +171,7 @@ template <> struct TNodeIndex<NODE_PAR_LEFT            > { using Type = TNode<To
 template <> struct TNodeIndex<NODE_SQR_LEFT            > { using Type = TNode<Token::SQR_LEFT            >;};
 template <> struct TNodeIndex<NODE_PIPE_BIS            > { using Type = TNode<Token::PIPE_BIS            >;};
 template <> struct TNodeIndex<NODE_QUESTION            > { using Type = TNode<Token::QUESTION            >;};
+template <> struct TNodeIndex<NODE_COMMENT             > { using Type = TNode<Token::COMMENT             >;};
 template <> struct TNodeIndex<NODE_COMMA               > { using Type = TNode<Token::COMMA               >;};
 template <> struct TNodeIndex<NODE_TILDE               > { using Type = TNode<Token::TILDE               >;};
 
@@ -215,7 +221,42 @@ struct TNodeIndex<NODE_SLASH>
     using Type = TNode
     <
         Token::SLASH,
-        TGoto<IsEqual, NODE_SLASH_EQUAL>
+        TGoto<IsEqual , NODE_SLASH_EQUAL     >,
+        TGoto<IsSlash , NODE_COMMENT_LINE    >,
+        TGoto<IsStar  , NODE_COMMENT_BLOCK_0 >                
+    >;
+};
+
+template <>
+struct TNodeIndex<NODE_COMMENT_LINE>
+{
+    using Type = TNode
+    <
+        Token::UNKNOWN,
+        TGoto<IsNewLine  , NODE_COMMENT>,
+        TGoto<IsAnything , NODE_COMMENT_LINE>
+    >;
+};
+
+template <>
+struct TNodeIndex<NODE_COMMENT_BLOCK_0>
+{
+    using Type = TNode
+    <
+        Token::UNKNOWN,
+        TGoto<IsStar     , NODE_COMMENT_BLOCK_1>,
+        TGoto<IsAnything , NODE_COMMENT_BLOCK_0>
+    >;
+};
+
+template <>
+struct TNodeIndex<NODE_COMMENT_BLOCK_1>
+{
+    using Type = TNode
+    <
+        Token::UNKNOWN,
+        TGoto<IsSlash    , NODE_COMMENT>,
+        TGoto<IsAnything , NODE_COMMENT_BLOCK_0>
     >;
 };
 

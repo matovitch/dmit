@@ -22,7 +22,8 @@ void Reader::advance()
 
 void Reader::advanceToRawToken()
 {
-    while (look() == Token::WHITESPACE)
+    while (look() == Token::WHITESPACE ||
+           look() == Token::COMMENT)
     {
         _head++;
     }

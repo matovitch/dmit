@@ -11,17 +11,17 @@ Reader::Reader(const uint8_t* const head,
     _tail{tail}
 {}
 
-Reader::operator bool() const
+bool Reader::isValid() const
 {
     return _head < _tail;
 }
 
-void Reader::operator++()
+void Reader::advance()
 {
     _head++;
 }
 
-const uint8_t Reader::operator*() const
+const uint8_t Reader::look() const
 {
     return *_head;
 }

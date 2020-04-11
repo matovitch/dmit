@@ -41,4 +41,12 @@ struct TOr
     }
 };
 
+struct IsAnything
+{
+    bool operator()(const uint8_t) const
+    {
+        return true;
+    }
+};
+
 } // namespace dmit::lex

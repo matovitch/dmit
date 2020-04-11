@@ -111,16 +111,17 @@ auto skp(Parser&& parser)
 {
     return [parser](lex::Reader reader) -> std::optional<lex::Reader>
     {
-        auto readerOpt = parser(reader);
-
-        if (readerOpt)
+        if (parser(reader))
         {
             return std::nullopt;
         }
 
-        do
+        reader.advance();
+        reader.advanceToRawToken();
+
+        while (!reader.isEoi())
         {
-            readerOpt = parser(reader);
+            const auto readerOpt = parser(reader);
 
             if (readerOpt)
             {
@@ -130,7 +131,6 @@ auto skp(Parser&& parser)
             reader.advance();
             reader.advanceToRawToken();
         }
-        while (!reader.isEoi());
 
         return reader;
     };

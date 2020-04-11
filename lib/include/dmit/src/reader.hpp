@@ -13,11 +13,11 @@ public:
     Reader(const uint8_t* const head,
            const uint8_t* const tail);
 
-    operator bool() const;
+    bool isValid() const;
 
-    void operator++();
+    void advance();
 
-    const uint8_t operator*() const;
+    const uint8_t look() const;
 
     uint32_t offset() const;
 
