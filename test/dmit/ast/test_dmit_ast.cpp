@@ -9,9 +9,6 @@
 
 #include "dmit/lex/state.hpp"
 
-#include "doctest/doctest_fwd.h"
-#include "doctest/utils.h"
-
 #include <variant>
 
 struct Aster
@@ -43,8 +40,8 @@ TEST_CASE("ast")
 {
     Aster aster;
 
-    CHECK(dmit::fmt::asString(aster("test/data/ast_0.in")) == fileAsString("test/data/ast_0.out"));
-    CHECK(dmit::fmt::asString(aster("test/data/ast_1.in")) == fileAsString("test/data/ast_1.out"));
+    CHECK(dmit::fmt::asString(aster("test/data/ast/add.in"       )) == fileAsString("test/data/ast/add.out"       ));
+    CHECK(dmit::fmt::asString(aster("test/data/ast/increment.in" )) == fileAsString("test/data/ast/increment.out" ));
 }
 
 } // TEST_SUITE("inout")

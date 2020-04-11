@@ -29,12 +29,11 @@ TEST_CASE("lex")
 {
     Lexer lexer;
 
-    CHECK(dmit::fmt::asString(lexer("test/data/lex_0.in")) == fileAsString("test/data/lex_0.out"));
-    CHECK(dmit::fmt::asString(lexer("test/data/lex_1.in")) == fileAsString("test/data/lex_1.out"));
-    CHECK(dmit::fmt::asString(lexer("test/data/lex_2.in")) == fileAsString("test/data/lex_2.out"));
-    CHECK(dmit::fmt::asString(lexer("test/data/lex_3.in")) == fileAsString("test/data/lex_3.out"));
-    CHECK(dmit::fmt::asString(lexer("test/data/lex_4.in")) == fileAsString("test/data/lex_4.out"));
-    CHECK(dmit::fmt::asString(lexer("test/data/lex_5.in")) == fileAsString("test/data/lex_5.out"));
+    CHECK(dmit::fmt::asString(lexer("test/data/lex/number.in"     )) == fileAsString("test/data/lex/number.out"     ));
+    CHECK(dmit::fmt::asString(lexer("test/data/lex/whitespace.in" )) == fileAsString("test/data/lex/whitespace.out" ));
+    CHECK(dmit::fmt::asString(lexer("test/data/lex/identifier.in" )) == fileAsString("test/data/lex/identifier.out" ));
+    CHECK(dmit::fmt::asString(lexer("test/data/lex/operator.in"   )) == fileAsString("test/data/lex/operator.out"   ));
+    CHECK(dmit::fmt::asString(lexer("test/data/lex/keyword.in"    )) == fileAsString("test/data/lex/keyword.out"    ));
 }
 
 } // TEST_SUITE("inout")

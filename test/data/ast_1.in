@@ -1,6 +1,0 @@
-func increment(i : i64) -> i64
-{
-    let j : i64;
-    j = i + 1;
-    return j;
-}

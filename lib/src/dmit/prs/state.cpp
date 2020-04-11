@@ -269,7 +269,7 @@ Builder::Builder() :
 
     rcvScope = alt(rawScope, skpScope);
 
-    scope = rcvScope;
+    scope = rcvScope; // Only here to create a fake scope if we could not parse one
 
     // Function declaration
 

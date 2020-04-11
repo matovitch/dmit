@@ -19,8 +19,7 @@ std::string asString(const prs::state::Error& error)
 
     oss << "{\"expect\":"       << error._expect
         << ",\"actual\":"       << error._actual
-        << ",\"treeNodeKind\":" << error._treeNodeKind
-        << ",\"offset\":"       << error._offset << "}";
+        << ",\"treeNodeKind\":" << error._treeNodeKind << "}";
 
     return oss.str();
 }
@@ -39,7 +38,8 @@ std::string asString(const prs::state::error::Set& errorSet)
         errorHashSet.insert(error);
     }
 
-    oss << "{\"errors\":" << DMIT_FMT_CONTAINER_AS_STRING(errorHashSet) << "}";
+    oss << "{\"offset\":" << errorSet.offset()
+        << ",\"errors\":" << DMIT_FMT_CONTAINER_AS_STRING(errorHashSet) << "}";
 
     return oss.str();
 }
@@ -48,7 +48,7 @@ std::string asString(const prs::state::error::SetOfSet& errorSetOfSet)
 {
     std::ostringstream oss;
 
-    oss << "{\"errors\":" << DMIT_FMT_CONTAINER_AS_STRING(errorSetOfSet.errors()) << "}";
+    oss << DMIT_FMT_CONTAINER_AS_STRING(errorSetOfSet.errors());
 
     return oss.str();
 }

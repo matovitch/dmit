@@ -14,13 +14,11 @@ struct Error : dmit::fmt::Formatable
 {
     Error(const lex::Token,
           const lex::Token,
-          const tree::node::Kind,
-          const uint32_t);
+          const tree::node::Kind);
 
     const lex::Token       _expect;
     const lex::Token       _actual;
     const tree::node::Kind _treeNodeKind;
-    const uint32_t         _offset;
 };
 
 namespace error
@@ -38,13 +36,14 @@ struct Hasher
 
     static const std::size_t FNV1A_START = 0xcbf29ce484222325;
     static const std::size_t FNV1A_PRIME = 0x100000001b3;
-    static const std::size_t BYTE_MASK   = 0xff;
 };
 
 class Set : fmt::Formatable
 {
 
 public:
+
+    Set();
 
     bool push(const lex::Token,
               const lex::Token,
@@ -61,6 +60,7 @@ public:
 
 private:
 
+    uint32_t           _offset;
     std::vector<Error> _errors;
 };
 

@@ -5,12 +5,10 @@ namespace dmit::prs::state
 
 Error::Error(const lex::Token       expect,
              const lex::Token       actual,
-             const tree::node::Kind treeNodeKind,
-             const uint32_t         offset) :
+             const tree::node::Kind treeNodeKind) :
     _expect       { expect         },
     _actual       { actual         },
-    _treeNodeKind { treeNodeKind   },
-    _offset       { offset         }
+    _treeNodeKind { treeNodeKind   }
 {}
 
 namespace error
@@ -21,8 +19,7 @@ bool Comparator::operator()(const Error& lhs,
 {
     return lhs._expect         == rhs._expect       &&
            lhs._actual         == rhs._actual       &&
-           lhs._treeNodeKind   == rhs._treeNodeKind &&
-           lhs._offset         == rhs._offset;
+           lhs._treeNodeKind   == rhs._treeNodeKind;
 }
 
 std::size_t Hasher::operator()(const Error& error) const
@@ -36,42 +33,28 @@ std::size_t Hasher::operator()(const Error& error) const
     hash ^= error._treeNodeKind._asInt;
     hash *= FNV1A_PRIME;
 
-    std::size_t offset = error._offset;
-
-    hash ^= offset & BYTE_MASK;
-    hash *= FNV1A_PRIME;
-
-    offset >>= std::numeric_limits<uint32_t>::digits;
-    hash ^= offset & BYTE_MASK;
-    hash *= FNV1A_PRIME;
-
-    offset >>= std::numeric_limits<uint32_t>::digits;
-    hash ^= offset & BYTE_MASK;
-    hash *= FNV1A_PRIME;
-
-    offset >>= std::numeric_limits<uint32_t>::digits;
-    hash ^= offset & BYTE_MASK;
-    hash *= FNV1A_PRIME;
-
     return hash;
 }
+
+Set::Set() : _offset{std::numeric_limits<uint32_t>::max()} {}
 
 bool Set::push(const lex::Token expect,
                const lex::Token actual,
                const tree::node::Kind treeNodeKind,
-               const uint32_t   offset)
+               const uint32_t offset)
 {
-    if (offset > this->offset())
+    if (offset > _offset)
     {
         return false;
     }
 
-    if (offset < this->offset())
+    if (offset < _offset)
     {
         _errors.clear();
+        _offset = offset;
     }
 
-    _errors.emplace_back(expect, actual, treeNodeKind, offset);
+    _errors.emplace_back(expect, actual, treeNodeKind);
 
     return true;
 }
@@ -79,17 +62,22 @@ bool Set::push(const lex::Token expect,
 void Set::pop()
 {
     _errors.pop_back();
+
+    if (_errors.empty())
+    {
+        _offset = std::numeric_limits<uint32_t>::max();
+    }
 }
 
 void Set::clear()
 {
     _errors.clear();
+    _offset = std::numeric_limits<uint32_t>::max();
 }
 
 uint32_t Set::offset() const
 {
-    return _errors.empty() ? std::numeric_limits<uint32_t>::max()
-                           : _errors.back()._offset;
+    return _offset;
 }
 
 const std::vector<Error>& Set::errors() const

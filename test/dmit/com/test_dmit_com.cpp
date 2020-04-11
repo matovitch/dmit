@@ -1,7 +1,5 @@
 #include "dmit/com/base64.hpp"
 
-#include "doctest/doctest_fwd.h"
-
 #include <cstdint>
 #include <string>
 #include <vector>

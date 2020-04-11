@@ -73,7 +73,7 @@ std::string asString(const lex::Token token)
 {
     std::ostringstream oss;
 
-    oss << "{\"token\":\"" << K_TOKEN_AS_CSTR[token._asInt] << "\"}";
+    oss << "\"" << K_TOKEN_AS_CSTR[token._asInt] << "\"";
 
     return oss.str();
 }

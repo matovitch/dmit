@@ -33,7 +33,7 @@ std::string asString(const prs::state::tree::node::Kind treeNodeKind)
 {
     std::ostringstream oss;
 
-    oss << "{\"treeNodeKind\":\"" << K_TREE_NODE_KIND_AS_CSTR[treeNodeKind._asInt] << "\"}";
+    oss << "\"" << K_TREE_NODE_KIND_AS_CSTR[treeNodeKind._asInt] << "\"";
 
     return oss.str();
 }
@@ -42,8 +42,8 @@ std::string asString(const prs::state::tree::Node& node)
 {
     std::ostringstream oss;
 
-    oss << "{\"kind\":\"" << K_TREE_NODE_KIND_AS_CSTR[node._kind._asInt]
-        << "\",\"size\":"     << node._size
+    oss << "{\"kind\":"       << node._kind
+        << ",\"size\":"       << node._size
         << ",\"childCount\":" << node._childCount
         << ",\"start\":"      << node._start
         << ",\"stop\":"       << node._stop << "}";

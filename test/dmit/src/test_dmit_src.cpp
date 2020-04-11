@@ -4,9 +4,6 @@
 #include "dmit/fmt/src/line_index.hpp"
 #include "dmit/fmt/src/location.hpp"
 
-#include "doctest/doctest_fwd.h"
-#include "doctest/utils.h"
-
 dmit::src::Location src(const std::string& sourceAsString, uint32_t offset)
 {
     std::vector<uint8_t> sourceAsByte{reinterpret_cast<const uint8_t*>(sourceAsString.data()),
