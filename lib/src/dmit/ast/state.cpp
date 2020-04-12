@@ -56,7 +56,7 @@ dmit::prs::Reader makeSubReaderFor(const dmit::prs::state::tree::node::Kind pars
 Builder::Builder() : _state{}, _nodePool{_state._nodePool} {}
 
 void Builder::makeAssignment(dmit::prs::Reader& reader,
-                             TNode<node::Kind::EXP_ASSIGN>& expAssign)
+                             TNode<node::Kind::EXP_BINOP>& expAssign)
 {
     // RHS
     makeExpression(reader, expAssign._rhs);
@@ -207,7 +207,7 @@ void Builder::makeExpression(const dmit::prs::Reader& reader,
     }
     else if (parseNodeKind == ParseNodeKind::EXP_ASSIGN)
     {
-        node::TIndex<node::Kind::EXP_ASSIGN> assignment;
+        node::TIndex<node::Kind::EXP_BINOP> assignment;
         _nodePool.make(assignment);
         auto subReader = makeSubReaderFor(ParseNodeKind::EXP_ASSIGN, reader);
         makeAssignment(subReader, _nodePool.get(assignment));
@@ -294,26 +294,26 @@ void Builder::makeReturnType(const dmit::prs::Reader& supReader,
 }
 
 void Builder::makeArguments(const dmit::prs::Reader& supReader,
-                            TNode<node::Kind::FUN_ARGUMENTS>& arguments)
+                            TNode<node::Kind::FUN_DEFINITION>& function)
 {
     DMIT_COM_ASSERT(supReader.look()._kind == ParseNodeKind::FUN_ARGUMENTS);
     auto readerOpt = supReader.makeSubReader();
 
     if (!readerOpt)
     {
-        arguments._typeClaims._size = 0;
+        function._arguments._size = 0;
         return;
     }
 
     auto& reader = readerOpt.value();
 
-    _nodePool.make(reader.size() >> 1, arguments._typeClaims);
+    _nodePool.make(reader.size() >> 1, function._arguments);
 
-    uint32_t i = arguments._typeClaims._size;
+    uint32_t i = function._arguments._size;
 
     while (reader.isValid())
     {
-        makeTypeClaim(reader, _nodePool.get(arguments._typeClaims[--i]));
+        makeTypeClaim(reader, _nodePool.get(function._arguments[--i]));
     }
 }
 
@@ -349,8 +349,7 @@ void Builder::makeFunction(const dmit::prs::Reader& supReader,
     reader.advance();
 
     // Arguments
-    _nodePool.make(function._arguments);
-    makeArguments(reader, _nodePool.get(function._arguments));
+    makeArguments(reader, function);
     reader.advance();
 
     // Name

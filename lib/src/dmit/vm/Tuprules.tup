@@ -1,0 +1,2 @@
+LIB_DMIT_VM_CPP = $(LIB_SRC)/dmit/vm/*.cpp
+LIB_DMIT_VM_OUT = libdmit_vm.a

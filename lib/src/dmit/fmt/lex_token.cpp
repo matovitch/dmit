@@ -5,7 +5,7 @@
 #include <sstream>
 #include <string>
 
-static const char* K_TOKEN_AS_CSTR[] =
+static const char* const K_TOKEN_AS_CSTR[] =
 {
     "WHITESPACE",
     "COMMENT",

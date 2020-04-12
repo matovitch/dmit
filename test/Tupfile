@@ -9,5 +9,6 @@ include_rules
           $(ROOT)/<lib_dmit_src> \
           $(ROOT)/<lib_dmit_prs> \
           $(ROOT)/<lib_dmit_ast> \
+          $(ROOT)/<lib_dmit_vm>  \
           $(ROOT)/<lib_doctest>  \
                                  |> !cl |> $(BIN_TEST_OUT) $(ROOT)/<bin_test>

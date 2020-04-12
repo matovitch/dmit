@@ -51,9 +51,7 @@ private:
                         TNode<node::Kind::FUN_RETURN>& returnType);
 
     void makeArguments(const dmit::prs::Reader& supReader,
-                       TNode<node::Kind::FUN_ARGUMENTS>& arguments);
-
-    void makeArgumentsEmpty(TNode<node::Kind::FUN_ARGUMENTS>& arguments);
+                       TNode<node::Kind::FUN_DEFINITION>& function);
 
     void makeFunction(const dmit::prs::Reader& supReader,
                       TNode<node::Kind::FUN_DEFINITION>& function);
@@ -68,7 +66,7 @@ private:
                         Expression& expression);
 
     void makeAssignment(dmit::prs::Reader& reader,
-                        TNode<node::Kind::EXP_ASSIGN>& assignment);
+                        TNode<node::Kind::EXP_BINOP>& assignment);
 
     void makeReturn(dmit::prs::Reader& reader,
                     TNode<node::Kind::STM_RETURN>& stmReturn);

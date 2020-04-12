@@ -23,10 +23,8 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
     enum : uint8_t
     {
         DCL_VARIABLE   ,
-        EXP_ASSIGN     ,
         EXP_BINOP      ,
         EXPRESSION     ,
-        FUN_ARGUMENTS  ,
         FUN_CALL       ,
         FUN_DEFINITION ,
         FUN_RETURN     ,
@@ -71,9 +69,13 @@ using Statement = std::variant<node::TIndex<node::Kind::STM_RETURN>>;
 
 using Expression = std::variant<node::TIndex<node::Kind::LIT_IDENTIFIER >,
                                 node::TIndex<node::Kind::LIT_INTEGER    >,
-                                node::TIndex<node::Kind::EXP_ASSIGN     >,
                                 node::TIndex<node::Kind::EXP_BINOP      >,
                                 node::TIndex<node::Kind::FUN_CALL       >>;
+
+using ScopeVariant = std::variant<Statement,
+                                  Declaration,
+                                  Expression,
+                                  node::TIndex<node::Kind::SCOPE>>;
 
 template <com::TEnumIntegerType<node::Kind> KIND>
 struct TNode {};
@@ -88,15 +90,9 @@ template <>
 struct TNode<node::Kind::FUN_DEFINITION>
 {
     node::TIndex<node::Kind::LIT_IDENTIFIER > _name;
-    node::TIndex<node::Kind::FUN_ARGUMENTS  > _arguments;
+    node::TRange<node::Kind::TYPE_CLAIM     > _arguments;
     node::TIndex<node::Kind::FUN_RETURN     > _returnType;
     node::TIndex<node::Kind::SCOPE          > _body;
-};
-
-template <>
-struct TNode<node::Kind::FUN_ARGUMENTS>
-{
-    node::TRange<node::Kind::TYPE_CLAIM> _typeClaims;
 };
 
 template<>
@@ -139,10 +135,7 @@ struct TNode<node::Kind::SCOPE>
 template <>
 struct TNode<node::Kind::SCOPE_VARIANT>
 {
-    std::variant<Statement,
-                 Declaration,
-                 Expression,
-                 node::TIndex<node::Kind::SCOPE>> _value;
+    ScopeVariant _value;
 };
 
 template <>
@@ -164,15 +157,6 @@ template<>
 struct TNode<node::Kind::DCL_VARIABLE>
 {
     node::TIndex<node::Kind::TYPE_CLAIM> _typeClaim;
-};
-
-template<>
-struct TNode<node::Kind::EXP_ASSIGN>
-{
-    node::TIndex<node::Kind::LEXEME> _operator;
-
-    Expression _lhs;
-    Expression _rhs;
 };
 
 template<>

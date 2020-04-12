@@ -5,3 +5,4 @@
 #include "dmit/lex/test_dmit_lex.cpp"
 #include "dmit/prs/test_dmit_prs.cpp"
 #include "dmit/ast/test_dmit_ast.cpp"
+#include "dmit/vm/test_dmit_vm.cpp"
