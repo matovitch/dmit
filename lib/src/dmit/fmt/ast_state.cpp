@@ -13,21 +13,6 @@ namespace dmit::fmt
 namespace
 {
 
-template <com::TEnumIntegerType<ast::node::Kind> KIND, class Visitor>
-void visitRange(Visitor& visitor, const ast::node::TRange<KIND>& range)
-{
-    visitor._oss << "[";
-
-    for (uint32_t i = 0; i < range._size; i++)
-    {
-        visitor(range[i]); visitor._oss << ',';
-    }
-
-    visitor._oss.seekp(range._size ? -1 : 0, std::ios_base::end);
-
-    visitor._oss << "]";
-}
-
 struct Visitor
 {
     Visitor(const ast::State::NodePool& nodePool, std::ostringstream& oss) :
@@ -133,7 +118,7 @@ struct Visitor
 
         _oss << "\"arguments\":";
 
-        visitRange(*this, funCall._arguments);
+        (*this)(funCall._arguments);
 
         _oss << "}";
     }
@@ -160,7 +145,7 @@ struct Visitor
     {
         const auto& scope = _nodePool.get(scopeIdx);
 
-        visitRange(*this, scope._variants);
+        (*this)(scope._variants);
     }
 
     void operator()(const ast::node::TIndex<ast::node::Kind::FUN_DEFINITION>& functionIdx)
@@ -169,32 +154,33 @@ struct Visitor
 
         _oss << "{\"node\":\"Function\",";
 
-        _oss << "\"name\":"       ;           (*this)(function._name       ); _oss << ',';
-        _oss << "\"arguments\":"  ; visitRange(*this, function._arguments  ); _oss << ',';
-        _oss << "\"returnType\":" ;           (*this)(function._returnType ); _oss << ',';
-        _oss << "\"body\":"       ;           (*this)(function._body       );
+        _oss << "\"name\":"       ; (*this)(function._name       ); _oss << ',';
+        _oss << "\"arguments\":"  ; (*this)(function._arguments  ); _oss << ',';
+        _oss << "\"returnType\":" ; (*this)(function._returnType ); _oss << ',';
+        _oss << "\"body\":"       ; (*this)(function._body       );
 
         _oss << '}';
     }
 
-    void operator()(const ast::Declaration& declaration)
+    template <com::TEnumIntegerType<ast::node::Kind> KIND>
+    void operator()(const ast::node::TRange<KIND>& range)
     {
-        std::visit(*this, declaration);
+        _oss << "[";
+
+        for (uint32_t i = 0; i < range._size; i++)
+        {
+            (*this)(range[i]); _oss << ',';
+        }
+
+        _oss.seekp(range._size ? -1 : 0, std::ios_base::end);
+
+        _oss << "]";
     }
 
-    void operator()(const ast::Statement& statement)
+    template <class... Types>
+    void operator()(const std::variant<Types...>& variant)
     {
-        std::visit(*this, statement);
-    }
-
-    void operator()(const ast::Expression& expression)
-    {
-        std::visit(*this, expression);
-    }
-
-    void operator()(const ast::ScopeVariant& scopeVariant)
-    {
-        std::visit(*this, scopeVariant);
+        std::visit(*this, variant);
     }
 
     const ast::State::NodePool & _nodePool;
@@ -211,7 +197,7 @@ std::string asString(const ast::State& state)
 
     oss << "{\"node\":\"Program\",\"functions\":";
 
-    visitRange(visitor, state._program._functions);
+    visitor(state._program._functions);
 
     oss << "}";
 
