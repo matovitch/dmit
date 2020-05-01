@@ -15,4 +15,6 @@ void hash(const uint8_t* const data,
           const uint64_t size,
           Hash& hash);
 
+void combine(const Hash& lhs, Hash& rhs);
+
 } // namespace dmit::com::murmur

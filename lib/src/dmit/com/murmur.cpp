@@ -6,6 +6,7 @@
 #include "dmit/com/murmur.hpp"
 
 #include <cstdint>
+#include <cstring>
 #include <limits>
 
 namespace
@@ -107,6 +108,16 @@ void hash(const uint8_t* const data,
 
     h1 += h2;
     h2 += h1;
+}
+
+void combine(const Hash& lhs, Hash& rhs)
+{
+    uint8_t data[sizeof(Hash) << 1];
+
+    memcpy(data                , &lhs, sizeof(Hash));
+    memcpy(data + sizeof(Hash) , &rhs, sizeof(Hash));
+
+    hash(data, sizeof(data), rhs);
 }
 
 } // namespace dmit::com::murmur
