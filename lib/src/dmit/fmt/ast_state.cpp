@@ -25,7 +25,6 @@ struct Visitor
         const auto& lexeme = _nodePool.get(lexemeIdx);
 
         _oss << "{\"node\":\"Lexeme\",";
-
         _oss << "\"index\":" << lexeme._index << "}";
     }
 
@@ -34,10 +33,8 @@ struct Visitor
         const auto& identifier = _nodePool.get(identifierIdx);
 
         _oss << "{\"node\":\"Identifier\",";
-
         _oss << "\"lexeme\":"; (*this)(identifier._lexeme);
-
-        _oss << '}';
+        _oss << "}";
     }
 
     void operator()(const ast::node::TIndex<ast::node::Kind::LIT_INTEGER>& integerIdx)
@@ -45,10 +42,8 @@ struct Visitor
         const auto& integer = _nodePool.get(integerIdx);
 
         _oss << "{\"node\":\"Integer\",";
-
         _oss << "\"lexeme\":"; (*this)(integer._lexeme);
-
-        _oss << '}';
+        _oss << "}";
     }
 
     void operator()(const ast::node::TIndex<ast::node::Kind::TYPE_CLAIM>& typeClaimIdx)
@@ -56,11 +51,8 @@ struct Visitor
         const auto& typeClaim = _nodePool.get(typeClaimIdx);
 
         _oss << "{\"node\":\"Type Claim\",";
-
-        _oss << "\"variable\":" ; (*this)(typeClaim._variable); _oss << ',';
-        _oss << "\"type\":"     ; (*this)(typeClaim._type    );
-
-        _oss << '}';
+        _oss << "\"variable\":" ; (*this)(typeClaim._variable ); _oss << ',';
+        _oss << "\"type\":"     ; (*this)(typeClaim._type     ); _oss << "}";
     }
 
     void operator()(const ast::node::TIndex<ast::node::Kind::FUN_RETURN>& funReturnIdx)
@@ -81,10 +73,8 @@ struct Visitor
         const auto& stmReturn = _nodePool.get(stmReturnIdx);
 
         _oss << "{\"node\":\"Return Statement\",";
-
         _oss << "\"expression\":"; (*this)(stmReturn._expression);
-
-        _oss << '}';
+        _oss << "}";
     }
 
     void operator()(const ast::node::TIndex<ast::node::Kind::EXP_BINOP>& expBinopIdx)
@@ -92,13 +82,9 @@ struct Visitor
         const auto& expBinop = _nodePool.get(expBinopIdx);
 
         _oss << "{\"node\":\"Binary Operation\",";
-
-        _oss << "\"operator\":" ; (*this)(expBinop._operator); _oss << ',';
-
-        _oss << "\"lhs\":"; (*this)(expBinop._lhs); _oss << ',';
-        _oss << "\"rhs\":"; (*this)(expBinop._rhs);
-
-        _oss << '}';
+        _oss << "\"operator\":" ; (*this)(expBinop._operator ); _oss << ",";
+        _oss << "\"lhs\":"      ; (*this)(expBinop._lhs      ); _oss << ",";
+        _oss << "\"rhs\":"      ; (*this)(expBinop._rhs      ); _oss << "}";
     }
 
     void operator()(const ast::node::TIndex<ast::node::Kind::EXPRESSION>& expressionIdx)
@@ -113,14 +99,8 @@ struct Visitor
         const auto& funCall = _nodePool.get(funCallIdx);
 
         _oss << "{\"node\":\"Function Call\",";
-
-        _oss << "\"callee\":"; (*this)(funCall._callee); _oss << ',';
-
-        _oss << "\"arguments\":";
-
-        (*this)(funCall._arguments);
-
-        _oss << "}";
+        _oss << "\"callee\":"    ; (*this)(funCall._callee    ); _oss << ",";
+        _oss << "\"arguments\":" ; (*this)(funCall._arguments ); _oss << "}";
     }
 
     void operator()(const ast::node::TIndex<ast::node::Kind::DCL_VARIABLE>& dclVariableIdx)
@@ -128,9 +108,7 @@ struct Visitor
         const auto& dclVariable = _nodePool.get(dclVariableIdx);
 
         _oss << "{\"node\":\"Variable Declaration\",";
-
         _oss << "\"typeClaim\":"; (*this)(dclVariable._typeClaim);
-
         _oss << '}';
     }
 
@@ -153,13 +131,10 @@ struct Visitor
         const auto& function = _nodePool.get(functionIdx);
 
         _oss << "{\"node\":\"Function\",";
-
         _oss << "\"name\":"       ; (*this)(function._name       ); _oss << ',';
         _oss << "\"arguments\":"  ; (*this)(function._arguments  ); _oss << ',';
         _oss << "\"returnType\":" ; (*this)(function._returnType ); _oss << ',';
-        _oss << "\"body\":"       ; (*this)(function._body       );
-
-        _oss << '}';
+        _oss << "\"body\":"       ; (*this)(function._body       ); _oss << '}';
     }
 
     template <com::TEnumIntegerType<ast::node::Kind> KIND>
@@ -193,9 +168,9 @@ std::string asString(const ast::State& state)
 {
     std::ostringstream oss;
 
-    Visitor visitor{state._nodePool, oss};
-
     oss << "{\"node\":\"Program\",\"functions\":";
+
+    Visitor visitor{state._nodePool, oss};
 
     visitor(state._program._functions);
 

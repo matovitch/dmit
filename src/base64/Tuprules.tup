@@ -1,21 +1,24 @@
-BIN_FILE_LOADER_CPP = $(ROOT)/src/base64/*.cpp
-
 # Note: There is a bug with tup and the binary cannot be named 'base64'
 #       Not exactly sure as to why... :/
 BIN_FILE_LOADER_OUT = base64.bin
 
-# Note: The linker need the libs in topological order
-CLFLAGS += -l dmit_fmt
-CLFLAGS += -l dmit_com
-CLFLAGS += -l dmit_src
-CLFLAGS += -l dmit_lex
-CLFLAGS += -l dmit_prs
-CLFLAGS += -l dmit_ast
-CLFLAGS += -l stdc++fs
+ifeq (@(IS_BUILDING_BINARIES),y)
+    BIN_FILE_LOADER_CPP = $(ROOT)/src/base64/*.cpp
+    # Note: The linker need the libs in topological order
+    CLFLAGS += -l dmit_fmt
+    CLFLAGS += -l dmit_com
+    CLFLAGS += -l dmit_src
+    CLFLAGS += -l dmit_lex
+    CLFLAGS += -l dmit_prs
+    CLFLAGS += -l dmit_ast
+    CLFLAGS += -l stdc++fs
 
-CLFLAGS += -L $(ROOT)/lib/src/dmit/fmt
-CLFLAGS += -L $(ROOT)/lib/src/dmit/com
-CLFLAGS += -L $(ROOT)/lib/src/dmit/src
-CLFLAGS += -L $(ROOT)/lib/src/dmit/lex
-CLFLAGS += -L $(ROOT)/lib/src/dmit/prs
-CLFLAGS += -L $(ROOT)/lib/src/dmit/ast
+    CLFLAGS += -L $(ROOT)/lib/src/dmit/fmt
+    CLFLAGS += -L $(ROOT)/lib/src/dmit/com
+    CLFLAGS += -L $(ROOT)/lib/src/dmit/src
+    CLFLAGS += -L $(ROOT)/lib/src/dmit/lex
+    CLFLAGS += -L $(ROOT)/lib/src/dmit/prs
+    CLFLAGS += -L $(ROOT)/lib/src/dmit/ast
+else
+    BIN_FILE_LOADER_CPP = $(ROOT)/src/dummy/*.cpp
+endif

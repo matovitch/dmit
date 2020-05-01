@@ -137,7 +137,7 @@ namespace base64
 std::size_t encodeBufferSize(const std::size_t size)
 {
     return (size % K_DECODED_BATCH_SIZE) ? (size / K_DECODED_BATCH_SIZE + 1) * K_ENCODED_BATCH_SIZE
-                                       : (size / K_DECODED_BATCH_SIZE    ) * K_ENCODED_BATCH_SIZE;
+                                         : (size / K_DECODED_BATCH_SIZE    ) * K_ENCODED_BATCH_SIZE;
 }
 
 std::size_t decodeBufferSize(const uint8_t* const srce,
