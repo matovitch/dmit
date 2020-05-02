@@ -6,6 +6,8 @@
 
 #include "dmit/com/option_reference.hpp"
 
+#include <cstring>
+
 namespace dmit::vm
 {
 
@@ -40,26 +42,25 @@ public:
     void cmp_lt_i_s_8();
     void cmp_lt_i_u();
     void cmp_ne();
+    void conv_d_f();
     void conv_d_s_1();
     void conv_d_s_2();
     void conv_d_s_4();
     void conv_d_s_8();
     void conv_d_u();
+    void conv_f_d();
     void conv_f_s_1();
     void conv_f_s_2();
     void conv_f_s_4();
     void conv_f_s_8();
     void conv_f_u();
     void ctz();
-    void d_to_f();
     void div_d();
     void div_f();
     void div_i_s();
     void div_i_u();
     void drop();
     void eqz();
-    void f_to_d();
-    void get_global();
     void grow();
     void load_1();
     void load_2();
@@ -79,7 +80,6 @@ public:
     void rotr();
     void save();
     void select();
-    void set_global();
     void sext_1_2();
     void sext_1_4();
     void sext_1_8();
@@ -95,6 +95,7 @@ public:
     void sub_d();
     void sub_f();
     void sub_i();
+    void switch_();
     void trunc_d_1();
     void trunc_d_2();
     void trunc_d_4();
@@ -106,6 +107,89 @@ public:
     void xor_();
 
 private:
+
+    template <class Type>
+    Type stackTopAs()
+    {
+        const uint64_t top = _stack.look(); _stack.drop();
+        return *(reinterpret_cast<const Type*>(&top));
+    }
+
+    template <class Type>
+    void stackPush(const Type value)
+    {
+        uint64_t toPush = 0;
+        std::memcpy(&toPush, &value, sizeof(Type));
+        _stack.push(toPush);
+    }
+
+    template <class Type>
+    void add()
+    {
+        const Type lhs = stackTopAs<Type>();
+        const Type rhs = stackTopAs<Type>();
+
+        stackPush<Type>(lhs + rhs);
+        _process.value().get().advance();
+    }
+
+    template <class Type>
+    void div()
+    {
+        const Type lhs = stackTopAs<Type>();
+        const Type rhs = stackTopAs<Type>();
+
+        stackPush<Type>(lhs / rhs);
+        _process.value().get().advance();
+    }
+
+    template <class Type>
+    void sub()
+    {
+        const Type lhs = stackTopAs<Type>();
+        const Type rhs = stackTopAs<Type>();
+
+        stackPush<Type>(lhs - rhs);
+        _process.value().get().advance();
+    }
+
+    template <class Type>
+    void cmp_gt()
+    {
+        const Type lhs = stackTopAs<Type>();
+        const Type rhs = stackTopAs<Type>();
+
+        _stack.push(lhs > rhs);
+        _process.value().get().advance();
+    }
+
+
+    template <class Type>
+    void cmp_lt()
+    {
+        const Type lhs = stackTopAs<Type>();
+        const Type rhs = stackTopAs<Type>();
+
+        _stack.push(lhs < rhs);
+        _process.value().get().advance();
+    }
+
+    template <class From, class To>
+    void conv()
+    {
+        const From arg = stackTopAs<From>();
+        stackPush(static_cast<To>(arg));
+        _process.value().get().advance();
+    }
+
+    template <class Type>
+    void load()
+    {
+        const uint64_t arg = _stack.look(); _stack.drop();
+
+        stackPush<Type>(_memory.load<Type>(arg));
+        _process.value().get().advance();
+    }
 
     StackOp                       _stack;
     dmit::com::OptionRef<Process> _process;

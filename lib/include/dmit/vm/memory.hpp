@@ -15,6 +15,14 @@ public:
 
     uint64_t size() const;
 
+    template <class Type>
+    Type load(const uint64_t address) const
+    {
+        const uint8_t* const ptr = _asBytes.data() + address;
+
+        return *(reinterpret_cast<const Type*>(ptr));
+    }
+
 private:
 
     std::vector<uint8_t> _asBytes;
