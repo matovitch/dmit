@@ -20,20 +20,17 @@ public:
 
     void save();
 
+    void ret();
+
     void pause() const;
 
     const uint8_t* argument() const;
-
-    uint64_t get_global() const;
-
-    void set_global(const uint64_t global);
 
 private:
 
     program::Counter        _programCounter;
     const Program&          _program;
     StackCall&              _stackCall;
-    std::optional<uint64_t> _globalOpt;
 };
 
 } // namespace dmit::vm

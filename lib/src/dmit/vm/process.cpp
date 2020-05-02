@@ -24,35 +24,20 @@ void Process::jump(const int32_t offset)
 void Process::save()
 {
     advance();
-
-    _stackCall.push(_programCounter.asInt());
-}
-
-uint64_t Process::get_global() const
-{
-    if (!_globalOpt)
-    {
-        return 0;
-    }
-
-    return _globalOpt.value();
-}
-
-void Process::set_global(const uint64_t global)
-{
-    if (_globalOpt)
-    {
-        return;
-    }
-
-    _globalOpt = global;
+    _stackCall.push(_programCounter);
 }
 
 const uint8_t* Process::argument() const
 {
-    const uint32_t argIndex = _program.argIndexes()[_programCounter.asInt()];
+    const uint32_t argIndex = _program.argIndexes()[_programCounter._asInt];
 
     return _program.arguments().data() + argIndex;
+}
+
+void Process::ret()
+{
+    _programCounter = _stackCall.look(); _stackCall.drop();
+    advance();
 }
 
 void Process::pause() const

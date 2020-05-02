@@ -84,7 +84,6 @@ static const char* const K_INSTRUCTION_AS_CSTR[] =
     "SUB_D",
     "SUB_F",
     "SUB_I",
-    "SWITCH",
     "TRUNC_D_1",
     "TRUNC_D_2",
     "TRUNC_D_4",

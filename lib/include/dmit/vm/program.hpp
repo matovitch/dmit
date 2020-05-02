@@ -35,18 +35,11 @@ private:
 namespace program
 {
 
-class Counter
+struct Counter
 {
-
-public:
-
     void advance();
 
     void jump(const int32_t offset);
-
-    uint32_t asInt() const;
-
-private:
 
     uint32_t _asInt = 0;
 };

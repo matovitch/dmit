@@ -201,7 +201,18 @@ void Machine::point()
 
 void Machine::popcnt()
 {
-    DMIT_COM_ASSERT(false && "popcnt not implemented");
+    // NOTE: This implementation is slow but the machine is not optimized for performance
+    uint64_t arg = _stack.look(); _stack.drop();
+
+    int count = 0;
+
+    while (arg)
+    {
+        count += (arg & 1);
+        arg >>= 1;
+    }
+
+    _stack.push(count);
     _process.value().get().advance();
 }
 
@@ -213,81 +224,67 @@ void Machine::push()
 
 void Machine::rem_s()
 {
-    DMIT_COM_ASSERT(false && "rem_s not implemented");
+    const int64_t lhs = stackTopAs<int64_t>();
+    const int64_t rhs = stackTopAs<int64_t>();
+
+    _stack.push(lhs % rhs);
     _process.value().get().advance();
 }
 
 void Machine::rem_u()
 {
-    DMIT_COM_ASSERT(false && "rem_u not implemented");
+    const uint64_t lhs = _stack.look(); _stack.drop();
+    const uint64_t rhs = _stack.look(); _stack.drop();
+
+    _stack.push(lhs % rhs);
     _process.value().get().advance();
 }
 
 void Machine::ret()
 {
-    DMIT_COM_ASSERT(false && "ret not implemented");
-    _process.value().get().advance();
+    _process.value().get().ret();
 }
 
 void Machine::rotl()
 {
-    DMIT_COM_ASSERT(false && "rotl not implemented");
+    const uint64_t lhs = _stack.look(); _stack.drop();
+    const uint64_t rhs = _stack.look(); _stack.drop();
+
+    _stack.push((rhs << lhs) | (rhs >> (std::numeric_limits<uint64_t>::digits - lhs)));
     _process.value().get().advance();
 }
 
 void Machine::rotr()
 {
-    DMIT_COM_ASSERT(false && "rotr not implemented");
+    const uint64_t lhs = _stack.look(); _stack.drop();
+    const uint64_t rhs = _stack.look(); _stack.drop();
+
+    _stack.push((rhs >> lhs) | (rhs << (std::numeric_limits<uint64_t>::digits - lhs)));
     _process.value().get().advance();
 }
 
 void Machine::save()
 {
-    DMIT_COM_ASSERT(false && "save not implemented");
+    _process.value().get().save();
     _process.value().get().advance();
 }
 
 void Machine::select()
 {
-    DMIT_COM_ASSERT(false && "select not implemented");
+    const uint64_t condition = _stack.look(); _stack.drop();
+    const uint64_t lhs       = _stack.look(); _stack.drop();
+    const uint64_t rhs       = _stack.look(); _stack.drop();
+
+    _stack.push(condition ? lhs : rhs);
     _process.value().get().advance();
 }
 
-void Machine::sext_1_2()
-{
-    DMIT_COM_ASSERT(false && "sext_1_2 not implemented");
-    _process.value().get().advance();
-}
-
-void Machine::sext_1_4()
-{
-    DMIT_COM_ASSERT(false && "sext_1_4 not implemented");
-    _process.value().get().advance();
-}
-
-void Machine::sext_1_8()
-{
-    DMIT_COM_ASSERT(false && "sext_1_8 not implemented");
-    _process.value().get().advance();
-}
-
-void Machine::sext_2_4()
-{
-    DMIT_COM_ASSERT(false && "sext_2_4 not implemented");
-    _process.value().get().advance();
-}
-
-void Machine::sext_2_8()
-{
-    DMIT_COM_ASSERT(false && "sext_2_8 not implemented");
-    _process.value().get().advance();
-}
-
-void Machine::sext_4_8()
-{
-    DMIT_COM_ASSERT(false && "sext_4_8 not implemented");
-    _process.value().get().advance();
-}
+void Machine::sext_1_2() { conv<int8_t  , int16_t>(); }
+void Machine::sext_1_4() { conv<int8_t  , int32_t>(); }
+void Machine::sext_1_8() { conv<int8_t  , int64_t>(); }
+void Machine::sext_2_4() { conv<int16_t , int64_t>(); }
+void Machine::sext_2_8() { conv<int16_t , int64_t>(); }
+void Machine::sext_4_8() { conv<int32_t , int64_t>(); }
 
 void Machine::sra()
 {
@@ -295,97 +292,35 @@ void Machine::sra()
     const uint64_t rhs = _stack.look(); _stack.drop();
 
     _stack.push(lhs >> rhs);
-
     _process.value().get().advance();
 }
 
 void Machine::srl()
 {
-    DMIT_COM_ASSERT(false && "srl not implemented");
+    const uint64_t lhs = _stack.look(); _stack.drop();
+    const uint64_t rhs = _stack.look(); _stack.drop();
+
+    _stack.push(lhs << rhs);
     _process.value().get().advance();
 }
 
-void Machine::store_1()
-{
-    DMIT_COM_ASSERT(false && "store_1 not implemented");
-    _process.value().get().advance();
-}
-
-void Machine::store_2()
-{
-    DMIT_COM_ASSERT(false && "store_2 not implemented");
-    _process.value().get().advance();
-}
-
-void Machine::store_4()
-{
-    DMIT_COM_ASSERT(false && "store_4 not implemented");
-    _process.value().get().advance();
-}
-
-void Machine::store_8()
-{
-    DMIT_COM_ASSERT(false && "store_8 not implemented");
-    _process.value().get().advance();
-}
+void Machine::store_1() { store<uint8_t  >(); }
+void Machine::store_2() { store<uint16_t >(); }
+void Machine::store_4() { store<uint32_t >(); }
+void Machine::store_8() { store<uint64_t >(); }
 
 void Machine::sub_d() { sub<double   >(); }
 void Machine::sub_f() { sub<float    >(); }
 void Machine::sub_i() { sub<uint64_t >(); }
 
-void Machine::switch_()
-{
-    DMIT_COM_ASSERT(false && "switch not implemented");
-    _process.value().get().advance();
-}
-
-void Machine::trunc_d_1()
-{
-    DMIT_COM_ASSERT(false && "trunc_d_1 not implemented");
-    _process.value().get().advance();
-}
-
-void Machine::trunc_d_2()
-{
-    DMIT_COM_ASSERT(false && "trunc_d_2 not implemented");
-    _process.value().get().advance();
-}
-
-void Machine::trunc_d_4()
-{
-    DMIT_COM_ASSERT(false && "trunc_d_4 not implemented");
-    _process.value().get().advance();
-}
-
-void Machine::trunc_d_8()
-{
-    DMIT_COM_ASSERT(false && "trunc_d_8 not implemented");
-    _process.value().get().advance();
-}
-
-void Machine::trunc_f_1()
-{
-    DMIT_COM_ASSERT(false && "trunc_f_1 not implemented");
-    _process.value().get().advance();
-}
-
-void Machine::trunc_f_2()
-{
-    DMIT_COM_ASSERT(false && "trunc_f_2 not implemented");
-    _process.value().get().advance();
-}
-
-void Machine::trunc_f_4()
-{
-    DMIT_COM_ASSERT(false && "trunc_f_4 not implemented");
-    _process.value().get().advance();
-}
-
-void Machine::trunc_f_8()
-{
-    DMIT_COM_ASSERT(false && "trunc_f_8 not implemented");
-    _process.value().get().advance();
-}
+void Machine::trunc_d_1() { conv<double , int8_t  >(); }
+void Machine::trunc_d_2() { conv<double , int16_t >(); }
+void Machine::trunc_d_4() { conv<double , int32_t >(); }
+void Machine::trunc_d_8() { conv<double , int64_t >(); }
+void Machine::trunc_f_1() { conv<float  , int8_t  >(); }
+void Machine::trunc_f_2() { conv<float  , int16_t >(); }
+void Machine::trunc_f_4() { conv<float  , int32_t >(); }
+void Machine::trunc_f_8() { conv<float  , int64_t >(); }
 
 void Machine::xor_()
 {

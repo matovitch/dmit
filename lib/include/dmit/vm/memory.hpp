@@ -23,6 +23,17 @@ public:
         return *(reinterpret_cast<const Type*>(ptr));
     }
 
+    template <class Type>
+    void store(const uint64_t address, const Type payload)
+    {
+        const uint8_t* payloadAsBytes = reinterpret_cast<const uint8_t*>(&payload);
+
+        for (int i = 0; i < sizeof(Type); i++)
+        {
+            _asBytes[address] = payloadAsBytes[i];
+        }
+    }
+
 private:
 
     std::vector<uint8_t> _asBytes;

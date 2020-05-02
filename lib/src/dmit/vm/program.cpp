@@ -144,11 +144,6 @@ void Counter::jump(const int32_t offset)
     _asInt += offset;
 }
 
-uint32_t Counter::asInt() const
-{
-    return _asInt;
-}
-
 } // namespace program
 
 } // namespace dmit::vm

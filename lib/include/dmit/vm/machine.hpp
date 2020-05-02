@@ -95,7 +95,6 @@ public:
     void sub_d();
     void sub_f();
     void sub_i();
-    void switch_();
     void trunc_d_1();
     void trunc_d_2();
     void trunc_d_4();
@@ -185,9 +184,23 @@ private:
     template <class Type>
     void load()
     {
-        const uint64_t arg = _stack.look(); _stack.drop();
+        const int64_t address = stackTopAs<int64_t>();
 
-        stackPush<Type>(_memory.load<Type>(arg));
+        address < 0 ? stackPush<Type>(_stack  .load<Type>(address))
+                    : stackPush<Type>(_memory .load<Type>(address));
+
+        _process.value().get().advance();
+    }
+
+    template <class Type>
+    void store()
+    {
+        const uint64_t address = _stack.look(); _stack.drop();
+        const Type payload = stackTopAs<Type>();
+
+        address < 0 ? _stack  .store<Type>(address, payload)
+                    : _memory .store<Type>(address, payload);
+
         _process.value().get().advance();
     }
 
