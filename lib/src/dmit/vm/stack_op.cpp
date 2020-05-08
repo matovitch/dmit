@@ -15,11 +15,12 @@ StackOp::StackOp(uint64_t* const head, const uint32_t size) :
 
 uint64_t StackOp::look() const
 {
-    return *_head;
+    return *(_head - 1);
 }
 
-void StackOp::push(const uint64_t)
+void StackOp::push(const uint64_t value)
 {
+    *_head = value;
     _head++;
     DMIT_COM_ASSERT(_head < _tail);
 }

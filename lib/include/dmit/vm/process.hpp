@@ -6,6 +6,8 @@
 namespace dmit::vm
 {
 
+class Machine;
+
 class Process
 {
 
@@ -13,6 +15,8 @@ public:
 
     Process(const Program& program,
                   StackCall& stackCall);
+
+    void advance(Machine& machine);
 
     void advance();
 
@@ -22,7 +26,11 @@ public:
 
     void ret();
 
-    void pause() const;
+    void pause();
+
+    void resume();
+
+    bool isRunning() const;
 
     const uint8_t* argument() const;
 
@@ -31,6 +39,7 @@ private:
     program::Counter        _programCounter;
     const Program&          _program;
     StackCall&              _stackCall;
+    bool                    _isRunning = false;
 };
 
 } // namespace dmit::vm

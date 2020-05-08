@@ -12,6 +12,8 @@ class StackCall
 
 public:
 
+    StackCall() = delete;
+
     StackCall(program::Counter* const head, const uint32_t size);
 
     void push(const program::Counter);

@@ -16,94 +16,96 @@ class Machine
 
 public:
 
-    void loadProcess(Process& process);
+    Machine(StackOp& stack, Memory& memory);
 
-    void add_d();
-    void add_f();
-    void add_i();
-    void and_();
-    void break_();
-    void break_if();
-    void break_table();
-    void clz();
-    void cmp_eq();
-    void cmp_gt_d();
-    void cmp_gt_f();
-    void cmp_gt_i_s_1();
-    void cmp_gt_i_s_2();
-    void cmp_gt_i_s_4();
-    void cmp_gt_i_s_8();
-    void cmp_gt_i_u();
-    void cmp_lt_d();
-    void cmp_lt_f();
-    void cmp_lt_i_s_1();
-    void cmp_lt_i_s_2();
-    void cmp_lt_i_s_4();
-    void cmp_lt_i_s_8();
-    void cmp_lt_i_u();
-    void cmp_ne();
-    void conv_d_f();
-    void conv_d_s_1();
-    void conv_d_s_2();
-    void conv_d_s_4();
-    void conv_d_s_8();
-    void conv_d_u();
-    void conv_f_d();
-    void conv_f_s_1();
-    void conv_f_s_2();
-    void conv_f_s_4();
-    void conv_f_s_8();
-    void conv_f_u();
-    void ctz();
-    void div_d();
-    void div_f();
-    void div_i_s();
-    void div_i_u();
-    void drop();
-    void eqz();
-    void grow();
-    void load_1();
-    void load_2();
-    void load_4();
-    void load_8();
-    void mul();
-    void nop();
-    void or_();
-    void pause();
-    void point();
-    void popcnt();
-    void push();
-    void rem_s();
-    void rem_u();
-    void ret();
-    void rotl();
-    void rotr();
-    void save();
-    void select();
-    void sext_1_2();
-    void sext_1_4();
-    void sext_1_8();
-    void sext_2_4();
-    void sext_2_8();
-    void sext_4_8();
-    void sra();
-    void srl();
-    void store_1();
-    void store_2();
-    void store_4();
-    void store_8();
-    void sub_d();
-    void sub_f();
-    void sub_i();
-    void trunc_d_1();
-    void trunc_d_2();
-    void trunc_d_4();
-    void trunc_d_8();
-    void trunc_f_1();
-    void trunc_f_2();
-    void trunc_f_4();
-    void trunc_f_8();
-    void xor_();
+    void run(Process& process);
+
+    void add_d        (Process& process);
+    void add_f        (Process& process);
+    void add_i        (Process& process);
+    void and_         (Process& process);
+    void break_       (Process& process);
+    void break_if     (Process& process);
+    void break_table  (Process& process);
+    void clz          (Process& process);
+    void cmp_eq       (Process& process);
+    void cmp_gt_d     (Process& process);
+    void cmp_gt_f     (Process& process);
+    void cmp_gt_i_s_1 (Process& process);
+    void cmp_gt_i_s_2 (Process& process);
+    void cmp_gt_i_s_4 (Process& process);
+    void cmp_gt_i_s_8 (Process& process);
+    void cmp_gt_i_u   (Process& process);
+    void cmp_lt_d     (Process& process);
+    void cmp_lt_f     (Process& process);
+    void cmp_lt_i_s_1 (Process& process);
+    void cmp_lt_i_s_2 (Process& process);
+    void cmp_lt_i_s_4 (Process& process);
+    void cmp_lt_i_s_8 (Process& process);
+    void cmp_lt_i_u   (Process& process);
+    void cmp_ne       (Process& process);
+    void conv_d_f     (Process& process);
+    void conv_d_s_1   (Process& process);
+    void conv_d_s_2   (Process& process);
+    void conv_d_s_4   (Process& process);
+    void conv_d_s_8   (Process& process);
+    void conv_d_u     (Process& process);
+    void conv_f_d     (Process& process);
+    void conv_f_s_1   (Process& process);
+    void conv_f_s_2   (Process& process);
+    void conv_f_s_4   (Process& process);
+    void conv_f_s_8   (Process& process);
+    void conv_f_u     (Process& process);
+    void ctz          (Process& process);
+    void div_d        (Process& process);
+    void div_f        (Process& process);
+    void div_i_s      (Process& process);
+    void div_i_u      (Process& process);
+    void drop         (Process& process);
+    void eqz          (Process& process);
+    void grow         (Process& process);
+    void load_1       (Process& process);
+    void load_2       (Process& process);
+    void load_4       (Process& process);
+    void load_8       (Process& process);
+    void mul          (Process& process);
+    void nop          (Process& process);
+    void or_          (Process& process);
+    void pause        (Process& process);
+    void point        (Process& process);
+    void popcnt       (Process& process);
+    void push         (Process& process);
+    void rem_s        (Process& process);
+    void rem_u        (Process& process);
+    void ret          (Process& process);
+    void rotl         (Process& process);
+    void rotr         (Process& process);
+    void save         (Process& process);
+    void select       (Process& process);
+    void sext_1_2     (Process& process);
+    void sext_1_4     (Process& process);
+    void sext_1_8     (Process& process);
+    void sext_2_4     (Process& process);
+    void sext_2_8     (Process& process);
+    void sext_4_8     (Process& process);
+    void sra          (Process& process);
+    void srl          (Process& process);
+    void store_1      (Process& process);
+    void store_2      (Process& process);
+    void store_4      (Process& process);
+    void store_8      (Process& process);
+    void sub_d        (Process& process);
+    void sub_f        (Process& process);
+    void sub_i        (Process& process);
+    void trunc_d_1    (Process& process);
+    void trunc_d_2    (Process& process);
+    void trunc_d_4    (Process& process);
+    void trunc_d_8    (Process& process);
+    void trunc_f_1    (Process& process);
+    void trunc_f_2    (Process& process);
+    void trunc_f_4    (Process& process);
+    void trunc_f_8    (Process& process);
+    void xor_         (Process& process);
 
 private:
 
@@ -123,77 +125,77 @@ private:
     }
 
     template <class Type>
-    void add()
+    void add(Process& process)
     {
         const Type lhs = stackTopAs<Type>();
         const Type rhs = stackTopAs<Type>();
 
         stackPush<Type>(lhs + rhs);
-        _process.value().get().advance();
+        process.advance();
     }
 
     template <class Type>
-    void div()
+    void div(Process& process)
     {
         const Type lhs = stackTopAs<Type>();
         const Type rhs = stackTopAs<Type>();
 
         stackPush<Type>(lhs / rhs);
-        _process.value().get().advance();
+        process.advance();
     }
 
     template <class Type>
-    void sub()
+    void sub(Process& process)
     {
         const Type lhs = stackTopAs<Type>();
         const Type rhs = stackTopAs<Type>();
 
         stackPush<Type>(lhs - rhs);
-        _process.value().get().advance();
+        process.advance();
     }
 
     template <class Type>
-    void cmp_gt()
+    void cmp_gt(Process& process)
     {
         const Type lhs = stackTopAs<Type>();
         const Type rhs = stackTopAs<Type>();
 
         _stack.push(lhs > rhs);
-        _process.value().get().advance();
+        process.advance();
     }
 
 
     template <class Type>
-    void cmp_lt()
+    void cmp_lt(Process& process)
     {
         const Type lhs = stackTopAs<Type>();
         const Type rhs = stackTopAs<Type>();
 
         _stack.push(lhs < rhs);
-        _process.value().get().advance();
+        process.advance();
     }
 
     template <class From, class To>
-    void conv()
+    void conv(Process& process)
     {
         const From arg = stackTopAs<From>();
         stackPush(static_cast<To>(arg));
-        _process.value().get().advance();
+        process.advance();
     }
 
     template <class Type>
-    void load()
+    void load(Process& process)
     {
         const int64_t address = stackTopAs<int64_t>();
 
         address < 0 ? stackPush<Type>(_stack  .load<Type>(address))
                     : stackPush<Type>(_memory .load<Type>(address));
 
-        _process.value().get().advance();
+        process.advance();
     }
 
     template <class Type>
-    void store()
+    void store(Process& process)
     {
         const uint64_t address = _stack.look(); _stack.drop();
         const Type payload = stackTopAs<Type>();
@@ -201,14 +203,11 @@ private:
         address < 0 ? _stack  .store<Type>(address, payload)
                     : _memory .store<Type>(address, payload);
 
-        _process.value().get().advance();
+        process.advance();
     }
 
-    StackOp                       _stack;
-    dmit::com::OptionRef<Process> _process;
-    Memory                        _memory;
+    StackOp & _stack;
+    Memory  & _memory;
 };
-
-
 
 } // namespace dmit::vm

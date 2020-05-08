@@ -2,11 +2,12 @@
 
 #include "dmit/vm/instruction.hpp"
 #include "dmit/vm/machine.hpp"
+#include "dmit/vm/process.hpp"
 
 namespace dmit::vm
 {
 
-static void(Machine::* K_INSTRUCTION_MAP[])() =
+static void(Machine::* K_INSTRUCTION_MAP[])(dmit::vm::Process&) =
 {
     &Machine::add_d,
     &Machine::add_f,
@@ -116,7 +117,7 @@ void Program::addInstruction(const Instruction instruction,
     }
 }
 
-const std::vector<void (Machine::*)()>& Program::instructions() const
+const std::vector<void (Machine::*)(dmit::vm::Process&)>& Program::instructions() const
 {
     return _instructions;
 }

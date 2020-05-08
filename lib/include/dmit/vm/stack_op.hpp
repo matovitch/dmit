@@ -11,6 +11,8 @@ class StackOp
 
 public:
 
+    StackOp() = delete;
+
     StackOp(uint64_t* const head, const uint32_t size);
 
     void push(const uint64_t);
