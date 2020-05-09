@@ -46,11 +46,11 @@ TEST_CASE("point")
     uint64_t arg;
     uint8_t* argAsBytes = reinterpret_cast<uint8_t*>(&arg);
 
-    arg =  3; program.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  3
-    arg =  2; program.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  2
-    arg =  1; program.addInstruction(dmit::vm::Instruction::POINT , argAsBytes, sizeof(arg) ); // POINT 1
-              program.addInstruction(dmit::vm::Instruction::LOAD_8                          ); // LOAD_8
-              program.addInstruction(dmit::vm::Instruction::PAUSE                           ); // PAUSE
+    arg = 3; program.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  3
+    arg = 2; program.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  2
+    arg = 1; program.addInstruction(dmit::vm::Instruction::POINT , argAsBytes, sizeof(arg) ); // POINT 1
+             program.addInstruction(dmit::vm::Instruction::LOAD_8                          ); // LOAD_8
+             program.addInstruction(dmit::vm::Instruction::PAUSE                           ); // PAUSE
 
     CHECK(execute(program) == 3);
 }
@@ -64,17 +64,17 @@ TEST_CASE("select")
     uint64_t arg;
     uint8_t* argAsBytes = reinterpret_cast<uint8_t*>(&arg);
 
-    arg =  3; program_1.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  3
-    arg =  2; program_1.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  2
-    arg =  0; program_1.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  0
-              program_1.addInstruction(dmit::vm::Instruction::SELECT                          ); // SELECT
-              program_1.addInstruction(dmit::vm::Instruction::PAUSE                           ); // PAUSE
+    arg = 3; program_1.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  3
+    arg = 2; program_1.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  2
+    arg = 0; program_1.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  0
+             program_1.addInstruction(dmit::vm::Instruction::SELECT                          ); // SELECT
+             program_1.addInstruction(dmit::vm::Instruction::PAUSE                           ); // PAUSE
 
-    arg =  3; program_2.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  3
-    arg =  2; program_2.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  2
-    arg =  1; program_2.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  1
-              program_2.addInstruction(dmit::vm::Instruction::SELECT                          ); // SELECT
-              program_2.addInstruction(dmit::vm::Instruction::PAUSE                           ); // PAUSE
+    arg = 3; program_2.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  3
+    arg = 2; program_2.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  2
+    arg = 1; program_2.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  1
+             program_2.addInstruction(dmit::vm::Instruction::SELECT                          ); // SELECT
+             program_2.addInstruction(dmit::vm::Instruction::PAUSE                           ); // PAUSE
 
     CHECK(execute(program_1) == 3);
     CHECK(execute(program_2) == 2);
@@ -88,10 +88,10 @@ TEST_CASE("break")
     uint64_t arg;
     uint8_t* argAsBytes = reinterpret_cast<uint8_t*>(&arg);
 
-    arg =  3; program.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  3
-    arg =  1; program.addInstruction(dmit::vm::Instruction::BREAK , argAsBytes, sizeof(arg) ); // BREAK 1
-    arg =  2; program.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  2
-              program.addInstruction(dmit::vm::Instruction::PAUSE                           ); // PAUSE
+    arg = 3; program.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  3
+    arg = 1; program.addInstruction(dmit::vm::Instruction::BREAK , argAsBytes, sizeof(arg) ); // BREAK 1
+    arg = 2; program.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  2
+             program.addInstruction(dmit::vm::Instruction::PAUSE                           ); // PAUSE
 
     CHECK(execute(program) == 3);
 }
@@ -105,19 +105,19 @@ TEST_CASE("break_if")
     uint64_t arg;
     uint8_t* argAsBytes = reinterpret_cast<uint8_t*>(&arg);
 
-    arg =  1; program_1.addInstruction(dmit::vm::Instruction::PUSH     , argAsBytes, sizeof(arg) ); // PUSH     1
-    arg =  2; program_1.addInstruction(dmit::vm::Instruction::BREAK_IF , argAsBytes, sizeof(arg) ); // BREAK_IF 2, 0
-    arg =  3; program_1.addInstruction(dmit::vm::Instruction::PUSH     , argAsBytes, sizeof(arg) ); // PUSH     3
-    arg =  1; program_1.addInstruction(dmit::vm::Instruction::BREAK    , argAsBytes, sizeof(arg) ); // BREAK    1
-    arg =  2; program_1.addInstruction(dmit::vm::Instruction::PUSH     , argAsBytes, sizeof(arg) ); // PUSH     2
-              program_1.addInstruction(dmit::vm::Instruction::PAUSE                              ); // PAUSE
+    arg = 1; program_1.addInstruction(dmit::vm::Instruction::PUSH     , argAsBytes, sizeof(arg) ); // PUSH     1
+    arg = 2; program_1.addInstruction(dmit::vm::Instruction::BREAK_IF , argAsBytes, sizeof(arg) ); // BREAK_IF 2, 0
+    arg = 3; program_1.addInstruction(dmit::vm::Instruction::PUSH     , argAsBytes, sizeof(arg) ); // PUSH     3
+    arg = 1; program_1.addInstruction(dmit::vm::Instruction::BREAK    , argAsBytes, sizeof(arg) ); // BREAK    1
+    arg = 2; program_1.addInstruction(dmit::vm::Instruction::PUSH     , argAsBytes, sizeof(arg) ); // PUSH     2
+             program_1.addInstruction(dmit::vm::Instruction::PAUSE                              ); // PAUSE
 
-    arg =  0; program_2.addInstruction(dmit::vm::Instruction::PUSH     , argAsBytes, sizeof(arg) ); // PUSH     0
-    arg =  2; program_2.addInstruction(dmit::vm::Instruction::BREAK_IF , argAsBytes, sizeof(arg) ); // BREAK_IF 2, 0
-    arg =  3; program_2.addInstruction(dmit::vm::Instruction::PUSH     , argAsBytes, sizeof(arg) ); // PUSH     3
-    arg =  1; program_2.addInstruction(dmit::vm::Instruction::BREAK    , argAsBytes, sizeof(arg) ); // BREAK    1
-    arg =  2; program_2.addInstruction(dmit::vm::Instruction::PUSH     , argAsBytes, sizeof(arg) ); // PUSH     2
-              program_2.addInstruction(dmit::vm::Instruction::PAUSE                              ); // PAUSE
+    arg = 0; program_2.addInstruction(dmit::vm::Instruction::PUSH     , argAsBytes, sizeof(arg) ); // PUSH     0
+    arg = 2; program_2.addInstruction(dmit::vm::Instruction::BREAK_IF , argAsBytes, sizeof(arg) ); // BREAK_IF 2, 0
+    arg = 3; program_2.addInstruction(dmit::vm::Instruction::PUSH     , argAsBytes, sizeof(arg) ); // PUSH     3
+    arg = 1; program_2.addInstruction(dmit::vm::Instruction::BREAK    , argAsBytes, sizeof(arg) ); // BREAK    1
+    arg = 2; program_2.addInstruction(dmit::vm::Instruction::PUSH     , argAsBytes, sizeof(arg) ); // PUSH     2
+             program_2.addInstruction(dmit::vm::Instruction::PAUSE                              ); // PAUSE
 
     CHECK(execute(program_1) == 2);
     CHECK(execute(program_2) == 3);
@@ -131,14 +131,14 @@ TEST_CASE("store/load")
     uint64_t arg;
     uint8_t* argAsBytes = reinterpret_cast<uint8_t*>(&arg);
 
-    arg =  8; program.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  8
-              program.addInstruction(dmit::vm::Instruction::GROW                            ); // GROW
-    arg =  3; program.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  3
-    arg =  0; program.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  0
-    arg =  1; program.addInstruction(dmit::vm::Instruction::STORE_8                         ); // STORE_8
-    arg =  0; program.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  0
-              program.addInstruction(dmit::vm::Instruction::LOAD_8                          ); // LOAD_8
-              program.addInstruction(dmit::vm::Instruction::PAUSE                           ); // PAUSE
+    arg = 8; program.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  8
+             program.addInstruction(dmit::vm::Instruction::GROW                            ); // GROW
+    arg = 3; program.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  3
+    arg = 0; program.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  0
+    arg = 1; program.addInstruction(dmit::vm::Instruction::STORE_8                         ); // STORE_8
+    arg = 0; program.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  0
+             program.addInstruction(dmit::vm::Instruction::LOAD_8                          ); // LOAD_8
+             program.addInstruction(dmit::vm::Instruction::PAUSE                           ); // PAUSE
 
     CHECK(execute(program) == 3);
 }
