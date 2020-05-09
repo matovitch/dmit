@@ -5,26 +5,27 @@
 
 uint64_t execute(const dmit::vm::Program& program)
 {
-    // Create the call stack
+    // We need...
+
+    // The call stack
     dmit::vm::StackCall stackCall{nullptr, 0};
-    // Create the process
+    // The process
     dmit::vm::Process process{program, stackCall};
-    // Create the operand stack
+    // The operand stack
     std::array<uint64_t, 0x100> stackOpStorage;
     dmit::vm::StackOp stackOp{stackOpStorage.data(), stackOpStorage.size()};
-    // And the memory
+    // The memory
     dmit::vm::Memory memory;
     // Last but not least, the machine
     dmit::vm::Machine machine{stackOp, memory};
-    // Run the process
+    // Run the process on the machine
     machine.run(process);
-
+    // Return the top of the operand stack
     return stackOp.look();
 }
 
 TEST_CASE("add_i")
 {
-    // Create the program
     dmit::vm::Program program;
 
     uint64_t arg;
@@ -40,7 +41,6 @@ TEST_CASE("add_i")
 
 TEST_CASE("point")
 {
-    // Create the program
     dmit::vm::Program program;
 
     uint64_t arg;
@@ -57,7 +57,6 @@ TEST_CASE("point")
 
 TEST_CASE("select")
 {
-    // Create the program
     dmit::vm::Program program_1;
     dmit::vm::Program program_2;
 
@@ -82,7 +81,6 @@ TEST_CASE("select")
 
 TEST_CASE("break")
 {
-    // Create the program
     dmit::vm::Program program;
 
     uint64_t arg;
@@ -98,7 +96,6 @@ TEST_CASE("break")
 
 TEST_CASE("break_if")
 {
-    // Create the program
     dmit::vm::Program program_1;
     dmit::vm::Program program_2;
 
@@ -125,7 +122,6 @@ TEST_CASE("break_if")
 
 TEST_CASE("store/load")
 {
-    // Create the program
     dmit::vm::Program program;
 
     uint64_t arg;
