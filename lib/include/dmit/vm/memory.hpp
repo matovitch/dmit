@@ -30,7 +30,7 @@ public:
 
         for (int i = 0; i < sizeof(Type); i++)
         {
-            _asBytes[address] = payloadAsBytes[i];
+            _asBytes[address + i] = payloadAsBytes[i];
         }
     }
 

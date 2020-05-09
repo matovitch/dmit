@@ -142,7 +142,7 @@ void Counter::advance()
 
 void Counter::jump(const int32_t offset)
 {
-    _asInt += offset;
+    _asInt += offset + 1;
 }
 
 } // namespace program

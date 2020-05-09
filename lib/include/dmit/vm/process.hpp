@@ -37,9 +37,9 @@ public:
 private:
 
     program::Counter        _programCounter;
+    bool                    _isRunning = false;
     const Program&          _program;
     StackCall&              _stackCall;
-    bool                    _isRunning = false;
 };
 
 } // namespace dmit::vm

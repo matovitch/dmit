@@ -205,7 +205,7 @@ void Machine::pause(Process& process)
 
 void Machine::point(Process& process)
 {
-    _stack.push(_stack.offset() + *(reinterpret_cast<const uint8_t*>(process.argument())));
+    _stack.push(_stack.offset() + *(reinterpret_cast<const uint8_t*>(process.argument())) + 1);
     process.advance();
 }
 
