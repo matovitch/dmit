@@ -55,6 +55,21 @@ TEST_CASE("point")
     CHECK(execute(program) == 3);
 }
 
+TEST_CASE("drop")
+{
+    dmit::vm::Program program;
+
+    uint64_t arg;
+    uint8_t* argAsBytes = reinterpret_cast<uint8_t*>(&arg);
+
+    arg = 3; program.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  3
+    arg = 2; program.addInstruction(dmit::vm::Instruction::PUSH  , argAsBytes, sizeof(arg) ); // PUSH  2
+             program.addInstruction(dmit::vm::Instruction::DROP                            ); // DROP
+             program.addInstruction(dmit::vm::Instruction::PAUSE                           ); // PAUSE
+
+    CHECK(execute(program) == 3);
+}
+
 TEST_CASE("select")
 {
     dmit::vm::Program program_1;
@@ -118,6 +133,32 @@ TEST_CASE("break_if")
 
     CHECK(execute(program_1) == 2);
     CHECK(execute(program_2) == 3);
+}
+
+TEST_CASE("break_table")
+{
+    dmit::vm::Program program_1;
+    dmit::vm::Program program_2;
+
+    uint64_t arg;
+    uint8_t* argAsBytes = reinterpret_cast<uint8_t*>(&arg);
+
+    arg = 1; program_1.addInstruction(dmit::vm::Instruction::PUSH        , argAsBytes, sizeof(arg) ); // PUSH        1
+    arg = 2; program_1.addInstruction(dmit::vm::Instruction::BREAK_TABLE , argAsBytes, sizeof(arg) ); // BREAK_TABLE 2, 0
+    arg = 3; program_1.addInstruction(dmit::vm::Instruction::PUSH        , argAsBytes, sizeof(arg) ); // PUSH        3
+    arg = 1; program_1.addInstruction(dmit::vm::Instruction::BREAK       , argAsBytes, sizeof(arg) ); // BREAK       1
+    arg = 2; program_1.addInstruction(dmit::vm::Instruction::PUSH        , argAsBytes, sizeof(arg) ); // PUSH        2
+             program_1.addInstruction(dmit::vm::Instruction::PAUSE                                 ); // PAUSE
+
+    arg = 0; program_2.addInstruction(dmit::vm::Instruction::PUSH        , argAsBytes, sizeof(arg) ); // PUSH        0
+    arg = 2; program_2.addInstruction(dmit::vm::Instruction::BREAK_TABLE , argAsBytes, sizeof(arg) ); // BREAK_TABLE 2, 0
+    arg = 3; program_2.addInstruction(dmit::vm::Instruction::PUSH        , argAsBytes, sizeof(arg) ); // PUSH        3
+    arg = 1; program_2.addInstruction(dmit::vm::Instruction::BREAK       , argAsBytes, sizeof(arg) ); // BREAK       1
+    arg = 2; program_2.addInstruction(dmit::vm::Instruction::PUSH        , argAsBytes, sizeof(arg) ); // PUSH        2
+             program_2.addInstruction(dmit::vm::Instruction::PAUSE                                 ); // PAUSE
+
+    CHECK(execute(program_1) == 3);
+    CHECK(execute(program_2) == 2);
 }
 
 TEST_CASE("store/load")
