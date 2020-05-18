@@ -1,3 +1,5 @@
+#include "test.hpp"
+
 #include "dmit/prs/reader.hpp"
 #include "dmit/prs/state.hpp"
 

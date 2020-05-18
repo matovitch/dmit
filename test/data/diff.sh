@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ROOT="$(readlink -f $(dirname $0)/..)"
+ROOT="$(readlink -f $(dirname $0)/../..)"
 
 pushd $ROOT > /dev/null
 

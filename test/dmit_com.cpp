@@ -1,3 +1,5 @@
+#include "test.hpp"
+
 #include "dmit/com/base64.hpp"
 
 #include <cstdint>

@@ -5,7 +5,7 @@ PROJECT_NAME=$(basename $ROOT_FOLDER | perl -pe 's/([^_])([A-Z])/\1_\2/g' | tr '
 
 function make()
 {
-    tup && ./test/diff_test.sh && ./bin/test/test -tse=inout
+    tup && ./test/data/diff.sh && ./bin/test/test -tse=inout
 }
 
 function cleanSource()

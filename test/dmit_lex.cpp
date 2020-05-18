@@ -1,3 +1,5 @@
+#include "test.hpp"
+
 #include "dmit/lex/state.hpp"
 
 #include "dmit/fmt/lex/state.hpp"

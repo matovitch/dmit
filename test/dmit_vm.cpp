@@ -1,3 +1,5 @@
+#include "test.hpp"
+
 #include "dmit/vm/instruction.hpp"
 #include "dmit/vm/machine.hpp"
 #include "dmit/vm/program.hpp"

@@ -1,3 +1,5 @@
+#include "test.hpp"
+
 #include "dmit/src/line_index.hpp"
 #include "dmit/src/location.hpp"
 
