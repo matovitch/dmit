@@ -1,6 +1,8 @@
 #include "test.hpp"
 
+#include "dmit/com/unique_id.hpp"
 #include "dmit/com/base64.hpp"
+#include "dmit/com/sha256.hpp"
 
 #include <cstdint>
 #include <string>
