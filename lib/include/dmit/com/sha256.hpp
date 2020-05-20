@@ -35,5 +35,4 @@ private:
     State _state;
 };
 
-
 } // namespace dmit::com::sha256

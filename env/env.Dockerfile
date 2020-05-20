@@ -1,4 +1,4 @@
-FROM ubuntu:devel
+FROM ubuntu:latest
 
 ENV TO_INSTALL "               \
     libtinfo6                  \
@@ -11,8 +11,9 @@ ENV TO_INSTALL "               \
     libfuse-dev                \
     wget                       \
     jq                         \
-    python-minimal             \
+    python2-minimal            \
     valgrind                   \
+    libpcre3-dev               \
 "
 
 ENV TO_REMOVE "                \
@@ -22,10 +23,13 @@ ENV TO_REMOVE "                \
     libfuse-dev                \
     git-core                   \
     wget                       \
+    libpcre3-dev               \
 "
 
 ENV GUEST_GID "1000"
 ENV GUEST_UID "1000"
+
+ENV DEBIAN_FRONTEND "noninteractive"
 
 COPY entrypoint.sh /
 
@@ -46,12 +50,14 @@ RUN set -ex                                                                     
                                                                /usr/bin/$link;                                    \
                                                      done                                                       &&\
     git clone git://github.com/gittup/tup.git --progress                                                        &&\
+    ln -s /usr/bin/clang /usr/bin/gcc                                                                           &&\
     cd tup                                                                                                      &&\
     ./bootstrap-nofuse.sh                                                                                       &&\
     mv tup /usr/bin                                                                                             &&\
     cd ..                                                                                                       &&\
     rm -r tup                                                                                                   &&\
     git clone https://github.com/ymattw/ydiff.git --progress                                                    &&\
+    ln -s /usr/bin/python2 /usr/bin/python                                                                      &&\
     cd ydiff                                                                                                    &&\
     ./setup.py install                                                                                          &&\
     cd ..                                                                                                       &&\
