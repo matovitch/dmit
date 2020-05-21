@@ -199,7 +199,6 @@ void Machine::or_(Process& process)
 
 void Machine::pause(Process& process)
 {
-    process.advance();
     process.pause();
 }
 
