@@ -17,7 +17,7 @@ TEST_CASE("rt")
         0x0100 /* call    stack size */
     };
 
-    const auto& getProcessIdId = dmit::rt::core_library::GetProcessId ::ID;
+    const auto& getProcessIdId = dmit::rt::core_library::GetProcessId::ID;
 
     dmit::vm::Program program;
 

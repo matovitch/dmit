@@ -44,6 +44,24 @@ struct Return : Callable, Function
     static const com::UniqueId ID;
 };
 
+struct GetGlobal : Callable, Function
+{
+    GetGlobal(Context&);
+
+    void operator()(const uint8_t* const) override;
+
+    static const com::UniqueId ID;
+};
+
+struct SetGlobal : Callable, Function
+{
+    SetGlobal(Context&);
+
+    void operator()(const uint8_t* const) override;
+
+    static const com::UniqueId ID;
+};
+
 } // namespace core_library
 
 struct CoreLibrary
@@ -53,7 +71,8 @@ struct CoreLibrary
 
     core_library::GetProcessId _getProcessId;
     core_library::Return       _return;
-
+    core_library::GetGlobal    _getGlobal;
+    core_library::SetGlobal    _setGlobal;
 };
 
 } // namespace dmit::rt

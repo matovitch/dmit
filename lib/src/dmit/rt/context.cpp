@@ -3,6 +3,7 @@
 #include "dmit/rt/core_library.hpp"
 
 #include "dmit/com/unique_id.hpp"
+#include "dmit/com/assert.hpp"
 #include "dmit/com/sha256.hpp"
 
 #include <cstdint>
@@ -42,6 +43,30 @@ void Context::return_()
     {
         _isExiting = true;
     }
+}
+
+void Context::getGlobal()
+{
+    const auto& id = _processStack.topId();
+
+    const auto& fit = _globals.find(id);
+
+    DMIT_COM_ASSERT(fit != _globals.end());
+
+    _stack.push(fit->second);
+}
+
+void Context::setGlobal()
+{
+    const auto& id = _processStack.topId();
+
+    const auto& fit = _globals.find(id);
+
+    DMIT_COM_ASSERT(fit == _globals.end());
+
+    const auto global = _stack.look();
+
+    _globals[id] = global;
 }
 
 void Context::call(const vm::Program& program, const vm::program::Counter programCounter)

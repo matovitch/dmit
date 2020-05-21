@@ -12,6 +12,7 @@
 
 #include "dmit/com/sha256.hpp"
 
+#include <unordered_map>
 #include <cstdint>
 
 namespace dmit::rt
@@ -30,6 +31,8 @@ public:
 
     void getProcessId ();
     void return_      ();
+    void getGlobal    ();
+    void setGlobal    ();
 
 private:
 
@@ -46,6 +49,11 @@ private:
     FunctionRegister _functionRegister;
     ProcessStack     _processStack;
     CoreLibrary      _coreLibrary;
+
+    std::unordered_map<com::UniqueId,
+                       uint64_t,
+                       com::unique_id::Hasher,
+                       com::unique_id::Comparator> _globals;
 };
 
 } // namespace dmit::rt
