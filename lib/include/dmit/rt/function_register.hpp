@@ -1,5 +1,7 @@
 #pragma once
 
+#include "dmit/rt/callable.hpp"
+
 #include "dmit/com/unique_id.hpp"
 
 #include <functional>
@@ -7,11 +9,6 @@
 
 namespace dmit::rt
 {
-
-struct Callable
-{
-    virtual void operator()(const uint8_t* const) const = 0;
-};
 
 class FunctionRegister;
 
@@ -29,8 +26,29 @@ public:
 
 private:
 
-    std::reference_wrapper<FunctionRegister> _functionRegister;
+    FunctionRegister& _functionRegister;
 };
+
+namespace recorder
+{
+
+struct StructuredArg
+{
+    StructuredArg(const dmit::com::UniqueId& id, Callable& callable);
+
+    StructuredArg(const uint8_t* const bytes);
+
+    dmit::com::UniqueId& id() const;
+
+    Callable& callable() const;
+
+    uint8_t _storage[sizeof(uint64_t) +
+                     sizeof(uint64_t)];
+
+    const uint8_t* _bytes;
+};
+
+} // namespace recorder
 
 } // namesapce function_register
 

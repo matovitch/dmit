@@ -9,10 +9,12 @@
 namespace dmit::vm
 {
 
-Process::Process(const Program   & program,
-                       StackCall & stackCall) :
-    _program   { program   },
-    _stackCall { stackCall }
+Process::Process(const program::Counter programCounter,
+                 const Program   &      program,
+                       StackCall &      stackCall) :
+    _programCounter { programCounter },
+    _program        { program        },
+    _stackCall      { stackCall      }
 {}
 
 void Process::advance(Machine& machine)
@@ -61,6 +63,11 @@ const uint8_t* Process::argument() const
 {
     const uint32_t argIndex = _program.argIndexes()[_programCounter._asInt - 1];
     return _program.arguments().data() + argIndex;
+}
+
+const program::Counter& Process::programCounter() const
+{
+    return _programCounter;
 }
 
 } // namespace dmit::vm

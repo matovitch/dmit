@@ -12,7 +12,7 @@ uint64_t execute(const dmit::vm::Program& program)
     // The call stack
     dmit::vm::StackCall stackCall{nullptr, 0};
     // The process
-    dmit::vm::Process process{program, stackCall};
+    dmit::vm::Process process{dmit::vm::program::Counter{}, program, stackCall};
     // The operand stack
     std::array<uint64_t, 0x100> stackOpStorage;
     dmit::vm::StackOp stackOp{stackOpStorage.data(), stackOpStorage.size()};

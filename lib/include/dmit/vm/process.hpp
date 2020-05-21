@@ -13,8 +13,9 @@ class Process
 
 public:
 
-    Process(const Program& program,
-                  StackCall& stackCall);
+    Process(const program::Counter programCounter,
+            const Program   &      program,
+                  StackCall &      stackCall);
 
     void advance(Machine& machine);
 
@@ -33,6 +34,8 @@ public:
     bool isRunning() const;
 
     const uint8_t* argument() const;
+
+    const program::Counter& programCounter() const;
 
 private:
 

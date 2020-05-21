@@ -23,6 +23,8 @@ public:
 
     int64_t offset() const;
 
+    const uint8_t* asBytes() const;
+
     template <class Type>
     Type load(const int64_t address) const
     {

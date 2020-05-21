@@ -51,7 +51,7 @@ void transform(const uint8_t* const bytes, State& state)
 
     for (int i = 16; i < 64; ++i)
     {
-        m[i] = DMIT_COM_SHA256_SIG1(m[i -  2]) + m[i -  7] + 
+        m[i] = DMIT_COM_SHA256_SIG1(m[i -  2]) + m[i -  7] +
                DMIT_COM_SHA256_SIG0(m[i - 15]) + m[i - 16];
     }
 
@@ -104,7 +104,7 @@ const UniqueId& State::uniqueId() const
     return reinterpret_cast<const UniqueId&>(*this);
 }
 
-UniqueIdSequence::UniqueIdSequence(const UniqueId& seed)
+UniqueIdSequence::UniqueIdSequence(const Seed& seed)
 {
     static uint8_t buffer[64];
 

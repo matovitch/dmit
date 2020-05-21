@@ -46,38 +46,30 @@ Type& deserializePtr(const uint8_t* const bytes)
     return **(reinterpret_cast<Type**>(&ptrAsU64));
 }
 
+} // namespace
+
 namespace recorder
 {
 
-struct StructuredArg
+StructuredArg::StructuredArg(const dmit::com::UniqueId& id, Callable& callable) : _bytes{_storage}
 {
-    StructuredArg(const dmit::com::UniqueId& id, Callable& callable) : _bytes{_storage}
-    {
-        serializePtr(&id       , _storage + 0                );
-        serializePtr(&callable , _storage + sizeof(uint64_t) );
-    }
+    serializePtr(&id       , _storage + 0                );
+    serializePtr(&callable , _storage + sizeof(uint64_t) );
+}
 
-    StructuredArg(const uint8_t* const bytes) : _bytes{bytes} {}
+StructuredArg::StructuredArg(const uint8_t* const bytes) : _bytes{bytes} {}
 
-    dmit::com::UniqueId& id() const
-    {
-        return deserializePtr<dmit::com::UniqueId>(_bytes);
-    }
+dmit::com::UniqueId& StructuredArg::id() const
+{
+    return deserializePtr<dmit::com::UniqueId>(_bytes);
+}
 
-    Callable& callable() const
-    {
-        return deserializePtr<Callable>(_bytes + sizeof(uint64_t));
-    }
-
-    uint8_t _storage[sizeof(uint64_t) +
-                     sizeof(uint64_t)];
-
-    const uint8_t* _bytes;
-};
-
+Callable& StructuredArg::callable() const
+{
+    return deserializePtr<Callable>(_bytes + sizeof(uint64_t));
+}
 
 } // namespace recorder
-} // namespace
 
 Recorder::Recorder(FunctionRegister& functionRegister) :
     _functionRegister{functionRegister}
@@ -87,8 +79,8 @@ void Recorder::operator()(const uint8_t* const arg) const
 {
     recorder::StructuredArg structuredArg{arg};
 
-    _functionRegister.get().record(structuredArg.id(),
-                                   structuredArg.callable());
+    _functionRegister.record(structuredArg.id(),
+                             structuredArg.callable());
 }
 
 } // namespace function_register
@@ -102,7 +94,7 @@ void FunctionRegister::record(const dmit::com::UniqueId& id, Callable& callable)
 {
     const auto fit = _callables.find(id);
 
-    DMIT_COM_ASSERT(fit != _callables.end());
+    DMIT_COM_ASSERT(fit == _callables.end());
 
     _callables[id] = &callable;
 }

@@ -36,4 +36,9 @@ int64_t StackOp::offset() const
     return static_cast<int64_t>(_base - _head);
 }
 
+const uint8_t* StackOp::asBytes() const
+{
+    return reinterpret_cast<const uint8_t*>(_head - 1);
+}
+
 } // namespace dmit::vm

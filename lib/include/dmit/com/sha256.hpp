@@ -21,12 +21,14 @@ void transform(const uint8_t* const bytes, State& state);
 
 void update(const uint8_t* const bytes, State& state);
 
+using Seed = UniqueId;
+
 class UniqueIdSequence
 {
 
 public:
 
-    UniqueIdSequence(const UniqueId& seed);
+    UniqueIdSequence(const Seed& seed);
 
     const UniqueId& operator()();
 
