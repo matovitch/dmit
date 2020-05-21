@@ -122,7 +122,7 @@ UniqueIdSequence::UniqueIdSequence(const Seed& seed)
     update(buffer, sizeof(buffer), _state);
 }
 
-const UniqueId& UniqueIdSequence::operator()()
+const UniqueId& UniqueIdSequence::nextId()
 {
     static uint8_t buffer[64];
 

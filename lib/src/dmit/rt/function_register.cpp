@@ -75,7 +75,7 @@ Recorder::Recorder(FunctionRegister& functionRegister) :
     _functionRegister{functionRegister}
 {}
 
-void Recorder::operator()(const uint8_t* const arg) const
+void Recorder::operator()(const uint8_t* const arg)
 {
     recorder::StructuredArg structuredArg{arg};
 

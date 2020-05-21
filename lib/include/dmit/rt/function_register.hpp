@@ -22,7 +22,7 @@ public:
 
     Recorder(FunctionRegister&);
 
-    void operator()(const uint8_t* const) const override;
+    void operator()(const uint8_t* const) override;
 
 private:
 

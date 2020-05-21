@@ -2,7 +2,8 @@
 
 #include "dmit/rt/function_register.hpp"
 
-#include "dmit/rt/call_stack_pool.hpp"
+#include "dmit/rt/process_stack.hpp"
+#include "dmit/rt/core_library.hpp"
 #include "dmit/rt/callable.hpp"
 
 #include "dmit/vm/machine.hpp"
@@ -16,18 +17,6 @@
 namespace dmit::rt
 {
 
-namespace context
-{
-
-struct Exit : Callable
-{
-    void operator()(const uint8_t* const) const override;
-
-    static const com::UniqueId ID;
-};
-
-} // namespace context
-
 class Context
 {
 
@@ -39,9 +28,12 @@ public:
 
     void call(const vm::Program& program, const vm::program::Counter programCounter);
 
+    void getProcessId ();
+    void return_      ();
+
 private:
 
-    com::sha256::UniqueIdSequence _uniqueIdSequence;
+    void run();
 
     std::vector<uint64_t> _stackAsU64;
 
@@ -49,10 +41,11 @@ private:
     vm::Memory  _memory;
     vm::Machine _machine;
 
-    FunctionRegister _functionRegister;
-    CallStackPool    _callStackPool;
+    bool _isExiting = false;
 
-    context::Exit _exit;
+    FunctionRegister _functionRegister;
+    ProcessStack     _processStack;
+    CoreLibrary      _coreLibrary;
 };
 
 } // namespace dmit::rt

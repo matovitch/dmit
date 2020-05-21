@@ -18,7 +18,7 @@ CallSite::CallSite(const vm::program::Counter programCounter,
     _context        { context        }
 {}
 
-void CallSite::operator()(const uint8_t* const) const
+void CallSite::operator()(const uint8_t* const)
 {
     _context.call(_program, _programCounter);
 }

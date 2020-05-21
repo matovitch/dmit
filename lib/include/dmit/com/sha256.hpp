@@ -30,7 +30,7 @@ public:
 
     UniqueIdSequence(const Seed& seed);
 
-    const UniqueId& operator()();
+    const UniqueId& nextId();
 
 private:
 

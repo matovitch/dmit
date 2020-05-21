@@ -27,10 +27,10 @@ public:
 
 private:
 
-    thread_local static std::unique_ptr<Type> _instancePtr;
+    static std::unique_ptr<Type> _instancePtr;
 };
 
 template <class Type, type_flag::THas<Singletonable, Type> IS_SINGLETONABLE>
-thread_local std::unique_ptr<Type> TSingleton<Type, IS_SINGLETONABLE>::_instancePtr;
+std::unique_ptr<Type> TSingleton<Type, IS_SINGLETONABLE>::_instancePtr;
 
 } // namespace dmit::com
