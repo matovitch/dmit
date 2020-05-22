@@ -44,18 +44,36 @@ struct Return : Callable, Function
     static const com::UniqueId ID;
 };
 
-struct GetGlobal : Callable, Function
+struct GlobalGet : Callable, Function
 {
-    GetGlobal(Context&);
+    GlobalGet(Context&);
 
     void operator()(const uint8_t* const) override;
 
     static const com::UniqueId ID;
 };
 
-struct SetGlobal : Callable, Function
+struct GlobalSet : Callable, Function
 {
-    SetGlobal(Context&);
+    GlobalSet(Context&);
+
+    void operator()(const uint8_t* const) override;
+
+    static const com::UniqueId ID;
+};
+
+struct GlobalCpy : Callable, Function
+{
+    GlobalCpy(Context&);
+
+    void operator()(const uint8_t* const) override;
+
+    static const com::UniqueId ID;
+};
+
+struct MakeCallSite : Callable, Function
+{
+    MakeCallSite(Context&);
 
     void operator()(const uint8_t* const) override;
 
@@ -71,8 +89,10 @@ struct CoreLibrary
 
     core_library::GetProcessId _getProcessId;
     core_library::Return       _return;
-    core_library::GetGlobal    _getGlobal;
-    core_library::SetGlobal    _setGlobal;
+    core_library::GlobalCpy    _globalCpy;
+    core_library::GlobalGet    _globalGet;
+    core_library::GlobalSet    _globalSet;
+    core_library::MakeCallSite _makeCallSite;
 };
 
 } // namespace dmit::rt

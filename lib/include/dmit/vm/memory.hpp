@@ -34,6 +34,8 @@ public:
         }
     }
 
+    void copy(const uint8_t* const data, const uint64_t size, const uint64_t address);
+
 private:
 
     std::vector<uint8_t> _asBytes;

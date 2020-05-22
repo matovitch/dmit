@@ -12,25 +12,64 @@ TEST_CASE("rt")
 {
     dmit::rt::Context context
     {
-        dmit::com::sha256::Seed{}       ,
-        0x1000 /* operand stack size */ ,
-        0x0100 /* call    stack size */
+        dmit::com::sha256::Seed{}        ,
+        0x1000  /* operand stack size */ ,
+        0x0100  /* call    stack size */
     };
 
     const auto& getProcessIdId = dmit::rt::core_library::GetProcessId::ID;
 
-    dmit::vm::Program program;
+    dmit::vm::Program program{nullptr, 0};
 
     uint64_t arg;
     uint8_t* argAsBytes = reinterpret_cast<uint8_t*>(&arg);
 
-    arg = getProcessIdId._halfH; program.addInstruction(dmit::vm::Instruction::PUSH, argAsBytes, sizeof(arg)); // PUSH  getProcessIdId._halfH
-    arg = getProcessIdId._halfL; program.addInstruction(dmit::vm::Instruction::PUSH, argAsBytes, sizeof(arg)); // PUSH  getProcessIdId._halfL
+    arg = getProcessIdId._halfH; program.addInstruction(dmit::vm::Instruction::PUSH, argAsBytes, sizeof(arg)); // PUSH getProcessIdId._halfH
+    arg = getProcessIdId._halfL; program.addInstruction(dmit::vm::Instruction::PUSH, argAsBytes, sizeof(arg)); // PUSH getProcessIdId._halfL
                                  program.addInstruction(dmit::vm::Instruction::DROP);                          // DROP
                                  program.addInstruction(dmit::vm::Instruction::DROP);                          // DROP
                                  program.addInstruction(dmit::vm::Instruction::PAUSE);                         // PAUSE
 
     context.call(program, dmit::vm::program::Counter{});
+
+    CHECK(true);
+}
+
+TEST_CASE("makeCallSite")
+{
+    dmit::rt::Context context
+    {
+        dmit::com::sha256::Seed{}       ,
+        0x1000 /* operand stack size */ ,
+        0x0100 /* call    stack size */
+    };
+
+    const auto& makeCallSiteId = dmit::rt::core_library::MakeCallSite::ID;
+
+    dmit::vm::Program program_1{nullptr, 0};
+    dmit::vm::Program program_2{nullptr, 0};
+
+    uint64_t arg;
+    uint8_t* argAsBytes = reinterpret_cast<uint8_t*>(&arg);
+
+    arg = 0                     ; program_1.addInstruction(dmit::vm::Instruction::PUSH, argAsBytes, sizeof(arg)); // PUSH 1
+    arg = 42                    ; program_1.addInstruction(dmit::vm::Instruction::PUSH, argAsBytes, sizeof(arg)); // PUSH 42
+    arg = 43                    ; program_1.addInstruction(dmit::vm::Instruction::PUSH, argAsBytes, sizeof(arg)); // PUSH 43
+    arg = makeCallSiteId._halfH ; program_1.addInstruction(dmit::vm::Instruction::PUSH, argAsBytes, sizeof(arg)); // PUSH makeCallSiteId._halfH
+    arg = makeCallSiteId._halfL ; program_1.addInstruction(dmit::vm::Instruction::PUSH, argAsBytes, sizeof(arg)); // PUSH makeCallSiteId._halfL
+                                  program_1.addInstruction(dmit::vm::Instruction::PAUSE);                         // PAUSE
+    arg = 1                     ; program_1.addInstruction(dmit::vm::Instruction::PUSH, argAsBytes, sizeof(arg)); // PUSH 1
+    arg = 2                     ; program_1.addInstruction(dmit::vm::Instruction::PUSH, argAsBytes, sizeof(arg)); // PUSH 2
+                                  program_1.addInstruction(dmit::vm::Instruction::ADD_I);                         // ADD_I
+                                  program_1.addInstruction(dmit::vm::Instruction::DROP);                          // DROP
+                                  program_1.addInstruction(dmit::vm::Instruction::PAUSE);                         // PAUSE
+
+    arg = 42; program_2.addInstruction(dmit::vm::Instruction::PUSH, argAsBytes, sizeof(arg)); // PUSH 42
+    arg = 43; program_2.addInstruction(dmit::vm::Instruction::PUSH, argAsBytes, sizeof(arg)); // PUSH 43
+    program_2.addInstruction(dmit::vm::Instruction::PAUSE);
+
+    context.call(program_1, dmit::vm::program::Counter{});
+    context.call(program_2, dmit::vm::program::Counter{});
 
     CHECK(true);
 }

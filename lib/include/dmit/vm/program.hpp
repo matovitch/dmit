@@ -16,7 +16,8 @@ class Program
 
 public:
 
-    Program();
+    Program(const uint8_t* const globalData,
+            const uint64_t       globalSize);
 
     void addInstruction(const Instruction instruction,
                         const uint8_t* const argument = nullptr,
@@ -25,6 +26,9 @@ public:
     const std::vector<void (Machine::*)(dmit::vm::Process&) >& instructions() const;
     const std::vector<uint32_t                              >& argIndexes  () const;
     const std::vector<uint8_t                               >& arguments   () const;
+
+    const uint8_t* const _globalData;
+    const uint64_t       _globalSize;
 
 private:
 

@@ -97,7 +97,10 @@ static void(Machine::* K_INSTRUCTION_MAP[])(dmit::vm::Process&) =
     &Machine::xor_
 };
 
-Program::Program()
+Program::Program(const uint8_t* const globalData,
+                 const uint64_t       globalSize) :
+    _globalData{globalData},
+    _globalSize{globalSize}
 {
     _instructions.push_back(&Machine::nop);
     _argIndexes.push_back(0);

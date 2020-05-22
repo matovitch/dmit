@@ -37,12 +37,13 @@ public:
 
     const program::Counter& programCounter() const;
 
+    const Program& _program;
+
 private:
 
-    program::Counter        _programCounter;
-    bool                    _isRunning = false;
-    const Program&          _program;
-    StackCall&              _stackCall;
+    program::Counter _programCounter;
+    bool             _isRunning = false;
+    StackCall&       _stackCall;
 };
 
 } // namespace dmit::vm

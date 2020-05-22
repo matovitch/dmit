@@ -4,6 +4,7 @@
 
 #include "dmit/rt/process_stack.hpp"
 #include "dmit/rt/core_library.hpp"
+#include "dmit/rt/call_site.hpp"
 #include "dmit/rt/callable.hpp"
 
 #include "dmit/vm/machine.hpp"
@@ -31,8 +32,10 @@ public:
 
     void getProcessId ();
     void return_      ();
-    void getGlobal    ();
-    void setGlobal    ();
+    void globalGet    ();
+    void globalSet    ();
+    void globalCpy    ();
+    void makeCallSite ();
 
 private:
 
@@ -49,6 +52,7 @@ private:
     FunctionRegister _functionRegister;
     ProcessStack     _processStack;
     CoreLibrary      _coreLibrary;
+    call_site::Pool  _callSitePool;
 
     std::unordered_map<com::UniqueId,
                        uint64_t,

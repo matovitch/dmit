@@ -28,7 +28,7 @@ uint64_t execute(const dmit::vm::Program& program)
 
 TEST_CASE("add_i")
 {
-    dmit::vm::Program program;
+    dmit::vm::Program program{nullptr, 0};
 
     uint64_t arg;
     uint8_t* argAsBytes = reinterpret_cast<uint8_t*>(&arg);
@@ -43,7 +43,7 @@ TEST_CASE("add_i")
 
 TEST_CASE("point")
 {
-    dmit::vm::Program program;
+    dmit::vm::Program program{nullptr, 0};
 
     uint64_t arg;
     uint8_t* argAsBytes = reinterpret_cast<uint8_t*>(&arg);
@@ -59,7 +59,7 @@ TEST_CASE("point")
 
 TEST_CASE("drop")
 {
-    dmit::vm::Program program;
+    dmit::vm::Program program{nullptr, 0};
 
     uint64_t arg;
     uint8_t* argAsBytes = reinterpret_cast<uint8_t*>(&arg);
@@ -74,8 +74,8 @@ TEST_CASE("drop")
 
 TEST_CASE("select")
 {
-    dmit::vm::Program program_1;
-    dmit::vm::Program program_2;
+    dmit::vm::Program program_1{nullptr, 0};
+    dmit::vm::Program program_2{nullptr, 0};
 
     uint64_t arg;
     uint8_t* argAsBytes = reinterpret_cast<uint8_t*>(&arg);
@@ -98,7 +98,7 @@ TEST_CASE("select")
 
 TEST_CASE("break")
 {
-    dmit::vm::Program program;
+    dmit::vm::Program program{nullptr, 0};
 
     uint64_t arg;
     uint8_t* argAsBytes = reinterpret_cast<uint8_t*>(&arg);
@@ -113,8 +113,8 @@ TEST_CASE("break")
 
 TEST_CASE("break_if")
 {
-    dmit::vm::Program program_1;
-    dmit::vm::Program program_2;
+    dmit::vm::Program program_1{nullptr, 0};
+    dmit::vm::Program program_2{nullptr, 0};
 
     uint64_t arg;
     uint8_t* argAsBytes = reinterpret_cast<uint8_t*>(&arg);
@@ -139,8 +139,8 @@ TEST_CASE("break_if")
 
 TEST_CASE("break_table")
 {
-    dmit::vm::Program program_1;
-    dmit::vm::Program program_2;
+    dmit::vm::Program program_1{nullptr, 0};
+    dmit::vm::Program program_2{nullptr, 0};
 
     uint64_t arg;
     uint8_t* argAsBytes = reinterpret_cast<uint8_t*>(&arg);
@@ -165,7 +165,7 @@ TEST_CASE("break_table")
 
 TEST_CASE("store/load")
 {
-    dmit::vm::Program program;
+    dmit::vm::Program program{nullptr, 0};
 
     uint64_t arg;
     uint8_t* argAsBytes = reinterpret_cast<uint8_t*>(&arg);
