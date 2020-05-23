@@ -41,6 +41,7 @@ void Process::save()
 void Process::ret()
 {
     _programCounter = _stackCall.look(); _stackCall.drop();
+    advance();
 }
 
 void Process::pause()
