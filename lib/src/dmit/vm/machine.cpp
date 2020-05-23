@@ -2,12 +2,15 @@
 
 #include "dmit/vm/process.hpp"
 
+#include "dmit/com/unique_id.hpp"
 #include "dmit/com/assert.hpp"
 
 #include <cstdint>
 
 namespace dmit::vm
 {
+
+static const com::UniqueId RETURN_ID{"#return"};
 
 Machine::Machine(StackOp& stack, Memory& memory) :
     _stack{stack},
@@ -251,7 +254,15 @@ void Machine::rem_u(Process& process)
 
 void Machine::ret(Process& process)
 {
-    process.ret();
+    if (!process.hasEmptyCallStack())
+    {
+        return process.ret();
+    }
+
+    _stack.push(RETURN_ID._halfH);
+    _stack.push(RETURN_ID._halfL);
+
+    process.pause();
 }
 
 void Machine::rotl(Process& process)

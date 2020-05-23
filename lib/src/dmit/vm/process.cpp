@@ -12,8 +12,8 @@ namespace dmit::vm
 Process::Process(const program::Counter programCounter,
                  const Program   &      program,
                        StackCall &      stackCall) :
-    _programCounter { programCounter },
     _program        { program        },
+    _programCounter { programCounter },
     _stackCall      { stackCall      }
 {}
 
@@ -41,12 +41,12 @@ void Process::save()
 void Process::ret()
 {
     _programCounter = _stackCall.look(); _stackCall.drop();
-    advance();
 }
 
 void Process::pause()
 {
     _isRunning = false;
+    advance();
 }
 
 void Process::resume()
@@ -57,6 +57,11 @@ void Process::resume()
 bool Process::isRunning() const
 {
     return _isRunning;
+}
+
+bool Process::hasEmptyCallStack() const
+{
+    return _stackCall.isEmpty();
 }
 
 const uint8_t* Process::argument() const

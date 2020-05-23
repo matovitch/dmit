@@ -116,9 +116,6 @@ void Context::call(const vm::Program& program, const vm::program::Counter progra
 {
     _isExiting = false;
 
-    _stack.push(core_library::Return::ID._halfH);
-    _stack.push(core_library::Return::ID._halfL);
-
     _processStack.push(programCounter, program);
 
     run();

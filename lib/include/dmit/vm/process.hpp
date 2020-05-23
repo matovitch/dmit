@@ -33,6 +33,8 @@ public:
 
     bool isRunning() const;
 
+    bool hasEmptyCallStack() const;
+
     const uint8_t* argument() const;
 
     const program::Counter& programCounter() const;

@@ -35,4 +35,9 @@ program::Counter StackCall::look() const
     return *_head;
 }
 
+bool StackCall::isEmpty() const
+{
+    return _head - 1 == _base;
+}
+
 } // namespace dmit::vm

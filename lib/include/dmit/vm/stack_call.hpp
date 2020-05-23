@@ -22,6 +22,8 @@ public:
 
     program::Counter look() const;
 
+    bool isEmpty() const;
+
 private:
 
           program::Counter*       _head;
