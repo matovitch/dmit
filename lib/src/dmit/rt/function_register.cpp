@@ -71,6 +71,8 @@ Callable& StructuredArg::callable() const
 
 } // namespace recorder
 
+const com::UniqueId Recorder::ID{"#recorder"};
+
 Recorder::Recorder(FunctionRegister& functionRegister) :
     _functionRegister{functionRegister}
 {}
@@ -87,7 +89,7 @@ void Recorder::operator()(const uint8_t* const arg)
 
 FunctionRegister::FunctionRegister() : _recorder{*this}
 {
-    record(dmit::com::UniqueId{"#recorder"}, _recorder);
+    record(function_register::Recorder::ID, _recorder);
 }
 
 void FunctionRegister::record(const dmit::com::UniqueId& id, Callable& callable)

@@ -20,19 +20,16 @@ Context::Context(const com::sha256::Seed& seed,
     _processStack{stackSizeCall, seed},
     _coreLibrary{*this}
 {
-    function_register::recorder::StructuredArg getProcessId {core_library::GetProcessId ::ID, _coreLibrary._getProcessId };
-    function_register::recorder::StructuredArg return_      {core_library::Return       ::ID, _coreLibrary._return       };
-    function_register::recorder::StructuredArg globalGet    {core_library::GlobalGet    ::ID, _coreLibrary._globalGet    };
-    function_register::recorder::StructuredArg globalSet    {core_library::GlobalSet    ::ID, _coreLibrary._globalSet    };
-    function_register::recorder::StructuredArg globalCpy    {core_library::GlobalCpy    ::ID, _coreLibrary._globalCpy    };
-    function_register::recorder::StructuredArg makeCallSite {core_library::MakeCallSite ::ID, _coreLibrary._makeCallSite };
+    for (const auto& function : _coreLibrary.functions())
+    {
+        function_register::recorder::StructuredArg recorderArg
+        {
+            function->id(),
+            function->me()
+        };
 
-    _functionRegister.call(dmit::com::UniqueId{"#recorder"}, reinterpret_cast<uint8_t*>(&getProcessId ));
-    _functionRegister.call(dmit::com::UniqueId{"#recorder"}, reinterpret_cast<uint8_t*>(&return_      ));
-    _functionRegister.call(dmit::com::UniqueId{"#recorder"}, reinterpret_cast<uint8_t*>(&globalGet    ));
-    _functionRegister.call(dmit::com::UniqueId{"#recorder"}, reinterpret_cast<uint8_t*>(&globalSet    ));
-    _functionRegister.call(dmit::com::UniqueId{"#recorder"}, reinterpret_cast<uint8_t*>(&globalCpy    ));
-    _functionRegister.call(dmit::com::UniqueId{"#recorder"}, reinterpret_cast<uint8_t*>(&makeCallSite ));
+        _functionRegister.call(function_register::Recorder::ID, reinterpret_cast<uint8_t*>(&recorderArg));
+    }
 }
 
 void Context::getProcessId()
@@ -109,7 +106,7 @@ void Context::makeCallSite()
     // 3. Register it
     function_register::recorder::StructuredArg arg{uniqueId, callSite};
 
-    _functionRegister.call(dmit::com::UniqueId{"#recorder"}, reinterpret_cast<uint8_t*>(&arg));
+    _functionRegister.call(function_register::Recorder::ID, reinterpret_cast<uint8_t*>(&arg));
 }
 
 void Context::call(const vm::Program& program, const vm::program::Counter programCounter)

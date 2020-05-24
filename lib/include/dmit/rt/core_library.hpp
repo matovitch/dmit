@@ -5,6 +5,8 @@
 #include "dmit/com/unique_id.hpp"
 
 #include <cstdint>
+#include <memory>
+#include <vector>
 
 namespace dmit::rt
 {
@@ -14,85 +16,108 @@ class Context;
 namespace core_library
 {
 
-class Function
+class Function : public Callable
 {
 
 public:
 
     Function(Context&);
 
+    void operator()(const uint8_t* const) override;
+
+    virtual void run() = 0;
+
+    virtual const com::UniqueId& id() const = 0;
+
+    Function& me();
+
 protected:
 
     Context& _context;
 };
 
-struct GetProcessId : Callable, Function
+struct GetProcessId : Function
 {
     GetProcessId(Context&);
 
-    void operator()(const uint8_t* const) override;
+    void run() override;
+
+    const com::UniqueId& id() const override;
 
     static const com::UniqueId ID;
 };
 
-struct Return : Callable, Function
+struct Return : Function
 {
     Return(Context&);
 
-    void operator()(const uint8_t* const) override;
+    void run() override;
+
+    const com::UniqueId& id() const override;
 
     static const com::UniqueId ID;
 };
 
-struct GlobalGet : Callable, Function
+struct GlobalGet : Function
 {
     GlobalGet(Context&);
 
-    void operator()(const uint8_t* const) override;
+    void run() override;
+
+    const com::UniqueId& id() const override;
 
     static const com::UniqueId ID;
 };
 
-struct GlobalSet : Callable, Function
+struct GlobalSet : Function
 {
     GlobalSet(Context&);
 
-    void operator()(const uint8_t* const) override;
+    void run() override;
+
+    const com::UniqueId& id() const override;
 
     static const com::UniqueId ID;
 };
 
-struct GlobalCpy : Callable, Function
+struct GlobalCpy : Function
 {
     GlobalCpy(Context&);
 
-    void operator()(const uint8_t* const) override;
+    void run() override;
+
+    const com::UniqueId& id() const override;
 
     static const com::UniqueId ID;
 };
 
-struct MakeCallSite : Callable, Function
+struct MakeCallSite : Function
 {
     MakeCallSite(Context&);
 
-    void operator()(const uint8_t* const) override;
+    void run() override;
+
+    const com::UniqueId& id() const override;
 
     static const com::UniqueId ID;
 };
 
+using FunctionPool = std::vector<std::unique_ptr<core_library::Function>>;
+
 } // namespace core_library
 
-struct CoreLibrary
+class CoreLibrary
 {
+
+public:
 
     CoreLibrary(Context&);
 
-    core_library::GetProcessId _getProcessId;
-    core_library::Return       _return;
-    core_library::GlobalCpy    _globalCpy;
-    core_library::GlobalGet    _globalGet;
-    core_library::GlobalSet    _globalSet;
-    core_library::MakeCallSite _makeCallSite;
+    const core_library::FunctionPool& functions() const;
+
+private:
+
+    core_library::FunctionPool _functions;
 };
 
 } // namespace dmit::rt

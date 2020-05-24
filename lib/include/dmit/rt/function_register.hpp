@@ -24,6 +24,8 @@ public:
 
     void operator()(const uint8_t* const) override;
 
+    static const com::UniqueId ID;
+
 private:
 
     FunctionRegister& _functionRegister;
