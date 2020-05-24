@@ -1,5 +1,6 @@
 #pragma once
 
+#include "dmit/rt/process_stack.hpp"
 #include "dmit/rt/callable.hpp"
 
 #include "dmit/vm/program.hpp"
@@ -11,25 +12,23 @@
 namespace dmit::rt
 {
 
-class Context;
-
 class CallSite : public Callable
 {
 
 public:
 
     CallSite(const vm::program::Counter programCounter,
-             const vm::Program &        program,
-                   Context     &        context);
+             const vm::Program  &       program,
+                   ProcessStack &       processStack);
 
-    void operator()(const uint8_t* const) override;
+    void call(const uint8_t* const) override;
 
 private:
 
     const vm::program::Counter _programCounter;
 
     const vm::Program & _program;
-          Context     & _context;
+    ProcessStack      & _processStack;
 };
 
 namespace call_site
@@ -41,8 +40,8 @@ class Pool
 public:
 
     CallSite& make(const vm::program::Counter programCounter,
-                   const vm::Program &        program,
-                         Context     &        context);
+                   const vm::Program  &       program,
+                         ProcessStack &       processStack);
 
 private:
 

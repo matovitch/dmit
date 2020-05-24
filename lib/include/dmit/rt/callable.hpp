@@ -7,7 +7,7 @@ namespace dmit::rt
 
 struct Callable
 {
-    virtual void operator()(const uint8_t* const) = 0;
+    virtual void call(const uint8_t* const) = 0;
 
     virtual ~Callable() {}
 };

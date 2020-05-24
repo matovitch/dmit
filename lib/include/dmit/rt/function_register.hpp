@@ -1,6 +1,7 @@
 #pragma once
 
 #include "dmit/rt/callable.hpp"
+#include "dmit/rt/library.hpp"
 
 #include "dmit/com/unique_id.hpp"
 
@@ -22,7 +23,7 @@ public:
 
     Recorder(FunctionRegister&);
 
-    void operator()(const uint8_t* const) override;
+    void call(const uint8_t* const) override;
 
     static const com::UniqueId ID;
 
@@ -51,6 +52,8 @@ struct StructuredArg
 };
 
 } // namespace recorder
+
+void registerLibrary(const Library&, FunctionRegister&);
 
 } // namesapce function_register
 

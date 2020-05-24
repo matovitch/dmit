@@ -5,6 +5,7 @@
 #include "dmit/vm/memory.hpp"
 
 #include "dmit/com/option_reference.hpp"
+#include "dmit/com/unique_id.hpp"
 
 #include <cstring>
 
@@ -106,6 +107,11 @@ public:
     void trunc_f_4    (Process& process);
     void trunc_f_8    (Process& process);
     void xor_         (Process& process);
+
+    com::UniqueId  popUniqueId();
+    void          pushUniqueId(const com::UniqueId&);
+
+    const StackOp& stack() const;
 
 private:
 

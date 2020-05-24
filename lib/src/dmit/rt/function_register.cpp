@@ -77,12 +77,26 @@ Recorder::Recorder(FunctionRegister& functionRegister) :
     _functionRegister{functionRegister}
 {}
 
-void Recorder::operator()(const uint8_t* const arg)
+void Recorder::call(const uint8_t* const arg)
 {
     recorder::StructuredArg structuredArg{arg};
 
     _functionRegister.record(structuredArg.id(),
                              structuredArg.callable());
+}
+
+void registerLibrary(const Library& library, FunctionRegister& functionRegister)
+{
+    for (const auto& function : library.functions())
+    {
+        recorder::StructuredArg toRecord
+        {
+            function->id(),
+            function->me()
+        };
+
+        functionRegister.call(Recorder::ID, reinterpret_cast<uint8_t*>(&toRecord));
+    }
 }
 
 } // namespace function_register
@@ -107,7 +121,7 @@ void FunctionRegister::call(const dmit::com::UniqueId& id, const uint8_t* const 
 
     DMIT_COM_ASSERT(fit != _callables.end());
 
-    fit->second->operator()(arg);
+    fit->second->call(arg);
 }
 
 } // namespace dmit::rt

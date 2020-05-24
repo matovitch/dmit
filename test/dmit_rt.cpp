@@ -1,25 +1,40 @@
 #include "test.hpp"
 
-#include "dmit/rt/core_library.hpp"
-#include "dmit/rt/context.hpp"
+#include "dmit/rt/function_register.hpp"
+#include "dmit/rt/process_stack.hpp"
+#include "dmit/rt/library_core.hpp"
+#include "dmit/rt/loop.hpp"
 
+#include "dmit/vm/stack_op.hpp"
 #include "dmit/vm/program.hpp"
+#include "dmit/vm/memory.hpp"
 
 #include "dmit/com/unique_id.hpp"
 #include "dmit/com/sha256.hpp"
 
 TEST_CASE("getProcessId")
 {
-    dmit::rt::Context context
-    {
-        dmit::com::sha256::Seed{}        ,
-        0x1000  /* operand stack size */ ,
-        0x0100  /* call    stack size */
-    };
+    // The function register
+    dmit::rt::FunctionRegister functionRegister;
+    // The process stack
+    dmit::rt::ProcessStack processStack{0x100 /* callstack size */, dmit::com::sha256::Seed{}};
+    // The operand stack
+    std::array<uint64_t, 0x100> stackStorage;
+    dmit::vm::StackOp stack{stackStorage.data(), stackStorage.size()};
+    // The memory
+    dmit::vm::Memory memory;
+    // The machine
+    dmit::vm::Machine machine{stack, memory};
+    // The loop
+    dmit::rt::Loop loop{machine, processStack, functionRegister};
+    // The core library
+    dmit::rt::LibraryCore libraryCore{stack, memory, processStack, functionRegister, loop};
 
-    const auto& getProcessIdId = dmit::rt::core_library::GetProcessId::ID;
+    dmit::rt::function_register::registerLibrary(libraryCore, functionRegister);
 
     dmit::vm::Program program{nullptr, 0};
+
+    const auto& getProcessIdId = dmit::rt::library_core::GetProcessId::ID;
 
     uint64_t arg;
     uint8_t* argAsBytes = reinterpret_cast<uint8_t*>(&arg);
@@ -29,22 +44,34 @@ TEST_CASE("getProcessId")
                                  program.addInstruction(dmit::vm::Instruction::PAUSE);                         // PAUSE
                                  program.addInstruction(dmit::vm::Instruction::RET);                           // RET
 
-    context.call(program, dmit::vm::program::Counter{});
+    processStack.push(dmit::vm::program::Counter{}, program);
+    loop.run();
 }
 
 TEST_CASE("makeCallSite")
 {
-    dmit::rt::Context context
-    {
-        dmit::com::sha256::Seed{}       ,
-        0x1000 /* operand stack size */ ,
-        0x0100 /* call    stack size */
-    };
+    // The function register
+    dmit::rt::FunctionRegister functionRegister;
+    // The process stack
+    dmit::rt::ProcessStack processStack{0x100 /* callstack size */, dmit::com::sha256::Seed{}};
+    // The operand stack
+    std::array<uint64_t, 0x100> stackStorage;
+    dmit::vm::StackOp stack{stackStorage.data(), stackStorage.size()};
+    // The memory
+    dmit::vm::Memory memory;
+    // The machine
+    dmit::vm::Machine machine{stack, memory};
+    // The loop
+    dmit::rt::Loop loop{machine, processStack, functionRegister};
+    // The core library
+    dmit::rt::LibraryCore libraryCore{stack, memory, processStack, functionRegister, loop};
 
-    const auto& makeCallSiteId = dmit::rt::core_library::MakeCallSite::ID;
+    dmit::rt::function_register::registerLibrary(libraryCore, functionRegister);
 
     dmit::vm::Program program_1{nullptr, 0};
     dmit::vm::Program program_2{nullptr, 0};
+
+    const auto& makeCallSiteId = dmit::rt::library_core::MakeCallSite::ID;
 
     uint64_t arg;
     uint8_t* argAsBytes = reinterpret_cast<uint8_t*>(&arg);
@@ -66,6 +93,8 @@ TEST_CASE("makeCallSite")
     program_2.addInstruction(dmit::vm::Instruction::PAUSE);                                   // PAUSE
     program_2.addInstruction(dmit::vm::Instruction::RET);                                     // RET
 
-    context.call(program_1, dmit::vm::program::Counter{});
-    context.call(program_2, dmit::vm::program::Counter{});
+    processStack.push(dmit::vm::program::Counter{}, program_1);
+    loop.run();
+    processStack.push(dmit::vm::program::Counter{}, program_2);
+    loop.run();
 }

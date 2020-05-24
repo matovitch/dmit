@@ -27,6 +27,27 @@ void Machine::run(Process& process)
     }
 }
 
+const StackOp& Machine::stack() const
+{
+    return _stack;
+}
+
+com::UniqueId Machine::popUniqueId()
+{
+    com::UniqueId uniqueId;
+
+    uniqueId._halfL = _stack.look(); _stack.drop();
+    uniqueId._halfH = _stack.look(); _stack.drop();
+
+    return uniqueId;
+}
+
+void Machine::pushUniqueId(const com::UniqueId& uniqueId)
+{
+    _stack.push(uniqueId._halfH);
+    _stack.push(uniqueId._halfL);
+}
+
 void Machine::add_d(Process& process) { add<double   >(process); }
 void Machine::add_f(Process& process) { add<float    >(process); }
 void Machine::add_i(Process& process) { add<uint64_t >(process); }
@@ -259,8 +280,7 @@ void Machine::ret(Process& process)
         return process.ret();
     }
 
-    _stack.push(RETURN_ID._halfH);
-    _stack.push(RETURN_ID._halfL);
+    pushUniqueId(RETURN_ID);
 
     process.pause();
 }
