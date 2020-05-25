@@ -85,20 +85,6 @@ void Recorder::call(const uint8_t* const arg)
                              structuredArg.callable());
 }
 
-void registerLibrary(const Library& library, FunctionRegister& functionRegister)
-{
-    for (const auto& function : library.functions())
-    {
-        recorder::StructuredArg toRecord
-        {
-            function->id(),
-            function->me()
-        };
-
-        functionRegister.call(Recorder::ID, reinterpret_cast<uint8_t*>(&toRecord));
-    }
-}
-
 } // namespace function_register
 
 FunctionRegister::FunctionRegister() : _recorder{*this}

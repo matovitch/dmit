@@ -1,5 +1,6 @@
 #pragma once
 
+#include "dmit/rt/function_register.hpp"
 #include "dmit/rt/callable.hpp"
 
 #include "dmit/com/unique_id.hpp"
@@ -33,7 +34,7 @@ class Library
 
 public:
 
-    const library::function::Pool& functions() const;
+    void recordsIn(FunctionRegister&) const;
 
     template <class FunctionType, class... Args>
     void addFunction(Args&&... args)

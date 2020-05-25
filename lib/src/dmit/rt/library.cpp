@@ -1,11 +1,23 @@
 #include "dmit/rt/library.hpp"
 
+#include "dmit/rt/function_register.hpp"
+
 namespace dmit::rt
 {
 
-const library::function::Pool& Library::functions() const
+void Library::recordsIn(FunctionRegister& functionRegister) const
 {
-    return _functions;
+    for (const auto& function : _functions)
+    {
+        function_register::recorder::StructuredArg toRecord
+        {
+            function->id(),
+            function->me()
+        };
+
+        functionRegister.call(function_register::Recorder::ID,
+                              reinterpret_cast<uint8_t*>(&toRecord));
+    }
 }
 
 namespace library
