@@ -14,10 +14,9 @@ TEST_CASE("getProcessId")
     // The process stack
     dmit::rt::ProcessStack processStack{0x100 /* callstack size */, dmit::com::sha256::Seed{}};
     // The operand stack
-    std::array<uint64_t, 0x100> stackOpStorage;
-    dmit::vm::StackOp stackOp{stackOpStorage.data(), stackOpStorage.size()};
+    dmit::vm::Machine::Storage machineStorage(0x100);
     // The context
-    dmit::rt::Context context{processStack, stackOp};
+    dmit::rt::Context context{processStack, machineStorage};
 
     dmit::vm::Program program{nullptr, 0};
 
@@ -40,10 +39,9 @@ TEST_CASE("makeCallSite")
     // The process stack
     dmit::rt::ProcessStack processStack{0x100 /* callstack size */, dmit::com::sha256::Seed{}};
     // The operand stack
-    std::array<uint64_t, 0x100> stackOpStorage;
-    dmit::vm::StackOp stackOp{stackOpStorage.data(), stackOpStorage.size()};
+    dmit::vm::Machine::Storage machineStorage(0x100);
     // The context
-    dmit::rt::Context context{processStack, stackOp};
+    dmit::rt::Context context{processStack, machineStorage};
 
     dmit::vm::Program program_1{nullptr, 0};
     dmit::vm::Program program_2{nullptr, 0};

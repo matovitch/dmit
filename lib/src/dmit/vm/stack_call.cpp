@@ -9,10 +9,10 @@
 namespace dmit::vm
 {
 
-StackCall::StackCall(program::Counter* const head, const uint32_t size) :
-    _head{head},
-    _base{head - 1},
-    _tail{head + size}
+StackCall::StackCall(Storage& storage) :
+    _head{storage.data()},
+    _base{_head - 1},
+    _tail{_head + storage._size}
 {}
 
 void StackCall::push(const program::Counter address)

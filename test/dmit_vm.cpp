@@ -9,21 +9,20 @@ uint64_t execute(const dmit::vm::Program& program)
 {
     // We need...
 
-    // The call stack
-    dmit::vm::StackCall stackCall{nullptr, 0};
-    // The process
-    dmit::vm::Process process{dmit::vm::program::Counter{}, program, stackCall};
-    // The operand stack
-    std::array<uint64_t, 0x100> stackOpStorage;
-    dmit::vm::StackOp stackOp{stackOpStorage.data(), stackOpStorage.size()};
-    // The memory
+    // Storages and memory
+    dmit::vm::Process::Storage storageProcess(0x100);
+    dmit::vm::Machine::Storage storageMachine(0x100);
     dmit::vm::Memory memory;
-    // Last but not least, the machine
-    dmit::vm::Machine machine{stackOp, memory};
-    // Run the process on the machine
+    // The machine
+    dmit::vm::Machine machine{storageMachine, memory};
+    // The process instanciating the program
+    dmit::vm::Process process{storageProcess, program, {}};
+
+    // Now we can run the process on the machine
     machine.run(process);
-    // Return the top of the operand stack
-    return stackOp.look();
+
+    // And return the top of the operand stack
+    return machine._stack.look();
 }
 
 TEST_CASE("add_i")

@@ -13,9 +13,15 @@ class Process
 
 public:
 
-    Process(const program::Counter programCounter,
-            const Program   &      program,
-                  StackCall &      stackCall);
+    using Storage = StackCall::Storage;
+
+    Process(      Storage &        stackCallStorage,
+            const Program &        program,
+            const program::Counter programCounter) :
+        _program        { program          },
+        _programCounter { programCounter   },
+        _stackCall      { stackCallStorage }
+    {}
 
     void advance(Machine& machine);
 
@@ -45,7 +51,7 @@ private:
 
     program::Counter _programCounter;
     bool             _isRunning = false;
-    StackCall&       _stackCall;
+    StackCall        _stackCall;
 };
 
 } // namespace dmit::vm

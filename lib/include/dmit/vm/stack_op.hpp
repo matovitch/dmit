@@ -1,7 +1,10 @@
 #pragma once
 
+#include "dmit/com/storage.hpp"
+
 #include <cstdint>
 #include <cstring>
+#include <vector>
 
 namespace dmit::vm
 {
@@ -11,9 +14,11 @@ class StackOp
 
 public:
 
+    using Storage = com::TStorage<uint64_t>;
+
     StackOp() = delete;
 
-    StackOp(uint64_t* const head, const uint32_t size);
+    StackOp(Storage&);
 
     void push(const uint64_t);
 

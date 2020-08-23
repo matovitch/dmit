@@ -12,8 +12,8 @@ namespace dmit::vm
 
 static const com::UniqueId RETURN_ID{"#return"};
 
-Machine::Machine(StackOp& stack, Memory& memory) :
-    _stack{stack},
+Machine::Machine(Storage& storage, Memory& memory) :
+    _stack{storage},
     _memory{memory}
 {}
 
@@ -25,11 +25,6 @@ void Machine::run(Process& process)
     {
         process.advance(*this);
     }
-}
-
-const StackOp& Machine::stack() const
-{
-    return _stack;
 }
 
 com::UniqueId Machine::popUniqueId()

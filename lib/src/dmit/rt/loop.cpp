@@ -29,7 +29,7 @@ void Loop::run()
     {
         _machine.run(_processStack.top());
 
-        _functionRegister.call(_machine.popUniqueId(), _machine.stack().asBytes());
+        _functionRegister.call(_machine.popUniqueId(), _machine._stack.asBytes());
     }
 }
 

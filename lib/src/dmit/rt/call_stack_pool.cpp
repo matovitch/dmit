@@ -13,13 +13,11 @@ CallStackPool::CallStackPool(const uint16_t stackSize) :
     _stackSize{stackSize}
 {}
 
-vm::StackCall& CallStackPool::make()
+vm::StackCall::Storage& CallStackPool::make()
 {
-    _programCounters.emplace_back(_stackSize);
+    _stackStorages.emplace_back(std::make_unique<vm::StackCall::Storage>(_stackSize));
 
-    _stacks.emplace_back(std::make_unique<vm::StackCall>(_programCounters.back().data(), _stackSize));
-
-    return *(_stacks.back());
+    return *(_stackStorages.back());
 }
 
 } // namespace dmit::rt

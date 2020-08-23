@@ -7,10 +7,10 @@
 namespace dmit::vm
 {
 
-StackOp::StackOp(uint64_t* const head, const uint32_t size) :
-    _head{head},
-    _base{head - 1},
-    _tail{head + size}
+StackOp::StackOp(Storage& storage) :
+    _head{storage.data()},
+    _base{_head - 1},
+    _tail{_head + storage._size}
 {}
 
 uint64_t StackOp::look() const
@@ -22,6 +22,7 @@ void StackOp::push(const uint64_t value)
 {
     *_head = value;
     _head++;
+
     DMIT_COM_ASSERT(_head < _tail);
 }
 

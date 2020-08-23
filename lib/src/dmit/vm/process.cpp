@@ -9,14 +9,6 @@
 namespace dmit::vm
 {
 
-Process::Process(const program::Counter programCounter,
-                 const Program   &      program,
-                       StackCall &      stackCall) :
-    _program        { program        },
-    _programCounter { programCounter },
-    _stackCall      { stackCall      }
-{}
-
 void Process::advance(Machine& machine)
 {
     std::invoke(_program.instructions()[_programCounter._asInt], machine, *this);

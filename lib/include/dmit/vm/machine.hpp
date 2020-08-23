@@ -17,7 +17,9 @@ class Machine
 
 public:
 
-    Machine(StackOp& stack, Memory& memory);
+    using Storage = StackOp::Storage;
+
+    Machine(Storage& storage, Memory& memory);
 
     void run(Process& process);
 
@@ -111,7 +113,7 @@ public:
     com::UniqueId  popUniqueId();
     void          pushUniqueId(const com::UniqueId&);
 
-    const StackOp& stack() const;
+    StackOp _stack;
 
 private:
 
@@ -212,8 +214,7 @@ private:
         process.advance();
     }
 
-    StackOp & _stack;
-    Memory  & _memory;
+    Memory& _memory;
 };
 
 } // namespace dmit::vm

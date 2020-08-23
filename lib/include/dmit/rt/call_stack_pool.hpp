@@ -17,15 +17,14 @@ public:
 
     CallStackPool(const uint16_t stackSize);
 
-    vm::StackCall& make();
+    vm::StackCall::Storage& make();
 
 private:
 
     const uint16_t _stackSize;
 
     // TODO: This pool design is dumbissim, please improve
-    std::vector<std::vector<vm::program::Counter >> _programCounters;
-    std::vector<std::unique_ptr<vm::StackCall    >> _stacks;
+    std::vector<std::unique_ptr<vm::StackCall::Storage>> _stackStorages;
 };
 
 } // namespace dmit::rt

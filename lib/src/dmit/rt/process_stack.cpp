@@ -18,7 +18,7 @@ ProcessStack::ProcessStack(const uint16_t callStackSize, const com::sha256::Seed
 void ProcessStack::push(const vm::program::Counter programCounter,
                         const vm::Program&     program)
 {
-    _processes.emplace(programCounter, program, _callStackPool.make());
+    _processes.emplace(_callStackPool.make(), program, programCounter);
     _uniqueIds.emplace(_uniqueIdSequence.nextId());
 }
 

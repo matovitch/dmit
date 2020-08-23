@@ -2,7 +2,10 @@
 
 #include "dmit/vm/program.hpp"
 
+#include "dmit/com/storage.hpp"
+
 #include <cstdint>
+#include <vector>
 
 namespace dmit::vm
 {
@@ -12,9 +15,11 @@ class StackCall
 
 public:
 
+    using Storage = com::TStorage<program::Counter>;
+
     StackCall() = delete;
 
-    StackCall(program::Counter* const head, const uint32_t size);
+    StackCall(Storage&);
 
     void push(const program::Counter);
 
@@ -25,7 +30,6 @@ public:
     bool isEmpty() const;
 
 private:
-
           program::Counter*       _head;
     const program::Counter* const _base;
     const program::Counter* const _tail;
