@@ -17,6 +17,9 @@ public:
          ProcessStack     & processStack,
          FunctionRegister & functionRegister);
 
+    void load(const vm::Program&,
+              const vm::program::Counter);
+
     void exit();
 
     void run();

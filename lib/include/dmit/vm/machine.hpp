@@ -8,18 +8,41 @@
 #include "dmit/com/unique_id.hpp"
 
 #include <cstring>
+#include <vector>
 
 namespace dmit::vm
 {
+
+namespace machine
+{
+
+class Storage
+{
+
+public:
+
+    void make(const std::size_t stackSize);
+
+    Memory& memory();
+
+    StackOp stack();
+
+private:
+
+    std::vector<StackOp::Storage> _stackStores;
+    std::vector<Memory>           _memories;
+};
+
+} // namespace machine
 
 class Machine
 {
 
 public:
 
-    using Storage = StackOp::Storage;
+    using Storage = machine::Storage;
 
-    Machine(Storage& storage, Memory& memory);
+    Machine(Storage& storage);
 
     void run(Process& process);
 
@@ -114,6 +137,7 @@ public:
     void          pushUniqueId(const com::UniqueId&);
 
     StackOp _stack;
+    Memory& _memory;
 
 private:
 
@@ -213,8 +237,6 @@ private:
 
         process.advance();
     }
-
-    Memory& _memory;
 };
 
 } // namespace dmit::vm

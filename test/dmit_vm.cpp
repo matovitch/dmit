@@ -7,20 +7,15 @@
 
 uint64_t execute(const dmit::vm::Program& program)
 {
-    // We need...
-
-    // Storages and memory
-    dmit::vm::Process::Storage storageProcess(0x100);
-    dmit::vm::Machine::Storage storageMachine(0x100);
-    dmit::vm::Memory memory;
+    // The process (instanciating the program)
+    dmit::vm::Process::Storage storageProcess{0x100 /*stackSize*/};
+    dmit::vm::Process process{storageProcess, program, {} /*programCounter*/};
     // The machine
-    dmit::vm::Machine machine{storageMachine, memory};
-    // The process instanciating the program
-    dmit::vm::Process process{storageProcess, program, {}};
-
-    // Now we can run the process on the machine
+    dmit::vm::machine::Storage storageMachine;
+    storageMachine.make(0x100 /*stackSize*/);
+    dmit::vm::Machine machine{storageMachine};
+    // Run the process on the machine
     machine.run(process);
-
     // And return the top of the operand stack
     return machine._stack.look();
 }

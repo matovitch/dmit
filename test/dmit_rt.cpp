@@ -11,12 +11,12 @@
 
 TEST_CASE("getProcessId")
 {
-    // The process stack
-    dmit::rt::ProcessStack processStack{0x100 /* callstack size */, dmit::com::sha256::Seed{}};
-    // The operand stack
-    dmit::vm::Machine::Storage machineStorage(0x100);
-    // The context
-    dmit::rt::Context context{processStack, machineStorage};
+    dmit::rt::context::Storage contextStorage;
+    contextStorage.make(0x100 /*machineStackSize*/,
+                        0x100 /*processStackSize*/,
+                        {}    /*seed*/);
+
+    dmit::rt::Context context{contextStorage};
 
     dmit::vm::Program program{nullptr, 0};
 
@@ -30,18 +30,18 @@ TEST_CASE("getProcessId")
                                  program.addInstruction(dmit::vm::Instruction::PAUSE);                         // PAUSE
                                  program.addInstruction(dmit::vm::Instruction::RET);                           // RET
 
-    processStack.push(dmit::vm::program::Counter{}, program);
+    context.load(program, {} /*programCounter*/);
     context.run();
 }
 
 TEST_CASE("makeCallSite")
 {
-    // The process stack
-    dmit::rt::ProcessStack processStack{0x100 /* callstack size */, dmit::com::sha256::Seed{}};
-    // The operand stack
-    dmit::vm::Machine::Storage machineStorage(0x100);
-    // The context
-    dmit::rt::Context context{processStack, machineStorage};
+    dmit::rt::context::Storage contextStorage;
+    contextStorage.make(0x100 /*machineStackSize*/,
+                        0x100 /*processStackSize*/,
+                        {}    /*seed*/);
+
+    dmit::rt::Context context{contextStorage};
 
     dmit::vm::Program program_1{nullptr, 0};
     dmit::vm::Program program_2{nullptr, 0};
@@ -68,8 +68,8 @@ TEST_CASE("makeCallSite")
     program_2.addInstruction(dmit::vm::Instruction::PAUSE);                                   // PAUSE
     program_2.addInstruction(dmit::vm::Instruction::RET);                                     // RET
 
-    processStack.push(dmit::vm::program::Counter{}, program_1);
+    context.load(program_1, {} /*programCounter*/);
     context.run();
-    processStack.push(dmit::vm::program::Counter{}, program_2);
+    context.load(program_2, {} /*programCounter*/);
     context.run();
 }

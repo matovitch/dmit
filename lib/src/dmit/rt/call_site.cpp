@@ -20,7 +20,7 @@ CallSite::CallSite(const vm::program::Counter programCounter,
 
 void CallSite::call(const uint8_t* const)
 {
-    _processStack.push(_programCounter, _program);
+    _processStack.push(_program, _programCounter);
 }
 
 namespace call_site

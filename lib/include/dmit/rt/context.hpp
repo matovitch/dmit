@@ -9,24 +9,55 @@
 #include "dmit/vm/machine.hpp"
 #include "dmit/vm/memory.hpp"
 
+#include "dmit/com/sha256.hpp"
+
+#include <memory>
+#include <vector>
+
 namespace dmit::rt
 {
+
+namespace context
+{
+
+class Storage
+{
+
+public:
+
+    void make(const std::size_t machineStackSize,
+              const std::size_t processStackSize,
+              const com::sha256::Seed&);
+
+    vm::Machine::Storage& machineStorage();
+
+    ProcessStack& processStack();
+
+private:
+
+    std::vector<std::unique_ptr<ProcessStack>> _processStacks;
+    vm::Machine::Storage _machineStorage;
+};
+
+} // namespace context
 
 class Context
 {
 
 public:
 
-    Context(ProcessStack         &,
-            vm::Machine::Storage &);
+    using Storage = context::Storage;
+
+    Context(Storage&);
+
+    void load(const vm::Program&,
+              const vm::program::Counter);
 
     void run();
 
 private:
 
     FunctionRegister _functionRegister;
-    vm::Memory       _memory;
-
     vm::Machine _machine;
     Loop        _loop;
     LibraryCore _libraryCore;

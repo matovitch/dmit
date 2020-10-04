@@ -12,9 +12,9 @@ namespace dmit::vm
 
 static const com::UniqueId RETURN_ID{"#return"};
 
-Machine::Machine(Storage& storage, Memory& memory) :
-    _stack{storage},
-    _memory{memory}
+Machine::Machine(Storage& storage) :
+    _stack  {storage.stack  ()},
+    _memory {storage.memory ()}
 {}
 
 void Machine::run(Process& process)
@@ -367,4 +367,26 @@ void Machine::xor_(Process& process)
     process.advance();
 }
 
+namespace machine
+{
+
+void Storage::make(const std::size_t stackSize)
+{
+    _stackStores.emplace_back(stackSize);
+    _memories.emplace_back();
+}
+
+Memory& Storage::memory()
+{
+    DMIT_COM_ASSERT(!_memories.empty());
+    return _memories.back();
+}
+
+StackOp Storage::stack()
+{
+    DMIT_COM_ASSERT(!_stackStores.empty());
+    return StackOp{_stackStores.back()};
+}
+
+} // namespace machine
 } // namespace dmit::vm

@@ -20,7 +20,7 @@ public:
 
     ProcessStack(const uint16_t callStackSize, const com::sha256::Seed& seed);
 
-    void push(const vm::program::Counter, const vm::Program&);
+    void push(const vm::Program&, const vm::program::Counter);
 
     vm::Process& top();
 

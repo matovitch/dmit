@@ -16,6 +16,12 @@ Loop::Loop(vm::Machine      & machine,
     _functionRegister {functionRegister}
 {}
 
+void Loop::load(const vm::Program&         program,
+          const vm::program::Counter programCounter)
+{
+    _processStack.push(program, programCounter);
+}
+
 void Loop::exit()
 {
     _isExiting = true;
