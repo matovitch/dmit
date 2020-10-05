@@ -29,14 +29,18 @@ public:
               const std::size_t processStackSize,
               const com::sha256::Seed&);
 
-    vm::Machine::Storage& machineStorage();
+    vm::Machine& machine();
 
     ProcessStack& processStack();
 
+    FunctionRegister& functionRegister();
+
 private:
 
-    std::vector<std::unique_ptr<ProcessStack>> _processStacks;
-    vm::Machine::Storage _machineStorage;
+    std::vector<std::unique_ptr<FunctionRegister >> _functionRegisters;
+    std::vector<std::unique_ptr<ProcessStack     >> _processStacks;
+    std::vector<std::unique_ptr<vm::Machine      >> _machines;
+    vm::Machine::Storage                            _machineStorage;
 };
 
 } // namespace context
@@ -57,10 +61,8 @@ public:
 
 private:
 
-    FunctionRegister _functionRegister;
-    vm::Machine _machine;
-    Loop        _loop;
-    LibraryCore _libraryCore;
+    Loop             _loop;
+    LibraryCore      _libraryCore;
 };
 
 } // namespace dmit::rt

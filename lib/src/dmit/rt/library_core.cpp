@@ -2,6 +2,7 @@
 
 #include "dmit/rt/function_register.hpp"
 #include "dmit/rt/process_stack.hpp"
+#include "dmit/rt/context.hpp"
 #include "dmit/rt/library.hpp"
 #include "dmit/rt/loop.hpp"
 
@@ -16,16 +17,12 @@
 namespace dmit::rt
 {
 
-LibraryCore::LibraryCore(vm::StackOp      & stack,
-                         vm::Memory       & memory,
-                         ProcessStack     & processStack,
-                         FunctionRegister & functionRegister,
-                         Loop             & loop) :
-    _stack{stack},
-    _memory{memory},
-    _processStack{processStack},
-    _functionRegister{functionRegister},
-    _loop{loop}
+LibraryCore::LibraryCore(context::Storage& contextStorage, Loop& loop) :
+    _stack            {contextStorage.machine()._stack},
+    _memory           {contextStorage.machine()._memory},
+    _processStack     {contextStorage.processStack()},
+    _functionRegister {contextStorage.functionRegister()},
+    _loop             {loop}
 {
     addFunction<library_core::GetProcessId >(*this);
     addFunction<library_core::GlobalCpy    >(*this);
@@ -33,6 +30,8 @@ LibraryCore::LibraryCore(vm::StackOp      & stack,
     addFunction<library_core::GlobalSet    >(*this);
     addFunction<library_core::Return       >(*this);
     addFunction<library_core::MakeCallSite >(*this);
+
+    recordsIn(_functionRegister);
 }
 
 namespace library_core

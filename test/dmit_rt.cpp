@@ -65,8 +65,8 @@ TEST_CASE("makeCallSite")
 
     arg = 42; program_2.addInstruction(dmit::vm::Instruction::PUSH, argAsBytes, sizeof(arg)); // PUSH 42
     arg = 43; program_2.addInstruction(dmit::vm::Instruction::PUSH, argAsBytes, sizeof(arg)); // PUSH 43
-    program_2.addInstruction(dmit::vm::Instruction::PAUSE);                                   // PAUSE
-    program_2.addInstruction(dmit::vm::Instruction::RET);                                     // RET
+              program_2.addInstruction(dmit::vm::Instruction::PAUSE);                         // PAUSE
+              program_2.addInstruction(dmit::vm::Instruction::RET);                           // RET
 
     context.load(program_1, {} /*programCounter*/);
     context.run();

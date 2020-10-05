@@ -2,18 +2,17 @@
 
 #include "dmit/rt/function_register.hpp"
 #include "dmit/rt/process_stack.hpp"
+#include "dmit/rt/context.hpp"
 
 #include "dmit/vm/machine.hpp"
 
 namespace dmit::rt
 {
 
-Loop::Loop(vm::Machine      & machine,
-           ProcessStack     & processStack,
-           FunctionRegister & functionRegister) :
-    _machine          {machine},
-    _processStack     {processStack},
-    _functionRegister {functionRegister}
+Loop::Loop(context::Storage& contextStorage) :
+    _machine          {contextStorage.machine()},
+    _processStack     {contextStorage.processStack()},
+    _functionRegister {contextStorage.functionRegister()}
 {}
 
 void Loop::load(const vm::Program&         program,

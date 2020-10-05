@@ -12,12 +12,9 @@ namespace dmit::rt
 {
 
 Context::Context(Storage& storage) :
-    _machine{storage.machineStorage()},
-    _loop{_machine, storage.processStack(), _functionRegister},
-    _libraryCore{_machine._stack, _machine._memory, storage.processStack(), _functionRegister, _loop}
-{
-    _libraryCore.recordsIn(_functionRegister);
-}
+    _loop        {storage},
+    _libraryCore {storage, _loop}
+{}
 
 void Context::load(const vm::Program&         program,
                    const vm::program::Counter programCounter)
@@ -38,18 +35,28 @@ void Storage::make(const std::size_t machineStackSize,
                    const com::sha256::Seed& seed)
 {
     _machineStorage.make(machineStackSize);
-    _processStacks.push_back(std::make_unique<ProcessStack>(processStackSize, seed));
+
+    _machines          .push_back(std::make_unique<vm::Machine      >(_machineStorage));
+    _processStacks     .push_back(std::make_unique<ProcessStack     >(processStackSize, seed));
+    _functionRegisters .push_back(std::make_unique<FunctionRegister >());
 }
 
-vm::Machine::Storage& Storage::machineStorage()
+vm::Machine& Storage::machine()
 {
-    return _machineStorage;
+    DMIT_COM_ASSERT(!_machines.empty());
+    return *(_machines.back());
 }
 
 ProcessStack& Storage::processStack()
 {
     DMIT_COM_ASSERT(!_processStacks.empty());
     return *(_processStacks.back());
+}
+
+FunctionRegister& Storage::functionRegister()
+{
+    DMIT_COM_ASSERT(!_functionRegisters.empty());
+    return *(_functionRegisters.back());
 }
 
 } // namespace context

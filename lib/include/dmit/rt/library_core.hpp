@@ -17,17 +17,15 @@
 namespace dmit::rt
 {
 
+namespace context { class Storage; }
+
 using GlobalMap = std::unordered_map<com::UniqueId,
                                      uint64_t,
                                      com::unique_id::Hasher,
                                      com::unique_id::Comparator>;
 struct LibraryCore : Library
 {
-    LibraryCore(vm::StackOp      & stack,
-                vm::Memory       & memory,
-                ProcessStack     & processStack,
-                FunctionRegister & functionRegister,
-                Loop             & loop);
+    LibraryCore(context::Storage& contextStorage, Loop& loop);
 
     vm::StackOp      & _stack;
     vm::Memory       & _memory;

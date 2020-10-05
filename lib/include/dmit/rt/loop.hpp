@@ -8,14 +8,14 @@
 namespace dmit::rt
 {
 
+namespace context { class Storage; }
+
 class Loop
 {
 
 public:
 
-    Loop(vm::Machine      & machine,
-         ProcessStack     & processStack,
-         FunctionRegister & functionRegister);
+    Loop(context::Storage& contextStorage);
 
     void load(const vm::Program&,
               const vm::program::Counter);
