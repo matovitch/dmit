@@ -1,5 +1,6 @@
 #include "test.hpp"
 
+#include "dmit/ast/lexeme.hpp"
 #include "dmit/ast/state.hpp"
 #include "dmit/ast/pool.hpp"
 #include "dmit/ast/node.hpp"
@@ -23,9 +24,9 @@ struct Aster
         _parser .clearState();
         _lexer  .clearState();
 
-        const auto& tokens = _lexer(reinterpret_cast<const uint8_t*>(toParse.data()),
-                                                                     toParse.size())._tokens;
-        const auto& parseTree = _parser(tokens)._tree;
+        const auto& lex = _lexer(reinterpret_cast<const uint8_t*>(toParse.data()),
+                                                                  toParse.size());
+        const auto& parseTree = _parser(lex._tokens)._tree;
 
         return _aster(parseTree);
     }
