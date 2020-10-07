@@ -1,6 +1,5 @@
 #include "test.hpp"
 
-#include "dmit/ast/lexeme.hpp"
 #include "dmit/ast/state.hpp"
 #include "dmit/ast/pool.hpp"
 #include "dmit/ast/node.hpp"
