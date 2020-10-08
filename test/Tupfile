@@ -9,6 +9,7 @@ include_rules
           $(ROOT)/<lib_dmit_src> \
           $(ROOT)/<lib_dmit_prs> \
           $(ROOT)/<lib_dmit_ast> \
+          $(ROOT)/<lib_dmit_sem> \
           $(ROOT)/<lib_dmit_vm>  \
           $(ROOT)/<lib_dmit_rt>  \
           $(ROOT)/<lib_doctest>  \

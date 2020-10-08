@@ -357,7 +357,7 @@ void Builder::makeFunction(const dmit::prs::Reader& supReader,
     makeIdentifier(reader, _nodePool.get(function._name));
 }
 
-const State& Builder::operator()(const prs::state::Tree& parseTree)
+State& Builder::operator()(const prs::state::Tree& parseTree)
 {
     dmit::prs::Reader reader{parseTree};
     auto& program = _state._program;

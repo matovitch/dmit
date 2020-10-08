@@ -11,8 +11,6 @@
 
 #include "dmit/lex/state.hpp"
 
-#include <variant>
-
 struct Aster
 {
 
@@ -25,9 +23,9 @@ struct Aster
 
         const auto& lex = _lexer(reinterpret_cast<const uint8_t*>(toParse.data()),
                                                                   toParse.size());
-        const auto& parseTree = _parser(lex._tokens)._tree;
+        const auto& prs = _parser(lex._tokens);
 
-        return _aster(parseTree);
+        return _aster(prs._tree);
     }
 
     dmit::ast::state::Builder _aster;

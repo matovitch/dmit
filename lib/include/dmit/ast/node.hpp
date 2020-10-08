@@ -1,5 +1,6 @@
 #pragma once
 
+#include "dmit/com/unique_id.hpp"
 #include "dmit/com/enum.hpp"
 
 #include "dmit/fmt/formatable.hpp"
@@ -93,6 +94,8 @@ struct TNode<node::Kind::FUN_DEFINITION>
     node::TRange<node::Kind::TYPE_CLAIM     > _arguments;
     node::TIndex<node::Kind::FUN_RETURN     > _returnType;
     node::TIndex<node::Kind::SCOPE          > _body;
+
+    com::UniqueId _id;
 };
 
 template<>

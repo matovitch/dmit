@@ -32,7 +32,7 @@ public:
 
     Builder();
 
-    const State& operator()(const prs::state::Tree& parseTree);
+    State& operator()(const prs::state::Tree& parseTree);
 
 private:
 
