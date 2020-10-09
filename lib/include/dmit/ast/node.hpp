@@ -1,5 +1,7 @@
 #pragma once
 
+#include "dmit/ast/integer.hpp"
+
 #include "dmit/com/unique_id.hpp"
 #include "dmit/com/enum.hpp"
 
@@ -121,6 +123,8 @@ template <>
 struct TNode<node::Kind::LIT_INTEGER>
 {
     node::TIndex<node::Kind::LEXEME> _lexeme;
+
+    Integer _value;
 };
 
 template <>

@@ -8,6 +8,8 @@
 
 #include "dmit/lex/state.hpp"
 
+#include "dmit/src/partition.hpp"
+
 TEST_CASE("sem")
 {
     dmit::ast::state::Builder aster;
@@ -25,5 +27,7 @@ TEST_CASE("sem")
 
     auto& ast = aster(prs._tree);
 
-    dmit::sem::analyze(toParseAsBytes, lex._offsets, ast);
+    dmit::src::Partition partition{toParseAsBytes, lex._offsets};
+
+    dmit::sem::analyze(partition, ast);
 }

@@ -2,14 +2,15 @@
 
 #include "dmit/ast/state.hpp"
 
+#include "dmit/src/partition.hpp"
+
 #include <cstdint>
 #include <vector>
 
 namespace dmit::sem
 {
 
-void analyze(const uint8_t* const source,
-             const std::vector<uint32_t>& offsets,
+void analyze(const dmit::src::Partition& partition,
              dmit::ast::State& ast);
 
 } // namespace dmit::sem
