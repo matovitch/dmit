@@ -3,6 +3,7 @@
 #include "dmit/ast/state.hpp"
 
 #include "dmit/src/partition.hpp"
+#include "dmit/src/slice.hpp"
 
 #include "dmit/com/assert.hpp"
 #include "dmit/com/murmur.hpp"

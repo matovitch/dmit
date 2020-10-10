@@ -7,8 +7,8 @@ ENV TO_INSTALL "               \
     software-properties-common \
     git-core                   \
     curl                       \
-    fuse                       \
-    libfuse-dev                \
+    fuse3                      \
+    libfuse3-dev               \
     wget                       \
     jq                         \
     python2-minimal            \
@@ -20,7 +20,7 @@ ENV TO_REMOVE "                \
     pkg-config                 \
     software-properties-common \
     curl                       \
-    libfuse-dev                \
+    libfuse3-dev               \
     git-core                   \
     wget                       \
     libpcre3-dev               \
