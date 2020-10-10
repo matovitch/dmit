@@ -1,15 +1,12 @@
 #pragma once
 
-#include "topo/details/list/iterator.hpp"
-#include "topo/details/list/steal.hpp"
-#include "topo/details/list/cell.hpp"
+#include "list/iterator.hpp"
+#include "list/steal.hpp"
+#include "list/cell.hpp"
 
-#include "topo/details/pool/pool.hpp"
+#include "pool/pool.hpp"
 
 #include <cstdint>
-
-namespace topo_details
-{
 
 template <class Traits>
 class TList
@@ -100,5 +97,3 @@ template <class Type, std::size_t SIZE>
 using TMake = TList<TTraits<Type, SIZE>>;
 
 } // namespace list
-
-} // namespace topo_details

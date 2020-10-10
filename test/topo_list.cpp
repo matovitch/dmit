@@ -1,11 +1,11 @@
 #include "test.hpp"
 
-#include "topo/details/list/list.hpp"
+#include "list/list.hpp"
 
-using CharList = topo_details::list::TMake<char, 2>;
+using CharList = list::TMake<char, 2>;
 using CharListCellPool = typename CharList::CellPool;
 
-TEST_CASE("topo_details::list")
+TEST_CASE("list")
 {
     CharListCellPool charListCellPool;
 

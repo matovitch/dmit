@@ -1,7 +1,7 @@
 #pragma once
 
-#include "topo/details/list/iterator.hpp"
-#include "topo/details/list/list.hpp"
+#include "list/iterator.hpp"
+#include "list/list.hpp"
 
 namespace topo
 {
@@ -41,11 +41,11 @@ using TMake = TEdge<TTraits<Type, SIZE>>;
 template <class Type, std::size_t SIZE>
 struct TTraits
 {
-    using NodeListIt       = topo_details::list::iterator::TMake<node::TMake<Type, SIZE> >;
-    using EdgeListIt       = topo_details::list::iterator::TMake<edge::TMake<Type, SIZE> >;
-    using EdgeListItListIt = topo_details::list::iterator::TMake<EdgeListIt              >;
+    using NodeListIt       = list::iterator::TMake<node::TMake<Type, SIZE> >;
+    using EdgeListIt       = list::iterator::TMake<edge::TMake<Type, SIZE> >;
+    using EdgeListItListIt = list::iterator::TMake<EdgeListIt              >;
 
-    using EdgeList         = topo_details::list::TMake<edge::TMake<Type, SIZE>, SIZE>;
+    using EdgeList         = list::TMake<edge::TMake<Type, SIZE>, SIZE>;
 };
 
 } // namespace edge

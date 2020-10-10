@@ -1,9 +1,6 @@
 #pragma once
 
-#include "topo/details/pool/allocator.hpp"
-
-namespace topo_details
-{
+#include "pool/details/allocator.hpp"
 
 template <class Allocator>
 class TPool
@@ -33,8 +30,6 @@ namespace pool
 {
 
 template <class Type, std::size_t SIZE>
-using TMake = TPool<allocator::TMake<Type, SIZE>>;
+using TMake = TPool<pool_details::allocator::TMake<Type, SIZE>>;
 
 } // namespace pool
-
-} // namespace topo_details

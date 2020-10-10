@@ -1,18 +1,15 @@
 #pragma once
 
-#include "topo/details/buffer/abstract.hpp"
-#include "topo/details/buffer/stack.hpp"
-#include "topo/details/buffer/heap.hpp"
+#include "pool/details/buffer/abstract.hpp"
+#include "pool/details/buffer/stack.hpp"
+#include "pool/details/buffer/heap.hpp"
 
-#include "topo/details/stack/stack.hpp"
+#include "pool/details/stack/stack.hpp"
 
 #include <cstdint>
 #include <memory>
 
-namespace topo_details
-{
-
-namespace pool
+namespace pool_details
 {
 
 template <class Traits>
@@ -95,6 +92,4 @@ using TMake = TAllocator<TTraits<Type, SIZE>>;
 
 } // namespace allocator
 
-} // namespace pool
-
-} // namespace topo_details
+} // namespace pool_details

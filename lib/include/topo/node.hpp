@@ -1,9 +1,9 @@
 #pragma once
 
-#include "topo/graph/edge.hpp"
+#include "topo/edge.hpp"
 
-#include "topo/details/list/iterator.hpp"
-#include "topo/details/list/list.hpp"
+#include "list/iterator.hpp"
+#include "list/list.hpp"
 
 #include <cstdint>
 
@@ -59,8 +59,8 @@ struct TTraits
 {
     using Type = TypeTraits;
 
-    using EdgeListIt     = topo_details::list::iterator::TMake<edge::TMake<Type, SIZE>>;
-    using EdgeListItList = topo_details::list::TMake<EdgeListIt, SIZE>;
+    using EdgeListIt     = list::iterator::TMake<edge::TMake<Type, SIZE>>;
+    using EdgeListItList = list::TMake<EdgeListIt, SIZE>;
 
     using EdgeListItPool = typename EdgeListItList::CellPool;
 };

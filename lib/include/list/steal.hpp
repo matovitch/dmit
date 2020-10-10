@@ -1,10 +1,7 @@
 #pragma once
 
-#include "topo/details/list/iterator.hpp"
-#include "topo/details/list/cell.hpp"
-
-namespace topo_details
-{
+#include "list/iterator.hpp"
+#include "list/cell.hpp"
 
 template <class>
 class TList;
@@ -50,5 +47,3 @@ void steal(TList<Traits>& lhs,
 }
 
 } // namespace list
-
-} // namespace topo_details

@@ -1,9 +1,6 @@
 #pragma once
 
-#include "topo/details/list/cell.hpp"
-
-namespace topo_details
-{
+#include "list/cell.hpp"
 
 template <class>
 class TList;
@@ -26,7 +23,7 @@ template <class Cell>
 class TIterator
 {
     template <class>
-    friend class ::topo_details::TList; // namespace prefix needed for clang
+    friend class ::TList; // namespace prefix needed for clang
 
     using Type = typename Cell::Type;
 
@@ -113,5 +110,3 @@ using TMake = TIterator<const TCell<Type>>;
 } // namespace const_iterator
 
 } // namespace list
-
-} // namespace topo_details

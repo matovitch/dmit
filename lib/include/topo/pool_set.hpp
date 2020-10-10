@@ -1,9 +1,9 @@
 #pragma once
 
-#include "topo/details/list/list.hpp"
-#include "topo/details/pool/pool.hpp"
-#include "topo/graph/node.hpp"
-#include "topo/graph/edge.hpp"
+#include "topo/node.hpp"
+#include "topo/edge.hpp"
+
+#include "list/list.hpp"
 
 namespace topo
 {
@@ -34,10 +34,10 @@ struct TTraits
     using Node = node::TMake<Type, SIZE>;
     using Edge = edge::TMake<Type, SIZE>;
 
-    using Nodes   = typename topo_details::list::TMake<Node   , SIZE>::CellPool;
-    using Edges   = typename topo_details::list::TMake<Edge   , SIZE>::CellPool;
-    using EdgeIt  = typename topo_details::list::TMake<Edge   , SIZE>::iterator;
-    using EdgeIts = typename topo_details::list::TMake<EdgeIt , SIZE>::CellPool;
+    using Nodes   = typename list::TMake<Node   , SIZE>::CellPool;
+    using Edges   = typename list::TMake<Edge   , SIZE>::CellPool;
+    using EdgeIt  = typename list::TMake<Edge   , SIZE>::iterator;
+    using EdgeIts = typename list::TMake<EdgeIt , SIZE>::CellPool;
 };
 
 template <class Type, std::size_t SIZE>

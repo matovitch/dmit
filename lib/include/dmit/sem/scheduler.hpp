@@ -2,7 +2,7 @@
 
 #include "dmit/sem/task.hpp"
 
-#include "topo/graph/graph.hpp"
+#include "topo/graph.hpp"
 
 #include <cstdint>
 

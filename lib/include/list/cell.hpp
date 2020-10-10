@@ -1,8 +1,5 @@
 #pragma once
 
-namespace topo_details
-{
-
 namespace list
 {
 
@@ -29,5 +26,3 @@ struct TCell
 };
 
 } // namespace list
-
-} // namespace topo_details

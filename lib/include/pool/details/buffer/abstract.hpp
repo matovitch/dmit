@@ -1,6 +1,6 @@
 #pragma once
 
-namespace topo_details
+namespace pool_details
 {
 
 namespace buffer
@@ -16,4 +16,4 @@ struct TAbstract
 
 } // namespace buffer
 
-} // namespace topo_details
+} // namespace pool_details

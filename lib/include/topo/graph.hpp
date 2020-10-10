@@ -1,12 +1,14 @@
 #pragma once
 
-#include "topo/details/list/steal.hpp"
-#include "topo/details/list/cell.hpp"
-#include "topo/details/list/list.hpp"
-#include "topo/details/pool/pool.hpp"
-#include "topo/graph/pool_set.hpp"
-#include "topo/graph/node.hpp"
-#include "topo/graph/edge.hpp"
+#include "topo/pool_set.hpp"
+#include "topo/node.hpp"
+#include "topo/edge.hpp"
+
+#include "list/steal.hpp"
+#include "list/cell.hpp"
+#include "list/list.hpp"
+
+#include "pool/pool.hpp"
 
 #include <optional>
 #include <cstdint>
@@ -49,7 +51,7 @@ public:
     {
         if (lhs->isPending())
         {
-            topo_details::list::steal(_blockeds, _pendings, lhs);
+            list::steal(_blockeds, _pendings, lhs);
         }
 
         _edges.emplace_front(lhs, rhs);
@@ -70,7 +72,7 @@ public:
 
         if (edgeIt->_dependerNode->isPending())
         {
-            topo_details::list::steal(_pendings, _blockeds, edgeIt->_dependerNode);
+            list::steal(_pendings, _blockeds, edgeIt->_dependerNode);
         }
 
         _edges.erase(edgeIt);
@@ -147,13 +149,13 @@ struct TTraits
     using Node = node::TMake<Type, SIZE>;
     using Edge = edge::TMake<Type, SIZE>;
 
-    using EdgeList = topo_details::list::TMake<Edge, SIZE>;
-    using NodeList = topo_details::list::TMake<Node, SIZE>;
+    using EdgeList = list::TMake<Edge, SIZE>;
+    using NodeList = list::TMake<Node, SIZE>;
 
     using NodeListIt = typename NodeList::iterator;
     using EdgeListIt = typename EdgeList::iterator;
 
-    using EdgeItPool = typename topo_details::list::TMake<EdgeListIt, SIZE>::CellPool;
+    using EdgeItPool = typename list::TMake<EdgeListIt, SIZE>::CellPool;
 
     using PoolSet = pool_set::TMake<Type, SIZE>;
 };

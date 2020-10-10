@@ -1,11 +1,11 @@
 #pragma once
 
-#include "topo/details/buffer/abstract.hpp"
+#include "pool/details/buffer/abstract.hpp"
 
 #include <type_traits>
 #include <cstdint>
 
-namespace topo_details
+namespace pool_details
 {
 
 namespace buffer
@@ -86,4 +86,4 @@ using TMake = TStack<TTraits<Type, SIZE>>;
 
 } // namespace buffer
 
-} // namespace topo_details
+} // namespace pool_details

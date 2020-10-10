@@ -1,6 +1,6 @@
 #pragma once
 
-#include "topo/details/stack/chunk.hpp"
+#include "pool/details/stack/chunk.hpp"
 
 #include <type_traits>
 #include <iterator>
@@ -8,7 +8,7 @@
 #include <memory>
 #include <list>
 
-namespace topo_details
+namespace pool_details
 {
 
 template <class Traits>
@@ -136,4 +136,4 @@ using TMake = TStack<TTraits<Type, SIZE>>;
 
 } // namespace stack
 
-} // namespace topo_details
+} // namespace pool_details

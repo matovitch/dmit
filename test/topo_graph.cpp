@@ -1,7 +1,7 @@
 #include "test.hpp"
 
-#include "topo/graph/pool_set.hpp"
-#include "topo/graph/graph.hpp"
+#include "topo/pool_set.hpp"
+#include "topo/graph.hpp"
 
 using CharGraph   = topo::graph::TMake<char, 4>;
 using CharPoolSet = typename CharGraph::PoolSet;

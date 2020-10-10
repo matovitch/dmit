@@ -4,7 +4,7 @@
 #include <utility>
 #include <cstdint>
 
-namespace topo_details
+namespace pool_details
 {
 
 template <std::size_t SIZE>
@@ -102,4 +102,4 @@ private:
 
 } // namespace stack
 
-} // namespace topo_details
+} // namespace pool_details
