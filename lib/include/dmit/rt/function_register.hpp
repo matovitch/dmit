@@ -51,7 +51,7 @@ struct StructuredArg
 };
 
 } // namespace recorder
-} // namesapce function_register
+} // namespace function_register
 
 class FunctionRegister
 {

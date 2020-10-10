@@ -18,15 +18,15 @@ namespace topo
 template <class Traits>
 class TGraph
 {
-    using NodeListIt = typename Traits::NodeListIt;
-    using EdgeListIt = typename Traits::EdgeListIt;
     using EdgeItPool = typename Traits::EdgeItPool;
     using EdgeList   = typename Traits::EdgeList;
     using NodeList   = typename Traits::NodeList;
 
 public:
 
-    using PoolSet  = typename Traits::PoolSet;
+    using NodeListIt = typename Traits::NodeListIt;
+    using EdgeListIt = typename Traits::EdgeListIt;
+    using PoolSet    = typename Traits::PoolSet;
 
     TGraph(PoolSet& poolSet) :
         _edges    {poolSet._edges},

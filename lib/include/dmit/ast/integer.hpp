@@ -11,4 +11,4 @@ struct Integer
     bool _isSigned;
 };
 
-} // namesapce dmit::ast
+} // namespace dmit::ast

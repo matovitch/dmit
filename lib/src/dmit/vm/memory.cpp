@@ -21,4 +21,4 @@ void Memory::copy(const uint8_t* const data, const uint64_t size, const uint64_t
     std::memcpy(_asBytes.data() + address, data, size);
 }
 
-} // namesapce dmit::vm
+} // namespace dmit::vm

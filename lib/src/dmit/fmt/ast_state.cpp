@@ -179,4 +179,4 @@ std::string asString(const ast::State& state)
     return oss.str();
 }
 
-} // namesapce dmit::fmt
+} // namespace dmit::fmt
