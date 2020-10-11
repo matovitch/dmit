@@ -10,35 +10,63 @@
 
 #include "pool/pool.hpp"
 
+#include <optional>
+
 namespace dmit::sem
 {
 
-template <class Type>
+template <class Type, std::size_t SIZE>
 class TTask;
 
 namespace task
 {
 
-struct Abstract
+template <std::size_t SIZE>
+class TAbstract
 {
+    using Lock = typename topo::graph::TMake<task::TAbstract<SIZE>*, SIZE>::EdgeListIt;
+
+public:
+
+    TAbstract(const uint64_t fenceTime) : _fenceTime{fenceTime} {}
+
     virtual void run() = 0;
 
-    virtual ~Abstract() {}
+    virtual ~TAbstract() {}
 
     template <class Type>
-    TTask<Type>& as()
+    TTask<Type, SIZE>& as()
     {
-        return reinterpret_cast<TTask<Type>&>(*this);
+        return reinterpret_cast<TTask<Type, SIZE>&>(*this);
     }
+
+    void registerLock(const Lock lock)
+    {
+        _lockOpt = lock;
+    }
+
+    Lock lock() const
+    {
+        DMIT_COM_ASSERT(_lockOpt);
+        return _lockOpt.value();
+    }
+
+    const uint64_t _fenceTime;
+
+private:
+
+    std::optional<Lock> _lockOpt;
 };
 
 } // namespace task
 
-template <class Type>
-class TTask : public task::Abstract
+template <class Type, std::size_t SIZE>
+class TTask : public task::TAbstract<SIZE>
 {
 
 public:
+
+    TTask(const uint64_t fenceTime) : task::TAbstract<SIZE>{fenceTime} {}
 
     void assignWork(TWork<Type>& work)
     {
@@ -72,17 +100,17 @@ private:
 namespace task
 {
 
-template <class Type>
-using TPool = pool::TMake<TTask<Type>, 0x10>;
+template <class Type, std::size_t SIZE>
+using TPool = pool::TMake<TTask<Type, SIZE>, 0x10>;
 
 template <class Type, std::size_t SIZE>
 struct TWrapper
 {
-    using NodeItType = typename topo::graph::TMake<task::Abstract*, SIZE>::NodeListIt;
+    using NodeItType = typename topo::graph::TMake<task::TAbstract<SIZE>*, SIZE>::NodeListIt;
 
     TWrapper(NodeItType value) : _value{value} {}
 
-    TTask<Type>& operator()()
+    TTask<Type, SIZE>& operator()()
     {
         return _value->_value->template as<Type>();
     }

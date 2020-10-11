@@ -50,7 +50,7 @@ TEST_CASE("semSched")
 
     dmit::sem::Scheduler scheduler;
 
-    dmit::sem::task::TPool<char> taskPool;
+    dmit::sem::Scheduler::TTaskPool<char> taskPool;
 
     auto taskA = scheduler.makeTask(taskPool);
     auto taskB = scheduler.makeTask(taskPool);
