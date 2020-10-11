@@ -44,6 +44,8 @@ public:
 
         task.registerLock(_taskGraph.attach(taskWrapper._value,
                                             taskWrapper._value));
+        _fences.push_back(&task);
+        
         return taskWrapper;
     }
 
