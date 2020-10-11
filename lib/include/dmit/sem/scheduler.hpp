@@ -12,42 +12,50 @@ namespace dmit::sem
 template <std::size_t SIZE>
 class TScheduler
 {
-    using TaskGraph  = topo::graph::TMake<task::Abstract*, SIZE>;
 
 public:
 
+    using TaskGraph  = topo::graph::TMake<task::Abstract*, SIZE>;
     using PoolSet    = typename TaskGraph::PoolSet;
-    using Task       = typename TaskGraph::NodeListIt;
     using Dependency = typename TaskGraph::EdgeListIt;
 
-    TScheduler(PoolSet& poolSet) : _taskGraph{poolSet} {}
+    template <class Type>
+    using TTaskWrapper = task::TWrapper<Type, SIZE>;
+
+    TScheduler() : _taskGraph{_poolSet} {}
 
     template <class Type>
-    Task makeTask(task::TPool<Type>& taskPool)
+    TTaskWrapper<Type> makeTask(task::TPool<Type>& taskPool)
     {
         auto& task = taskPool.make();
-        return _taskGraph.makeNode(&task);
+        return TTaskWrapper<Type>{_taskGraph.makeNode(&task)};
     }
 
-    Dependency attach(Task lhs,
-                      Task rhs)
+    template <class Type>
+    Dependency attach(TTaskWrapper<Type> lhs,
+                      TTaskWrapper<Type> rhs)
     {
-        rhs->_value->message().send();
-        return _taskGraph.attach(lhs, rhs);
+        rhs().message().send();
+        return _taskGraph.attach(lhs._value,
+                                 rhs._value);
     }
 
     void run()
     {
         while (!_taskGraph.empty())
         {
-            _taskGraph.top()->_value->run();
-            _taskGraph.pop(_taskGraph.top());
+            auto top = _taskGraph.top();
+            top->_value->run();
+            _taskGraph.pop(top);
         }
     }
 
 private:
 
+    PoolSet _poolSet;
     TaskGraph _taskGraph;
 };
+
+using Scheduler = dmit::sem::TScheduler<1>;
 
 } // namespace dmit::sem

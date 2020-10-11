@@ -1,12 +1,12 @@
 #pragma once
 
-#include "dmit/rt/call_stack_pool.hpp"
-
 #include "dmit/vm/process.hpp"
 #include "dmit/vm/program.hpp"
 
 #include "dmit/com/unique_id.hpp"
 #include "dmit/com/sha256.hpp"
+
+#include "pool/pool.hpp"
 
 #include <stack>
 
@@ -32,7 +32,9 @@ public:
 
 private:
 
-    CallStackPool _callStackPool;
+    const uint16_t _callStackSize;
+
+    pool::TMake<vm::StackCall::Storage, 1> _callStackPool;
 
     std::stack<vm::Process   > _processes;
     std::stack<com::UniqueId > _uniqueIds;

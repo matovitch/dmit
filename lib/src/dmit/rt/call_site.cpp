@@ -23,18 +23,4 @@ void CallSite::call(const uint8_t* const)
     _processStack.push(_program, _programCounter);
 }
 
-namespace call_site
-{
-
-CallSite& Pool::make(const vm::program::Counter programCounter,
-                     const vm::Program  &       program,
-                           ProcessStack &       processStack)
-{
-    _callSites.emplace_back(std::make_unique<CallSite>(programCounter,
-                                                       program,
-                                                       processStack));
-    return *(_callSites.back());
-}
-
-} // namespace call_site
 } // namespace dmit::rt

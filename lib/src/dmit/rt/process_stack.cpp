@@ -1,6 +1,5 @@
 #include "dmit/rt/process_stack.hpp"
 
-#include "dmit/vm/process.hpp"
 #include "dmit/vm/program.hpp"
 
 #include "dmit/com/unique_id.hpp"
@@ -11,14 +10,14 @@ namespace dmit::rt
 {
 
 ProcessStack::ProcessStack(const uint16_t callStackSize, const com::sha256::Seed& seed) :
-    _callStackPool{callStackSize},
+    _callStackSize{callStackSize},
     _uniqueIdSequence{seed}
 {}
 
 void ProcessStack::push(const vm::Program&     program,
                         const vm::program::Counter programCounter)
 {
-    _processes.emplace(_callStackPool.make(), program, programCounter);
+    _processes.emplace(_callStackPool.make(_callStackSize), program, programCounter);
     _uniqueIds.emplace(_uniqueIdSequence.nextId());
 }
 

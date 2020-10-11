@@ -5,6 +5,8 @@
 
 #include "dmit/vm/program.hpp"
 
+#include "pool/pool.hpp"
+
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -34,19 +36,7 @@ private:
 namespace call_site
 {
 
-class Pool
-{
-
-public:
-
-    CallSite& make(const vm::program::Counter programCounter,
-                   const vm::Program  &       program,
-                         ProcessStack &       processStack);
-
-private:
-
-    std::vector<std::unique_ptr<CallSite>> _callSites; // TODO make better
-};
+using Pool = pool::TMake<CallSite, 0x10>;
 
 } // namespace call_site
 } // namespace dmit::rt

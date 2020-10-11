@@ -6,6 +6,10 @@
 #include "dmit/com/option_reference.hpp"
 #include "dmit/com/assert.hpp"
 
+#include "topo/graph.hpp"
+
+#include "pool/pool.hpp"
+
 namespace dmit::sem
 {
 
@@ -74,20 +78,21 @@ namespace task
 {
 
 template <class Type>
-class TPool
+using TPool = pool::TMake<TTask<Type>, 0x10>;
+
+template <class Type, std::size_t SIZE>
+struct TWrapper
 {
+    using NodeItType = typename topo::graph::TMake<task::Abstract*, SIZE>::NodeListIt;
 
-public:
+    TWrapper(NodeItType value) : _value{value} {}
 
-    TTask<Type>& make()
+    TTask<Type>& operator()()
     {
-        _pool.emplace_back(std::make_unique<TTask<Type>>());
-        return *(_pool.back());
+        return _value->_value->template as<Type>();
     }
 
-private:
-
-    std::vector<std::unique_ptr<TTask<Type>>> _pool; // TODO replace with topo's pool
+    NodeItType _value;
 };
 
 } // namespace task

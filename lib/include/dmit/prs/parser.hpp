@@ -6,6 +6,8 @@
 
 #include "dmit/lex/reader.hpp"
 
+#include "pool/pool.hpp"
+
 #include <functional>
 #include <optional>
 #include <memory>
@@ -68,15 +70,14 @@ public:
               class Close = close ::TPipeline<>>
     TParser<Open, Close> make(State& state)
     {
-        _fnPtrs.emplace_back(new std::optional<Fn>);
+        auto& fnPtr = _fnPtrs.make();
 
-        return TParser<Open, Close>{*(_fnPtrs.back()), state};
+        return TParser<Open, Close>{fnPtr, state};
     }
 
 private:
 
-    // TODO: Improve the allocation pattern here.
-    std::vector<std::unique_ptr<std::optional<Fn>>> _fnPtrs;
+    pool::TMake<std::optional<Fn>, 0x100> _fnPtrs;
 };
 
 } // namespace parser

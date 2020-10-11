@@ -38,11 +38,17 @@ TEST_CASE("sem")
 
 TEST_CASE("semSched")
 {
-    using Scheduler = dmit::sem::TScheduler<1>;
+    dmit::sem::message::TPool<char> messagePool;
 
-    Scheduler::PoolSet schedulerPoolSet;
+    auto& mesgA = messagePool.make();
+    auto& mesgB = messagePool.make();
+    auto& mesgC = messagePool.make();
 
-    Scheduler scheduler{schedulerPoolSet};
+    dmit::sem::TWork<char> workA{[]{std::cout << "A\n"; return 'A';}, mesgA};
+    dmit::sem::TWork<char> workB{[]{std::cout << "B\n"; return 'B';}, mesgB};
+    dmit::sem::TWork<char> workC{[]{std::cout << "C\n"; return 'C';}, mesgC};
+
+    dmit::sem::Scheduler scheduler;
 
     dmit::sem::task::TPool<char> taskPool;
 
@@ -50,20 +56,14 @@ TEST_CASE("semSched")
     auto taskB = scheduler.makeTask(taskPool);
     auto taskC = scheduler.makeTask(taskPool);
 
-    dmit::sem::TMessage<char> mesgA;
-    dmit::sem::TMessage<char> mesgB;
-    dmit::sem::TMessage<char> mesgC;
-
-    dmit::sem::TWork<char> workA{[]{std::cout << "A\n"; return 'A';}, mesgA};
-    dmit::sem::TWork<char> workB{[]{std::cout << "B\n"; return 'B';}, mesgB};
-    dmit::sem::TWork<char> workC{[]{std::cout << "C\n"; return 'C';}, mesgC};
-
-    taskA->_value->as<char>().assignWork(workA);
-    taskB->_value->as<char>().assignWork(workB);
-    taskC->_value->as<char>().assignWork(workC);
+    taskA().assignWork(workA);
+    taskB().assignWork(workB);
+    taskC().assignWork(workC);
 
     /*auto depAB = */scheduler.attach(taskA, taskB);
     /*auto depCA = */scheduler.attach(taskC, taskA);
+
+    mesgC.send(); // simulate for refCount
 
     scheduler.run();
 
