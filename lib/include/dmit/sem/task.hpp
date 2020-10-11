@@ -21,10 +21,6 @@ namespace task
 
 struct Abstract
 {
-    virtual message::Abstract& message() = 0;
-
-    virtual work::Abstract& work() = 0;
-
     virtual void run() = 0;
 
     virtual ~Abstract() {}
@@ -49,16 +45,15 @@ public:
         _work = work;
     }
 
-    work::Abstract& work() override
+    TWork<Type>& work()
     {
         DMIT_COM_ASSERT(_work);
         return _work.value().get();
     }
 
-    message::Abstract& message() override
+    TMessage<Type> message()
     {
-        DMIT_COM_ASSERT(_work);
-        return work().message();
+        return work()._message;
     }
 
     void run() override

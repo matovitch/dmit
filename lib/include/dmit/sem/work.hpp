@@ -8,30 +8,7 @@ namespace dmit::sem
 {
 
 template <class Type>
-class TWork;
-
-namespace work
-{
-
-struct Abstract
-{
-    virtual void run() = 0;
-
-    virtual message::Abstract& message() = 0;
-
-    virtual ~Abstract(){}
-
-    template <class Type>
-    TWork<Type>& as()
-    {
-        return reinterpret_cast<TWork<Type>&>(*this);
-    }
-};
-
-} // namespace work
-
-template <class Type>
-class TWork : public work::Abstract
+class TWork
 {
 
 public:
@@ -43,12 +20,7 @@ public:
         _message{message}
     {}
 
-    message::Abstract& message() override
-    {
-        return _message;
-    }
-
-    void run() override
+    void run()
     {
         _message.write(_function());
     }
@@ -56,6 +28,9 @@ public:
 private:
 
     const std::function<Type()> _function;
+
+public:
+
     TMessage<Type>& _message;
 };
 

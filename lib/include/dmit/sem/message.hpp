@@ -13,28 +13,6 @@ class TMessage;
 namespace message
 {
 
-class Abstract
-{
-
-public:
-
-    void send();
-
-    void retrieve();
-
-    bool isValid() const;
-
-    template <class Type>
-    TMessage<Type>& as()
-    {
-        return reinterpret_cast<TMessage<Type>&>(*this);
-    }
-
-private:
-
-    uint32_t _refCount = 0;
-};
-
 template <class Type>
 class TPool
 {
@@ -59,7 +37,7 @@ private:
 } // namespace message
 
 template <class Type>
-class TMessage : public message::Abstract
+class TMessage
 {
 
 public:
@@ -68,6 +46,11 @@ public:
         _pool{pool}
     {}
 
+    void send()
+    {
+        _refCount++;
+    }
+
     void write(const Type value)
     {
         _value = value;
@@ -75,9 +58,9 @@ public:
 
     Type read()
     {
-        this->message::Abstract::retrieve();
+        _refCount--;
 
-        if (!this->message::Abstract::isValid())
+        if (!_refCount)
         {
             _pool.recycle(*this);
         }
@@ -87,6 +70,7 @@ public:
 
 private:
 
+    uint32_t _refCount = 0;
     Type _value;
     message::TPool<Type>& _pool;
 };

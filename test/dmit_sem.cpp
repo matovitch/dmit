@@ -70,8 +70,4 @@ TEST_CASE("semSched")
     std::cout << mesgA.read() << '\n';
     std::cout << mesgB.read() << '\n';
     std::cout << mesgC.read() << '\n';
-
-    std::cout << mesgA.isValid() << '\n';
-    std::cout << mesgB.isValid() << '\n';
-    std::cout << mesgC.isValid() << '\n';
 }
