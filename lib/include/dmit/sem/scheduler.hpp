@@ -51,6 +51,12 @@ public:
     Dependency attach(TTaskWrapper<Type> lhs,
                       TTaskWrapper<Type> rhs)
     {
+        if (lhs().hasLock())
+        {
+            _taskGraph.detach(lhs().lock());
+            lhs().removeLock();
+        }
+
         rhs().message().send();
         return _taskGraph.attach(lhs._value,
                                  rhs._value);
@@ -64,7 +70,7 @@ public:
             top->_value->run();
             _taskGraph.pop(top);
 
-            if (_taskGraph.empty())
+            while (_taskGraph.empty() && !_fences.empty())
             {
                 unlockFences();
             }
@@ -73,11 +79,6 @@ public:
 
     void unlockFences()
     {
-        if (_fences.empty())
-        {
-            return;
-        }
-
         int limit = _fences.size() - 2;
 
         while (limit != -1)
@@ -96,23 +97,30 @@ public:
 
         for (int i = 0; i < limit; i++)
         {
-            if (_fences[i]->_fenceTime > _fences[limit]->_fenceTime)
+            if (_fences[i]->fenceTime() > _fences[limit]->fenceTime())
             {
                 continue;
             }
 
-            limit = (_fences[i]->_fenceTime < _fences[limit]->_fenceTime) ? _fences.size() - 1
-                                                                          : limit - 1;
+            limit = (_fences[i]->fenceTime() < _fences[limit]->fenceTime()) ? _fences.size() - 1
+                                                                            : limit - 1;
             auto tmp = _fences[i];
             _fences[i] = _fences[limit];
             _fences[limit] = tmp;
         }
 
-        _fenceTime = _fences[limit]->_fenceTime;
+        if (_fenceTime < _fences[limit]->fenceTime())
+        {
+            _fenceTime = _fences[limit]->fenceTime();
+        }
 
         for (int j = _fences.size() - 1; j >= limit; j--)
         {
-            _taskGraph.detach(_fences[j]->lock());
+            if (_fences[j]->hasLock())
+            {
+                _taskGraph.detach(_fences[j]->lock());
+            }
+
             _fences.pop_back();
         }
     }

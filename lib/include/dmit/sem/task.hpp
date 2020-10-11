@@ -45,16 +45,31 @@ public:
         _lockOpt = lock;
     }
 
+    void removeLock()
+    {
+        _fenceTime = 0;
+        _lockOpt = std::nullopt;
+    }
+
     Lock lock() const
     {
         DMIT_COM_ASSERT(_lockOpt);
         return _lockOpt.value();
     }
 
-    const uint64_t _fenceTime;
+    bool hasLock() const
+    {
+        return _lockOpt.operator bool();
+    }
+
+    uint64_t fenceTime() const
+    {
+        return _fenceTime;
+    }
 
 private:
 
+    uint64_t _fenceTime;
     std::optional<Lock> _lockOpt;
 };
 
