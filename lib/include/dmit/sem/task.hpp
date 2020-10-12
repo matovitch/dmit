@@ -28,8 +28,6 @@ class TAbstract
 
 public:
 
-    TAbstract(const uint64_t fenceTime) : _fenceTime{fenceTime} {}
-
     virtual void run() = 0;
 
     virtual ~TAbstract() {}
@@ -40,14 +38,13 @@ public:
         return reinterpret_cast<TTask<Type, SIZE>&>(*this);
     }
 
-    void registerLock(const Lock lock)
+    void insertLock(const Lock lock)
     {
         _lockOpt = lock;
     }
 
     void removeLock()
     {
-        _fenceTime = 0;
         _lockOpt = std::nullopt;
     }
 
@@ -62,14 +59,8 @@ public:
         return _lockOpt.operator bool();
     }
 
-    uint64_t fenceTime() const
-    {
-        return _fenceTime;
-    }
-
 private:
 
-    uint64_t _fenceTime;
     std::optional<Lock> _lockOpt;
 };
 
@@ -81,8 +72,6 @@ class TTask : public task::TAbstract<SIZE>
 
 public:
 
-    TTask(const uint64_t fenceTime) : task::TAbstract<SIZE>{fenceTime} {}
-
     void assignWork(TWork<Type>& work)
     {
         _work = work;
@@ -92,11 +81,6 @@ public:
     {
         DMIT_COM_ASSERT(_work);
         return _work.value().get();
-    }
-
-    TMessage<Type> message()
-    {
-        return work()._message;
     }
 
     void run() override

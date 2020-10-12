@@ -2,6 +2,7 @@
 
 #include "dmit/sem/scheduler.hpp"
 #include "dmit/sem/analyze.hpp"
+#include "dmit/sem/context.hpp"
 #include "dmit/sem/message.hpp"
 #include "dmit/sem/task.hpp"
 #include "dmit/sem/work.hpp"
@@ -33,7 +34,9 @@ TEST_CASE("sem")
 
     dmit::src::Partition partition{toParseAsBytes, lex._offsets};
 
-    dmit::sem::analyze(partition, ast);
+    dmit::sem::Context semContext{partition, ast._nodePool};
+
+    dmit::sem::analyze(ast, semContext);
 }
 
 TEST_CASE("semSched")
@@ -44,9 +47,11 @@ TEST_CASE("semSched")
     auto& mesgB = messagePool.make();
     auto& mesgC = messagePool.make();
 
-    dmit::sem::TWork<char> workA{[]{std::cout << "A\n"; return 'A';}, mesgA};
-    dmit::sem::TWork<char> workB{[]{std::cout << "B\n"; return 'B';}, mesgB};
-    dmit::sem::TWork<char> workC{[]{std::cout << "C\n"; return 'C';}, mesgC};
+    dmit::sem::work::TPool<char> workPool;
+
+    auto& workA = workPool.make([]{std::cout << "A\n"; return 'A';}, mesgA);
+    auto& workB = workPool.make([]{std::cout << "B\n"; return 'B';}, mesgB);
+    auto& workC = workPool.make([]{std::cout << "C\n"; return 'C';}, mesgC);
 
     dmit::sem::Scheduler scheduler;
 

@@ -2,6 +2,8 @@
 
 #include "dmit/sem/task.hpp"
 
+#include "dmit/com/assert.hpp"
+
 #include "topo/graph.hpp"
 
 #include <cstdint>
@@ -32,21 +34,16 @@ public:
     template <class Type>
     TTaskWrapper<Type> makeTask(TTaskPool<Type>& taskPool)
     {
-        auto& task = taskPool.make(0);
+        auto& task = taskPool.make();
         return TTaskWrapper<Type>{_taskGraph.makeNode(&task)};
     }
 
     template <class Type>
-    TTaskWrapper<Type> makeTaskAsFence(TTaskPool<Type>& taskPool, const uint64_t fenceTtl)
+    void registerFence(TTaskWrapper<Type>& task)
     {
-        auto& task = taskPool.make(_fenceTime + fenceTtl);
-        auto taskWrapper = TTaskWrapper<Type>{_taskGraph.makeNode(&task)};
-
-        task.registerLock(_taskGraph.attach(taskWrapper._value,
-                                            taskWrapper._value));
-        _fences.push_back(&task);
-        
-        return taskWrapper;
+        task().insertLock(_taskGraph.attach(task._value,
+                                              task._value));
+        _fences.push_back(&(task()));
     }
 
     template <class Type>
@@ -59,7 +56,7 @@ public:
             lhs().removeLock();
         }
 
-        rhs().message().send();
+        rhs().work()._message.send();
         return _taskGraph.attach(lhs._value,
                                  rhs._value);
     }
@@ -72,59 +69,23 @@ public:
             top->_value->run();
             _taskGraph.pop(top);
 
-            while (_taskGraph.empty() && !_fences.empty())
-            {
-                unlockFences();
-            }
+            unlockFences();
         }
+
+        DMIT_COM_ASSERT(!_taskGraph.isCyclic());
     }
 
     void unlockFences()
     {
-        int limit = _fences.size() - 2;
-
-        while (limit != -1)
+        for (auto& fence : _fences)
         {
-            if (_fences[limit + 1] == _fences[limit])
+            if (fence->hasLock())
             {
-                limit--;
-            }
-            else
-            {
-                break;
+                _taskGraph.detach(fence->lock());
             }
         }
 
-        limit++;
-
-        for (int i = 0; i < limit; i++)
-        {
-            if (_fences[i]->fenceTime() > _fences[limit]->fenceTime())
-            {
-                continue;
-            }
-
-            limit = (_fences[i]->fenceTime() < _fences[limit]->fenceTime()) ? _fences.size() - 1
-                                                                            : limit - 1;
-            auto tmp = _fences[i];
-            _fences[i] = _fences[limit];
-            _fences[limit] = tmp;
-        }
-
-        if (_fenceTime < _fences[limit]->fenceTime())
-        {
-            _fenceTime = _fences[limit]->fenceTime();
-        }
-
-        for (int j = _fences.size() - 1; j >= limit; j--)
-        {
-            if (_fences[j]->hasLock())
-            {
-                _taskGraph.detach(_fences[j]->lock());
-            }
-
-            _fences.pop_back();
-        }
+        _fences.clear();
     }
 
 private:
@@ -132,7 +93,6 @@ private:
     PoolSet _poolSet;
     TaskGraph _taskGraph;
     std::vector<task::TAbstract<SIZE>*> _fences;
-    uint64_t _fenceTime = 0;
 };
 
 using Scheduler = dmit::sem::TScheduler<1>;

@@ -2,6 +2,7 @@
 
 #include "pool/pool.hpp"
 
+#include <functional>
 #include <cstdint>
 
 namespace dmit::sem
@@ -51,9 +52,9 @@ public:
         _refCount++;
     }
 
-    void write(const Type value)
+    void write(const std::function<Type()>& function)
     {
-        _value = value;
+        _value = function();
     }
 
     Type read()
@@ -73,6 +74,17 @@ private:
     uint32_t _refCount = 0;
     Type _value;
     message::TPool<Type>& _pool;
+};
+
+template <>
+struct TMessage<void>
+{
+    void send() {}
+
+    void write(const std::function<void()>& function)
+    {
+        function();
+    }
 };
 
 } // namespace dmit::sem

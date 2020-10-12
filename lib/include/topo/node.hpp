@@ -66,7 +66,5 @@ struct TTraits
 };
 
 } // namespace node
-
 } // namespace graph
-
 } // namespace topo
