@@ -67,9 +67,9 @@ public:
 
     uint32_t make(const uint32_t size)
     {
-        const uint32_t counter = _counter + 1;
+        const uint32_t counter = _counter;
 
-        _counter += size;
+        _counter += size + 1;
 
         if ((_counter >> LOG2_SIZE) + 1 > _chunks.size())
         {

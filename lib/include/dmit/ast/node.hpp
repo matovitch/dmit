@@ -45,11 +45,31 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
 };
 
 template <com::TEnumIntegerType<Kind> KIND>
-struct TIndex
+struct TIndex;
+
+struct Location
 {
     using Type = uint32_t;
 
-    Type _value;
+    template <com::TEnumIntegerType<Kind> KIND>
+    TIndex<KIND> as() const
+    {
+        return TIndex<KIND>{_index};
+    }
+
+    com::TEnumIntegerType<Kind> _kind;
+    Type _index;
+};
+
+template <com::TEnumIntegerType<Kind> KIND>
+struct TIndex
+{
+    Location location() const
+    {
+        return Location{KIND, _value};
+    }
+
+    typename Location::Type _value;
 };
 
 template <com::TEnumIntegerType<Kind> KIND>
@@ -105,6 +125,8 @@ struct TNode<node::Kind::TYPE_CLAIM>
 {
     node::TIndex<node::Kind::LIT_IDENTIFIER> _variable;
     node::TIndex<node::Kind::LIT_IDENTIFIER> _type;
+
+    com::UniqueId _id;
 };
 
 template <>

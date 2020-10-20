@@ -30,21 +30,108 @@ src::Slice getSlice(const ast::node::TIndex<KIND>& node,
            );
 };
 
-struct AnalyzerFunction
+struct FunctionAnalyzer
 {
-    AnalyzerFunction(const ast::node::TIndex<ast::node::Kind::FUN_DEFINITION>& functionIdx,
+    FunctionAnalyzer(const ast::node::TIndex<ast::node::Kind::FUN_DEFINITION>& functionIdx,
                      Context& context) :
         _functionIdx{functionIdx},
         _context{context}
     {}
 
+    void defineName(ast::TNode<ast::node::Kind::FUN_DEFINITION>& function)
+    {
+        // 1. Compute definition key
+        const auto& functionName = getSlice(function._name, _context);
+
+        dmit::com::murmur::hash(functionName._head, functionName.size(), function._id);
+
+        dmit::com::murmur::combine(_context.DEFINE, function._id);
+
+        // 2. Check possible redefinition
+        auto fitFact = _context._factMap.find(function._id);
+
+        const auto functionLocation = _functionIdx.location();
+
+        if (fitFact != _context._factMap.end())
+        {
+            // 2.1 notifyRedefinitionError(fitFact->second, functionLocation, _context);
+            DMIT_COM_ASSERT(!"Function redefinition");
+        }
+
+        // 3. Notify pending task if it exists
+        auto fitTask = _context._taskMap.find(function._id);
+
+        if (fitTask != _context._taskMap.end())
+        {
+            _context._scheduler.unlock(fitTask->second);
+        }
+
+        // 4. Register definition key
+        _context._factMap.emplace(function._id, functionLocation);
+    }
+
+    void defineArg(const ast::node::TIndex<ast::node::Kind::TYPE_CLAIM> argumentIdx,
+                   const ast::TNode<ast::node::Kind::FUN_DEFINITION>& function)
+    {
+        auto& argument = _context._astNodePool.get(argumentIdx);
+
+        // 1. Compute definition key
+        const auto& argumentVariable = getSlice(argument._variable, _context);
+
+        dmit::com::murmur::hash(argumentVariable._head, argumentVariable.size(), argument._id);
+
+        dmit::com::murmur::combine(_context.ARGUMENT_OF, argument._id);
+        dmit::com::murmur::combine(function._id, argument._id);
+
+        // 2. Check possible redefinition
+        auto fitFact = _context._factMap.find(argument._id);
+
+        const auto argumentLocation = argumentIdx.location();
+
+        if (fitFact != _context._factMap.end())
+        {
+            // 2.1 notifyRedefinitionError(fitFact->second, argumentLocation, _context);
+            DMIT_COM_ASSERT(!"Argument redefinition");
+        }
+
+        // 3. Register definition key
+        _context._factMap.emplace(argument._id, argumentLocation);
+    }
+
+    void analyzeVariant(const ast::node::TIndex<ast::node::Kind::SCOPE_VARIANT> variantIdx,
+                        const ast::TNode<ast::node::Kind::FUN_DEFINITION>& function)
+    {
+        //auto& variant = _context._astNodePool.get(variantIdx)._value;
+        //TODO visit
+    }
+
+    void analyzeBody(const ast::TNode<ast::node::Kind::FUN_DEFINITION>& function)
+    {
+        auto& variants = _context._astNodePool.get(function._body)._variants;
+
+        for (uint32_t i = 0; i < variants._size; i++)
+        {
+            analyzeVariant(variants[i], function);
+        }
+    }
+
     void operator()()
     {
         auto& function = _context._astNodePool.get(_functionIdx);
 
-        const auto& functionName = getSlice(function._name, _context);
+        // Name
+        defineName(function);
 
-        dmit::com::murmur::hash(functionName._head, functionName.size(), function._id);
+        // Arguments
+        auto& arguments = function._arguments;
+
+        for (uint32_t i = 0; i < arguments._size; i++)
+        {
+            defineArg(arguments[i], function);
+        }
+
+        // Body
+        analyzeBody(function);
     }
 
     const ast::node::TIndex<ast::node::Kind::FUN_DEFINITION> _functionIdx;
@@ -60,9 +147,9 @@ void analyze(ast::State& ast,
 
     for (uint32_t i = 0; i < functions._size; i++)
     {
-        auto task = context._scheduler.makeTask(context._taskVoidPool);
+        auto task = context._scheduler.makeTask(context._taskPool);
 
-        auto& work = context._workVoidPool.make(AnalyzerFunction{functions[i], context}, context._mesgVoid);
+        auto& work = context._workPool.make(FunctionAnalyzer{functions[i], context});
 
         task().assignWork(work);
     }

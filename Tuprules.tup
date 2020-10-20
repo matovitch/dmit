@@ -4,7 +4,7 @@ ROOT = $(TUP_CWD)
 # CPP TO OBJ #
 ##############
 
-CX = clang++
+CX = clang++-11
 
 CXFLAGS += -std=c++17
 CXFLAGS += -Wall
@@ -54,7 +54,7 @@ CXFLAGS += -I $(ROOT)/lib/include
 
 CL = $(CX)
 
-CLFLAGS += -fuse-ld=lld
+CLFLAGS += -fuse-ld=lld-11
 
 ifeq (@(IS_ASAN),y)
     CLFLAGS += -fsanitize=address

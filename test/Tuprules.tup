@@ -25,4 +25,3 @@ CLFLAGS += -L $(ROOT)/lib/src/dmit/ast
 CLFLAGS += -L $(ROOT)/lib/src/dmit/sem
 CLFLAGS += -L $(ROOT)/lib/src/dmit/vm
 CLFLAGS += -L $(ROOT)/lib/src/dmit/rt
-CLFLAGS += -L $(ROOT)/lib/src/doctest

@@ -7,6 +7,9 @@
 namespace dmit::sem
 {
 
+const com::UniqueId Context::ARGUMENT_OF {"@ArgumentOf"};
+const com::UniqueId Context::DEFINE      {"@Define"};
+
 Context::Context(const dmit::src::Partition& srcPartition,
                  ast::State::NodePool&       astNodePool) :
     _srcPartition{srcPartition},

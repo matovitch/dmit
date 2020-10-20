@@ -8,7 +8,6 @@
 
 #include <cstdint>
 #include <vector>
-#include <limits>
 
 namespace dmit::sem
 {
@@ -19,44 +18,44 @@ class TScheduler
 
 public:
 
-    using TaskGraph  = topo::graph::TMake<task::TAbstract<SIZE>*, SIZE>;
+    using TaskWrapper = task::TWrapper <SIZE>;
+    using TaskPool    = task::TPool    <SIZE>;
+    using Task        = TTask          <SIZE>;
+
+    using TaskGraph  = topo::graph::TMake<Task*, SIZE>;
+
     using PoolSet    = typename TaskGraph::PoolSet;
     using Dependency = typename TaskGraph::EdgeListIt;
 
-    template <class Type>
-    using TTaskPool = task::TPool<Type, SIZE>;
-
-    template <class Type>
-    using TTaskWrapper = task::TWrapper<Type, SIZE>;
-
     TScheduler() : _taskGraph{_poolSet} {}
 
-    template <class Type>
-    TTaskWrapper<Type> makeTask(TTaskPool<Type>& taskPool)
+    TaskWrapper makeTask(TaskPool& taskPool)
     {
         auto& task = taskPool.make();
-        return TTaskWrapper<Type>{_taskGraph.makeNode(&task)};
+        return TaskWrapper{_taskGraph.makeNode(&task)};
     }
 
-    template <class Type>
-    void registerFence(TTaskWrapper<Type>& task)
+    void registerFence(TaskWrapper task)
     {
         task().insertLock(_taskGraph.attach(task._value,
-                                              task._value));
+                                            task._value));
         _fences.push_back(&(task()));
     }
 
-    template <class Type>
-    Dependency attach(TTaskWrapper<Type> lhs,
-                      TTaskWrapper<Type> rhs)
+    void unlock(TaskWrapper task)
     {
-        if (lhs().hasLock())
+        if (task().hasLock())
         {
-            _taskGraph.detach(lhs().lock());
-            lhs().removeLock();
+            _taskGraph.detach(task().lock());
+            task().removeLock();
         }
+    }
 
-        rhs().work()._message.send();
+    Dependency attach(TaskWrapper lhs,
+                      TaskWrapper rhs)
+    {
+        unlock(lhs);
+
         return _taskGraph.attach(lhs._value,
                                  rhs._value);
     }
@@ -92,7 +91,7 @@ private:
 
     PoolSet _poolSet;
     TaskGraph _taskGraph;
-    std::vector<task::TAbstract<SIZE>*> _fences;
+    std::vector<Task*> _fences;
 };
 
 using Scheduler = dmit::sem::TScheduler<1>;

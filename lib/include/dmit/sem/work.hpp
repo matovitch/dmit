@@ -1,72 +1,59 @@
 #pragma once
 
-#include "dmit/sem/message.hpp"
+#include "pool/pool.hpp"
 
 #include <functional>
 
 namespace dmit::sem
 {
 
-template <class Type>
-class TWork;
+namespace work
+{
+
+class Pool;
+
+} // namespace work
+
+class Work
+{
+
+public:
+
+    template <class Function>
+    Work(Function&& function,
+         work::Pool& pool) :
+        _function{std::move(function)},
+        _pool{pool}
+    {}
+
+    void run();
+
+private:
+
+    const std::function<void()> _function;
+    work::Pool& _pool;
+};
 
 namespace work
 {
 
-template <class Type>
-class TPool
+class Pool
 {
 
 public:
 
     template <class Function>
-    TWork<Type>& make(Function&& function,
-                      TMessage<Type>& message)
+    Work& make(Function&& function)
     {
-        return _pool.make(function, *this, message);
+        return _pool.make(function, *this);
     }
 
-    void recycle(TWork<Type>& work)
-    {
-        _pool.recycle(work);
-    }
+    void recycle(Work& work);
 
 private:
 
-    pool::TMake<TWork<Type>, 0x10> _pool;
+    pool::TMake<Work, 0x10> _pool;
 };
 
 } // namespace work
-
-template <class Type>
-class TWork
-{
-
-public:
-    
-    template <class Function>
-    TWork(Function&& function,
-          work::TPool<Type>& pool,
-          TMessage<Type>& message) :
-        _function{std::move(function)},
-        _pool{pool},
-        _message{message}
-    {}
-
-    void run()
-    {
-        _message.write(_function);
-        _pool.recycle(*this);
-    }
-
-private:
-
-    const std::function<Type()> _function;
-    work::TPool<Type>&          _pool;
-
-public:
-
-    TMessage<Type>& _message;
-};
-
 } // namespace dmit::sem

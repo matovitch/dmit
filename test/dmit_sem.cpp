@@ -1,11 +1,7 @@
 #include "test.hpp"
 
-#include "dmit/sem/scheduler.hpp"
 #include "dmit/sem/analyze.hpp"
 #include "dmit/sem/context.hpp"
-#include "dmit/sem/message.hpp"
-#include "dmit/sem/task.hpp"
-#include "dmit/sem/work.hpp"
 
 #include "dmit/ast/state.hpp"
 
@@ -21,7 +17,7 @@ TEST_CASE("sem")
     dmit::prs::state::Builder parser;
     dmit::lex::state::Builder lexer;
 
-    const auto& toParse = fileAsString("test/data/ast/increment.in");
+    const auto& toParse = fileAsString("test/data/sem/increment.in");
 
     const auto toParseAsBytes = reinterpret_cast<const uint8_t*>(toParse.data());
 
@@ -37,42 +33,4 @@ TEST_CASE("sem")
     dmit::sem::Context semContext{partition, ast._nodePool};
 
     dmit::sem::analyze(ast, semContext);
-}
-
-TEST_CASE("semSched")
-{
-    dmit::sem::message::TPool<char> messagePool;
-
-    auto& mesgA = messagePool.make();
-    auto& mesgB = messagePool.make();
-    auto& mesgC = messagePool.make();
-
-    dmit::sem::work::TPool<char> workPool;
-
-    auto& workA = workPool.make([]{std::cout << "A\n"; return 'A';}, mesgA);
-    auto& workB = workPool.make([]{std::cout << "B\n"; return 'B';}, mesgB);
-    auto& workC = workPool.make([]{std::cout << "C\n"; return 'C';}, mesgC);
-
-    dmit::sem::Scheduler scheduler;
-
-    dmit::sem::Scheduler::TTaskPool<char> taskPool;
-
-    auto taskA = scheduler.makeTask(taskPool);
-    auto taskB = scheduler.makeTask(taskPool);
-    auto taskC = scheduler.makeTask(taskPool);
-
-    taskA().assignWork(workA);
-    taskB().assignWork(workB);
-    taskC().assignWork(workC);
-
-    /*auto depAB = */scheduler.attach(taskA, taskB);
-    /*auto depCA = */scheduler.attach(taskC, taskA);
-
-    mesgC.send(); // simulate for refCount
-
-    scheduler.run();
-
-    std::cout << mesgA.read() << '\n';
-    std::cout << mesgB.read() << '\n';
-    std::cout << mesgC.read() << '\n';
 }

@@ -19,18 +19,27 @@ struct Context
 {
     static constexpr std::size_t SIZE = 0x10;
 
+    using Scheduler   = TScheduler <SIZE>;
+    using TaskWrapper = typename Scheduler::TaskWrapper;
+
+
     Context(const dmit::src::Partition& srcPartition,
             ast::State::NodePool&       astNodePool);
 
-    TScheduler<SIZE>            _scheduler;
     const dmit::src::Partition& _srcPartition;
     ast::State::NodePool&       _astNodePool;
 
-    std::unordered_map<com::UniqueId, task::TAbstract<SIZE>*, com::unique_id::Hasher,
-                                                              com::unique_id::Comparator> _taskMap;
-    TScheduler<SIZE>::TTaskPool <void> _taskVoidPool;
-    work::TPool                 <void> _workVoidPool;
-    TMessage                    <void> _mesgVoid;
+    TScheduler<SIZE>    _scheduler;
+    Scheduler::TaskPool _taskPool;
+    work::Pool          _workPool;
+
+    std::unordered_map<com::UniqueId, TaskWrapper, com::unique_id::Hasher,
+                                                   com::unique_id::Comparator> _taskMap;
+
+    std::unordered_map<com::UniqueId, ast::node::Location, com::unique_id::Hasher,
+                                                           com::unique_id::Comparator> _factMap;
+    static const com::UniqueId ARGUMENT_OF;
+    static const com::UniqueId DEFINE;
 };
 
 } // namespace dmit::sem
