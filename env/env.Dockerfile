@@ -37,7 +37,7 @@ ENV LLVM_VERSION "11"
 
 ENV FLAGS_DOCTEST "-D DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN"
 
-ENV FLAGS_SQLITE3 ""
+ENV FLAGS_SQLITE3 "-D SQLITE_CORE"
 
 ENV CXX "/usr/bin/clang++-${LLVM_VERSION}"
 
@@ -72,7 +72,10 @@ RUN set -ex                                                                     
     curl https://www.sqlite.org/2020/sqlite-autoconf-3330000.tar.gz > sqlite-autoconf-3330000.tar.gz            &&\
     tar xvf sqlite-autoconf-3330000.tar.gz                                                                      &&\
     cd sqlite-autoconf-3330000                                                                                  &&\
-    clang-${LLVM_VERSION} $FLAGS_SQLITE3 -c sqlite3.c -o libsqlite3.a                                           &&\
+    curl https://raw.githubusercontent.com/sqlite/sqlite/version-3.33.0/ext/misc/memvfs.c > memvfs.c            &&\
+    clang-${LLVM_VERSION} $FLAGS_SQLITE3 -c sqlite3.c -o sqlite3.o                                              &&\
+    clang-${LLVM_VERSION} $FLAGS_SQLITE3 -c memvfs.c -o memvfs.o -I .                                           &&\
+    ar cr libsqlite3.a sqlite3.o memvfs.o                                                                       &&\
     mv libsqlite3.a /usr/lib                                                                                    &&\
     cd ..                                                                                                       &&\
     rm -r sqlite-autoconf-3330000 sqlite-autoconf-3330000.tar.gz                                                &&\
