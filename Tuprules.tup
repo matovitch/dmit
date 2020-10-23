@@ -67,5 +67,3 @@ endif
 ifeq (@(IS_STATIC),y)
     CLFLAGS += -static-libstdc++ -static-libgcc
 endif
-
-!cl = |> $(CL) %%%f $(CLFLAGS) -o %o |>

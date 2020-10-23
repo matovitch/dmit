@@ -1,7 +1,7 @@
-BIN_TEST_CPP = $(ROOT)/test/*.cpp
-BIN_TEST_OUT = test
-
-CXFLAGS += -I $(ROOT)/test
+ifeq (@(IS_BUILDING_BINARIES),y)
+    BIN_CPP = $(ROOT)/src/*.cpp
+    BIN_OBJ = $(ROOT)/src/*.o
+endif
 
 # Note: The linker need the libs in topological order
 CLFLAGS += -l dmit_fmt
@@ -13,7 +13,9 @@ CLFLAGS += -l dmit_ast
 CLFLAGS += -l dmit_sem
 CLFLAGS += -l dmit_vm
 CLFLAGS += -l dmit_rt
-CLFLAGS += -l doctest
+CLFLAGS += -l sqlite3
+CLFLAGS += -l nng
+CLFLAGS += -l cmp
 CLFLAGS += -l stdc++fs
 
 CLFLAGS += -L $(ROOT)/lib/src/dmit/fmt
@@ -26,4 +28,4 @@ CLFLAGS += -L $(ROOT)/lib/src/dmit/sem
 CLFLAGS += -L $(ROOT)/lib/src/dmit/vm
 CLFLAGS += -L $(ROOT)/lib/src/dmit/rt
 
-!cl = |> $(CL) %%%f $(CLFLAGS) -o %o |>
+!cl = |> $(CL) %f $(CLFLAGS) -o %o |>
