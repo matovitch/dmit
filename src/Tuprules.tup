@@ -17,6 +17,8 @@ CLFLAGS += -l sqlite3
 CLFLAGS += -l nng
 CLFLAGS += -l cmp
 CLFLAGS += -l stdc++fs
+CLFLAGS += -l pthread
+CLFLAGS += -l dl
 
 CLFLAGS += -L $(ROOT)/lib/src/dmit/fmt
 CLFLAGS += -L $(ROOT)/lib/src/dmit/com
