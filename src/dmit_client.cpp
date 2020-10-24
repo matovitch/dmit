@@ -1,5 +1,8 @@
+#include "dmit/src/file.hpp"
+
+#include "dmit/srl/src/file.hpp"
+
 #include "dmit/com/logger.hpp"
-#include "dmit/com/assert.hpp"
 
 #include "nng/nng.hpp"
 #include "nng/protocol/reqrep0/req.h"
@@ -14,6 +17,45 @@ extern "C"
 #include <iostream>
 #include <cstdlib>
 #include <cstdint>
+
+static const int K_REPLY = 43;
+
+bool reader(cmp_ctx_t* ctx, void *data, size_t limit) {
+    memcpy(data, ctx->buf, limit);
+    ctx->buf = (char*)(ctx->buf) + limit;
+    return true;
+}
+
+bool skipper(cmp_ctx_t* ctx, size_t count) {
+    ctx->buf = (char*)(ctx->buf) + count;
+    return true;
+}
+
+size_t writer(cmp_ctx_t* ctx, const void *data, size_t count) {
+    memcpy(ctx->buf, data, count);
+    ctx->buf = (char*)(ctx->buf) + count;
+    return count;
+}
+
+size_t writerSize(cmp_ctx_t* ctx, const void *data, size_t count) {
+    ctx->buf = (char*)(ctx->buf) + count;
+    return count;
+}
+
+size_t messageSize(cmp_ctx_t* ctx)
+{
+    return *((size_t*)(&(ctx->buf)));
+}
+
+void writeQuery(const dmit::src::File& file, cmp_ctx_t* ctx)
+{
+    dmit::srl::serialize(file, ctx);
+}
+
+void displayNngError(const char* functionName, int errorCode)
+{
+    DMIT_COM_LOG_ERR << functionName << ": " << nng_strerror(errorCode) << '\n';
+}
 
 enum : char
 {
@@ -50,36 +92,28 @@ void displayVersion()
     DMIT_COM_LOG_OUT << "dmit_client, version 0.1\n";
 }
 
-
-bool reader(cmp_ctx_t *ctx, void *data, size_t limit) {
-    memcpy(data, ctx->buf, limit);
-    char** ctxBytes = (char**)(&(ctx->buf));
-    *ctxBytes += limit;
-    return true;
-}
-
-bool skipper(cmp_ctx_t *ctx, size_t count) {
-    char** ctxBytes = (char**)(&(ctx->buf));
-    *ctxBytes += count;
-    return true;
-}
-
-size_t writer(cmp_ctx_t *ctx, const void *data, size_t count) {
-    memcpy(ctx->buf, data, count);
-    char** ctxBytes = (char**)(&(ctx->buf));
-    *ctxBytes += count;
-    return count;
-}
-
-void fatal(const char* functionName, int errorCode)
+void displayFileError(const dmit::src::file::Error& fileError, const char* fileName)
 {
-    DMIT_COM_LOG_ERR << functionName << ": " << nng_strerror(errorCode) << '\n';
-}
+    if (fileError == dmit::src::file::Error::FILE_NOT_FOUND)
+    {
+        DMIT_COM_LOG_ERR << "error: cannot find file '" << fileName << "'\n";
+    }
 
-static const int K_QUERY      = 42;
-static const int K_REPLY      = 43;
-static const int K_QUERY_SIZE =  9;
-static const int K_REPLY_SIZE =  9;
+    if (fileError == dmit::src::file::Error::FILE_NOT_REGULAR)
+    {
+        DMIT_COM_LOG_ERR << "error: '" << fileName << "' is not a regular file\n";
+    }
+
+    if (fileError == dmit::src::file::Error::FILE_OPEN_FAIL)
+    {
+        DMIT_COM_LOG_ERR << "error: cannot open '" << fileName << "'\n";
+    }
+
+    if (fileError == dmit::src::file::Error::FILE_READ_FAIL)
+    {
+        DMIT_COM_LOG_ERR << "error: failed to read file '" << fileName << "'\n";
+    }
+}
 
 int main(int argc, char** argv)
 {
@@ -132,6 +166,16 @@ int main(int argc, char** argv)
 
     // Command OK, now doing the work
 
+    const auto& fileErrOpt = dmit::src::file::make(filePath);
+
+    if (fileErrOpt.hasError())
+    {
+        displayFileError(fileErrOpt.error(), filePath);
+        return EXIT_FAILURE;
+    }
+
+    const auto& file = fileErrOpt.value();
+
     int returnCode = EXIT_SUCCESS;
 
     {
@@ -142,66 +186,80 @@ int main(int argc, char** argv)
 
         if ((errorCode = nng_req0_open(&socket._asNng)) != 0)
         {
-            fatal("nng_req0_open", errorCode);
+            displayNngError("nng_req0_open", errorCode);
             returnCode = EXIT_FAILURE;
-            goto FINI;
+            goto CLEAN_UP;
         }
 
         // 2. Dial URL
 
         if ((errorCode = nng_dial(socket._asNng, url, nullptr, 0)) != 0)
         {
-            fatal("nng_dial", errorCode);
+            displayNngError("nng_dial", errorCode);
             returnCode = EXIT_FAILURE;
-            goto FINI;
+            goto CLEAN_UP;
         }
 
-        // 3. Write the query
+        // 3. Compute query size
 
-        uint8_t query[K_QUERY_SIZE];
+        cmp_ctx_t cmpQuerySize = {0};
 
-        cmp_ctx_t cmp1 = {0};
+        cmp_init(&cmpQuerySize, nullptr, nullptr, nullptr, writerSize);
 
-        cmp_init(&cmp1, &query, reader, skipper, writer);
+        writeQuery(file, &cmpQuerySize);
 
-        cmp_write_u64(&cmp1, K_QUERY);
+        const size_t querySize = messageSize(&cmpQuerySize);
 
-        // 4. Send it
+        // 4. Write query
 
-        if ((errorCode = nng_send(socket._asNng, query, sizeof(query), 0)) != 0)
+        nng::Buffer query{querySize};
+
+        cmp_ctx_t cmpQuery = {0};
+
+        cmp_init(&cmpQuery, query._asBytes, reader, skipper, writer);
+
+        writeQuery(file, &cmpQuery);
+
+        // 5. Send it
+
+        if ((errorCode = nng_send(socket._asNng, &query, 0)) != 0)
         {
-            fatal("nng_send", errorCode);
+            displayNngError("nng_send", errorCode);
             returnCode = EXIT_FAILURE;
-            goto FINI;
+            goto CLEAN_UP;
         }
 
-        // 5. Wait for the reply
+        // 6. Wait for the reply
 
-        nng::Buffer buffer;
+        nng::Buffer bufferReply;
 
-        if ((errorCode = nng_recv(socket._asNng, &buffer, 0)) != 0)
+        if ((errorCode = nng_recv(socket._asNng, &bufferReply, 0)) != 0)
         {
-            fatal("nng_recv", errorCode);
+            displayNngError("nng_recv", errorCode);
             returnCode = EXIT_FAILURE;
-            goto FINI;
+            goto CLEAN_UP;
         }
 
-        // 6. Decode it
+        // 7. Decode it
 
-        DMIT_COM_ASSERT(buffer._size == K_REPLY_SIZE);
+        cmp_ctx_t cmpReply = {0};
 
-        cmp_ctx_t cmp2 = {0};
-
-        cmp_init(&cmp2, buffer._asBytes, reader, skipper, writer);
+        cmp_init(&cmpReply, bufferReply._asBytes, reader, skipper, writer);
 
         uint64_t reply;
 
-        cmp_read_u64(&cmp2, &reply);
+        if (!cmp_read_u64(&cmpReply, &reply))
+        {
+            DMIT_COM_LOG_ERR << "Badly formed reply\n";
+            returnCode = EXIT_FAILURE;
+            goto CLEAN_UP;
+        }
 
-        DMIT_COM_ASSERT(reply == K_REPLY);
+        returnCode = (reply == K_REPLY) ? EXIT_SUCCESS
+                                        : EXIT_FAILURE;
     }
 
-    FINI:
+    CLEAN_UP:
         nng_fini();
 
     return returnCode;

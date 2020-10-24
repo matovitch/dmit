@@ -81,6 +81,7 @@ RUN set -ex                                                                     
     cmake -G "Unix Makefiles"                                                                                   &&\
     make                                                                                                        &&\
     mv libnng.a /usr/lib                                                                                        &&\
+    mv tools/nngcat/nngcat /usr/bin                                                                             &&\
     cd ..                                                                                                       &&\
     rm -rf nng                                                                                                  &&\
     git clone --progress --depth 1 --branch v19 https://github.com/camgunz/cmp.git                              &&\

@@ -10,12 +10,13 @@ function make()
 
 function cleanSource()
 {
-    find . -type f \( -name "*.cpp"   -o \
-                      -name "*.hpp"   -o \
-                      -name "*.h"     -o \
-                      -name "*.sh"    -o \
-                      -name "Tupfile" -o \
-                      -name "*.tup" \) | while read file; do sed -i 's/ *$//' $file; done
+    find ${ROOT_FOLDER} -type f \( -name "*.cpp"   -o \
+                                   -name "*.hpp"   -o \
+                                   -name "*.h"     -o \
+                                   -name "*.sh"    -o \
+                                   -name "Tupfile" -o \
+                                   -name "*.tup"      \
+                                                      \) | while read file; do sed -i 's/ *$//' $file; done
 }
 
 function makeEnv()

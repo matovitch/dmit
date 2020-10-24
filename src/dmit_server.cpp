@@ -1,5 +1,6 @@
+#include "dmit/srl/tag.hpp"
+
 #include "dmit/com/logger.hpp"
-#include "dmit/com/assert.hpp"
 
 #include "nng/nng.hpp"
 #include "nng/protocol/reqrep0/rep.h"
@@ -14,6 +15,45 @@ extern "C"
 #include <iostream>
 #include <cstdlib>
 #include <cstdint>
+
+static const int K_REPLY = 43;
+
+bool reader(cmp_ctx_t *ctx, void *data, size_t limit) {
+    memcpy(data, ctx->buf, limit);
+    ctx->buf = (char*)(ctx->buf) + limit;
+    return true;
+}
+
+bool skipper(cmp_ctx_t *ctx, size_t count) {
+    ctx->buf = (char*)(ctx->buf) + count;
+    return true;
+}
+
+size_t writer(cmp_ctx_t *ctx, const void *data, size_t count) {
+    memcpy(ctx->buf, data, count);
+    ctx->buf = (char*)(ctx->buf) + count;
+    return count;
+}
+
+size_t writerSize(cmp_ctx_t *ctx, const void *data, size_t count) {
+    ctx->buf = (char*)(ctx->buf) + count;
+    return count;
+}
+
+size_t messageSize(cmp_ctx_t *ctx)
+{
+    return *((size_t*)(&(ctx->buf)));
+}
+
+void writeReply(cmp_ctx_t *ctx)
+{
+    cmp_write_u64(ctx, K_REPLY);
+}
+
+void displayNngError(const char* functionName, int errorCode)
+{
+    DMIT_COM_LOG_ERR << functionName << ": " << nng_strerror(errorCode) << '\n';
+}
 
 enum : char
 {
@@ -46,36 +86,6 @@ void displayVersion()
 {
     DMIT_COM_LOG_OUT << "dmit_server, version 0.1\n";
 }
-
-bool reader(cmp_ctx_t *ctx, void *data, size_t limit) {
-    memcpy(data, ctx->buf, limit);
-    char** ctxBytes = (char**)(&(ctx->buf));
-    *ctxBytes += limit;
-    return true;
-}
-
-bool skipper(cmp_ctx_t *ctx, size_t count) {
-    char** ctxBytes = (char**)(&(ctx->buf));
-    *ctxBytes += count;
-    return true;
-}
-
-size_t writer(cmp_ctx_t *ctx, const void *data, size_t count) {
-    memcpy(ctx->buf, data, count);
-    char** ctxBytes = (char**)(&(ctx->buf));
-    *ctxBytes += count;
-    return count;
-}
-
-void fatal(const char* functionName, int errorCode)
-{
-    DMIT_COM_LOG_ERR << functionName << ": " << nng_strerror(errorCode) << '\n';
-}
-
-static const int K_QUERY      = 42;
-static const int K_REPLY      = 43;
-static const int K_QUERY_SIZE =  9;
-static const int K_REPLY_SIZE =  9;
 
 int main(int argc, char** argv)
 {
@@ -126,22 +136,22 @@ int main(int argc, char** argv)
         // 1. Open socket
 
         nng::Socket socket;
-        int         errorCode;
+        int errorCode;
 
         if ((errorCode = nng_rep0_open(&socket._asNng)) != 0)
         {
-            fatal("nng_rep0_open", errorCode);
+            displayNngError("nng_rep0_open", errorCode);
             returnCode = EXIT_FAILURE;
-            goto FINI;
+            goto CLEAN_UP;
         }
 
         // 2. Listen URL
 
         if ((errorCode = nng_listen(socket._asNng, url, nullptr, 0)) != 0)
         {
-            fatal("nng_listen", errorCode);
+            displayNngError("nng_listen", errorCode);
             returnCode = EXIT_FAILURE;
-            goto FINI;
+            goto CLEAN_UP;
         }
 
         // 3. Loop awaiting requests
@@ -150,51 +160,62 @@ int main(int argc, char** argv)
         {
             // 3.1. Expect a query
 
-            nng::Buffer buffer;
+            nng::Buffer queryAsBuffer;
 
-            if ((errorCode = nng_recv(socket._asNng, &buffer, 0)) != 0)
+            if ((errorCode = nng_recv(socket._asNng, &queryAsBuffer, 0)) != 0)
             {
-                fatal("nng_recv", errorCode);
+                displayNngError("nng_recv", errorCode);
                 returnCode = EXIT_FAILURE;
-                goto FINI;
+                goto CLEAN_UP;
             }
 
             // 3.2 Decode it
 
-            DMIT_COM_ASSERT(buffer._size == K_QUERY_SIZE);
+            cmp_ctx_t cmpQuery = {0};
 
-            cmp_ctx_t cmp1 = {0};
+            cmp_init(&cmpQuery, queryAsBuffer._asBytes, reader, skipper, writer);
 
-            cmp_init(&cmp1, buffer._asBytes, reader, skipper, writer);
+            uint8_t query = 0;
 
-            uint64_t query = 0;
-
-            cmp_read_u64(&cmp1, &query);
-
-            DMIT_COM_ASSERT(query == K_QUERY);
-
-            // 3.3. Write a reply
-
-            uint8_t reply[K_REPLY_SIZE];
-
-            cmp_ctx_t cmp2 = {0};
-
-            cmp_init(&cmp2, &reply, reader, skipper, writer);
-
-            cmp_write_u64(&cmp2, K_REPLY);
-
-            // 3.4 Send it
-
-            if ((errorCode = nng_send(socket._asNng, reply, sizeof(reply), 0)) != 0)
+            if (!cmp_read_u8(&cmpQuery, &query) || query != dmit::srl::Tag::FILE)
             {
-                fatal("nng_send", errorCode);
+                DMIT_COM_LOG_ERR << "Badly formed query\n";
                 returnCode = EXIT_FAILURE;
-                goto FINI;
+                goto CLEAN_UP;
+            }
+
+            // 3.3 Estimate reply size
+
+            cmp_ctx_t cmpReplySize = {0};
+
+            cmp_init(&cmpReplySize, nullptr, nullptr, nullptr, writerSize);
+
+            writeReply(&cmpReplySize);
+
+            const size_t replySize = messageSize(&cmpReplySize);
+
+            // 3.4. Write it
+
+            nng::Buffer bufferReply{replySize};
+
+            cmp_ctx_t cmpReply = {0};
+
+            cmp_init(&cmpReply, bufferReply._asBytes, reader, skipper, writer);
+
+            writeReply(&cmpReply);
+
+            // 3.5 And send it
+
+            if ((errorCode = nng_send(socket._asNng, &bufferReply, 0)) != 0)
+            {
+                displayNngError("nng_send", errorCode);
+                returnCode = EXIT_FAILURE;
+                goto CLEAN_UP;
             }
         }
     }
 
-    FINI:
+    CLEAN_UP:
         nng_fini();
 
     return returnCode;
