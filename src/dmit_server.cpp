@@ -1,8 +1,10 @@
 #include "dmit/com/logger.hpp"
 #include "dmit/com/assert.hpp"
 
-#include "nng/nng.h"
-#include <nng/protocol/reqrep0/rep.h>
+#include "nng/nng.hpp"
+#include "nng/protocol/reqrep0/rep.h"
+
+#include "cmp/cmp.h"
 
 extern "C"
 {
@@ -18,7 +20,6 @@ enum : char
     K_OPTION_INVALID     = ':',
     K_OPTION_HELP        = 'h',
     K_OPTION_VERSION     = 'v',
-    K_OPTION_FILE_PATH   = 'f',
     K_OPTION_URL         = 'u',
 };
 
@@ -46,69 +47,35 @@ void displayVersion()
     DMIT_COM_LOG_OUT << "dmit_server, version 0.1\n";
 }
 
-#define PUT64(ptr, u)                                \
-    do {                                             \
-        (ptr)[0] = (uint8_t)(((uint64_t)(u)) >> 56); \
-        (ptr)[1] = (uint8_t)(((uint64_t)(u)) >> 48); \
-        (ptr)[2] = (uint8_t)(((uint64_t)(u)) >> 40); \
-        (ptr)[3] = (uint8_t)(((uint64_t)(u)) >> 32); \
-        (ptr)[4] = (uint8_t)(((uint64_t)(u)) >> 24); \
-        (ptr)[5] = (uint8_t)(((uint64_t)(u)) >> 16); \
-        (ptr)[6] = (uint8_t)(((uint64_t)(u)) >> 8);  \
-        (ptr)[7] = (uint8_t)((uint64_t)(u));         \
-    } while (0)
+bool reader(cmp_ctx_t *ctx, void *data, size_t limit) {
+    memcpy(data, ctx->buf, limit);
+    char** ctxBytes = (char**)(&(ctx->buf));
+    *ctxBytes += limit;
+    return true;
+}
 
-#define GET64(ptr, v)                                 \
-    v = (((uint64_t)((uint8_t)(ptr)[0])) << 56) + \
-        (((uint64_t)((uint8_t)(ptr)[1])) << 48) + \
-        (((uint64_t)((uint8_t)(ptr)[2])) << 40) + \
-        (((uint64_t)((uint8_t)(ptr)[3])) << 32) + \
-        (((uint64_t)((uint8_t)(ptr)[4])) << 24) + \
-        (((uint64_t)((uint8_t)(ptr)[5])) << 16) + \
-        (((uint64_t)((uint8_t)(ptr)[6])) << 8) +  \
-        (((uint64_t)(uint8_t)(ptr)[7]))
+bool skipper(cmp_ctx_t *ctx, size_t count) {
+    char** ctxBytes = (char**)(&(ctx->buf));
+    *ctxBytes += count;
+    return true;
+}
 
-#define DATECMD 1
+size_t writer(cmp_ctx_t *ctx, const void *data, size_t count) {
+    memcpy(ctx->buf, data, count);
+    char** ctxBytes = (char**)(&(ctx->buf));
+    *ctxBytes += count;
+    return count;
+}
 
 void fatal(const char* functionName, int errorCode)
 {
     DMIT_COM_LOG_ERR << functionName << ": " << nng_strerror(errorCode) << '\n';
 }
 
-struct Socket
-{
-    ~Socket();
-
-    nng_socket _asNng;
-};
-
-Socket::~Socket()
-{
-    nng_close(_asNng);
-}
-
-struct Buffer
-{
-    ~Buffer();
-
-    void release();
-
-    char*  _asBytes = nullptr;
-    size_t _size;
-};
-
-void Buffer::release()
-{
-    _asBytes = nullptr;
-}
-
-Buffer::~Buffer()
-{
-    if (_asBytes)
-    {
-        nng_free(_asBytes, _size);
-    }
-}
+static const int K_QUERY      = 42;
+static const int K_REPLY      = 43;
+static const int K_QUERY_SIZE =  9;
+static const int K_REPLY_SIZE =  9;
 
 int main(int argc, char** argv)
 {
@@ -151,13 +118,15 @@ int main(int argc, char** argv)
         return EXIT_SUCCESS;
     }
 
+    // Everything fine, now doing the work
+
     int returnCode = EXIT_SUCCESS;
 
     {
-        Socket socket;
-        int    errorCode;
+        nng::Socket socket;
+        int         errorCode;
 
-        // 1. Open socket and dial url
+        // 1. Open socket
 
         if ((errorCode = nng_rep0_open(&socket._asNng)) != 0)
         {
@@ -166,6 +135,8 @@ int main(int argc, char** argv)
             goto FINI;
         }
 
+        // 2. Dial URL
+
         if ((errorCode = nng_listen(socket._asNng, url, nullptr, 0)) != 0)
         {
             fatal("nng_listen", errorCode);
@@ -173,37 +144,53 @@ int main(int argc, char** argv)
             goto FINI;
         }
 
-        // 2. Loop awaiting requests
+        // 3. Loop awaiting requests
 
         while (true)
         {
-            // 2.1. Check for mail
+            // 3.1. Expect a query
 
-            Buffer buffer;
+            nng::Buffer buffer;
 
-            if ((errorCode = nng_recv(socket._asNng, &buffer._asBytes, &buffer._size, NNG_FLAG_ALLOC)) != 0)
+            if ((errorCode = nng_recv(socket._asNng, &buffer, 0)) != 0)
             {
                 fatal("nng_recv", errorCode);
                 returnCode = EXIT_FAILURE;
                 goto FINI;
             }
 
-            // 2.2. Write and send the reply
+            // 3.2 Decode it
 
-            uint64_t command;
+            DMIT_COM_ASSERT(buffer._size == K_QUERY_SIZE);
 
-            DMIT_COM_ASSERT(buffer._size == sizeof(uint64_t) && (GET64(buffer._asBytes, command)) == DATECMD);
+            cmp_ctx_t cmp1 = {0};
 
-            PUT64(buffer._asBytes, 42);
+            cmp_init(&cmp1, buffer._asBytes, reader, skipper, writer);
 
-            if ((errorCode = nng_send(socket._asNng, buffer._asBytes, buffer._size, NNG_FLAG_ALLOC)) != 0)
+            uint64_t query = 0;
+
+            cmp_read_u64(&cmp1, &query);
+
+            DMIT_COM_ASSERT(query == K_QUERY);
+
+            // 3.3. Write a reply
+
+            uint8_t reply[K_REPLY_SIZE];
+
+            cmp_ctx_t cmp2 = {0};
+
+            cmp_init(&cmp2, &reply, reader, skipper, writer);
+
+            cmp_write_u64(&cmp2, K_REPLY);
+
+            // 3.4 Send it
+
+            if ((errorCode = nng_send(socket._asNng, reply, sizeof(reply), 0)) != 0)
             {
                 fatal("nng_send", errorCode);
                 returnCode = EXIT_FAILURE;
                 goto FINI;
             }
-
-            buffer.release();
         }
     }
 

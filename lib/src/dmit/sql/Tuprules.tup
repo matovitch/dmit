@@ -1,2 +1,0 @@
-LIB_DMIT_SQL_CPP = $(LIB_SRC)/dmit/sql/*.cpp
-LIB_DMIT_SQL_OUT = libdmit_sql.a
