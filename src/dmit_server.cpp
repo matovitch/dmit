@@ -135,7 +135,7 @@ int main(int argc, char** argv)
             goto FINI;
         }
 
-        // 2. Dial URL
+        // 2. Listen URL
 
         if ((errorCode = nng_listen(socket._asNng, url, nullptr, 0)) != 0)
         {
