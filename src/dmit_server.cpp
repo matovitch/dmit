@@ -123,10 +123,10 @@ int main(int argc, char** argv)
     int returnCode = EXIT_SUCCESS;
 
     {
+        // 1. Open socket
+
         nng::Socket socket;
         int         errorCode;
-
-        // 1. Open socket
 
         if ((errorCode = nng_rep0_open(&socket._asNng)) != 0)
         {
