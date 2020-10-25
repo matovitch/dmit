@@ -8,26 +8,26 @@ namespace dmit::cmp
 
 bool write(cmp_ctx_t* context, const src::File& file)
 {
-    if (!write_u8(context, Tag::FILE))
+    if (!writeU8(context, Tag::FILE))
     {
         return false;
     }
 
-    if (!write_array(context, 2))
+    if (!writeArray(context, 2))
     {
         return false;
     }
 
     const auto& filePathAsString = file._path.string();
 
-    if (!write_str(context, filePathAsString.data(),
-                            filePathAsString.size()))
+    if (!writeStr(context, filePathAsString.data(),
+                           filePathAsString.size()))
     {
         return false;
     }
 
-    if (!write_bin(context, file.content().data(),
-                            file.content().size()))
+    if (!writeBin(context, file.content().data(),
+                           file.content().size()))
     {
         return false;
     }

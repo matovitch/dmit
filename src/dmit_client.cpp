@@ -210,7 +210,7 @@ int main(int argc, char** argv)
 
         uint64_t reply;
 
-        if (!cmp_read_u64(&cmpContextReply, &reply))
+        if (!dmit::cmp::readU64(&cmpContextReply, &reply))
         {
             DMIT_COM_LOG_ERR << "error: badly formed reply\n";
             returnCode = EXIT_FAILURE;

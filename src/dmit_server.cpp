@@ -148,7 +148,7 @@ int main(int argc, char** argv)
 
             uint8_t query = dmit::cmp::Tag::INVALID;
 
-            if (!cmp_read_u8(&cmpContextQuery, &query) || query != dmit::cmp::Tag::FILE)
+            if (!dmit::cmp::readU8(&cmpContextQuery, &query) || query != dmit::cmp::Tag::FILE)
             {
                 DMIT_COM_LOG_ERR << "Badly formed query\n";
                 returnCode = EXIT_FAILURE;
