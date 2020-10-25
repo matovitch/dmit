@@ -1,12 +1,13 @@
 #include "dmit/src/file.hpp"
 
-
-#include "dmit/srl/serializable.hpp"
-#include "dmit/srl/src/file.hpp"
+#include "dmit/cmp/src/file.hpp"
+#include "dmit/cmp/cmp.hpp"
 
 #include "dmit/com/logger.hpp"
 
-#include "nng/nng.hpp"
+#include "dmit/nng/nng.hpp"
+
+#include "nng/nng.h"
 #include "nng/protocol/reqrep0/req.h"
 
 #include "cmp/cmp.h"
@@ -21,7 +22,7 @@ static const int K_REPLY = 43;
 
 bool writeQuery(const dmit::src::File& file, cmp_ctx_t* ctx)
 {
-    return dmit::srl::serialize(file, ctx);
+    return dmit::cmp::write(ctx, file);
 }
 
 void displayNngError(const char* functionName, int errorCode)
@@ -153,8 +154,8 @@ int main(int argc, char** argv)
     {
         // Open socket
 
-        nng::Socket socket;
-        int         errorCode;
+        dmit::nng::Socket socket;
+        int errorCode;
 
         if ((errorCode = nng_req0_open(&socket._asNng)) != 0)
         {
@@ -174,7 +175,7 @@ int main(int argc, char** argv)
 
         // Write query
 
-        auto queryOpt = dmit::srl::asNngBuffer(file, writeQuery);
+        auto queryOpt = dmit::cmp::asNngBuffer(file, writeQuery);
 
         if (!queryOpt)
         {
@@ -194,7 +195,7 @@ int main(int argc, char** argv)
 
         // Wait for reply
 
-        nng::Buffer bufferReply;
+        dmit::nng::Buffer bufferReply;
 
         if ((errorCode = nng_recv(socket._asNng, &bufferReply, 0)) != 0)
         {
@@ -205,11 +206,11 @@ int main(int argc, char** argv)
 
         // Decode reply
 
-        cmp_ctx_t cmpReply = dmit::srl::cmpContextFromNngBuffer(bufferReply);
+        cmp_ctx_t cmpContextReply = dmit::cmp::contextFromNngBuffer(bufferReply);
 
         uint64_t reply;
 
-        if (!cmp_read_u64(&cmpReply, &reply))
+        if (!cmp_read_u64(&cmpContextReply, &reply))
         {
             DMIT_COM_LOG_ERR << "error: badly formed reply\n";
             returnCode = EXIT_FAILURE;

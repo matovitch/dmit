@@ -4,7 +4,7 @@
 
 #include <cstdint>
 
-namespace dmit::srl
+namespace dmit::cmp
 {
 
 struct Tag : com::TEnum<uint8_t>
@@ -18,4 +18,4 @@ struct Tag : com::TEnum<uint8_t>
     DMIT_COM_ENUM_IMPLICIT_FROM_INT(Tag);
 };
 
-} // namespace dmit::srl
+} // namespace dmit::cmp

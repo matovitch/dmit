@@ -1,2 +1,0 @@
-LIB_DMIT_SRL_CPP = $(LIB_SRC)/dmit/srl/*.cpp
-LIB_DMIT_SRL_OUT = libdmit_srl.a

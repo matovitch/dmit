@@ -1,32 +1,12 @@
-#pragma once
+#include "dmit/nng/nng.hpp"
 
 #include "nng/nng.h"
 
+#include <cstdint>
 #include <cstdlib>
 
-namespace nng
+namespace dmit::nng
 {
-
-struct Socket
-{
-    ~Socket();
-
-    nng_socket _asNng;
-};
-
-struct Buffer
-{
-    Buffer() = default;
-
-    Buffer(size_t size);
-
-    ~Buffer();
-
-    void release();
-
-    char*  _asBytes = nullptr;
-    size_t _size;
-};
 
 Socket::~Socket()
 {
@@ -57,9 +37,9 @@ Buffer::~Buffer()
     }
 }
 
-} // namespace nng
+} // namespace dmit::nng
 
-NNG_DECL int nng_send(nng_socket socket, nng::Buffer* bufferPtr, int flags)
+int nng_send(nng_socket socket, dmit::nng::Buffer* bufferPtr, int flags)
 {
     int rc = nng_send(socket, bufferPtr->_asBytes, bufferPtr->_size, flags | NNG_FLAG_ALLOC);
 
@@ -71,7 +51,7 @@ NNG_DECL int nng_send(nng_socket socket, nng::Buffer* bufferPtr, int flags)
     return rc;
 }
 
-NNG_DECL int nng_recv(nng_socket socket, nng::Buffer* bufferPtr, int flags)
+int nng_recv(nng_socket socket, dmit::nng::Buffer* bufferPtr, int flags)
 {
     return nng_recv(socket, &(bufferPtr->_asBytes), &(bufferPtr->_size), flags | NNG_FLAG_ALLOC);
 }

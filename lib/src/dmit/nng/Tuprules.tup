@@ -1,0 +1,2 @@
+LIB_DMIT_NNG_CPP = $(LIB_SRC)/dmit/nng/*.cpp
+LIB_DMIT_NNG_OUT = libdmit_nng.a

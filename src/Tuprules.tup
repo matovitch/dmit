@@ -4,9 +4,10 @@ ifeq (@(IS_BUILDING_BINARIES),y)
 endif
 
 # Note: The linker need the libs in topological order
+CLFLAGS += -l dmit_nng
 CLFLAGS += -l dmit_fmt
 CLFLAGS += -l dmit_com
-CLFLAGS += -l dmit_srl
+CLFLAGS += -l dmit_cmp
 CLFLAGS += -l dmit_lex
 CLFLAGS += -l dmit_src
 CLFLAGS += -l dmit_prs
@@ -21,9 +22,10 @@ CLFLAGS += -l stdc++fs
 CLFLAGS += -l pthread
 CLFLAGS += -l dl
 
+CLFLAGS += -L $(ROOT)/lib/src/dmit/nng
 CLFLAGS += -L $(ROOT)/lib/src/dmit/fmt
 CLFLAGS += -L $(ROOT)/lib/src/dmit/com
-CLFLAGS += -L $(ROOT)/lib/src/dmit/srl
+CLFLAGS += -L $(ROOT)/lib/src/dmit/cmp
 CLFLAGS += -L $(ROOT)/lib/src/dmit/lex
 CLFLAGS += -L $(ROOT)/lib/src/dmit/src
 CLFLAGS += -L $(ROOT)/lib/src/dmit/prs

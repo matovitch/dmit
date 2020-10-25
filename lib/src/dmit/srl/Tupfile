@@ -1,5 +1,0 @@
-include_rules
-
-: foreach $(LIB_DMIT_SRL_CPP) |> !cx |> %B.o <obj>
-
-: <obj> |> !lx |> $(LIB_DMIT_SRL_OUT) $(ROOT)/<lib_dmit_srl>

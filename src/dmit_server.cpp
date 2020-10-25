@@ -1,9 +1,11 @@
-#include "dmit/srl/serializable.hpp"
-#include "dmit/srl/tag.hpp"
+#include "dmit/cmp/cmp.hpp"
+#include "dmit/cmp/tag.hpp"
 
 #include "dmit/com/logger.hpp"
 
-#include "nng/nng.hpp"
+#include "dmit/nng/nng.hpp"
+
+#include "nng/nng.h"
 #include "nng/protocol/reqrep0/rep.h"
 
 #include "cmp/cmp.h"
@@ -18,7 +20,7 @@ static const int K_REPLY = 43;
 
 bool writeReply(const uint64_t reply, cmp_ctx_t* ctx)
 {
-    return cmp_write_u64(ctx, reply);
+    return dmit::cmp::write_u64(ctx, reply);
 }
 
 void displayNngError(const char* functionName, int errorCode)
@@ -106,7 +108,7 @@ int main(int argc, char** argv)
     {
         // 1. Open socket
 
-        nng::Socket socket;
+        dmit::nng::Socket socket;
         int errorCode;
 
         if ((errorCode = nng_rep0_open(&socket._asNng)) != 0)
@@ -131,7 +133,7 @@ int main(int argc, char** argv)
         {
             // 3.1. Expect a query
 
-            nng::Buffer bufferQuery;
+            dmit::nng::Buffer bufferQuery;
 
             if ((errorCode = nng_recv(socket._asNng, &bufferQuery, 0)) != 0)
             {
@@ -142,11 +144,11 @@ int main(int argc, char** argv)
 
             // 3.2 Decode it
 
-            cmp_ctx_t cmpQuery = dmit::srl::cmpContextFromNngBuffer(bufferQuery);
+            auto cmpContextQuery = dmit::cmp::contextFromNngBuffer(bufferQuery);
 
-            uint8_t query = dmit::srl::Tag::INVALID;
+            uint8_t query = dmit::cmp::Tag::INVALID;
 
-            if (!cmp_read_u8(&cmpQuery, &query) || query != dmit::srl::Tag::FILE)
+            if (!cmp_read_u8(&cmpContextQuery, &query) || query != dmit::cmp::Tag::FILE)
             {
                 DMIT_COM_LOG_ERR << "Badly formed query\n";
                 returnCode = EXIT_FAILURE;
@@ -155,7 +157,7 @@ int main(int argc, char** argv)
 
             // 3.4. Write reply
 
-            auto replyOpt = dmit::srl::asNngBuffer(K_REPLY, writeReply);
+            auto replyOpt = dmit::cmp::asNngBuffer(K_REPLY, writeReply);
 
             if (!replyOpt)
             {
