@@ -32,6 +32,11 @@ size_t writer(cmp_ctx_t* ctx, const void *data, size_t count) {
 
 } // namespace
 
+bool readBytes(cmp_ctx_t* ctx, void* data, uint32_t limit)
+{
+    return ctx->read(ctx, data, limit);
+}
+
 cmp_ctx_t contextFromNngBuffer(dmit::nng::Buffer& nngBuffer)
 {
     cmp_ctx_t cmpBuffer = {0};

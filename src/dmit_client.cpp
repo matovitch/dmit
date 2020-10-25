@@ -1,5 +1,8 @@
+#include "dmit/drv/action.hpp"
+
 #include "dmit/src/file.hpp"
 
+#include "dmit/cmp/drv/action.hpp"
 #include "dmit/cmp/src/file.hpp"
 #include "dmit/cmp/cmp.hpp"
 
@@ -18,11 +21,21 @@
 #include <cstdlib>
 #include <cstdint>
 
-static const int K_REPLY = 43;
+static const int K_REPLY_ACK = 42;
 
-bool writeQuery(const dmit::src::File& file, cmp_ctx_t* ctx)
+bool queryCreateOrUpdateFile(cmp_ctx_t* context, const dmit::src::File& file)
 {
-    return dmit::cmp::write(ctx, file);
+    if (!dmit::cmp::write(context, dmit::drv::Action::CREATE_OR_UPDATE_FILE))
+    {
+        return false;
+    }
+
+    return dmit::cmp::write(context, file);
+}
+
+bool queryStopServer(cmp_ctx_t* context)
+{
+    return dmit::cmp::write(context, dmit::drv::Action::STOP_SERVER);
 }
 
 void displayNngError(const char* functionName, int errorCode)
@@ -32,32 +45,35 @@ void displayNngError(const char* functionName, int errorCode)
 
 enum : char
 {
-    K_OPTION_INVALID   = ':',
-    K_OPTION_HELP      = 'h',
-    K_OPTION_VERSION   = 'v',
-    K_OPTION_FILE_PATH = 'f',
-    K_OPTION_URL       = 'u',
+    K_OPTION_INVALID     = ':',
+    K_OPTION_HELP        = 'h',
+    K_OPTION_VERSION     = 'v',
+    K_OPTION_STOP_SERVER = 's',
+    K_OPTION_URL         = 'u',
+    K_OPTION_FILE_PATH   = 'f',
 };
 
 static const ko_longopt_t K_OPTIONS_LONG[] =
 {
-    { "help"      , ko_no_argument       , K_OPTION_HELP       },
-    { "version"   , ko_no_argument       , K_OPTION_VERSION    },
-    { "file-path" , ko_required_argument , K_OPTION_FILE_PATH  },
-    { "url"       , ko_required_argument , K_OPTION_URL        },
-    { nullptr     , ko_no_argument       , K_OPTION_INVALID    } // sentinel required
+    { "help"        , ko_no_argument       , K_OPTION_HELP        },
+    { "version"     , ko_no_argument       , K_OPTION_VERSION     },
+    { "stop-server" , ko_no_argument       , K_OPTION_STOP_SERVER },
+    { "url"         , ko_required_argument , K_OPTION_URL         },
+    { "file-path"   , ko_required_argument , K_OPTION_FILE_PATH   },
+    { nullptr       , ko_no_argument       , K_OPTION_INVALID     } // sentinel required
 };
 
-static const char* K_OPTIONS_SHORT = "hvf:u:";
+static const char* K_OPTIONS_SHORT = "hvsu:f:";
 
 void displayHelp()
 {
     DMIT_COM_LOG_OUT << "dmit_client\n\n";
     DMIT_COM_LOG_OUT << "Usage:\n";
-    DMIT_COM_LOG_OUT << "    " << "-h, --help                  Show this screen\n";
-    DMIT_COM_LOG_OUT << "    " << "-v, --version               Display version\n";
-    DMIT_COM_LOG_OUT << "    " << "-u, --url        URL        Connect to SERVER_URL\n";
-    DMIT_COM_LOG_OUT << "    " << "-f, --file-path  FILE_PATH  Load FILE_PATH\n";
+    DMIT_COM_LOG_OUT << "    " << "-h, --help                   Show this screen\n";
+    DMIT_COM_LOG_OUT << "    " << "-v, --version                Display version\n";
+    DMIT_COM_LOG_OUT << "    " << "-s, --stop-server            Stop the server\n";
+    DMIT_COM_LOG_OUT << "    " << "-u, --url         URL        Connect to URL\n";
+    DMIT_COM_LOG_OUT << "    " << "-f, --file-path   FILE_PATH  Load FILE_PATH\n";
 }
 
 void displayVersion()
@@ -88,14 +104,121 @@ void displayFileError(const dmit::src::file::Error& fileError, const char* fileN
     }
 }
 
+int stopServer(dmit::nng::Socket& socket)
+{
+    // Write query
+
+    auto queryOpt = dmit::cmp::asNngBuffer(queryStopServer);
+
+    if (!queryOpt)
+    {
+        DMIT_COM_LOG_ERR << "error: failed to craft query\n";
+        return EXIT_FAILURE;
+    }
+
+    // Send query
+
+    int errorCode;
+
+    if ((errorCode = nng_send(socket._asNng, &(queryOpt.value()), 0)) != 0)
+    {
+        displayNngError("nng_send", errorCode);
+        return EXIT_FAILURE;
+    }
+
+    // Wait for reply
+
+    dmit::nng::Buffer bufferReply;
+
+    if ((errorCode = nng_recv(socket._asNng, &bufferReply, 0)) != 0)
+    {
+        displayNngError("nng_recv", errorCode);
+        return EXIT_FAILURE;
+    }
+
+    // Decode reply
+
+    cmp_ctx_t cmpContextReply = dmit::cmp::contextFromNngBuffer(bufferReply);
+
+    uint64_t reply;
+
+    if (!dmit::cmp::readU64(&cmpContextReply, &reply) || reply != K_REPLY_ACK)
+    {
+        DMIT_COM_LOG_ERR << "error: badly formed reply\n";
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
+}
+
+int createOrUpdateFile(dmit::nng::Socket& socket, const char* filePath)
+{
+    // Read the file
+
+    const auto& fileErrOpt = dmit::src::file::make(filePath);
+
+    if (fileErrOpt.hasError())
+    {
+        displayFileError(fileErrOpt.error(), filePath);
+        return EXIT_FAILURE;
+    }
+
+    const auto& file = fileErrOpt.value();
+
+    // Write query
+
+    auto queryOpt = dmit::cmp::asNngBuffer(queryCreateOrUpdateFile, file);
+
+    if (!queryOpt)
+    {
+        DMIT_COM_LOG_ERR << "error: failed to craft query\n";
+        return EXIT_FAILURE;
+    }
+
+    // Send query
+
+    int errorCode;
+
+    if ((errorCode = nng_send(socket._asNng, &(queryOpt.value()), 0)) != 0)
+    {
+        displayNngError("nng_send", errorCode);
+        return EXIT_FAILURE;
+    }
+
+    // Wait for reply
+
+    dmit::nng::Buffer bufferReply;
+
+    if ((errorCode = nng_recv(socket._asNng, &bufferReply, 0)) != 0)
+    {
+        displayNngError("nng_recv", errorCode);
+        return EXIT_FAILURE;
+    }
+
+    // Decode reply
+
+    cmp_ctx_t cmpContextReply = dmit::cmp::contextFromNngBuffer(bufferReply);
+
+    uint64_t reply;
+
+    if (!dmit::cmp::readU64(&cmpContextReply, &reply) || reply != K_REPLY_ACK)
+    {
+        DMIT_COM_LOG_ERR << "error: badly formed reply\n";
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
+}
+
 int main(int argc, char** argv)
 {
     // Decode the arguments
 
-    bool        hasHelp    = false;
-    bool        hasVersion = false;
-    const char* filePath   = nullptr;
-    const char* url        = nullptr;
+    bool        hasHelp       = false;
+    bool        hasVersion    = false;
+    bool        hasStopServer = false;
+    const char* filePath      = nullptr;
+    const char* url           = nullptr;
 
     ketopt_t ketoptStatus = KETOPT_INIT;
     int      ketoptOption;
@@ -107,8 +230,9 @@ int main(int argc, char** argv)
                                   K_OPTIONS_SHORT,
                                   K_OPTIONS_LONG)) != -1)
     {
-        hasHelp    |= (ketoptOption == K_OPTION_HELP    );
-        hasVersion |= (ketoptOption == K_OPTION_VERSION );
+        hasHelp       |= (ketoptOption == K_OPTION_HELP        );
+        hasVersion    |= (ketoptOption == K_OPTION_VERSION     );
+        hasStopServer |= (ketoptOption == K_OPTION_STOP_SERVER );
 
         if (ketoptOption == K_OPTION_FILE_PATH ) { filePath = ketoptStatus.arg; }
         if (ketoptOption == K_OPTION_URL       ) { url      = ketoptStatus.arg; }
@@ -129,25 +253,12 @@ int main(int argc, char** argv)
     }
 
     // Check the command is properly formed
-
-    if (!filePath || !url)
+    if (!url)
     {
-        DMIT_COM_LOG_ERR << "error: unrecognized command line\n";
+        DMIT_COM_LOG_ERR << "error: url option is necessary to reach the server";
         displayHelp();
         return EXIT_FAILURE;
     }
-
-    // Read the file
-
-    const auto& fileErrOpt = dmit::src::file::make(filePath);
-
-    if (fileErrOpt.hasError())
-    {
-        displayFileError(fileErrOpt.error(), filePath);
-        return EXIT_FAILURE;
-    }
-
-    const auto& file = fileErrOpt.value();
 
     int returnCode = EXIT_SUCCESS;
 
@@ -173,54 +284,19 @@ int main(int argc, char** argv)
             goto CLEAN_UP;
         }
 
-        // Write query
+        // Perform Actions
 
-        auto queryOpt = dmit::cmp::asNngBuffer(file, writeQuery);
-
-        if (!queryOpt)
+        if (hasStopServer)
         {
-            DMIT_COM_LOG_ERR << "error: failed to craft query\n";
-            returnCode = EXIT_FAILURE;
+            returnCode = stopServer(socket);
             goto CLEAN_UP;
         }
 
-        // Send query
-
-        if ((errorCode = nng_send(socket._asNng, &(queryOpt.value()), 0)) != 0)
+        if (filePath)
         {
-            displayNngError("nng_send", errorCode);
-            returnCode = EXIT_FAILURE;
+            returnCode = createOrUpdateFile(socket, filePath);
             goto CLEAN_UP;
         }
-
-        // Wait for reply
-
-        dmit::nng::Buffer bufferReply;
-
-        if ((errorCode = nng_recv(socket._asNng, &bufferReply, 0)) != 0)
-        {
-            displayNngError("nng_recv", errorCode);
-            returnCode = EXIT_FAILURE;
-            goto CLEAN_UP;
-        }
-
-        // Decode reply
-
-        cmp_ctx_t cmpContextReply = dmit::cmp::contextFromNngBuffer(bufferReply);
-
-        uint64_t reply;
-
-        if (!dmit::cmp::readU64(&cmpContextReply, &reply))
-        {
-            DMIT_COM_LOG_ERR << "error: badly formed reply\n";
-            returnCode = EXIT_FAILURE;
-            goto CLEAN_UP;
-        }
-
-        // Exit
-
-        returnCode = (reply == K_REPLY) ? EXIT_SUCCESS
-                                        : EXIT_FAILURE;
     }
 
     CLEAN_UP:

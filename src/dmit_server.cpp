@@ -1,5 +1,6 @@
+#include "dmit/drv/action.hpp"
+
 #include "dmit/cmp/cmp.hpp"
-#include "dmit/cmp/tag.hpp"
 
 #include "dmit/com/logger.hpp"
 
@@ -16,16 +17,99 @@
 #include <cstdlib>
 #include <cstdint>
 
-static const int K_REPLY = 43;
-
-bool writeReply(const uint64_t reply, cmp_ctx_t* ctx)
-{
-    return dmit::cmp::write_u64(ctx, reply);
-}
+static const int K_REPLY_ACK = 42;
 
 void displayNngError(const char* functionName, int errorCode)
 {
-    DMIT_COM_LOG_ERR << functionName << ": " << nng_strerror(errorCode) << '\n';
+    DMIT_COM_LOG_ERR << "error: " << functionName << "returned '" << nng_strerror(errorCode) << "'\n";
+}
+
+bool writeReply(cmp_ctx_t* context, const uint64_t reply)
+{
+    return dmit::cmp::writeU64(context, reply);
+}
+
+void replyStop(dmit::nng::Socket& socket, int& returnCode, bool& isStopping)
+{
+    // 1. Process Query
+
+    DMIT_COM_LOG_OUT << "Stopping server...\n";
+
+    isStopping = true;
+
+    // 2. Write reply
+
+    auto replyOpt = dmit::cmp::asNngBuffer(writeReply, K_REPLY_ACK);
+
+    if (!replyOpt)
+    {
+        DMIT_COM_LOG_ERR << "error: failed to craft reply\n";
+        returnCode = EXIT_FAILURE;
+        return;
+    }
+
+    // 3. Send it
+
+    int errorCode;
+
+    if ((errorCode = nng_send(socket._asNng, &(replyOpt.value()), 0)) != 0)
+    {
+        displayNngError("nng_send", errorCode);
+        returnCode = EXIT_FAILURE;
+        return;
+    }
+}
+
+void replyCreateOrUpdateFile(dmit::nng::Socket& socket, cmp_ctx_t* context)
+{
+    // 1. Process Query
+
+    uint32_t size;
+
+    if (!dmit::cmp::readArray(context, &size) || size != 2)
+    {
+        DMIT_COM_LOG_ERR << "error: badly formed query\n";
+        return;
+    }
+
+    uint32_t stringSize;
+
+    if (!dmit::cmp::readStrSize(context, &stringSize)) {
+        DMIT_COM_LOG_ERR << "error: badly formed query\n";
+        return;
+    }
+
+    std::string string;
+
+    string.resize(stringSize);
+
+    if (!dmit::cmp::readBytes(context, string.data(), stringSize))
+    {
+        DMIT_COM_LOG_ERR << "error: badly formed query\n";
+        return;
+    }
+
+    DMIT_COM_LOG_OUT << string << '\n';
+
+    // 2. Write reply
+
+    auto replyOpt = dmit::cmp::asNngBuffer(writeReply, K_REPLY_ACK);
+
+    if (!replyOpt)
+    {
+        DMIT_COM_LOG_ERR << "error: failed to craft reply\n";
+        return;
+    }
+
+    // 3. Send it
+
+    int errorCode;
+
+    if ((errorCode = nng_send(socket._asNng, &(replyOpt.value()), 0)) != 0)
+    {
+        displayNngError("nng_send", errorCode);
+        return;
+    }
 }
 
 enum : char
@@ -103,7 +187,7 @@ int main(int argc, char** argv)
 
     // Everything fine, now doing the work
 
-    int returnCode = EXIT_SUCCESS;
+    int returnCode;
 
     {
         // 1. Open socket
@@ -118,7 +202,7 @@ int main(int argc, char** argv)
             goto CLEAN_UP;
         }
 
-        // 2. Listen URL
+        // 2. Listen onto URL
 
         if ((errorCode = nng_listen(socket._asNng, url, nullptr, 0)) != 0)
         {
@@ -129,9 +213,11 @@ int main(int argc, char** argv)
 
         // 3. Loop awaiting requests
 
-        while (true)
+        bool isStopping = false;
+
+        while (!isStopping)
         {
-            // 3.1. Expect a query
+            // 3.1. Await a query
 
             dmit::nng::Buffer bufferQuery;
 
@@ -146,33 +232,25 @@ int main(int argc, char** argv)
 
             auto cmpContextQuery = dmit::cmp::contextFromNngBuffer(bufferQuery);
 
-            uint8_t query = dmit::cmp::Tag::INVALID;
+            uint8_t query;
 
-            if (!dmit::cmp::readU8(&cmpContextQuery, &query) || query != dmit::cmp::Tag::FILE)
+            if (!dmit::cmp::readU8(&cmpContextQuery, &query))
             {
-                DMIT_COM_LOG_ERR << "Badly formed query\n";
+                DMIT_COM_LOG_ERR << "error: badly formed query\n";
                 returnCode = EXIT_FAILURE;
                 goto CLEAN_UP;
             }
 
-            // 3.4. Write reply
+            // 3.3 Process and reply
 
-            auto replyOpt = dmit::cmp::asNngBuffer(K_REPLY, writeReply);
-
-            if (!replyOpt)
+            if (query == dmit::drv::Action::CREATE_OR_UPDATE_FILE)
             {
-                DMIT_COM_LOG_ERR << "error: failed to craft reply\n";
-                returnCode = EXIT_FAILURE;
-                goto CLEAN_UP;
+                replyCreateOrUpdateFile(socket, &cmpContextQuery);
             }
 
-            // 3.5 And send it
-
-            if ((errorCode = nng_send(socket._asNng, &(replyOpt.value()), 0)) != 0)
+            if (query == dmit::drv::Action::STOP_SERVER)
             {
-                displayNngError("nng_send", errorCode);
-                returnCode = EXIT_FAILURE;
-                goto CLEAN_UP;
+                replyStop(socket, returnCode, isStopping);
             }
         }
     }

@@ -18,6 +18,10 @@ struct Buffer
 {
     Buffer() = default;
 
+    Buffer(const Buffer&) = delete;
+
+    Buffer(Buffer&&);
+
     Buffer(size_t size);
 
     ~Buffer();

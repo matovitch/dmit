@@ -24,6 +24,13 @@ Buffer::Buffer(size_t size) :
     }
 }
 
+Buffer::Buffer(Buffer&& toMove) :
+    _asBytes {toMove._asBytes },
+    _size    {toMove._size    }
+{
+    toMove.release();
+}
+
 void Buffer::release()
 {
     _asBytes = nullptr;
