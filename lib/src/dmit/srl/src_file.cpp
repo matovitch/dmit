@@ -1,5 +1,3 @@
-#pragma once
-
 #include "dmit/srl/tag.hpp"
 
 #include "dmit/src/file.hpp"

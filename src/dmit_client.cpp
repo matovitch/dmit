@@ -1,5 +1,7 @@
 #include "dmit/src/file.hpp"
 
+
+#include "dmit/srl/serializable.hpp"
 #include "dmit/srl/src/file.hpp"
 
 #include "dmit/com/logger.hpp"
@@ -9,10 +11,7 @@
 
 #include "cmp/cmp.h"
 
-extern "C"
-{
-    #include "ketopt/ketopt.h"
-}
+#include "ketopt/ketopt.h"
 
 #include <iostream>
 #include <cstdlib>
@@ -20,41 +19,14 @@ extern "C"
 
 static const int K_REPLY = 43;
 
-bool reader(cmp_ctx_t* ctx, void *data, size_t limit) {
-    memcpy(data, ctx->buf, limit);
-    ctx->buf = (char*)(ctx->buf) + limit;
-    return true;
-}
-
-bool skipper(cmp_ctx_t* ctx, size_t count) {
-    ctx->buf = (char*)(ctx->buf) + count;
-    return true;
-}
-
-size_t writer(cmp_ctx_t* ctx, const void *data, size_t count) {
-    memcpy(ctx->buf, data, count);
-    ctx->buf = (char*)(ctx->buf) + count;
-    return count;
-}
-
-size_t writerSize(cmp_ctx_t* ctx, const void *data, size_t count) {
-    ctx->buf = (char*)(ctx->buf) + count;
-    return count;
-}
-
-size_t messageSize(cmp_ctx_t* ctx)
+bool writeQuery(const dmit::src::File& file, cmp_ctx_t* ctx)
 {
-    return *((size_t*)(&(ctx->buf)));
-}
-
-void writeQuery(const dmit::src::File& file, cmp_ctx_t* ctx)
-{
-    dmit::srl::serialize(file, ctx);
+    return dmit::srl::serialize(file, ctx);
 }
 
 void displayNngError(const char* functionName, int errorCode)
 {
-    DMIT_COM_LOG_ERR << functionName << ": " << nng_strerror(errorCode) << '\n';
+    DMIT_COM_LOG_ERR << "error: " << functionName << " returned '" << nng_strerror(errorCode) << "'\n";
 }
 
 enum : char
@@ -164,7 +136,7 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-    // Command OK, now doing the work
+    // Read the file
 
     const auto& fileErrOpt = dmit::src::file::make(filePath);
 
@@ -179,7 +151,7 @@ int main(int argc, char** argv)
     int returnCode = EXIT_SUCCESS;
 
     {
-        // 1. Open socket
+        // Open socket
 
         nng::Socket socket;
         int         errorCode;
@@ -191,7 +163,7 @@ int main(int argc, char** argv)
             goto CLEAN_UP;
         }
 
-        // 2. Dial URL
+        // Dial URL
 
         if ((errorCode = nng_dial(socket._asNng, url, nullptr, 0)) != 0)
         {
@@ -200,36 +172,27 @@ int main(int argc, char** argv)
             goto CLEAN_UP;
         }
 
-        // 3. Compute query size
+        // Write query
 
-        cmp_ctx_t cmpQuerySize = {0};
+        auto queryOpt = dmit::srl::asNngBuffer(file, writeQuery);
 
-        cmp_init(&cmpQuerySize, nullptr, nullptr, nullptr, writerSize);
+        if (!queryOpt)
+        {
+            DMIT_COM_LOG_ERR << "error: failed to craft query\n";
+            returnCode = EXIT_FAILURE;
+            goto CLEAN_UP;
+        }
 
-        writeQuery(file, &cmpQuerySize);
+        // Send query
 
-        const size_t querySize = messageSize(&cmpQuerySize);
-
-        // 4. Write query
-
-        nng::Buffer query{querySize};
-
-        cmp_ctx_t cmpQuery = {0};
-
-        cmp_init(&cmpQuery, query._asBytes, reader, skipper, writer);
-
-        writeQuery(file, &cmpQuery);
-
-        // 5. Send it
-
-        if ((errorCode = nng_send(socket._asNng, &query, 0)) != 0)
+        if ((errorCode = nng_send(socket._asNng, &(queryOpt.value()), 0)) != 0)
         {
             displayNngError("nng_send", errorCode);
             returnCode = EXIT_FAILURE;
             goto CLEAN_UP;
         }
 
-        // 6. Wait for the reply
+        // Wait for reply
 
         nng::Buffer bufferReply;
 
@@ -240,20 +203,20 @@ int main(int argc, char** argv)
             goto CLEAN_UP;
         }
 
-        // 7. Decode it
+        // Decode reply
 
-        cmp_ctx_t cmpReply = {0};
-
-        cmp_init(&cmpReply, bufferReply._asBytes, reader, skipper, writer);
+        cmp_ctx_t cmpReply = dmit::srl::cmpContextFromNngBuffer(bufferReply);
 
         uint64_t reply;
 
         if (!cmp_read_u64(&cmpReply, &reply))
         {
-            DMIT_COM_LOG_ERR << "Badly formed reply\n";
+            DMIT_COM_LOG_ERR << "error: badly formed reply\n";
             returnCode = EXIT_FAILURE;
             goto CLEAN_UP;
         }
+
+        // Exit
 
         returnCode = (reply == K_REPLY) ? EXIT_SUCCESS
                                         : EXIT_FAILURE;

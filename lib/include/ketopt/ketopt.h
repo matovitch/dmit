@@ -1,5 +1,8 @@
-#ifndef KETOPT_H
-#define KETOPT_H
+#pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <string.h> /* for strchr() and strncmp() */
 
@@ -117,4 +120,6 @@ static int ketopt(ketopt_t *s, int argc, char *argv[], int permute, const char *
     return opt;
 }
 
+#ifdef __cplusplus
+} /* extern "C" */
 #endif

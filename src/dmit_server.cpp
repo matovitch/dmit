@@ -1,3 +1,4 @@
+#include "dmit/srl/serializable.hpp"
 #include "dmit/srl/tag.hpp"
 
 #include "dmit/com/logger.hpp"
@@ -7,10 +8,7 @@
 
 #include "cmp/cmp.h"
 
-extern "C"
-{
-    #include "ketopt/ketopt.h"
-}
+#include "ketopt/ketopt.h"
 
 #include <iostream>
 #include <cstdlib>
@@ -18,36 +16,9 @@ extern "C"
 
 static const int K_REPLY = 43;
 
-bool reader(cmp_ctx_t *ctx, void *data, size_t limit) {
-    memcpy(data, ctx->buf, limit);
-    ctx->buf = (char*)(ctx->buf) + limit;
-    return true;
-}
-
-bool skipper(cmp_ctx_t *ctx, size_t count) {
-    ctx->buf = (char*)(ctx->buf) + count;
-    return true;
-}
-
-size_t writer(cmp_ctx_t *ctx, const void *data, size_t count) {
-    memcpy(ctx->buf, data, count);
-    ctx->buf = (char*)(ctx->buf) + count;
-    return count;
-}
-
-size_t writerSize(cmp_ctx_t *ctx, const void *data, size_t count) {
-    ctx->buf = (char*)(ctx->buf) + count;
-    return count;
-}
-
-size_t messageSize(cmp_ctx_t *ctx)
+bool writeReply(const uint64_t reply, cmp_ctx_t* ctx)
 {
-    return *((size_t*)(&(ctx->buf)));
-}
-
-void writeReply(cmp_ctx_t *ctx)
-{
-    cmp_write_u64(ctx, K_REPLY);
+    return cmp_write_u64(ctx, reply);
 }
 
 void displayNngError(const char* functionName, int errorCode)
@@ -160,9 +131,9 @@ int main(int argc, char** argv)
         {
             // 3.1. Expect a query
 
-            nng::Buffer queryAsBuffer;
+            nng::Buffer bufferQuery;
 
-            if ((errorCode = nng_recv(socket._asNng, &queryAsBuffer, 0)) != 0)
+            if ((errorCode = nng_recv(socket._asNng, &bufferQuery, 0)) != 0)
             {
                 displayNngError("nng_recv", errorCode);
                 returnCode = EXIT_FAILURE;
@@ -171,11 +142,9 @@ int main(int argc, char** argv)
 
             // 3.2 Decode it
 
-            cmp_ctx_t cmpQuery = {0};
+            cmp_ctx_t cmpQuery = dmit::srl::cmpContextFromNngBuffer(bufferQuery);
 
-            cmp_init(&cmpQuery, queryAsBuffer._asBytes, reader, skipper, writer);
-
-            uint8_t query = 0;
+            uint8_t query = dmit::srl::Tag::INVALID;
 
             if (!cmp_read_u8(&cmpQuery, &query) || query != dmit::srl::Tag::FILE)
             {
@@ -184,29 +153,20 @@ int main(int argc, char** argv)
                 goto CLEAN_UP;
             }
 
-            // 3.3 Estimate reply size
+            // 3.4. Write reply
 
-            cmp_ctx_t cmpReplySize = {0};
+            auto replyOpt = dmit::srl::asNngBuffer(K_REPLY, writeReply);
 
-            cmp_init(&cmpReplySize, nullptr, nullptr, nullptr, writerSize);
-
-            writeReply(&cmpReplySize);
-
-            const size_t replySize = messageSize(&cmpReplySize);
-
-            // 3.4. Write it
-
-            nng::Buffer bufferReply{replySize};
-
-            cmp_ctx_t cmpReply = {0};
-
-            cmp_init(&cmpReply, bufferReply._asBytes, reader, skipper, writer);
-
-            writeReply(&cmpReply);
+            if (!replyOpt)
+            {
+                DMIT_COM_LOG_ERR << "error: failed to craft reply\n";
+                returnCode = EXIT_FAILURE;
+                goto CLEAN_UP;
+            }
 
             // 3.5 And send it
 
-            if ((errorCode = nng_send(socket._asNng, &bufferReply, 0)) != 0)
+            if ((errorCode = nng_send(socket._asNng, &(replyOpt.value()), 0)) != 0)
             {
                 displayNngError("nng_send", errorCode);
                 returnCode = EXIT_FAILURE;

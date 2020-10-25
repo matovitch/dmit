@@ -11,7 +11,8 @@ struct Tag : com::TEnum<uint8_t>
 {
     enum : uint8_t
     {
-        FILE
+        FILE,
+        INVALID
     };
 
     DMIT_COM_ENUM_IMPLICIT_FROM_INT(Tag);
