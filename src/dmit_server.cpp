@@ -1,10 +1,10 @@
 #include "dmit/drv/query.hpp"
 
-#include "dmit/db/connection.hpp"
-#include "dmit/db/db.hpp"
+#include "dmit/db/database.hpp"
 
 #include "dmit/cmp/cmp.hpp"
 
+#include "dmit/com/unique_id.hpp"
 #include "dmit/com/logger.hpp"
 
 #include "dmit/nng/nng.hpp"
@@ -22,7 +22,8 @@
 #include <cstdlib>
 #include <cstdint>
 
-static const int K_REPLY_ACK = 42;
+static const int K_REPLY_OK = 42;
+static const int K_REPLY_KO = 42;
 
 void displaySqlite3Error(const char* functionName, int errorCode)
 {
@@ -39,9 +40,32 @@ bool writeReply(cmp_ctx_t* context, const uint64_t reply)
     return dmit::cmp::writeU64(context, reply);
 }
 
+void replyWith(dmit::nng::Socket& socket, const uint64_t reply)
+{
+    // 1. Write reply
+
+    auto replyOpt = dmit::cmp::asNngBuffer(writeReply, reply);
+
+    if (!replyOpt)
+    {
+        DMIT_COM_LOG_ERR << "error: failed to craft reply\n";
+        return;
+    }
+
+    // 2. Send it
+
+    int errorCode;
+
+    if ((errorCode = nng_send(socket._asNng, &(replyOpt.value()), 0)) != 0)
+    {
+        displayNngError("nng_send", errorCode);
+        return;
+    }
+}
+
 void replyStop(dmit::nng::Socket& socket, int& returnCode, bool& isStopping)
 {
-    // 1. Process Query
+    // 1. Process query
 
     DMIT_COM_LOG_OUT << "Stopping server...\n";
 
@@ -49,7 +73,7 @@ void replyStop(dmit::nng::Socket& socket, int& returnCode, bool& isStopping)
 
     // 2. Write reply
 
-    auto replyOpt = dmit::cmp::asNngBuffer(writeReply, K_REPLY_ACK);
+    auto replyOpt = dmit::cmp::asNngBuffer(writeReply, K_REPLY_OK);
 
     if (!replyOpt)
     {
@@ -68,58 +92,87 @@ void replyStop(dmit::nng::Socket& socket, int& returnCode, bool& isStopping)
         returnCode = EXIT_FAILURE;
         return;
     }
+
+    returnCode = EXIT_SUCCESS;
 }
 
-void replyCreateOrUpdateFile(dmit::nng::Socket& socket, cmp_ctx_t* context)
+void replyCreateOrUpdateFile(dmit::nng::Socket& socket,
+                             cmp_ctx_t* context,
+                             dmit::db::Database& database)
 {
-    // 1. Process Query
+    // 1. Deserialize query
 
     uint32_t size;
 
     if (!dmit::cmp::readArray(context, &size) || size != 2)
     {
         DMIT_COM_LOG_ERR << "error: badly formed query\n";
+        replyWith(socket, K_REPLY_KO);
         return;
     }
 
-    uint32_t stringSize;
+    uint32_t filePathSize;
 
-    if (!dmit::cmp::readStrSize(context, &stringSize)) {
+    if (!dmit::cmp::readStrSize(context, &filePathSize)) {
         DMIT_COM_LOG_ERR << "error: badly formed query\n";
+        replyWith(socket, K_REPLY_KO);
         return;
     }
 
-    std::string string;
+    std::string filePath;
 
-    string.resize(stringSize);
+    filePath.resize(filePathSize);
 
-    if (!dmit::cmp::readBytes(context, string.data(), stringSize))
+    if (!dmit::cmp::readBytes(context, filePath.data(), filePathSize))
     {
         DMIT_COM_LOG_ERR << "error: badly formed query\n";
+        replyWith(socket, K_REPLY_KO);
         return;
     }
 
-    DMIT_COM_LOG_OUT << string << '\n';
+    uint32_t fileContentSize;
 
-    // 2. Write reply
+    if (!dmit::cmp::readBinSize(context, &fileContentSize)) {
+        DMIT_COM_LOG_ERR << "error: badly formed query\n";
+        replyWith(socket, K_REPLY_KO);
+        return;
+    }
 
-    auto replyOpt = dmit::cmp::asNngBuffer(writeReply, K_REPLY_ACK);
+    std::vector<uint8_t> fileContent(fileContentSize);
 
-    if (!replyOpt)
+    if (!dmit::cmp::readBytes(context, fileContent.data(), fileContentSize))
     {
-        DMIT_COM_LOG_ERR << "error: failed to craft reply\n";
+        DMIT_COM_LOG_ERR << "error: badly formed query\n";
+        replyWith(socket, K_REPLY_KO);
         return;
     }
 
-    // 3. Send it
+    // 2. Update database
 
+    const dmit::com::UniqueId fileId{filePath};
+
+    bool isFileInDb;
     int errorCode;
 
-    if ((errorCode = nng_send(socket._asNng, &(replyOpt.value()), 0)) != 0)
+    if ((errorCode = database.hasFile(fileId, isFileInDb)) != SQLITE_OK)
     {
-        displayNngError("nng_send", errorCode);
+        displaySqlite3Error("hasFile", errorCode);
+        replyWith(socket, K_REPLY_KO);
         return;
     }
+
+    errorCode = isFileInDb ? database.updateFile(fileId, fileContent)
+                           : database.insertFile(fileId, fileContent, filePath);
+    if (errorCode)
+    {
+        displaySqlite3Error("updateFile/insertFile", errorCode);
+        replyWith(socket, K_REPLY_KO);
+        return;
+    }
+
+    // 3. Reply OK at the end
+
+    replyWith(socket, K_REPLY_OK);
 }
 
 enum : char
@@ -208,11 +261,11 @@ int main(int argc, char** argv)
 
     int errorCode;
 
-    dmit::db::Connection dbConnection;
+    dmit::db::Database database{errorCode};
 
-    if ((errorCode = dmit::db::makeRamDb(dbConnection)) != SQLITE_OK)
+    if (errorCode != SQLITE_OK)
     {
-        displaySqlite3Error("sqlite3_open_v2", errorCode);
+        displaySqlite3Error("database", errorCode);
         return EXIT_FAILURE;
     }
 
@@ -273,7 +326,7 @@ int main(int argc, char** argv)
 
             if (query == dmit::drv::Query::CREATE_OR_UPDATE_FILE)
             {
-                replyCreateOrUpdateFile(socket, &cmpContextQuery);
+                replyCreateOrUpdateFile(socket, &cmpContextQuery, database);
             }
 
             if (query == dmit::drv::Query::STOP_SERVER)
