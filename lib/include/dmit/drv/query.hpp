@@ -7,7 +7,7 @@
 namespace dmit::drv
 {
 
-struct Action : com::TEnum<uint8_t>
+struct Query : com::TEnum<uint8_t>
 {
     enum : uint8_t
     {
@@ -16,7 +16,7 @@ struct Action : com::TEnum<uint8_t>
         INVALID
     };
 
-    DMIT_COM_ENUM_IMPLICIT_FROM_INT(Action);
+    DMIT_COM_ENUM_IMPLICIT_FROM_INT(Query);
 };
 
 } // namespace dmit::drv

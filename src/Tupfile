@@ -1,7 +1,8 @@
 include_rules
 
 : foreach $(BIN_CPP) |> !cx |> %B.o <obj>
-: foreach $(BIN_OBJ) | <obj> $(ROOT)/<lib_dmit_nng> \
+: foreach $(BIN_OBJ) | <obj> $(ROOT)/<lib_dmit_db>  \
+                             $(ROOT)/<lib_dmit_nng> \
                              $(ROOT)/<lib_dmit_fmt> \
                              $(ROOT)/<lib_dmit_com> \
                              $(ROOT)/<lib_dmit_cmp> \

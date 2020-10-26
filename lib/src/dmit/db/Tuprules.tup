@@ -1,0 +1,2 @@
+LIB_DMIT_DB_CPP = $(LIB_SRC)/dmit/db/*.cpp
+LIB_DMIT_DB_OUT = libdmit_db.a

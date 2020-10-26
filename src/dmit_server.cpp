@@ -1,4 +1,7 @@
-#include "dmit/drv/action.hpp"
+#include "dmit/drv/query.hpp"
+
+#include "dmit/db/connection.hpp"
+#include "dmit/db/db.hpp"
 
 #include "dmit/cmp/cmp.hpp"
 
@@ -8,6 +11,8 @@
 
 #include "nng/nng.h"
 #include "nng/protocol/reqrep0/rep.h"
+
+#include "sqlite3/sqlite3.h"
 
 #include "cmp/cmp.h"
 
@@ -19,9 +24,14 @@
 
 static const int K_REPLY_ACK = 42;
 
+void displaySqlite3Error(const char* functionName, int errorCode)
+{
+    DMIT_COM_LOG_ERR << "error: " << functionName << " returned '" << sqlite3_errstr(errorCode) << "'\n";
+}
+
 void displayNngError(const char* functionName, int errorCode)
 {
-    DMIT_COM_LOG_ERR << "error: " << functionName << "returned '" << nng_strerror(errorCode) << "'\n";
+    DMIT_COM_LOG_ERR << "error: " << functionName << " returned '" << nng_strerror(errorCode) << "'\n";
 }
 
 bool writeReply(cmp_ctx_t* context, const uint64_t reply)
@@ -185,7 +195,26 @@ int main(int argc, char** argv)
         return EXIT_SUCCESS;
     }
 
-    // Everything fine, now doing the work
+    // Check the command is properly formed
+
+    if (!url)
+    {
+        DMIT_COM_LOG_ERR << "error: url option is mandatory to create the server";
+        displayHelp();
+        return EXIT_FAILURE;
+    }
+
+    // Create the in-memory database
+
+    int errorCode;
+
+    dmit::db::Connection dbConnection;
+
+    if ((errorCode = dmit::db::makeRamDb(dbConnection)) != SQLITE_OK)
+    {
+        displaySqlite3Error("sqlite3_open_v2", errorCode);
+        return EXIT_FAILURE;
+    }
 
     int returnCode;
 
@@ -193,7 +222,6 @@ int main(int argc, char** argv)
         // 1. Open socket
 
         dmit::nng::Socket socket;
-        int errorCode;
 
         if ((errorCode = nng_rep0_open(&socket._asNng)) != 0)
         {
@@ -243,12 +271,12 @@ int main(int argc, char** argv)
 
             // 3.3 Process and reply
 
-            if (query == dmit::drv::Action::CREATE_OR_UPDATE_FILE)
+            if (query == dmit::drv::Query::CREATE_OR_UPDATE_FILE)
             {
                 replyCreateOrUpdateFile(socket, &cmpContextQuery);
             }
 
-            if (query == dmit::drv::Action::STOP_SERVER)
+            if (query == dmit::drv::Query::STOP_SERVER)
             {
                 replyStop(socket, returnCode, isStopping);
             }

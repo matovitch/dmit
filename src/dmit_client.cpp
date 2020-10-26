@@ -1,8 +1,8 @@
-#include "dmit/drv/action.hpp"
+#include "dmit/drv/query.hpp"
 
 #include "dmit/src/file.hpp"
 
-#include "dmit/cmp/drv/action.hpp"
+#include "dmit/cmp/drv/query.hpp"
 #include "dmit/cmp/src/file.hpp"
 #include "dmit/cmp/cmp.hpp"
 
@@ -25,7 +25,7 @@ static const int K_REPLY_ACK = 42;
 
 bool queryCreateOrUpdateFile(cmp_ctx_t* context, const dmit::src::File& file)
 {
-    if (!dmit::cmp::write(context, dmit::drv::Action::CREATE_OR_UPDATE_FILE))
+    if (!dmit::cmp::write(context, dmit::drv::Query::CREATE_OR_UPDATE_FILE))
     {
         return false;
     }
@@ -35,7 +35,7 @@ bool queryCreateOrUpdateFile(cmp_ctx_t* context, const dmit::src::File& file)
 
 bool queryStopServer(cmp_ctx_t* context)
 {
-    return dmit::cmp::write(context, dmit::drv::Action::STOP_SERVER);
+    return dmit::cmp::write(context, dmit::drv::Query::STOP_SERVER);
 }
 
 void displayNngError(const char* functionName, int errorCode)
@@ -253,6 +253,7 @@ int main(int argc, char** argv)
     }
 
     // Check the command is properly formed
+
     if (!url)
     {
         DMIT_COM_LOG_ERR << "error: url option is necessary to reach the server";
@@ -284,7 +285,7 @@ int main(int argc, char** argv)
             goto CLEAN_UP;
         }
 
-        // Perform Actions
+        // Send Queries
 
         if (hasStopServer)
         {
