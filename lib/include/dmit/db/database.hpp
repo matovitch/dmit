@@ -3,8 +3,11 @@
 #include "dmit/db/query_register.hpp"
 #include "dmit/db/connection.hpp"
 
+#include "dmit/nng/nng.hpp"
+
 #include "dmit/com/unique_id.hpp"
 
+#include <optional>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -28,11 +31,12 @@ public:
     int updateFile(const com::UniqueId        & fileId,
                    const std::vector<uint8_t> & fileContent);
 
+    std::optional<nng::Buffer> asNngBuffer();
+
 private:
 
     Connection _connection;
     QueryRegister _queryRegister;
 };
-
 
 } // namespace dmit::db

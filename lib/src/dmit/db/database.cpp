@@ -3,10 +3,13 @@
 #include "dmit/db/query_register.hpp"
 #include "dmit/db/connection.hpp"
 
+#include "dmit/nng/nng.hpp"
+
 #include "dmit/com/unique_id.hpp"
 
 #include "sqlite3/sqlite3.h"
 
+#include <optional>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -140,6 +143,11 @@ int Database::updateFile(const com::UniqueId        & fileId,
     }
 
     return SQLITE_OK;
+}
+
+std::optional<nng::Buffer> Database::asNngBuffer()
+{
+    return _connection.asNngBuffer();
 }
 
 } // namespace dmit::db

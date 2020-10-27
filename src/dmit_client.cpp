@@ -38,29 +38,36 @@ bool queryStopServer(cmp_ctx_t* context)
     return dmit::cmp::write(context, dmit::drv::Query::STOP_SERVER);
 }
 
+bool queryGetDatabase(cmp_ctx_t* context)
+{
+    return dmit::cmp::write(context, dmit::drv::Query::GET_DATABASE);
+}
+
 void displayNngError(const char* functionName, int errorCode)
 {
     DMIT_COM_LOG_ERR << "error: " << functionName << " returned '" << nng_strerror(errorCode) << "'\n";
 }
 
-enum : char
+enum
 {
-    K_OPTION_INVALID     = ':',
-    K_OPTION_HELP        = 'h',
-    K_OPTION_VERSION     = 'v',
-    K_OPTION_STOP_SERVER = 's',
-    K_OPTION_URL         = 'u',
-    K_OPTION_FILE_PATH   = 'f',
+    K_OPTION_INVALID      = ':',
+    K_OPTION_HELP         = 'h',
+    K_OPTION_VERSION      = 'v',
+    K_OPTION_STOP_SERVER  = 's',
+    K_OPTION_URL          = 'u',
+    K_OPTION_FILE_PATH    = 'f',
+    K_OPTION_GET_DATABASE = 0x100 // These options have no char representation
 };
 
 static const ko_longopt_t K_OPTIONS_LONG[] =
 {
-    { "help"        , ko_no_argument       , K_OPTION_HELP        },
-    { "version"     , ko_no_argument       , K_OPTION_VERSION     },
-    { "stop-server" , ko_no_argument       , K_OPTION_STOP_SERVER },
-    { "url"         , ko_required_argument , K_OPTION_URL         },
-    { "file-path"   , ko_required_argument , K_OPTION_FILE_PATH   },
-    { nullptr       , ko_no_argument       , K_OPTION_INVALID     } // sentinel required
+    { "help"        , ko_no_argument       , K_OPTION_HELP         },
+    { "version"     , ko_no_argument       , K_OPTION_VERSION      },
+    { "stop-server" , ko_no_argument       , K_OPTION_STOP_SERVER  },
+    { "url"         , ko_required_argument , K_OPTION_URL          },
+    { "file-path"   , ko_required_argument , K_OPTION_FILE_PATH    },
+    { "get-db"      , ko_no_argument       , K_OPTION_GET_DATABASE },
+    { nullptr       , ko_no_argument       , K_OPTION_INVALID      } // sentinel required
 };
 
 static const char* K_OPTIONS_SHORT = "hvsu:f:";
@@ -151,6 +158,48 @@ int stopServer(dmit::nng::Socket& socket)
     return EXIT_SUCCESS;
 }
 
+int getDatabase(dmit::nng::Socket& socket)
+{
+    // Write query
+
+    auto queryOpt = dmit::cmp::asNngBuffer(queryGetDatabase);
+
+    if (!queryOpt)
+    {
+        DMIT_COM_LOG_ERR << "error: failed to craft query\n";
+        return EXIT_FAILURE;
+    }
+
+    // Send query
+
+    int errorCode;
+
+    if ((errorCode = nng_send(socket._asNng, &(queryOpt.value()), 0)) != 0)
+    {
+        displayNngError("nng_send", errorCode);
+        return EXIT_FAILURE;
+    }
+
+    // Wait for reply
+
+    dmit::nng::Buffer bufferReply;
+
+    if ((errorCode = nng_recv(socket._asNng, &bufferReply, 0)) != 0)
+    {
+        displayNngError("nng_recv", errorCode);
+        return EXIT_FAILURE;
+    }
+
+    // Dump reply
+
+    for (int i = 0; i < bufferReply._size; i++)
+    {
+        DMIT_COM_LOG_OUT << bufferReply._asBytes[i];
+    }
+
+    return EXIT_SUCCESS;
+}
+
 int createOrUpdateFile(dmit::nng::Socket& socket, const char* filePath)
 {
     // Read the file
@@ -214,9 +263,11 @@ int main(int argc, char** argv)
 {
     // Decode the arguments
 
-    bool        hasHelp       = false;
-    bool        hasVersion    = false;
-    bool        hasStopServer = false;
+    bool hasHelp        = false;
+    bool hasVersion     = false;
+    bool hasStopServer  = false;
+    bool hasGetDatabase = false;
+
     const char* filePath      = nullptr;
     const char* url           = nullptr;
 
@@ -230,9 +281,10 @@ int main(int argc, char** argv)
                                   K_OPTIONS_SHORT,
                                   K_OPTIONS_LONG)) != -1)
     {
-        hasHelp       |= (ketoptOption == K_OPTION_HELP        );
-        hasVersion    |= (ketoptOption == K_OPTION_VERSION     );
-        hasStopServer |= (ketoptOption == K_OPTION_STOP_SERVER );
+        hasHelp        |= (ketoptOption == K_OPTION_HELP         );
+        hasVersion     |= (ketoptOption == K_OPTION_VERSION      );
+        hasStopServer  |= (ketoptOption == K_OPTION_STOP_SERVER  );
+        hasGetDatabase |= (ketoptOption == K_OPTION_GET_DATABASE );
 
         if (ketoptOption == K_OPTION_FILE_PATH ) { filePath = ketoptStatus.arg; }
         if (ketoptOption == K_OPTION_URL       ) { url      = ketoptStatus.arg; }
@@ -290,6 +342,12 @@ int main(int argc, char** argv)
         if (hasStopServer)
         {
             returnCode = stopServer(socket);
+            goto CLEAN_UP;
+        }
+
+        if (hasGetDatabase)
+        {
+            returnCode = getDatabase(socket);
             goto CLEAN_UP;
         }
 

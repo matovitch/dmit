@@ -163,7 +163,8 @@ void replyCreateOrUpdateFile(dmit::nng::Socket& socket,
 
     errorCode = isFileInDb ? database.updateFile(fileId, fileContent)
                            : database.insertFile(fileId, fileContent, filePath);
-    if (errorCode)
+
+    if (errorCode != SQLITE_OK)
     {
         displaySqlite3Error("updateFile/insertFile", errorCode);
         replyWith(socket, K_REPLY_KO);
@@ -173,6 +174,29 @@ void replyCreateOrUpdateFile(dmit::nng::Socket& socket,
     // 3. Reply OK at the end
 
     replyWith(socket, K_REPLY_OK);
+}
+
+void replyGetDatabase(dmit::nng::Socket& socket, dmit::db::Database& database)
+{
+    // 1. Write reply
+
+    auto replyOpt = database.asNngBuffer();
+
+    if (!replyOpt)
+    {
+        DMIT_COM_LOG_ERR << "error: failed to serialize the database\n";
+        return;
+    }
+
+    // 2. Send it
+
+    int errorCode;
+
+    if ((errorCode = nng_send(socket._asNng, &(replyOpt.value()), 0)) != 0)
+    {
+        displayNngError("nng_send", errorCode);
+        return;
+    }
 }
 
 enum : char
@@ -332,6 +356,11 @@ int main(int argc, char** argv)
             if (query == dmit::drv::Query::STOP_SERVER)
             {
                 replyStop(socket, returnCode, isStopping);
+            }
+
+            if (query == dmit::drv::Query::GET_DATABASE)
+            {
+                replyGetDatabase(socket, database);
             }
         }
     }

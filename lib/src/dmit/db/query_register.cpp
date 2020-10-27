@@ -10,19 +10,19 @@ namespace dmit::db
 {
 
 static const char K_QUERY_SELECT_FILE[] =
-    R"(
-        SELECT path, content FROM Files WHERE id = ?1;
-    )";
+R"(
+    SELECT path, content FROM Files WHERE id = ?1;
+)";
 
 static const char K_QUERY_INSERT_FILE[] =
-    R"(
-        INSERT INTO Files (id, path, content) VALUES (?1, ?2, ?3);
-    )";
+R"(
+    INSERT INTO Files (id, path, content) VALUES (?1, ?2, ?3);
+)";
 
 static const char K_QUERY_UPDATE_FILE[] =
-    R"(
-        UPDATE Files SET content = ?3 WHERE id = ?1;
-    )";
+R"(
+    UPDATE Files SET content = ?3 WHERE id = ?1;
+)";
 
 static const char* K_QUERIES[QueryRegister::SIZE] =
 {
