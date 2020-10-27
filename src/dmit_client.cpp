@@ -18,7 +18,6 @@
 
 #include "ketopt/ketopt.h"
 
-#include <iostream>
 #include <cstdlib>
 #include <cstdint>
 

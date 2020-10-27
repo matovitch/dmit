@@ -20,7 +20,6 @@
 
 #include "ketopt/ketopt.h"
 
-#include <iostream>
 #include <cstdlib>
 #include <cstdint>
 
@@ -34,7 +33,7 @@ void displayNngError(const char* functionName, int errorCode)
     DMIT_COM_LOG_ERR << "error: " << functionName << " returned '" << nng_strerror(errorCode) << "'\n";
 }
 
-bool writeReplyCode(cmp_ctx_t* context, const dmit::drv::ReplyCode replyCode)
+bool writeReply(cmp_ctx_t* context, const dmit::drv::ReplyCode replyCode)
 {
     return dmit::cmp::write(context, replyCode);
 }
@@ -43,7 +42,7 @@ void replyWith(dmit::nng::Socket& socket, const dmit::drv::ReplyCode replyCode)
 {
     // 1. Write reply
 
-    auto replyOpt = dmit::cmp::asNngBuffer(writeReplyCode, replyCode);
+    auto replyOpt = dmit::cmp::asNngBuffer(writeReply, replyCode);
 
     if (!replyOpt)
     {
@@ -72,7 +71,7 @@ void replyStop(dmit::nng::Socket& socket, int& returnCode, bool& isStopping)
 
     // 2. Write reply
 
-    auto replyOpt = dmit::cmp::asNngBuffer(writeReplyCode, dmit::drv::ReplyCode::OK);
+    auto replyOpt = dmit::cmp::asNngBuffer(writeReply, dmit::drv::ReplyCode::OK);
 
     if (!replyOpt)
     {
@@ -219,6 +218,8 @@ void replyDatabaseGet(dmit::nng::Socket& socket, dmit::db::Database& database)
 
 void replyDatabaseClean(dmit::nng::Socket& socket, dmit::db::Database& database)
 {
+    // 1. Process query
+
     int errorCode;
 
     if ((errorCode = database.clean()) != SQLITE_OK)
@@ -228,7 +229,7 @@ void replyDatabaseClean(dmit::nng::Socket& socket, dmit::db::Database& database)
         return;
     }
 
-    // 3. Reply OK at the end
+    // 2. Reply OK at the end
 
     replyWith(socket, dmit::drv::ReplyCode::OK);
 }
