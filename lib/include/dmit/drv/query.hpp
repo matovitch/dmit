@@ -13,7 +13,8 @@ struct Query : com::TEnum<uint8_t>
     {
         CREATE_OR_UPDATE_FILE,
         STOP_SERVER,
-        GET_DATABASE,
+        DATABASE_GET,
+        DATABASE_CLEAN,
         INVALID
     };
 

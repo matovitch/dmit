@@ -1,3 +1,4 @@
+#include "dmit/drv/reply_code.hpp"
 #include "dmit/drv/query.hpp"
 
 #include "dmit/src/file.hpp"
@@ -21,8 +22,6 @@
 #include <cstdlib>
 #include <cstdint>
 
-static const int K_REPLY_ACK = 42;
-
 bool queryCreateOrUpdateFile(cmp_ctx_t* context, const dmit::src::File& file)
 {
     if (!dmit::cmp::write(context, dmit::drv::Query::CREATE_OR_UPDATE_FILE))
@@ -38,9 +37,14 @@ bool queryStopServer(cmp_ctx_t* context)
     return dmit::cmp::write(context, dmit::drv::Query::STOP_SERVER);
 }
 
-bool queryGetDatabase(cmp_ctx_t* context)
+bool queryDatabaseGet(cmp_ctx_t* context)
 {
-    return dmit::cmp::write(context, dmit::drv::Query::GET_DATABASE);
+    return dmit::cmp::write(context, dmit::drv::Query::DATABASE_GET);
+}
+
+bool queryDatabaseClean(cmp_ctx_t* context)
+{
+    return dmit::cmp::write(context, dmit::drv::Query::DATABASE_CLEAN);
 }
 
 void displayNngError(const char* functionName, int errorCode)
@@ -50,24 +54,26 @@ void displayNngError(const char* functionName, int errorCode)
 
 enum
 {
-    K_OPTION_INVALID      = ':',
-    K_OPTION_HELP         = 'h',
-    K_OPTION_VERSION      = 'v',
-    K_OPTION_STOP_SERVER  = 's',
-    K_OPTION_URL          = 'u',
-    K_OPTION_FILE_PATH    = 'f',
-    K_OPTION_GET_DATABASE = 0x100 // These options have no char representation
+    K_OPTION_INVALID        = ':',
+    K_OPTION_HELP           = 'h',
+    K_OPTION_VERSION        = 'v',
+    K_OPTION_STOP_SERVER    = 's',
+    K_OPTION_URL            = 'u',
+    K_OPTION_FILE_PATH      = 'f',
+    K_OPTION_DATABASE_GET   = 0x100, // These options have no char representation
+    K_OPTION_DATABASE_CLEAN
 };
 
 static const ko_longopt_t K_OPTIONS_LONG[] =
 {
-    { "help"        , ko_no_argument       , K_OPTION_HELP         },
-    { "version"     , ko_no_argument       , K_OPTION_VERSION      },
-    { "stop-server" , ko_no_argument       , K_OPTION_STOP_SERVER  },
-    { "url"         , ko_required_argument , K_OPTION_URL          },
-    { "file-path"   , ko_required_argument , K_OPTION_FILE_PATH    },
-    { "get-db"      , ko_no_argument       , K_OPTION_GET_DATABASE },
-    { nullptr       , ko_no_argument       , K_OPTION_INVALID      } // sentinel required
+    { "help"        , ko_no_argument       , K_OPTION_HELP           },
+    { "version"     , ko_no_argument       , K_OPTION_VERSION        },
+    { "stop-server" , ko_no_argument       , K_OPTION_STOP_SERVER    },
+    { "url"         , ko_required_argument , K_OPTION_URL            },
+    { "file-path"   , ko_required_argument , K_OPTION_FILE_PATH      },
+    { "db-get"      , ko_no_argument       , K_OPTION_DATABASE_GET   },
+    { "db-clean"    , ko_no_argument       , K_OPTION_DATABASE_CLEAN },
+    { nullptr       , ko_no_argument       , K_OPTION_INVALID        } // sentinel required
 };
 
 static const char* K_OPTIONS_SHORT = "hvsu:f:";
@@ -79,6 +85,8 @@ void displayHelp()
     DMIT_COM_LOG_OUT << "    " << "-h, --help                   Show this screen\n";
     DMIT_COM_LOG_OUT << "    " << "-v, --version                Display version\n";
     DMIT_COM_LOG_OUT << "    " << "-s, --stop-server            Stop the server\n";
+    DMIT_COM_LOG_OUT << "    " << "    --db-get                 Dump the database\n";
+    DMIT_COM_LOG_OUT << "    " << "    --db-clean               Clean the database\n";
     DMIT_COM_LOG_OUT << "    " << "-u, --url         URL        Connect to URL\n";
     DMIT_COM_LOG_OUT << "    " << "-f, --file-path   FILE_PATH  Load FILE_PATH\n";
 }
@@ -147,9 +155,9 @@ int stopServer(dmit::nng::Socket& socket)
 
     cmp_ctx_t cmpContextReply = dmit::cmp::contextFromNngBuffer(bufferReply);
 
-    uint64_t reply;
+    uint8_t replyCode;
 
-    if (!dmit::cmp::readU64(&cmpContextReply, &reply) || reply != K_REPLY_ACK)
+    if (!dmit::cmp::readU8(&cmpContextReply, &replyCode) || replyCode != dmit::drv::ReplyCode::OK)
     {
         DMIT_COM_LOG_ERR << "error: badly formed reply\n";
         return EXIT_FAILURE;
@@ -158,11 +166,11 @@ int stopServer(dmit::nng::Socket& socket)
     return EXIT_SUCCESS;
 }
 
-int getDatabase(dmit::nng::Socket& socket)
+int databaseGet(dmit::nng::Socket& socket)
 {
     // Write query
 
-    auto queryOpt = dmit::cmp::asNngBuffer(queryGetDatabase);
+    auto queryOpt = dmit::cmp::asNngBuffer(queryDatabaseGet);
 
     if (!queryOpt)
     {
@@ -195,6 +203,53 @@ int getDatabase(dmit::nng::Socket& socket)
     for (int i = 0; i < bufferReply._size; i++)
     {
         DMIT_COM_LOG_OUT << bufferReply._asBytes[i];
+    }
+
+    return EXIT_SUCCESS;
+}
+
+int databaseClean(dmit::nng::Socket& socket)
+{
+    // Write query
+
+    auto queryOpt = dmit::cmp::asNngBuffer(queryDatabaseClean);
+
+    if (!queryOpt)
+    {
+        DMIT_COM_LOG_ERR << "error: failed to craft query\n";
+        return EXIT_FAILURE;
+    }
+
+    // Send query
+
+    int errorCode;
+
+    if ((errorCode = nng_send(socket._asNng, &(queryOpt.value()), 0)) != 0)
+    {
+        displayNngError("nng_send", errorCode);
+        return EXIT_FAILURE;
+    }
+
+    // Wait for reply
+
+    dmit::nng::Buffer bufferReply;
+
+    if ((errorCode = nng_recv(socket._asNng, &bufferReply, 0)) != 0)
+    {
+        displayNngError("nng_recv", errorCode);
+        return EXIT_FAILURE;
+    }
+
+    // Decode reply
+
+    cmp_ctx_t cmpContextReply = dmit::cmp::contextFromNngBuffer(bufferReply);
+
+    uint8_t replyCode;
+
+    if (!dmit::cmp::readU8(&cmpContextReply, &replyCode) || replyCode != dmit::drv::ReplyCode::OK)
+    {
+        DMIT_COM_LOG_ERR << "error: badly formed reply\n";
+        return EXIT_FAILURE;
     }
 
     return EXIT_SUCCESS;
@@ -248,9 +303,9 @@ int createOrUpdateFile(dmit::nng::Socket& socket, const char* filePath)
 
     cmp_ctx_t cmpContextReply = dmit::cmp::contextFromNngBuffer(bufferReply);
 
-    uint64_t reply;
+    uint8_t replyCode;
 
-    if (!dmit::cmp::readU64(&cmpContextReply, &reply) || reply != K_REPLY_ACK)
+    if (!dmit::cmp::readU8(&cmpContextReply, &replyCode) || replyCode != dmit::drv::ReplyCode::OK)
     {
         DMIT_COM_LOG_ERR << "error: badly formed reply\n";
         return EXIT_FAILURE;
@@ -263,10 +318,11 @@ int main(int argc, char** argv)
 {
     // Decode the arguments
 
-    bool hasHelp        = false;
-    bool hasVersion     = false;
-    bool hasStopServer  = false;
-    bool hasGetDatabase = false;
+    bool hasHelp          = false;
+    bool hasVersion       = false;
+    bool hasStopServer    = false;
+    bool hasDatabaseGet   = false;
+    bool hasDatabaseClean = false;
 
     const char* filePath      = nullptr;
     const char* url           = nullptr;
@@ -281,10 +337,11 @@ int main(int argc, char** argv)
                                   K_OPTIONS_SHORT,
                                   K_OPTIONS_LONG)) != -1)
     {
-        hasHelp        |= (ketoptOption == K_OPTION_HELP         );
-        hasVersion     |= (ketoptOption == K_OPTION_VERSION      );
-        hasStopServer  |= (ketoptOption == K_OPTION_STOP_SERVER  );
-        hasGetDatabase |= (ketoptOption == K_OPTION_GET_DATABASE );
+        hasHelp          |= (ketoptOption == K_OPTION_HELP           );
+        hasVersion       |= (ketoptOption == K_OPTION_VERSION        );
+        hasStopServer    |= (ketoptOption == K_OPTION_STOP_SERVER    );
+        hasDatabaseGet   |= (ketoptOption == K_OPTION_DATABASE_GET   );
+        hasDatabaseClean |= (ketoptOption == K_OPTION_DATABASE_CLEAN );
 
         if (ketoptOption == K_OPTION_FILE_PATH ) { filePath = ketoptStatus.arg; }
         if (ketoptOption == K_OPTION_URL       ) { url      = ketoptStatus.arg; }
@@ -345,9 +402,15 @@ int main(int argc, char** argv)
             goto CLEAN_UP;
         }
 
-        if (hasGetDatabase)
+        if (hasDatabaseGet)
         {
-            returnCode = getDatabase(socket);
+            returnCode = databaseGet(socket);
+            goto CLEAN_UP;
+        }
+
+        if (hasDatabaseClean)
+        {
+            returnCode = databaseClean(socket);
             goto CLEAN_UP;
         }
 

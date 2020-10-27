@@ -9,33 +9,79 @@
 namespace dmit::db
 {
 
+static const char K_QUERY_TRANSACTION_BEGIN[] =
+R"(
+    BEGIN TRANSACTION;
+)";
+
+static const char K_QUERY_TRANSACTION_ROLLBACK[] =
+R"(
+    ROLLBACK;
+)";
+
+static const char K_QUERY_TRANSACTION_COMMIT[] =
+R"(
+    COMMIT;
+)";
+
 static const char K_QUERY_SELECT_FILE[] =
 R"(
-    SELECT path, content FROM Files WHERE id = ?1;
+    SELECT 1 FROM Files WHERE file_id = ?1;
 )";
 
 static const char K_QUERY_INSERT_FILE[] =
 R"(
-    INSERT INTO Files (id, path, content) VALUES (?1, ?2, ?3);
+    INSERT INTO Files (file_id, unit_id, path) VALUES (?1, ?2, ?3);
 )";
 
 static const char K_QUERY_UPDATE_FILE[] =
 R"(
-    UPDATE Files SET content = ?3 WHERE id = ?1;
+    UPDATE Files SET unit_id = ?2 WHERE file_id = ?1;
+)";
+
+static const char K_QUERY_SELECT_UNIT[] =
+R"(
+    SELECT 1 FROM Units WHERE unit_id = ?2;
+)";
+
+static const char K_QUERY_INSERT_UNIT[] =
+R"(
+    INSERT INTO Units (unit_id, file_id, source) VALUES (?2, ?1, ?4);
+)";
+
+static const char K_QUERY_CLEAN[] =
+R"(
+    DELETE FROM Units WHERE Units.unit_id IN (
+        SELECT Units.unit_id FROM Units LEFT JOIN Files ON
+            Files.unit_id = Units.unit_id
+        WHERE Files.unit_id IS NULL
+    );
 )";
 
 static const char* K_QUERIES[QueryRegister::SIZE] =
 {
+    K_QUERY_TRANSACTION_BEGIN,
+    K_QUERY_TRANSACTION_ROLLBACK,
+    K_QUERY_TRANSACTION_COMMIT,
     K_QUERY_SELECT_FILE,
     K_QUERY_INSERT_FILE,
-    K_QUERY_UPDATE_FILE
+    K_QUERY_UPDATE_FILE,
+    K_QUERY_SELECT_UNIT,
+    K_QUERY_INSERT_UNIT,
+    K_QUERY_CLEAN
 };
 
 static const std::size_t K_QUERY_SIZES[QueryRegister::SIZE] =
 {
+    sizeof(K_QUERY_TRANSACTION_BEGIN),
+    sizeof(K_QUERY_TRANSACTION_ROLLBACK),
+    sizeof(K_QUERY_TRANSACTION_COMMIT),
     sizeof(K_QUERY_SELECT_FILE),
     sizeof(K_QUERY_INSERT_FILE),
-    sizeof(K_QUERY_UPDATE_FILE)
+    sizeof(K_QUERY_UPDATE_FILE),
+    sizeof(K_QUERY_SELECT_UNIT),
+    sizeof(K_QUERY_INSERT_UNIT),
+    sizeof(K_QUERY_CLEAN)
 };
 
 QueryRegister::QueryRegister(Connection& connection, int& errorCode) :

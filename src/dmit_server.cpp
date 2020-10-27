@@ -1,7 +1,9 @@
+#include "dmit/drv/reply_code.hpp"
 #include "dmit/drv/query.hpp"
 
 #include "dmit/db/database.hpp"
 
+#include "dmit/cmp/drv/reply_code.hpp"
 #include "dmit/cmp/cmp.hpp"
 
 #include "dmit/com/unique_id.hpp"
@@ -22,9 +24,6 @@
 #include <cstdlib>
 #include <cstdint>
 
-static const int K_REPLY_OK = 42;
-static const int K_REPLY_KO = 42;
-
 void displaySqlite3Error(const char* functionName, int errorCode)
 {
     DMIT_COM_LOG_ERR << "error: " << functionName << " returned '" << sqlite3_errstr(errorCode) << "'\n";
@@ -35,16 +34,16 @@ void displayNngError(const char* functionName, int errorCode)
     DMIT_COM_LOG_ERR << "error: " << functionName << " returned '" << nng_strerror(errorCode) << "'\n";
 }
 
-bool writeReply(cmp_ctx_t* context, const uint64_t reply)
+bool writeReplyCode(cmp_ctx_t* context, const dmit::drv::ReplyCode replyCode)
 {
-    return dmit::cmp::writeU64(context, reply);
+    return dmit::cmp::write(context, replyCode);
 }
 
-void replyWith(dmit::nng::Socket& socket, const uint64_t reply)
+void replyWith(dmit::nng::Socket& socket, const dmit::drv::ReplyCode replyCode)
 {
     // 1. Write reply
 
-    auto replyOpt = dmit::cmp::asNngBuffer(writeReply, reply);
+    auto replyOpt = dmit::cmp::asNngBuffer(writeReplyCode, replyCode);
 
     if (!replyOpt)
     {
@@ -73,7 +72,7 @@ void replyStop(dmit::nng::Socket& socket, int& returnCode, bool& isStopping)
 
     // 2. Write reply
 
-    auto replyOpt = dmit::cmp::asNngBuffer(writeReply, K_REPLY_OK);
+    auto replyOpt = dmit::cmp::asNngBuffer(writeReplyCode, dmit::drv::ReplyCode::OK);
 
     if (!replyOpt)
     {
@@ -107,7 +106,7 @@ void replyCreateOrUpdateFile(dmit::nng::Socket& socket,
     if (!dmit::cmp::readArray(context, &size) || size != 2)
     {
         DMIT_COM_LOG_ERR << "error: badly formed query\n";
-        replyWith(socket, K_REPLY_KO);
+        replyWith(socket, dmit::drv::ReplyCode::KO);
         return;
     }
 
@@ -115,7 +114,7 @@ void replyCreateOrUpdateFile(dmit::nng::Socket& socket,
 
     if (!dmit::cmp::readStrSize(context, &filePathSize)) {
         DMIT_COM_LOG_ERR << "error: badly formed query\n";
-        replyWith(socket, K_REPLY_KO);
+        replyWith(socket, dmit::drv::ReplyCode::KO);
         return;
     }
 
@@ -126,30 +125,31 @@ void replyCreateOrUpdateFile(dmit::nng::Socket& socket,
     if (!dmit::cmp::readBytes(context, filePath.data(), filePathSize))
     {
         DMIT_COM_LOG_ERR << "error: badly formed query\n";
-        replyWith(socket, K_REPLY_KO);
+        replyWith(socket, dmit::drv::ReplyCode::KO);
         return;
     }
 
-    uint32_t fileContentSize;
+    uint32_t unitSourceSize;
 
-    if (!dmit::cmp::readBinSize(context, &fileContentSize)) {
+    if (!dmit::cmp::readBinSize(context, &unitSourceSize)) {
         DMIT_COM_LOG_ERR << "error: badly formed query\n";
-        replyWith(socket, K_REPLY_KO);
+        replyWith(socket, dmit::drv::ReplyCode::KO);
         return;
     }
 
-    std::vector<uint8_t> fileContent(fileContentSize);
+    std::vector<uint8_t> unitSource(unitSourceSize);
 
-    if (!dmit::cmp::readBytes(context, fileContent.data(), fileContentSize))
+    if (!dmit::cmp::readBytes(context, unitSource.data(), unitSourceSize))
     {
         DMIT_COM_LOG_ERR << "error: badly formed query\n";
-        replyWith(socket, K_REPLY_KO);
+        replyWith(socket, dmit::drv::ReplyCode::KO);
         return;
     }
 
     // 2. Update database
 
-    const dmit::com::UniqueId fileId{filePath};
+    const dmit::com::UniqueId unitId {unitSource};
+    const dmit::com::UniqueId fileId {filePath};
 
     bool isFileInDb;
     int errorCode;
@@ -157,26 +157,44 @@ void replyCreateOrUpdateFile(dmit::nng::Socket& socket,
     if ((errorCode = database.hasFile(fileId, isFileInDb)) != SQLITE_OK)
     {
         displaySqlite3Error("hasFile", errorCode);
-        replyWith(socket, K_REPLY_KO);
+        replyWith(socket, dmit::drv::ReplyCode::KO);
         return;
     }
 
-    errorCode = isFileInDb ? database.updateFile(fileId, fileContent)
-                           : database.insertFile(fileId, fileContent, filePath);
+    if (isFileInDb)
+    {
+        bool isUnitInDb;
+
+        if ((errorCode = database.hasUnit(unitId, isUnitInDb)) != SQLITE_OK)
+        {
+            displaySqlite3Error("hasUnit", errorCode);
+            replyWith(socket, dmit::drv::ReplyCode::KO);
+            return;
+        }
+
+        if (!isUnitInDb)
+        {
+            errorCode = database.updateFileWithUnit(fileId, unitId, unitSource);
+        }
+    }
+    else
+    {
+        errorCode = database.insertFileWithUnit(fileId, unitId, filePath, unitSource);
+    }
 
     if (errorCode != SQLITE_OK)
     {
-        displaySqlite3Error("updateFile/insertFile", errorCode);
-        replyWith(socket, K_REPLY_KO);
+        displaySqlite3Error("(update|insert)FileWithUnit", errorCode);
+        replyWith(socket, dmit::drv::ReplyCode::KO);
         return;
     }
 
     // 3. Reply OK at the end
 
-    replyWith(socket, K_REPLY_OK);
+    replyWith(socket, dmit::drv::ReplyCode::OK);
 }
 
-void replyGetDatabase(dmit::nng::Socket& socket, dmit::db::Database& database)
+void replyDatabaseGet(dmit::nng::Socket& socket, dmit::db::Database& database)
 {
     // 1. Write reply
 
@@ -197,6 +215,22 @@ void replyGetDatabase(dmit::nng::Socket& socket, dmit::db::Database& database)
         displayNngError("nng_send", errorCode);
         return;
     }
+}
+
+void replyDatabaseClean(dmit::nng::Socket& socket, dmit::db::Database& database)
+{
+    int errorCode;
+
+    if ((errorCode = database.clean()) != SQLITE_OK)
+    {
+        displaySqlite3Error("clean", errorCode);
+        replyWith(socket, dmit::drv::ReplyCode::KO);
+        return;
+    }
+
+    // 3. Reply OK at the end
+
+    replyWith(socket, dmit::drv::ReplyCode::OK);
 }
 
 enum : char
@@ -358,9 +392,14 @@ int main(int argc, char** argv)
                 replyStop(socket, returnCode, isStopping);
             }
 
-            if (query == dmit::drv::Query::GET_DATABASE)
+            if (query == dmit::drv::Query::DATABASE_GET)
             {
-                replyGetDatabase(socket, database);
+                replyDatabaseGet(socket, database);
+            }
+
+            if (query == dmit::drv::Query::DATABASE_CLEAN)
+            {
+                replyDatabaseClean(socket, database);
             }
         }
     }

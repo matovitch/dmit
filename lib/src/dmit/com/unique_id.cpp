@@ -4,6 +4,7 @@
 
 #include <string_view>
 #include <cstdint>
+#include <vector>
 
 namespace dmit::com
 {
@@ -30,6 +31,11 @@ UniqueId::UniqueId(const std::string_view stringView)
     dmit::com::murmur::hash(reinterpret_cast<const uint8_t*>(stringView.data()),
                                                              stringView.size(),
                                                              *this);
+}
+
+UniqueId::UniqueId(const std::vector<uint8_t>& bytes)
+{
+    dmit::com::murmur::hash(bytes.data(), bytes.size(), *this);
 }
 
 } // namespace dmit::com

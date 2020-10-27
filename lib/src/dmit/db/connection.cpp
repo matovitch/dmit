@@ -14,9 +14,18 @@ namespace dmit::db
 static const char K_QUERY_CREATE_SCHEMA[] =
 R"(
     CREATE TABLE Files (
-        id      BLOB PRIMARY KEY,
-        path    TEXT,
-        content BLOB
+        file_id BLOB PRIMARY KEY,
+        unit_id BLOB NOT NULL,
+        path    TEXT NOT NULL
+    ) WITHOUT ROWID;
+
+    CREATE TABLE Units (
+        unit_id BLOB PRIMARY KEY,
+        file_id BLOB NUT NULL,
+        source  BLOB,
+        module  BLOB,
+        image   BLOB,
+        FOREIGN KEY(file_id) REFERENCES Files(file_id)
     );
 )";
 

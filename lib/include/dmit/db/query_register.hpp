@@ -13,17 +13,24 @@ struct QueryRegister
 {
     enum
     {
+        TRANSACTION_BEGIN,
+        TRANSACTION_ROLLBACK,
+        TRANSACTION_COMMIT,
         SELECT_FILE,
         INSERT_FILE,
         UPDATE_FILE,
+        SELECT_UNIT,
+        INSERT_UNIT,
+        CLEAN,
         SIZE
     };
 
     enum
     {
         FILE_ID = 1,
+        UNIT_ID,
         FILE_PATH,
-        FILE_CONTENT
+        UNIT_SOURCE
     };
 
     QueryRegister(Connection&, int& errorCode);

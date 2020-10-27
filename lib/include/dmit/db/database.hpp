@@ -23,17 +23,36 @@ public:
     Database(int& errorCode);
 
     int hasFile(const com::UniqueId& fileId, bool& result);
+    int hasUnit(const com::UniqueId& unitId, bool& result);
 
-    int insertFile(const com::UniqueId        & fileId,
-                   const std::vector<uint8_t> & fileContent,
-                   const std::string          & filePath);
+    int updateFileWithUnit(const com::UniqueId        & fileId,
+                           const com::UniqueId        & unitId,
+                           const std::vector<uint8_t> & unitSource);
 
-    int updateFile(const com::UniqueId        & fileId,
-                   const std::vector<uint8_t> & fileContent);
+    int insertFileWithUnit(const com::UniqueId        & fileId,
+                           const com::UniqueId        & unitId,
+                           const std::string          & filePath,
+                           const std::vector<uint8_t> & unitSource);
+    int clean();
 
     std::optional<nng::Buffer> asNngBuffer();
 
 private:
+
+    int transactionBegin();
+    int transactionRollback();
+    int transactionCommit();
+
+    int insertFile(const com::UniqueId & fileId,
+                   const com::UniqueId & fileUnitId,
+                   const std::string   & filePath);
+
+    int updateFile(const com::UniqueId & fileId,
+                   const com::UniqueId & fileUnitId);
+
+    int insertUnit(const com::UniqueId        & unitId,
+                   const com::UniqueId        & fileId,
+                   const std::vector<uint8_t> & source);
 
     Connection _connection;
     QueryRegister _queryRegister;
