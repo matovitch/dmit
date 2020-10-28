@@ -1,7 +1,5 @@
 #include "dmit/fmt/src/file.hpp"
 
-#include "dmit/fmt/src/line_index.hpp"
-
 #include "dmit/src/file.hpp"
 
 #include "dmit/com/base64.hpp"
@@ -31,11 +29,7 @@ std::string asString(const src::File& file)
         oss << byte;
     }
 
-    oss << "\",\"lineIndex\":";
-
-    oss << file.lineIndex();
-
-    oss << '}';
+    oss << "\"}";
 
     return oss.str();
 }

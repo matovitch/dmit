@@ -64,8 +64,6 @@ com::OptionError<File, Error> make(const std::filesystem::path& path)
         return errOpt.value();
     }
 
-    file.initLineIndex();
-
     return file;
 }
 
@@ -94,16 +92,6 @@ com::OptionError<std::unique_ptr<std::ifstream>, file::Error> File::makeFileStre
     }
 
     return std::move(ifsPtr);
-}
-
-void File::initLineIndex()
-{
-    _lineIndex.init(line_index::makeOffsets(_content));
-}
-
-const LineIndex& File::lineIndex() const
-{
-    return _lineIndex;
 }
 
 } // namespace dmit::src
