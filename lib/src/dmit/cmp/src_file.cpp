@@ -7,11 +7,6 @@ namespace dmit::cmp
 
 bool write(cmp_ctx_t* context, const src::File& file)
 {
-    if (!writeArray(context, 2))
-    {
-        return false;
-    }
-
     const auto& filePathAsString = file._path.string();
 
     if (!writeStr(context, filePathAsString.data(),

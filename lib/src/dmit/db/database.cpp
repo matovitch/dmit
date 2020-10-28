@@ -69,20 +69,6 @@ int Database::transactionRollback()
     return SQLITE_OK;
 }
 
-int Database::clean()
-{
-    auto queryClean = _queryRegister[QueryRegister::CLEAN];
-
-    int resultCode;
-
-    if ((resultCode = executeStatement(queryClean)) != SQLITE_DONE)
-    {
-        return resultCode;
-    }
-
-    return SQLITE_OK;
-}
-
 int Database::transactionCommit()
 {
     auto queryTransactionCommit = _queryRegister[QueryRegister::TRANSACTION_COMMIT];
@@ -90,6 +76,20 @@ int Database::transactionCommit()
     int resultCode;
 
     if ((resultCode = executeStatement(queryTransactionCommit)) != SQLITE_DONE)
+    {
+        return resultCode;
+    }
+
+    return SQLITE_OK;
+}
+
+int Database::clean()
+{
+    auto queryClean = _queryRegister[QueryRegister::CLEAN];
+
+    int resultCode;
+
+    if ((resultCode = executeStatement(queryClean)) != SQLITE_DONE)
     {
         return resultCode;
     }
@@ -157,6 +157,7 @@ int Database::updateFileWithUnit(const com::UniqueId        & fileId,
                                  const com::UniqueId        & unitId,
                                  const std::vector<uint8_t> & unitSource)
 {
+    int errorCodeRollback;
     int errorCode;
 
     // 1. Begin transaction
@@ -170,9 +171,9 @@ int Database::updateFileWithUnit(const com::UniqueId        & fileId,
 
     if ((errorCode = updateFile(fileId, unitId)) != SQLITE_OK)
     {
-        if ((errorCode = transactionRollback()) != SQLITE_OK)
+        if ((errorCodeRollback = transactionRollback()) != SQLITE_OK)
         {
-            return errorCode;
+            return errorCodeRollback;
         }
 
         return errorCode;
@@ -182,9 +183,9 @@ int Database::updateFileWithUnit(const com::UniqueId        & fileId,
 
     if ((errorCode = insertUnit(unitId, fileId, unitSource)) != SQLITE_OK)
     {
-        if ((errorCode = transactionRollback()) != SQLITE_OK)
+        if ((errorCodeRollback = transactionRollback()) != SQLITE_OK)
         {
-            return errorCode;
+            return errorCodeRollback;
         }
 
         return errorCode;
@@ -205,6 +206,7 @@ int Database::insertFileWithUnit(const com::UniqueId        & fileId,
                                  const std::string          & filePath,
                                  const std::vector<uint8_t> & unitSource)
 {
+    int errorCodeRollback;
     int errorCode;
 
     // 1. Begin transaction
@@ -218,9 +220,9 @@ int Database::insertFileWithUnit(const com::UniqueId        & fileId,
 
     if ((errorCode = insertFile(fileId, unitId, filePath)) != SQLITE_OK)
     {
-        if ((errorCode = transactionRollback()) != SQLITE_OK)
+        if ((errorCodeRollback = transactionRollback()) != SQLITE_OK)
         {
-            return errorCode;
+            return errorCodeRollback;
         }
 
         return errorCode;
@@ -230,9 +232,9 @@ int Database::insertFileWithUnit(const com::UniqueId        & fileId,
 
     if ((errorCode = insertUnit(unitId, fileId, unitSource)) != SQLITE_OK)
     {
-        if ((errorCode = transactionRollback()) != SQLITE_OK)
+        if ((errorCodeRollback = transactionRollback()) != SQLITE_OK)
         {
-            return errorCode;
+            return errorCodeRollback;
         }
 
         return errorCode;

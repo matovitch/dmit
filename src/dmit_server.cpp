@@ -100,15 +100,6 @@ void replyCreateOrUpdateFile(dmit::nng::Socket& socket,
 {
     // 1. Deserialize query
 
-    uint32_t size;
-
-    if (!dmit::cmp::readArray(context, &size) || size != 2)
-    {
-        DMIT_COM_LOG_ERR << "error: badly formed query\n";
-        replyWith(socket, dmit::drv::ReplyCode::KO);
-        return;
-    }
-
     uint32_t filePathSize;
 
     if (!dmit::cmp::readStrSize(context, &filePathSize)) {
