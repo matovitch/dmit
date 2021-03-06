@@ -6,10 +6,7 @@
 #include <vector>
 #include <array>
 
-namespace dmit
-{
-
-namespace ast
+namespace dmit::ast
 {
 
 namespace storage
@@ -110,6 +107,4 @@ using TMake = TStorage<sizeof(Type),
                        LOG2_SIZE>;
 };
 
-} // namespace ast
-
-} // namespace dmit
+} // namespace dmit::ast

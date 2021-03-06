@@ -16,10 +16,7 @@
 #include <variant>
 #include <vector>
 
-namespace dmit
-{
-
-namespace ast
+namespace dmit::ast
 {
 
 namespace node
@@ -217,5 +214,4 @@ struct TNode<node::Kind::EXPRESSION>
     Expression _value;
 };
 
-} // namespace ast
-} // namespace dmit
+} // namespace dmit::ast

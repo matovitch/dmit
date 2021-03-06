@@ -5,13 +5,7 @@
 
 #include <tuple>
 
-namespace dmit
-{
-
-namespace ast
-{
-
-namespace node
+namespace dmit::ast::node
 {
 
 namespace pool
@@ -95,7 +89,4 @@ struct TPool
                pool::TSub<Kind::SOURCE         , LOG2_SIZE>> _subs;
 };
 
-} // namespace node
-} // namespace ast
-} // namespace dmit
-
+} // namespace dmit::ast::node

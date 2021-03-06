@@ -8,10 +8,7 @@
 
 #include "dmit/fmt/formatable.hpp"
 
-namespace dmit
-{
-
-namespace ast
+namespace dmit::ast
 {
 
 struct State : fmt::Formatable
@@ -100,5 +97,4 @@ private:
 };
 
 } // namespace state
-} // namespace ast
-} // namespace dmit
+} // namespace dmit::ast

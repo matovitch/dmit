@@ -3,6 +3,7 @@
 #include "dmit/sem/analyze.hpp"
 #include "dmit/sem/context.hpp"
 
+#include "dmit/ast/source_register.hpp"
 #include "dmit/ast/state.hpp"
 
 #include "dmit/prs/state.hpp"
@@ -36,9 +37,11 @@ TEST_CASE("sem")
 
     // 1. Build the source
 
+    dmit::ast::SourceRegister sourceRegister;
+
     auto& source = ast._nodePool.get(ast._source);
 
-    new (&source) (std::decay_t<decltype(source)>)();
+    sourceRegister.add(source);
 
     source._srcPath = std::vector<uint8_t>{reinterpret_cast<const uint8_t*>(K_FILE_PATH),
                                            reinterpret_cast<const uint8_t*>(K_FILE_PATH) + sizeof(K_FILE_PATH)};
@@ -54,8 +57,4 @@ TEST_CASE("sem")
     // 2. Analyze
 
     dmit::sem::analyze(ast);
-
-    // 3. Destroy the source
-
-    std::destroy_at(&source);
 }
