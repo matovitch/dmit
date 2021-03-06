@@ -138,9 +138,10 @@ struct FunctionAnalyzer
 
 } // namespace
 
-void analyze(ast::State& ast,
-             Context& context)
+void analyze(ast::State& ast)
 {
+    Context context{ast._nodePool};
+
     auto& functions = ast._nodePool.get(ast._program)._functions;
 
     for (uint32_t i = 0; i < functions._size; i++)

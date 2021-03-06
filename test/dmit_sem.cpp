@@ -53,9 +53,7 @@ TEST_CASE("sem")
 
     // 2. Analyze
 
-    dmit::sem::Context semContext{ast._nodePool};
-
-    dmit::sem::analyze(ast, semContext);
+    dmit::sem::analyze(ast);
 
     // 3. Destroy the source
 

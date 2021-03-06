@@ -10,7 +10,6 @@
 namespace dmit::sem
 {
 
-void analyze(ast::State& ast,
-             Context& context);
+void analyze(ast::State& ast);
 
 } // namespace dmit::sem
