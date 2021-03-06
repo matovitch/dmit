@@ -197,7 +197,7 @@ bool write(Iterator begin, Iterator end, cmp_ctx_t* contextPtr)
 
     cmp_ctx_t contextCopy;
 
-    memcpy(&contextCopy, contextPtr, sizeof(cmp_ctx_t));
+    std::memcpy(&contextCopy, contextPtr, sizeof(cmp_ctx_t));
 
     if (!writeArray32(contextPtr, 0))
     {

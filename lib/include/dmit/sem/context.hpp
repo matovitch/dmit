@@ -5,8 +5,6 @@
 
 #include "dmit/ast/state.hpp"
 
-#include "dmit/src/partition.hpp"
-
 #include "dmit/com/unique_id.hpp"
 
 #include <unordered_map>
@@ -22,12 +20,9 @@ struct Context
     using Scheduler   = TScheduler <SIZE>;
     using TaskWrapper = typename Scheduler::TaskWrapper;
 
+    Context(ast::State::NodePool& astNodePool);
 
-    Context(const dmit::src::Partition& srcPartition,
-            ast::State::NodePool&       astNodePool);
-
-    const dmit::src::Partition& _srcPartition;
-    ast::State::NodePool&       _astNodePool;
+    ast::State::NodePool& _astNodePool;
 
     TScheduler<SIZE>    _scheduler;
     Scheduler::TaskPool _taskPool;

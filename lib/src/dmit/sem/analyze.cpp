@@ -21,13 +21,11 @@ template <com::TEnumIntegerType<ast::node::Kind> KIND>
 src::Slice getSlice(const ast::node::TIndex<KIND>& node,
                     Context& context)
 {
-    return context._srcPartition.getSlice(
-               context._astNodePool.get(
-                   context._astNodePool.get(
-                       node
-                   )._lexeme
-               )._index
-           );
+    const auto& lexeme = context._astNodePool.get(context._astNodePool.get(node)._lexeme);
+
+    const auto& source = context._astNodePool.get(lexeme._source);
+
+    return src::Slice{source._srcContent, source._lexOffsets, lexeme._index};
 };
 
 struct FunctionAnalyzer
@@ -143,7 +141,7 @@ struct FunctionAnalyzer
 void analyze(ast::State& ast,
              Context& context)
 {
-    auto& functions = ast._program._functions;
+    auto& functions = ast._nodePool.get(ast._program)._functions;
 
     for (uint32_t i = 0; i < functions._size; i++)
     {

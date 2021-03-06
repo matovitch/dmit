@@ -2,7 +2,7 @@
 
 #include "dmit/ast/state.hpp"
 
-#include "dmit/src/partition.hpp"
+#include "dmit/com/unique_id.hpp"
 
 namespace dmit::sem
 {
@@ -10,9 +10,7 @@ namespace dmit::sem
 const com::UniqueId Context::ARGUMENT_OF {"@ArgumentOf"};
 const com::UniqueId Context::DEFINE      {"@Define"};
 
-Context::Context(const dmit::src::Partition& srcPartition,
-                 ast::State::NodePool&       astNodePool) :
-    _srcPartition{srcPartition},
+Context::Context(ast::State::NodePool& astNodePool) :
     _astNodePool{astNodePool}
 {}
 

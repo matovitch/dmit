@@ -18,8 +18,9 @@ struct State : fmt::Formatable
 {
     using NodePool = node::TPool<0x10>;
 
-    TNode<node::Kind::PROGRAM> _program;
-    NodePool                   _nodePool;
+    NodePool                          _nodePool;
+    node::TIndex<node::Kind::PROGRAM> _program;
+    node::TIndex<node::Kind::SOURCE>  _source;
 };
 
 namespace state
@@ -82,6 +83,17 @@ private:
 
     void makeFunctionCall(dmit::prs::Reader& reader,
                           TNode<node::Kind::FUN_CALL>& funCall);
+
+    template <com::TEnumIntegerType<node::Kind> KIND>
+    void makeLexeme(const dmit::prs::Reader& reader, TNode<KIND>& node)
+    {
+        _nodePool.make(node._lexeme);
+
+        auto& lexeme   = _nodePool.get(node._lexeme);
+
+        lexeme._index  = reader.look()._start;
+        lexeme._source = _state._source;
+    }
 
     State            _state;
     State::NodePool& _nodePool;

@@ -321,16 +321,14 @@ void Builder::makeInteger(const dmit::prs::Reader& reader,
                           TNode<node::Kind::LIT_INTEGER>& integer)
 {
     DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::LIT_INTEGER);
-    _nodePool.make(integer._lexeme);
-    _nodePool.get (integer._lexeme)._index = reader.look()._start;
+    makeLexeme(reader, integer);
 }
 
 void Builder::makeIdentifier(const dmit::prs::Reader& reader,
                              TNode<node::Kind::LIT_IDENTIFIER>& identifier)
 {
     DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::LIT_IDENTIFIER);
-    _nodePool.make(identifier._lexeme);
-    _nodePool.get (identifier._lexeme)._index = reader.look()._start;
+    makeLexeme(reader, identifier);
 }
 
 void Builder::makeFunction(const dmit::prs::Reader& supReader,
@@ -360,7 +358,11 @@ void Builder::makeFunction(const dmit::prs::Reader& supReader,
 State& Builder::operator()(const prs::state::Tree& parseTree)
 {
     dmit::prs::Reader reader{parseTree};
-    auto& program = _state._program;
+
+    _nodePool.make(_state._program);
+    _nodePool.make(_state._source);
+
+    auto& program = _nodePool.get(_state._program);
 
     DMIT_COM_ASSERT(reader.isValid());
     _nodePool.make(reader.size(), program._functions);

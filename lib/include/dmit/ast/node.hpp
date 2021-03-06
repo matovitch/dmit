@@ -2,6 +2,9 @@
 
 #include "dmit/ast/integer.hpp"
 
+#include "dmit/src/line_index.hpp"
+#include "dmit/src/file.hpp"
+
 #include "dmit/com/unique_id.hpp"
 #include "dmit/com/enum.hpp"
 
@@ -9,6 +12,7 @@
 
 #include <functional>
 #include <optional>
+#include <cstdint>
 #include <variant>
 #include <vector>
 
@@ -38,7 +42,8 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
         SCOPE_VARIANT  ,
         STM_RETURN     ,
         TYPE_CLAIM     ,
-        PROGRAM
+        PROGRAM        ,
+        SOURCE
     };
 
     DMIT_COM_ENUM_IMPLICIT_FROM_INT(Kind);
@@ -110,6 +115,15 @@ struct TNode<node::Kind::PROGRAM>
 };
 
 template <>
+struct TNode<node::Kind::SOURCE>
+{
+    std::vector<uint8_t > _srcPath;
+    std::vector<uint8_t > _srcContent;
+    std::vector<uint32_t> _srcOffsets;
+    std::vector<uint32_t> _lexOffsets;
+};
+
+template <>
 struct TNode<node::Kind::FUN_DEFINITION>
 {
     node::TIndex<node::Kind::LIT_IDENTIFIER > _name;
@@ -152,6 +166,7 @@ struct TNode<node::Kind::LIT_INTEGER>
 template <>
 struct TNode<node::Kind::LEXEME>
 {
+    node::TIndex<node::Kind::SOURCE> _source;
     uint32_t _index;
 };
 

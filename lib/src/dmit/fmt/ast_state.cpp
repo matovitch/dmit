@@ -172,7 +172,7 @@ std::string asString(const ast::State& state)
 
     Visitor visitor{state._nodePool, oss};
 
-    visitor(state._program._functions);
+    visitor(state._nodePool.get(state._program)._functions);
 
     oss << "}";
 
