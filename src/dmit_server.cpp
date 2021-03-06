@@ -141,7 +141,9 @@ void replyCreateOrUpdateFile(dmit::nng::Socket& socket,
     const dmit::com::UniqueId unitId {unitSource};
     const dmit::com::UniqueId fileId {filePath};
 
+    bool isUnitInDb;
     bool isFileInDb;
+
     int errorCode;
 
     if ((errorCode = database.hasFile(fileId, isFileInDb)) != SQLITE_OK)
@@ -151,25 +153,26 @@ void replyCreateOrUpdateFile(dmit::nng::Socket& socket,
         return;
     }
 
-    if (isFileInDb)
+    if ((errorCode = database.hasUnit(unitId, isUnitInDb)) != SQLITE_OK)
     {
-        bool isUnitInDb;
-
-        if ((errorCode = database.hasUnit(unitId, isUnitInDb)) != SQLITE_OK)
-        {
-            displaySqlite3Error("hasUnit", errorCode);
-            replyWith(socket, dmit::drv::ReplyCode::KO);
-            return;
-        }
-
-        if (!isUnitInDb)
-        {
-            errorCode = database.updateFileWithUnit(fileId, unitId, unitSource);
-        }
+        displaySqlite3Error("hasUnit", errorCode);
+        replyWith(socket, dmit::drv::ReplyCode::KO);
+        return;
     }
-    else
+
+    if (!isFileInDb && isUnitInDb)
     {
-        errorCode = database.insertFileWithUnit(fileId, unitId, filePath, unitSource);
+        errorCode = database.insertFile(fileId, unitId, filePath);
+    }
+
+    if (!isFileInDb && !isUnitInDb)
+    {
+        errorCode = database.insertFileAndUnit(fileId, unitId, filePath, unitSource);
+    }
+
+    if (isFileInDb && !isUnitInDb)
+    {
+        errorCode = database.updateFileAndInsertUnit(fileId, unitId, unitSource);
     }
 
     if (errorCode != SQLITE_OK)

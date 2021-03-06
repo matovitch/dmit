@@ -153,9 +153,9 @@ int Database::hasUnit(const com::UniqueId& unitId, bool& result)
     return SQLITE_OK;
 }
 
-int Database::updateFileWithUnit(const com::UniqueId        & fileId,
-                                 const com::UniqueId        & unitId,
-                                 const std::vector<uint8_t> & unitSource)
+int Database::updateFileAndInsertUnit(const com::UniqueId        & fileId,
+                                      const com::UniqueId        & unitId,
+                                      const std::vector<uint8_t> & unitSource)
 {
     int errorCodeRollback;
     int errorCode;
@@ -181,7 +181,7 @@ int Database::updateFileWithUnit(const com::UniqueId        & fileId,
 
     // 3. Insert unit
 
-    if ((errorCode = insertUnit(unitId, fileId, unitSource)) != SQLITE_OK)
+    if ((errorCode = insertUnit(unitId, unitSource)) != SQLITE_OK)
     {
         if ((errorCodeRollback = transactionRollback()) != SQLITE_OK)
         {
@@ -201,10 +201,10 @@ int Database::updateFileWithUnit(const com::UniqueId        & fileId,
     return SQLITE_OK;
 }
 
-int Database::insertFileWithUnit(const com::UniqueId        & fileId,
-                                 const com::UniqueId        & unitId,
-                                 const std::string          & filePath,
-                                 const std::vector<uint8_t> & unitSource)
+int Database::insertFileAndUnit(const com::UniqueId        & fileId,
+                                const com::UniqueId        & unitId,
+                                const std::string          & filePath,
+                                const std::vector<uint8_t> & unitSource)
 {
     int errorCodeRollback;
     int errorCode;
@@ -230,7 +230,7 @@ int Database::insertFileWithUnit(const com::UniqueId        & fileId,
 
     // 3. Insert unit
 
-    if ((errorCode = insertUnit(unitId, fileId, unitSource)) != SQLITE_OK)
+    if ((errorCode = insertUnit(unitId, unitSource)) != SQLITE_OK)
     {
         if ((errorCodeRollback = transactionRollback()) != SQLITE_OK)
         {
@@ -331,7 +331,6 @@ int Database::updateFile(const com::UniqueId & fileId,
 }
 
 int Database::insertUnit(const com::UniqueId        & unitId,
-                         const com::UniqueId        & fileId,
                          const std::vector<uint8_t> & unitSource)
 {
     auto queryInsertUnit = _queryRegister[QueryRegister::INSERT_UNIT];
@@ -342,15 +341,6 @@ int Database::insertUnit(const com::UniqueId        & unitId,
                                        QueryRegister::UNIT_ID,
                                        &unitId,
                                        sizeof(decltype(unitId)),
-                                       nullptr)) != SQLITE_OK)
-    {
-        return errorCode;
-    }
-
-    if ((errorCode = sqlite3_bind_blob(queryInsertUnit,
-                                       QueryRegister::FILE_ID,
-                                       &fileId,
-                                       sizeof(decltype(fileId)),
                                        nullptr)) != SQLITE_OK)
     {
         return errorCode;

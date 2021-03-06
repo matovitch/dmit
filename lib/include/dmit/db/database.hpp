@@ -25,14 +25,19 @@ public:
     int hasFile(const com::UniqueId& fileId, bool& result);
     int hasUnit(const com::UniqueId& unitId, bool& result);
 
-    int updateFileWithUnit(const com::UniqueId        & fileId,
-                           const com::UniqueId        & unitId,
-                           const std::vector<uint8_t> & unitSource);
+    int insertFile(const com::UniqueId & fileId,
+                   const com::UniqueId & fileUnitId,
+                   const std::string   & filePath);
 
-    int insertFileWithUnit(const com::UniqueId        & fileId,
-                           const com::UniqueId        & unitId,
-                           const std::string          & filePath,
-                           const std::vector<uint8_t> & unitSource);
+    int insertFileAndUnit(const com::UniqueId        & fileId,
+                          const com::UniqueId        & unitId,
+                          const std::string          & filePath,
+                          const std::vector<uint8_t> & unitSource);
+
+    int updateFileAndInsertUnit(const com::UniqueId        & fileId,
+                                const com::UniqueId        & unitId,
+                                const std::vector<uint8_t> & unitSource);
+
     int clean();
 
     std::optional<nng::Buffer> asNngBuffer();
@@ -43,15 +48,10 @@ private:
     int transactionRollback();
     int transactionCommit();
 
-    int insertFile(const com::UniqueId & fileId,
-                   const com::UniqueId & fileUnitId,
-                   const std::string   & filePath);
-
     int updateFile(const com::UniqueId & fileId,
                    const com::UniqueId & fileUnitId);
 
     int insertUnit(const com::UniqueId        & unitId,
-                   const com::UniqueId        & fileId,
                    const std::vector<uint8_t> & source);
 
     Connection _connection;

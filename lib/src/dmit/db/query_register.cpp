@@ -46,7 +46,7 @@ R"(
 
 static const char K_QUERY_INSERT_UNIT[] =
 R"(
-    INSERT INTO Units (unit_id, file_id, source) VALUES (?2, ?1, ?4);
+    INSERT INTO Units (unit_id, source) VALUES (?2, ?4);
 )";
 
 static const char K_QUERY_CLEAN[] =

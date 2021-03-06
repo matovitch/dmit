@@ -21,11 +21,7 @@ R"(
 
     CREATE TABLE Units (
         unit_id BLOB PRIMARY KEY,
-        file_id BLOB NUT NULL,
-        source  BLOB,
-        module  BLOB,
-        image   BLOB,
-        FOREIGN KEY(file_id) REFERENCES Files(file_id)
+        source  BLOB
     );
 )";
 
