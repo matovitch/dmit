@@ -138,7 +138,7 @@ void Builder::makeStatement(const dmit::prs::Reader& reader,
     }
     else
     {
-        DMIT_COM_ASSERT(false); // Should not get there
+        DMIT_COM_ASSERT(!"[AST] Unknown statement node");
     }
 }
 
@@ -230,7 +230,7 @@ void Builder::makeExpression(const dmit::prs::Reader& reader,
     }
     else
     {
-        DMIT_COM_ASSERT(false); // Should not get there
+        DMIT_COM_ASSERT(!"[AST] Unknown expression node");
     }
 }
 
@@ -273,7 +273,7 @@ void Builder::makeScope(const dmit::prs::Reader& supReader,
         }
         else
         {
-            DMIT_COM_ASSERT(false); // Should not get there
+            DMIT_COM_ASSERT(!"[AST] Unknown scope element node");
         }
 
         reader.advance();
