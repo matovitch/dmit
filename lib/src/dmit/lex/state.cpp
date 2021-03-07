@@ -85,8 +85,8 @@ void State::matchKeywords(const uint8_t* const data)
 namespace state
 {
 
-const State& Builder::operator()(const uint8_t* const data,
-                                 const uint32_t size)
+State& Builder::operator()(const uint8_t* const data,
+                           const uint32_t size)
 {
     src::Reader reader{data, data + size};
 

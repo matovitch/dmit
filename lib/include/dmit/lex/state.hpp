@@ -30,8 +30,8 @@ class Builder
 
 public:
 
-    const State& operator()(const uint8_t* const data,
-                            const uint32_t size);
+    State& operator()(const uint8_t* const data,
+                      const uint32_t size);
 
     void clearState();
 

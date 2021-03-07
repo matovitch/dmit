@@ -24,9 +24,9 @@ struct Aster
         _parser .clearState();
         _lexer  .clearState();
 
-        const auto& lex = _lexer(reinterpret_cast<const uint8_t*>(toParse.data()),
-                                                                  toParse.size());
-        const auto& prs = _parser(lex._tokens);
+        auto& lex = _lexer(reinterpret_cast<const uint8_t*>(toParse.data()),
+                                                            toParse.size());
+        auto& prs = _parser(lex._tokens);
 
         auto& ast = _aster(prs._tree);
 
@@ -45,7 +45,8 @@ struct Aster
 
         source._srcOffsets = dmit::src::line_index::makeOffsets(source._srcContent);
 
-        source._lexOffsets = lex._offsets;
+        source._lexOffsets .swap(lex._offsets );
+        source._lexTokens  .swap(lex._tokens  );
 
         // return the ast
         return ast;

@@ -11,8 +11,8 @@ struct Slice : fmt::Formatable
 {
     uint32_t size() const;
 
-    const uint8_t* const _head = nullptr;
-    const uint8_t* const _tail = nullptr;
+    const uint8_t* _head = nullptr;
+    const uint8_t* _tail = nullptr;
 };
 
 } // namespace dmit::src

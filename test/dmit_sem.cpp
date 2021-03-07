@@ -13,6 +13,7 @@
 #include "dmit/src/line_index.hpp"
 
 #include <type_traits>
+#include <algorithm>
 #include <cstring>
 #include <memory>
 
@@ -28,10 +29,10 @@ TEST_CASE("sem")
 
     const auto toParseAsBytes = reinterpret_cast<const uint8_t*>(toParse.data());
 
-    const auto& lex = lexer(toParseAsBytes,
-                            toParse.size());
+    auto& lex = lexer(toParseAsBytes,
+                      toParse.size());
 
-    const auto& prs = parser(lex._tokens);
+    auto& prs = parser(lex._tokens);
 
     auto& ast = aster(prs._tree);
 
@@ -52,7 +53,8 @@ TEST_CASE("sem")
 
     source._srcOffsets = dmit::src::line_index::makeOffsets(source._srcContent);
 
-    source._lexOffsets = lex._offsets;
+    source._lexOffsets .swap(lex._offsets );
+    source._lexTokens  .swap(lex._tokens  );
 
     // 2. Analyze
 

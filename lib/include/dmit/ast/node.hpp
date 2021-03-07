@@ -3,7 +3,9 @@
 #include "dmit/ast/integer.hpp"
 
 #include "dmit/src/line_index.hpp"
-#include "dmit/src/file.hpp"
+#include "dmit/src/slice.hpp"
+
+#include "dmit/lex/token.hpp"
 
 #include "dmit/com/unique_id.hpp"
 #include "dmit/com/enum.hpp"
@@ -114,10 +116,11 @@ struct TNode<node::Kind::PROGRAM>
 template <>
 struct TNode<node::Kind::SOURCE>
 {
-    std::vector<uint8_t > _srcPath;
-    std::vector<uint8_t > _srcContent;
-    std::vector<uint32_t> _srcOffsets;
-    std::vector<uint32_t> _lexOffsets;
+    std::vector<uint8_t    > _srcPath;
+    std::vector<uint8_t    > _srcContent;
+    std::vector<uint32_t   > _srcOffsets;
+    std::vector<uint32_t   > _lexOffsets;
+    std::vector<lex::Token > _lexTokens;
 };
 
 template <>
@@ -165,6 +168,8 @@ struct TNode<node::Kind::LEXEME>
 {
     node::TIndex<node::Kind::SOURCE> _source;
     uint32_t _index;
+
+    mutable std::optional<lex::Token> _token; // cache
 };
 
 template <>

@@ -22,9 +22,9 @@ template <com::TEnumIntegerType<ast::node::Kind> KIND>
 src::Slice getSlice(const ast::node::TIndex<KIND>& node,
                     Context& context)
 {
-    const auto& lexemeIdx = context._astNodePool.get(node)._lexeme;
+    const auto& lexeme = context._astNodePool.get(node)._lexeme;
 
-    return ast::getSliceFromLexeme(lexemeIdx, context._astNodePool);
+    return ast::lexeme::getSlice(lexeme, context._astNodePool);
 };
 
 struct FunctionAnalyzer
@@ -102,8 +102,8 @@ struct FunctionAnalyzer
     void analyzeVariant(const ast::node::TIndex<ast::node::Kind::SCOPE_VARIANT> variantIdx,
                         const ast::TNode<ast::node::Kind::FUN_DEFINITION>& function)
     {
-        //auto& variant = _context._astNodePool.get(variantIdx)._value;
-        //TODO visit
+        // auto& variant = _context._astNodePool.get(variantIdx)._value;
+        // TODO visit
     }
 
     void analyzeBody(const ast::TNode<ast::node::Kind::FUN_DEFINITION>& function)
