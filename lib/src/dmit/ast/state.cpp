@@ -55,6 +55,13 @@ dmit::prs::Reader makeSubReaderFor(const dmit::prs::state::tree::node::Kind pars
 
 Builder::Builder() : _state{}, _nodePool{_state._nodePool} {}
 
+void Builder::makeLexeme(const dmit::prs::Reader& reader,
+                         TNode<node::Kind::LEXEME>& lexeme)
+{
+    lexeme._index  = reader.look()._start;
+    lexeme._source = _state._source;
+}
+
 void Builder::makeAssignment(dmit::prs::Reader& reader,
                              TNode<node::Kind::EXP_BINOP>& expAssign)
 {
@@ -64,8 +71,8 @@ void Builder::makeAssignment(dmit::prs::Reader& reader,
     DMIT_COM_ASSERT(reader.isValid());
 
     // Operator
-    _nodePool.make (expAssign._operator);
-    _nodePool.get  (expAssign._operator)._index = reader.look()._start;
+    _nodePool.make(expAssign._operator);
+    makeLexeme(reader, _nodePool.get(expAssign._operator));
     reader.advance();
     DMIT_COM_ASSERT(reader.isValid());
 
@@ -144,8 +151,8 @@ void Builder::makeBinop(dmit::prs::Reader& reader,
     DMIT_COM_ASSERT(reader.isValid());
 
     // Operator
-    _nodePool.make (binop._operator);
-    _nodePool.get  (binop._operator)._index = reader.look()._start;
+    _nodePool.make(binop._operator);
+    makeLexeme(reader, _nodePool.get(binop._operator));
     reader.advance();
     DMIT_COM_ASSERT(reader.isValid());
 
@@ -321,14 +328,16 @@ void Builder::makeInteger(const dmit::prs::Reader& reader,
                           TNode<node::Kind::LIT_INTEGER>& integer)
 {
     DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::LIT_INTEGER);
-    makeLexeme(reader, integer);
+    _nodePool.make(integer._lexeme);
+    makeLexeme(reader, _nodePool.get(integer._lexeme));
 }
 
 void Builder::makeIdentifier(const dmit::prs::Reader& reader,
                              TNode<node::Kind::LIT_IDENTIFIER>& identifier)
 {
     DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::LIT_IDENTIFIER);
-    makeLexeme(reader, identifier);
+    _nodePool.make(identifier._lexeme);
+    makeLexeme(reader, _nodePool.get(identifier._lexeme));
 }
 
 void Builder::makeFunction(const dmit::prs::Reader& supReader,

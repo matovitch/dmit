@@ -36,6 +36,9 @@ private:
 
     using ParseNodeKind = dmit::prs::state::tree::node::Kind;
 
+    void makeLexeme(const dmit::prs::Reader& reader,
+                    TNode<node::Kind::LEXEME>& lexeme);
+
     void makeInteger(const dmit::prs::Reader& reader,
                      TNode<node::Kind::LIT_INTEGER>& identifier);
 
@@ -80,17 +83,6 @@ private:
 
     void makeFunctionCall(dmit::prs::Reader& reader,
                           TNode<node::Kind::FUN_CALL>& funCall);
-
-    template <com::TEnumIntegerType<node::Kind> KIND>
-    void makeLexeme(const dmit::prs::Reader& reader, TNode<KIND>& node)
-    {
-        _nodePool.make(node._lexeme);
-
-        auto& lexeme   = _nodePool.get(node._lexeme);
-
-        lexeme._index  = reader.look()._start;
-        lexeme._source = _state._source;
-    }
 
     State            _state;
     State::NodePool& _nodePool;

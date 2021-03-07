@@ -1,5 +1,8 @@
 #include "dmit/fmt/ast/state.hpp"
 
+#include "dmit/fmt/src/slice.hpp"
+
+#include "dmit/ast/lexeme.hpp"
 #include "dmit/ast/state.hpp"
 #include "dmit/ast/node.hpp"
 
@@ -22,10 +25,8 @@ struct Visitor
 
     void operator()(const ast::node::TIndex<ast::node::Kind::LEXEME>& lexemeIdx)
     {
-        const auto& lexeme = _nodePool.get(lexemeIdx);
-
         _oss << "{\"node\":\"Lexeme\",";
-        _oss << "\"index\":" << lexeme._index << "}";
+        _oss << "\"slice\":" << ast::getSliceFromLexeme(lexemeIdx, _nodePool) << "}";
     }
 
     void operator()(const ast::node::TIndex<ast::node::Kind::LIT_IDENTIFIER>& identifierIdx)

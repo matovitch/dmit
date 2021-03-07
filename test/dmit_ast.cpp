@@ -1,5 +1,6 @@
 #include "test.hpp"
 
+#include "dmit/ast/source_register.hpp"
 #include "dmit/ast/state.hpp"
 #include "dmit/ast/pool.hpp"
 #include "dmit/ast/node.hpp"
@@ -10,6 +11,8 @@
 #include "dmit/fmt/ast/state.hpp"
 
 #include "dmit/lex/state.hpp"
+
+#include <cstring>
 
 struct Aster
 {
@@ -25,12 +28,34 @@ struct Aster
                                                                   toParse.size());
         const auto& prs = _parser(lex._tokens);
 
-        return _aster(prs._tree);
+        auto& ast = _aster(prs._tree);
+
+        // Build the source
+
+        auto& source = ast._nodePool.get(ast._source);
+
+        _sourceRegister.add(source);
+
+        source._srcPath = std::vector<uint8_t>{reinterpret_cast<const uint8_t*>(filePath),
+                                               reinterpret_cast<const uint8_t*>(filePath) + sizeof(filePath)};
+
+        source._srcContent.resize(toParse.size());
+
+        std::memcpy(source._srcContent.data(), toParse.data(), toParse.size());
+
+        source._srcOffsets = dmit::src::line_index::makeOffsets(source._srcContent);
+
+        source._lexOffsets = lex._offsets;
+
+        // return the ast
+        return ast;
     }
 
     dmit::ast::state::Builder _aster;
     dmit::prs::state::Builder _parser;
     dmit::lex::state::Builder _lexer;
+
+    dmit::ast::SourceRegister _sourceRegister;
 };
 
 TEST_SUITE("inout")

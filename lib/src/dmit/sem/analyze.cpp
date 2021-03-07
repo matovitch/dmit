@@ -2,6 +2,7 @@
 
 #include "dmit/sem/context.hpp"
 
+#include "dmit/ast/lexeme.hpp"
 #include "dmit/ast/state.hpp"
 
 #include "dmit/src/slice.hpp"
@@ -21,11 +22,9 @@ template <com::TEnumIntegerType<ast::node::Kind> KIND>
 src::Slice getSlice(const ast::node::TIndex<KIND>& node,
                     Context& context)
 {
-    const auto& lexeme = context._astNodePool.get(context._astNodePool.get(node)._lexeme);
+    const auto& lexemeIdx = context._astNodePool.get(node)._lexeme;
 
-    const auto& source = context._astNodePool.get(lexeme._source);
-
-    return src::Slice{source._srcContent, source._lexOffsets, lexeme._index};
+    return ast::getSliceFromLexeme(lexemeIdx, context._astNodePool);
 };
 
 struct FunctionAnalyzer
