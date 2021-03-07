@@ -40,12 +40,14 @@ struct FunctionAnalyzer
         // 1. Compute definition key
         const auto& functionName = getSlice(function._name, _context);
 
-        dmit::com::murmur::hash(functionName._head, functionName.size(), function._id);
+        function._id = dmit::com::UniqueId{};
 
-        dmit::com::murmur::combine(_context.DEFINE, function._id);
+        dmit::com::murmur::hash(functionName._head, functionName.size(), function._id.value());
+
+        dmit::com::murmur::combine(_context.DEFINE, function._id.value());
 
         // 2. Check possible redefinition
-        auto fitFact = _context._factMap.find(function._id);
+        auto fitFact = _context._factMap.find(function._id.value());
 
         const auto functionLocation = _functionIdx.location();
 
@@ -56,7 +58,7 @@ struct FunctionAnalyzer
         }
 
         // 3. Notify pending task if it exists
-        auto fitTask = _context._taskMap.find(function._id);
+        auto fitTask = _context._taskMap.find(function._id.value());
 
         if (fitTask != _context._taskMap.end())
         {
@@ -64,7 +66,7 @@ struct FunctionAnalyzer
         }
 
         // 4. Register definition key
-        _context._factMap.emplace(function._id, functionLocation);
+        _context._factMap.emplace(function._id.value(), functionLocation);
     }
 
     void defineArg(const ast::node::TIndex<ast::node::Kind::TYPE_CLAIM> argumentIdx,
@@ -75,13 +77,15 @@ struct FunctionAnalyzer
         // 1. Compute definition key
         const auto& argumentVariable = getSlice(argument._variable, _context);
 
-        dmit::com::murmur::hash(argumentVariable._head, argumentVariable.size(), argument._id);
+        argument._id = dmit::com::UniqueId{};
 
-        dmit::com::murmur::combine(_context.ARGUMENT_OF, argument._id);
-        dmit::com::murmur::combine(function._id, argument._id);
+        dmit::com::murmur::hash(argumentVariable._head, argumentVariable.size(), argument._id.value());
+
+        dmit::com::murmur::combine(_context.ARGUMENT_OF, argument._id.value());
+        dmit::com::murmur::combine(function._id.value(), argument._id.value());
 
         // 2. Check possible redefinition
-        auto fitFact = _context._factMap.find(argument._id);
+        auto fitFact = _context._factMap.find(argument._id.value());
 
         const auto argumentLocation = argumentIdx.location();
 
@@ -92,7 +96,7 @@ struct FunctionAnalyzer
         }
 
         // 3. Register definition key
-        _context._factMap.emplace(argument._id, argumentLocation);
+        _context._factMap.emplace(argument._id.value(), argumentLocation);
     }
 
     void analyzeVariant(const ast::node::TIndex<ast::node::Kind::SCOPE_VARIANT> variantIdx,

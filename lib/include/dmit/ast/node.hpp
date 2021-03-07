@@ -128,7 +128,7 @@ struct TNode<node::Kind::FUN_DEFINITION>
     node::TIndex<node::Kind::FUN_RETURN     > _returnType;
     node::TIndex<node::Kind::SCOPE          > _body;
 
-    com::UniqueId _id;
+    std::optional<com::UniqueId> _id;
 };
 
 template<>
@@ -137,7 +137,7 @@ struct TNode<node::Kind::TYPE_CLAIM>
     node::TIndex<node::Kind::LIT_IDENTIFIER> _variable;
     node::TIndex<node::Kind::LIT_IDENTIFIER> _type;
 
-    com::UniqueId _id;
+    std::optional<com::UniqueId> _id;
 };
 
 template <>
