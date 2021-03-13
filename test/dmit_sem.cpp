@@ -1,7 +1,6 @@
 #include "test.hpp"
 
 #include "dmit/sem/analyze.hpp"
-#include "dmit/sem/context.hpp"
 
 #include "dmit/ast/source_register.hpp"
 #include "dmit/ast/state.hpp"
