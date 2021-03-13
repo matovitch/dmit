@@ -62,33 +62,11 @@ struct TWrapper
 template <std::size_t SIZE>
 class TTask
 {
-    using Lock = typename topo::graph::TMake<TTask<SIZE>*, SIZE>::EdgeListIt;
     using Pool = task::TPool<SIZE>;
 
 public:
 
     TTask(Pool& pool) : _pool{pool} {}
-
-    void insertLock(const Lock lock)
-    {
-        _lockOpt = lock;
-    }
-
-    void removeLock()
-    {
-        _lockOpt = std::nullopt;
-    }
-
-    Lock lock() const
-    {
-        DMIT_COM_ASSERT(_lockOpt);
-        return _lockOpt.value();
-    }
-
-    bool hasLock() const
-    {
-        return _lockOpt.operator bool();
-    }
 
     void assignWork(Work& work)
     {
@@ -108,7 +86,6 @@ public:
 private:
 
     com::OptionReference<Work> _work;
-    std::optional<Lock> _lockOpt;
     Pool& _pool;
 };
 

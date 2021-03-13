@@ -1,6 +1,7 @@
 #include "dmit/sem/analyze.hpp"
 
 #include "dmit/sem/context.hpp"
+#include "dmit/sem/visitor.hpp"
 
 #include "dmit/ast/lexeme.hpp"
 #include "dmit/ast/state.hpp"
@@ -27,6 +28,9 @@ src::Slice getSlice(const ast::node::TIndex<KIND>& node,
     return ast::lexeme::getSlice(lexeme, context._astNodePool);
 };
 
+} // namespace
+
+/*
 struct FunctionAnalyzer
 {
     FunctionAnalyzer(const ast::node::TIndex<ast::node::Kind::FUN_DEFINITION>& functionIdx,
@@ -139,13 +143,82 @@ struct FunctionAnalyzer
     Context& _context;
 };
 
-} // namespace
+} // namespace */
+
+TAnalyzer<ast::node::Kind::FUN_DEFINITION>::TAnalyzer(Context& context,
+                     Visitor& visitor,
+                     ast::node::TIndex<ast::node::Kind::FUN_DEFINITION> astNodeIndex) :
+    _context{context},
+    _visitor{visitor},
+    _astNodeIndex{astNodeIndex}
+{}
+
+void TAnalyzer<ast::node::Kind::FUN_DEFINITION>::defineName(ast::TNode<ast::node::Kind::FUN_DEFINITION>& function)
+{
+    // 1. Compute definition key
+    const auto& functionName = getSlice(function._name, _context);
+
+    function._id = dmit::com::UniqueId{};
+
+    dmit::com::murmur::hash(functionName._head, functionName.size(), function._id.value());
+
+    dmit::com::murmur::combine(_context.DEFINE, function._id.value());
+
+    // 2. Check possible redefinition
+    auto fitFact = _context._factMap.find(function._id.value());
+
+    const auto functionLocation = _astNodeIndex.location();
+
+    if (fitFact != _context._factMap.end())
+    {
+        // 2.1 notifyRedefinitionError(fitFact->second, functionLocation, _context);
+        DMIT_COM_ASSERT(!"Function redefinition");
+    }
+
+    // 3. Notify pending task if it exists
+    /*auto fitTask = _context._taskMap.find(function._id.value());
+
+    if (fitTask != _context._taskMap.end())
+    {
+        _context._scheduler.unlock(fitTask->second);
+    }*/
+
+    // 4. Register definition key
+    _context._factMap.emplace(function._id.value(), functionLocation);
+}
+
+void TAnalyzer<ast::node::Kind::FUN_DEFINITION>::operator()()
+{
+    std::cout << "There!\n";
+
+    auto& function = _context._astNodePool.get(_astNodeIndex);
+
+    defineName(function);
+
+    _visitor(function._arguments);
+}
+
+TAnalyzer<ast::node::Kind::TYPE_CLAIM>::TAnalyzer(Context& context,
+                     Visitor& visitor,
+                     ast::node::TIndex<ast::node::Kind::TYPE_CLAIM> astNodeIndex) :
+    _context{context},
+    _visitor{visitor},
+    _astNodeIndex{astNodeIndex}
+{}
+
+void TAnalyzer<ast::node::Kind::TYPE_CLAIM>::operator()()
+{
+    std::cout << "Here!\n";
+}
 
 void analyze(ast::State& ast)
 {
     Context context{ast._nodePool};
+    Visitor visitor{context};
 
-    auto& functions = ast._nodePool.get(ast._program)._functions;
+    visitor(ast._nodePool.get(ast._program)._functions);
+
+    /*auto& functions = ast._nodePool.get(ast._program)._functions;
 
     for (uint32_t i = 0; i < functions._size; i++)
     {
@@ -154,7 +227,7 @@ void analyze(ast::State& ast)
         auto& work = context._workPool.make(FunctionAnalyzer{functions[i], context});
 
         task().assignWork(work);
-    }
+    }*/
 
     context._scheduler.run();
 }

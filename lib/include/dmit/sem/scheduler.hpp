@@ -35,29 +35,16 @@ public:
         return TaskWrapper{_taskGraph.makeNode(&task)};
     }
 
-    void registerFence(TaskWrapper task)
-    {
-        task().insertLock(_taskGraph.attach(task._value,
-                                            task._value));
-        _fences.push_back(&(task()));
-    }
-
-    void unlock(TaskWrapper task)
-    {
-        if (task().hasLock())
-        {
-            _taskGraph.detach(task().lock());
-            task().removeLock();
-        }
-    }
-
     Dependency attach(TaskWrapper lhs,
                       TaskWrapper rhs)
     {
-        unlock(lhs);
-
         return _taskGraph.attach(lhs._value,
                                  rhs._value);
+    }
+
+    void detachAll(TaskWrapper task)
+    {
+        _taskGraph.detachAll(task._value);
     }
 
     void run()
@@ -67,33 +54,15 @@ public:
             auto top = _taskGraph.top();
             top->_value->run();
             _taskGraph.pop(top);
-
-            unlockFences();
         }
 
         DMIT_COM_ASSERT(!_taskGraph.isCyclic());
-    }
-
-    void unlockFences()
-    {
-        for (auto& fence : _fences)
-        {
-            if (fence->hasLock())
-            {
-                _taskGraph.detach(fence->lock());
-            }
-        }
-
-        _fences.clear();
     }
 
 private:
 
     PoolSet _poolSet;
     TaskGraph _taskGraph;
-    std::vector<Task*> _fences;
 };
-
-using Scheduler = dmit::sem::TScheduler<1>;
 
 } // namespace dmit::sem

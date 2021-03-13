@@ -1,0 +1,2 @@
+LIB_SCHMIT     = $(LIB_SRC)/schmit
+LIB_SCHMIT_OUT = libschmit.a
