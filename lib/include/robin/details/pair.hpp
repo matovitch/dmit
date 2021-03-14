@@ -94,13 +94,17 @@ struct TComparator
     using Key        = typename Traits::Key;
     using Comparator = typename Traits::Comparator;
 
+    TComparator() : _comparator{} {}
+
     template <class Value>
     bool operator()(const TPair<Key, Value>& lhs,
                     const TPair<Key, Value>& rhs) const
     {
-        return lhs.first ==
-               rhs.first;
+        return _comparator(lhs.first,
+                          rhs.first);
     }
+
+    const Comparator _comparator;
 };
 
 namespace comparator

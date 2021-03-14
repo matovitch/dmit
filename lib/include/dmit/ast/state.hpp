@@ -45,6 +45,9 @@ private:
     void makeIdentifier(const dmit::prs::Reader& reader,
                         TNode<node::Kind::LIT_IDENTIFIER>& identifier);
 
+    void makeScopeVariant(const dmit::prs::Reader& reader,
+                          TNode<node::Kind::SCOPE_VARIANT>& scopeVariant);
+
     void makeScope(const dmit::prs::Reader& supReader,
                    TNode<node::Kind::SCOPE>& scope);
 

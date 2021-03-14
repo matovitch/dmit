@@ -107,7 +107,6 @@ void Builder::makeTypeClaim(dmit::prs::Reader& reader,
     DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::LIT_IDENTIFIER);
     _nodePool.make(typeClaim._variable);
     makeIdentifier(reader, _nodePool.get(typeClaim._variable));
-    reader.advance();
 }
 
 void Builder::makeDeclaration(const dmit::prs::Reader& supReader,
@@ -234,6 +233,39 @@ void Builder::makeExpression(const dmit::prs::Reader& reader,
     }
 }
 
+void Builder::makeScopeVariant(const dmit::prs::Reader& reader,
+                               TNode<node::Kind::SCOPE_VARIANT>& scopeVariant)
+{
+    auto parseNodeKind = reader.look()._kind;
+
+    if (isDeclaration(parseNodeKind))
+    {
+        blitVariant(Declaration{}, scopeVariant._value);
+        makeDeclaration(reader, std::get<Declaration>(scopeVariant._value));
+    }
+    else if (isStatement(parseNodeKind))
+    {
+        blitVariant(Statement{}, scopeVariant._value);
+        makeStatement(reader, std::get<Statement>(scopeVariant._value));
+    }
+    else if (isExpression(parseNodeKind))
+    {
+        blitVariant(Expression{}, scopeVariant._value);
+        makeExpression(reader, std::get<Expression>(scopeVariant._value));
+    }
+    else if (parseNodeKind == ParseNodeKind::SCOPE)
+    {
+        node::TIndex<node::Kind::SCOPE> subScope;
+        _nodePool.make(subScope);
+        makeScope(reader, _nodePool.get(subScope));
+        blitVariant(subScope, scopeVariant._value);
+    }
+    else
+    {
+        DMIT_COM_ASSERT(!"[AST] Unknown scope variant node");
+    }
+}
+
 void Builder::makeScope(const dmit::prs::Reader& supReader,
                         TNode<node::Kind::SCOPE>& scope)
 {
@@ -245,37 +277,7 @@ void Builder::makeScope(const dmit::prs::Reader& supReader,
 
     while (reader.isValid())
     {
-        auto& variant = _nodePool.get(scope._variants[--i]);
-
-        auto parseNodeKind = reader.look()._kind;
-
-        if (isDeclaration(parseNodeKind))
-        {
-            blitVariant(Declaration{}, variant._value);
-            makeDeclaration(reader, std::get<Declaration>(variant._value));
-        }
-        else if (isStatement(parseNodeKind))
-        {
-            blitVariant(Statement{}, variant._value);
-            makeStatement(reader, std::get<Statement>(variant._value));
-        }
-        else if (isExpression(parseNodeKind))
-        {
-            blitVariant(Expression{}, variant._value);
-            makeExpression(reader, std::get<Expression>(variant._value));
-        }
-        else if (parseNodeKind == ParseNodeKind::SCOPE)
-        {
-            node::TIndex<node::Kind::SCOPE> subScope;
-            _nodePool.make(subScope);
-            makeScope(reader, _nodePool.get(subScope));
-            blitVariant(subScope, variant._value);
-        }
-        else
-        {
-            DMIT_COM_ASSERT(!"[AST] Unknown scope element node");
-        }
-
+        makeScopeVariant(reader, _nodePool.get(scope._variants[--i]));
         reader.advance();
     }
 }
@@ -321,6 +323,7 @@ void Builder::makeArguments(const dmit::prs::Reader& supReader,
     while (reader.isValid())
     {
         makeTypeClaim(reader, _nodePool.get(function._arguments[--i]));
+        reader.advance();
     }
 }
 

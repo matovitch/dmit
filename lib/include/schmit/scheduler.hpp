@@ -62,6 +62,11 @@ public:
                                  rhs._value);
     }
 
+    void detachAll(TaskNode taskNode)
+    {
+        _taskGraph.detachAll(taskNode._value);
+    }
+
     schmit_details::coroutine::Abstract& nextCoroutine()
     {
         if (_taskGraph.empty())

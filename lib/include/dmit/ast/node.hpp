@@ -15,6 +15,7 @@
 #include <functional>
 #include <optional>
 #include <cstdint>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -45,35 +46,15 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
         SOURCE
     };
 
+    using IntegerSequence = std::make_integer_sequence<uint8_t, SOURCE>;
+
     DMIT_COM_ENUM_IMPLICIT_FROM_INT(Kind);
-};
-
-template <com::TEnumIntegerType<Kind> KIND>
-struct TIndex;
-
-struct Location
-{
-    using Type = uint32_t;
-
-    template <com::TEnumIntegerType<Kind> KIND>
-    TIndex<KIND> as() const
-    {
-        return TIndex<KIND>{_index};
-    }
-
-    com::TEnumIntegerType<Kind> _kind;
-    Type _index;
 };
 
 template <com::TEnumIntegerType<Kind> KIND>
 struct TIndex
 {
-    Location location() const
-    {
-        return Location{KIND, _value};
-    }
-
-    typename Location::Type _value;
+    uint32_t _value;
 };
 
 template <com::TEnumIntegerType<Kind> KIND>
@@ -87,6 +68,17 @@ struct TRange
     node::TIndex<KIND> _index;
     uint32_t _size;
 };
+
+template<class>
+struct TVariantHelper;
+
+template<com::TEnumIntegerType<Kind>... Kinds>
+struct TVariantHelper<std::integer_sequence<com::TEnumIntegerType<Kind>, Kinds...>>
+{
+    using Type = std::variant<TIndex<Kinds>...>;
+};
+
+using Location = typename TVariantHelper<Kind::IntegerSequence>::Type;
 
 } // namespace node
 
@@ -130,8 +122,6 @@ struct TNode<node::Kind::FUN_DEFINITION>
     node::TRange<node::Kind::TYPE_CLAIM     > _arguments;
     node::TIndex<node::Kind::FUN_RETURN     > _returnType;
     node::TIndex<node::Kind::SCOPE          > _body;
-
-    std::optional<com::UniqueId> _id;
 };
 
 template<>
@@ -139,8 +129,6 @@ struct TNode<node::Kind::TYPE_CLAIM>
 {
     node::TIndex<node::Kind::LIT_IDENTIFIER> _variable;
     node::TIndex<node::Kind::LIT_IDENTIFIER> _type;
-
-    std::optional<com::UniqueId> _id;
 };
 
 template <>
@@ -153,6 +141,8 @@ template <>
 struct TNode<node::Kind::LIT_IDENTIFIER>
 {
     node::TIndex<node::Kind::LEXEME> _lexeme;
+
+    std::optional<node::Location> _parentScope;
 };
 
 template <>
@@ -176,6 +166,8 @@ template <>
 struct TNode<node::Kind::SCOPE>
 {
     node::TRange<node::Kind::SCOPE_VARIANT> _variants;
+
+    std::optional<node::Location> _parentScope;
 };
 
 template <>
