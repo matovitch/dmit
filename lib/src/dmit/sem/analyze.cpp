@@ -19,22 +19,35 @@ struct VisitorScopeId
 {
     VisitorScopeId(Context& context) : _context{context} {}
 
-    template <com::TEnumIntegerType<ast::node::Kind> KIND>
-    com::UniqueId operator()(ast::node::TIndex<KIND> index)
+    com::UniqueId operator()(const ast::node::Location& location)
     {
-        DMIT_COM_ASSERT(!"[SEM] VisitorScopeId is not applicable for this node");
-        return com::UniqueId{};
+        return std::visit(*this, location);
     }
 
-    template <>
-    com::UniqueId operator()<ast::node::Kind::PROGRAM>(ast::node::TIndex<ast::node::Kind::PROGRAM> program)
+    com::UniqueId operator()(ast::node::TIndex<ast::node::Kind::PROGRAM>)
     {
+        std::cout << "[SEM] VisitorScopeId PROGRAM\n";
+
         return com::UniqueId{"#Rootscope"};
     }
 
-    template <>
-    com::UniqueId operator()<ast::node::Kind::FUN_DEFINITION>(ast::node::TIndex<ast::node::Kind::FUN_DEFINITION> functionIdx)
+    com::UniqueId operator()(ast::node::TIndex<ast::node::Kind::SCOPE> scopeIdx)
     {
+        std::cout << "[SEM] VisitorScopeId SCOPE\n";
+
+        com::UniqueId id{"#Scope"};
+
+        const auto& parentScope = _context.get(scopeIdx)._parentScope;
+        DMIT_COM_ASSERT(parentScope);
+        com::murmur::combine((*this)(parentScope.value()), id);
+
+        return id;
+    }
+
+    com::UniqueId operator()(ast::node::TIndex<ast::node::Kind::FUN_DEFINITION> functionIdx)
+    {
+        std::cout << "[SEM] VisitorScopeId FUN_DEFINITION\n";
+
         const auto& function = _context.get(functionIdx);
 
         // 1. Compute the local function scope id
@@ -53,9 +66,10 @@ struct VisitorScopeId
         return parentScopeId;
     }
 
-    template <>
-    com::UniqueId operator()<ast::node::Kind::TYPE_CLAIM>(ast::node::TIndex<ast::node::Kind::TYPE_CLAIM> typeClaimIdx)
+    com::UniqueId operator()(ast::node::TIndex<ast::node::Kind::TYPE_CLAIM> typeClaimIdx)
     {
+        std::cout << "[SEM] VisitorScopeId TYPE_CLAIM\n";
+
         const auto& typeClaim = _context.get(typeClaimIdx);
 
         // 1. Compute the local function scope id
@@ -87,9 +101,10 @@ struct Visitor
 {
     Visitor(Context& context) : _context{context}, _visitorScopeId{context} {}
 
-    void operator()(const ast::node::Location)
+    template <com::TEnumIntegerType<ast::node::Kind> KIND>
+    void operator()(const ast::node::TIndex<KIND>)
     {
-        std::cout << "Not implemented!\n";
+        std::cout << "[SEM] Visitor is not applicable for this node\n";
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::TYPE_CLAIM> typeClaimIdx)
@@ -103,6 +118,27 @@ struct Visitor
         com::UniqueId define{"#Define"};
         com::murmur::combine(_visitorScopeId(typeClaimIdx), define);
         _context._mapFact.emplace(define, typeClaimIdx);
+    }
+
+    void operator()(ast::node::TIndex<ast::node::Kind::DCL_VARIABLE> dclVariableIdx)
+    {
+        std::cout << "Here's a declaration of variable!\n";
+
+        (*this)(_context.get(dclVariableIdx)._typeClaim);
+    }
+
+    void operator()(ast::node::TIndex<ast::node::Kind::STM_RETURN> stmReturnIdx)
+    {
+        std::cout << "Here's a return statement!\n";
+
+        (*this)(_context.get(stmReturnIdx)._expression);
+    }
+
+    void operator()(ast::node::TIndex<ast::node::Kind::SCOPE_VARIANT> scopeVariantIdx)
+    {
+        std::cout << "Here's a scope variant!\n";
+
+        (*this)(_context.get(scopeVariantIdx)._value);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::SCOPE> scopeIdx)
