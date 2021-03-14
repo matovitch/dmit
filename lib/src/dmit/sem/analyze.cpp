@@ -8,6 +8,7 @@
 #include "dmit/com/murmur.hpp"
 
 #include <iostream> // TODO remove
+#include <cstring>
 
 namespace dmit::sem
 {
@@ -15,13 +16,22 @@ namespace dmit::sem
 namespace
 {
 
+template <class Variant, class BlipType>
+void blitVariant(const BlipType& toBlip, Variant& variant)
+{
+    const Variant toBlipAsVariant = toBlip;
+    std::memcpy(&variant, &toBlipAsVariant, sizeof(Variant));
+}
+
 struct VisitorScopeId
 {
     VisitorScopeId(Context& context) : _context{context} {}
 
-    com::UniqueId operator()(const ast::node::Location& location)
+    template <com::TEnumIntegerType<ast::node::Kind> KIND>
+    com::UniqueId operator()(const ast::node::TIndex<KIND>)
     {
-        return std::visit(*this, location);
+        std::cout << "[SEM] VisitorScopeId is not applicable for this node\n";
+        return com::UniqueId{};
     }
 
     com::UniqueId operator()(ast::node::TIndex<ast::node::Kind::PROGRAM>)
@@ -113,7 +123,7 @@ struct Visitor
 
         auto& typeClaim = _context.get(typeClaimIdx);
 
-        _context.get(typeClaim._variable)._parentScope = _context._astParentScope;
+        blitVariant(_context._astParentScope, _context.get(typeClaim._variable)._parentScope);
 
         com::UniqueId define{"#Define"};
         com::murmur::combine(_visitorScopeId(typeClaimIdx), define);
@@ -145,7 +155,7 @@ struct Visitor
     {
         auto& scope = _context.get(scopeIdx);
 
-        scope._parentScope = _context._astParentScope;
+        blitVariant(_context._astParentScope, scope._parentScope);
         _context._astParentScope = scopeIdx;
 
         (*this)(scope._variants);
@@ -157,7 +167,7 @@ struct Visitor
 
         auto& function = _context.get(functionIdx);
 
-        _context.get(function._name)._parentScope = _context._astParentScope;
+        blitVariant(_context._astParentScope, _context.get(function._name)._parentScope);
         _context._astParentScope = functionIdx;
 
         com::UniqueId define{"#Define"};
