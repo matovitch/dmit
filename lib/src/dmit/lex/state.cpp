@@ -34,7 +34,7 @@ static const char* const KEYWORDS[] =
     "return"
 };
 
-static const auto MAX_KEYWORD_SIZE = sizeof("return");
+static const auto MAX_KEYWORD_SIZE = sizeof("return") - 1;
 
 void State::matchKeywords(const uint8_t* const data)
 {
