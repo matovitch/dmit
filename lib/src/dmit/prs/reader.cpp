@@ -1,8 +1,6 @@
 #include "dmit/prs/reader.hpp"
 
-#include <functional>
-#include <optional>
-#include <cstdint>
+#include "dmit/prs/tree.hpp"
 
 namespace dmit::prs
 {

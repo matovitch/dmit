@@ -2,8 +2,6 @@
 
 #include "dmit/prs/tree.hpp"
 
-#include <functional>
-#include <optional>
 #include <cstdint>
 
 namespace dmit::prs
@@ -41,7 +39,7 @@ public:
 private:
 
     Reader(const state::tree::Node* const head,
-              const state::tree::Node* const tail);
+           const state::tree::Node* const tail);
 
     const state::tree::Node* _head;
     const state::tree::Node* _tail;
