@@ -107,8 +107,8 @@ void SetOfSet::cleanUp()
 
 void SetOfSet::clear()
 {
-    _errors .clear();
-    _errors .emplace_back();
+    _errors.clear();
+    _errors.emplace_back();
 }
 
 uint32_t SetOfSet::offset() const
@@ -118,7 +118,7 @@ uint32_t SetOfSet::offset() const
 
 void SetOfSet::recover()
 {
-    _errors .emplace_back();
+    _errors.emplace_back();
 }
 
 const std::vector<Set>& SetOfSet::errors() const

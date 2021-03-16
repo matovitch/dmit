@@ -137,6 +137,9 @@ Builder::Builder() :
     auto keyLet        = makeParserToken      <lex::Token::LET                       > (_pool, _state);
     auto keyFunc       = makeParserToken      <lex::Token::FUNC                      > (_pool, _state);
     auto keyWhile      = makeParserToken      <lex::Token::WHILE                     > (_pool, _state);
+    auto keyExport     = makeParserToken      <lex::Token::EXPORT                    > (_pool, _state);
+    auto keyImport     = makeParserToken      <lex::Token::IMPORT                    > (_pool, _state);
+    auto keyModule     = makeParserToken      <lex::Token::MODULE                    > (_pool, _state);
     auto keyReturn     = makeParserToken      <lex::Token::RETURN                    > (_pool, _state);
     auto minusKetRight = makeParserToken      <lex::Token::MINUS_KET_RIGHT           > (_pool, _state);
     auto opSum         = makeParserUnary      <tree::node::Kind::EXP_OPERATOR        > (_pool, _state);
@@ -203,6 +206,9 @@ Builder::Builder() :
     keyLet        = tok<lex::Token::LET             >();
     keyFunc       = tok<lex::Token::FUNC            >();
     keyWhile      = tok<lex::Token::WHILE           >();
+    keyExport     = tok<lex::Token::EXPORT          >();
+    keyImport     = tok<lex::Token::IMPORT          >();
+    keyModule     = tok<lex::Token::MODULE          >();
     keyReturn     = tok<lex::Token::RETURN          >();
     minusKetRight = tok<lex::Token::MINUS_KET_RIGHT >();
 

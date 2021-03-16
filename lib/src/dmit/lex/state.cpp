@@ -31,6 +31,9 @@ static const char* const KEYWORDS[] =
     "let",
     "func",
     "while",
+    "export",
+    "import",
+    "module",
     "return"
 };
 
