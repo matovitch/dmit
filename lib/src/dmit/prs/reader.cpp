@@ -38,13 +38,8 @@ bool Reader::isValidNext() const
     return _head - _head->_size - 1 > _tail;
 }
 
-std::optional<Reader> Reader::makeSubReader() const
+Reader Reader::makeSubReader() const
 {
-    if (_head->_size == 0)
-    {
-        return std::nullopt;
-    }
-
     return Reader{ _head - 1, _head - _head->_size - 1};
 }
 

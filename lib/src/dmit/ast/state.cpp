@@ -46,9 +46,8 @@ dmit::prs::Reader makeSubReaderFor(const dmit::prs::state::tree::node::Kind pars
                                    const dmit::prs::Reader& supReader)
 {
     DMIT_COM_ASSERT(supReader.look()._kind == parseNodeKind);
-    auto readerOpt = supReader.makeSubReader();
-    DMIT_COM_ASSERT(readerOpt);
-    return readerOpt.value();
+    auto reader = supReader.makeSubReader();
+    return reader;
 }
 
 } // namespace
@@ -124,7 +123,7 @@ void Builder::makeStatement(const dmit::prs::Reader& reader,
                             Statement& statement)
 {
     auto subReader = reader.makeSubReader();
-    DMIT_COM_ASSERT(subReader);
+    DMIT_COM_ASSERT(subReader.isValid());
 
     auto parseNodeKind = reader.look()._kind;
 
@@ -132,7 +131,7 @@ void Builder::makeStatement(const dmit::prs::Reader& reader,
     {
         node::TIndex<node::Kind::STM_RETURN> stmReturn;
         _nodePool.make(stmReturn);
-        makeReturn(subReader.value(), _nodePool.get(stmReturn));
+        makeReturn(subReader, _nodePool.get(stmReturn));
         blitVariant(stmReturn, statement);
     }
     else
@@ -285,16 +284,13 @@ void Builder::makeScope(const dmit::prs::Reader& supReader,
 void Builder::makeReturnType(const dmit::prs::Reader& supReader,
                              TNode<node::Kind::FUN_RETURN>& returnType)
 {
-    DMIT_COM_ASSERT(supReader.look()._kind == ParseNodeKind::FUN_RETURN);
-    auto readerOpt = supReader.makeSubReader();
+    auto reader = makeSubReaderFor(ParseNodeKind::FUN_RETURN, supReader);
 
-    if (!readerOpt)
+    if (!reader.isValid())
     {
         blitVariant(std::nullopt, returnType._option);
         return;
     }
-
-    auto& reader = readerOpt.value();
 
     node::TIndex<node::Kind::LIT_IDENTIFIER> identifier;
     _nodePool.make(identifier);
@@ -306,15 +302,13 @@ void Builder::makeArguments(const dmit::prs::Reader& supReader,
                             TNode<node::Kind::FUN_DEFINITION>& function)
 {
     DMIT_COM_ASSERT(supReader.look()._kind == ParseNodeKind::FUN_ARGUMENTS);
-    auto readerOpt = supReader.makeSubReader();
+    auto reader = supReader.makeSubReader();
 
-    if (!readerOpt)
+    if (!reader.isValid())
     {
         function._arguments._size = 0;
         return;
     }
-
-    auto& reader = readerOpt.value();
 
     _nodePool.make(reader.size() >> 1, function._arguments);
 
