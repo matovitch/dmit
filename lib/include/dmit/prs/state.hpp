@@ -138,8 +138,8 @@ struct Close
 
 class Builder
 {
-    using Parser = TParser<open::TPipeline<>, close::TPipeline<>>;
-
+    using Parser = TParser< open::TPipeline<>,
+                           close::TPipeline<>>;
 public:
 
     Builder();

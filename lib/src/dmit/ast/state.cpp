@@ -369,7 +369,6 @@ State& Builder::operator()(const prs::state::Tree& parseTree)
 
     auto& program = _nodePool.get(_state._program);
 
-    DMIT_COM_ASSERT(reader.isValid());
     _nodePool.make(reader.size(), program._functions);
 
     uint32_t i = program._functions._size;
