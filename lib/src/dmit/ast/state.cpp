@@ -46,8 +46,7 @@ dmit::prs::Reader makeSubReaderFor(const dmit::prs::state::tree::node::Kind pars
                                    const dmit::prs::Reader& supReader)
 {
     DMIT_COM_ASSERT(supReader.look()._kind == parseNodeKind);
-    auto reader = supReader.makeSubReader();
-    return reader;
+    return supReader.makeSubReader();
 }
 
 } // namespace
