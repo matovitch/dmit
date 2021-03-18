@@ -39,6 +39,7 @@ public:
         Stack stack;
 
         Open{}(reader, stack, _state);
+
         auto&& readerOpt = (_parserFnOpt.value())(reader);
 
         Close{}(readerOpt, stack, _state);
