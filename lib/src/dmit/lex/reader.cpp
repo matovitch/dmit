@@ -8,25 +8,31 @@
 namespace dmit::lex
 {
 
+namespace
+{
+
+void advanceToRawToken(const Token*& head)
+{
+    while (*head == Token::WHITESPACE ||
+           *head == Token::COMMENT)
+    {
+        head++;
+    }
+}
+
+} // namespace
+
 Reader::Reader(const std::vector<Token>& tokens) :
     _head{tokens.data() + 1},
     _tail{tokens.data() - 1 + tokens.size()}
 {
-    advanceToRawToken();
+    advanceToRawToken(_head);
 }
 
 void Reader::advance()
 {
     _head++;
-}
-
-void Reader::advanceToRawToken()
-{
-    while (look() == Token::WHITESPACE ||
-           look() == Token::COMMENT)
-    {
-        _head++;
-    }
+    advanceToRawToken(_head);
 }
 
 const Token Reader::look() const

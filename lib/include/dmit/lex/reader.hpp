@@ -17,8 +17,6 @@ public:
 
     void advance();
 
-    void advanceToRawToken();
-
     const Token look() const;
 
     bool isEoi() const;

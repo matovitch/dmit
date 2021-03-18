@@ -41,11 +41,6 @@ public:
         Open{}(reader, stack, _state);
         auto&& readerOpt = (_parserFnOpt.value())(reader);
 
-        if (readerOpt)
-        {
-            readerOpt.value().advanceToRawToken();
-        }
-
         Close{}(readerOpt, stack, _state);
 
         return readerOpt;
