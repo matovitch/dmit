@@ -303,12 +303,6 @@ void Builder::makeArguments(const dmit::prs::Reader& supReader,
     DMIT_COM_ASSERT(supReader.look()._kind == ParseNodeKind::FUN_ARGUMENTS);
     auto reader = supReader.makeSubReader();
 
-    if (!reader.isValid())
-    {
-        function._arguments._size = 0;
-        return;
-    }
-
     _nodePool.make(reader.size() >> 1, function._arguments);
 
     uint32_t i = function._arguments._size;

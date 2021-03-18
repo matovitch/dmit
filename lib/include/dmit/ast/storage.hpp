@@ -66,7 +66,7 @@ public:
     {
         const uint32_t counter = _counter;
 
-        _counter += size + 1;
+        _counter += size;
 
         if ((_counter >> LOG2_SIZE) + 1 > _chunks.size())
         {
