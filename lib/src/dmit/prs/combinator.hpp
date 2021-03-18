@@ -132,7 +132,6 @@ auto skp(Parser&& parser)
     };
 }
 
-
 auto msg(const char* const message)
 {
     return [message](lex::Reader reader) -> std::optional<lex::Reader>
