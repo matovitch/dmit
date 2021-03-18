@@ -114,6 +114,11 @@ auto skp(Parser&& parser)
 {
     return [parser](lex::Reader reader) -> std::optional<lex::Reader>
     {
+        if (parser(reader) || reader.isEoi())
+        {
+            return std::nullopt;
+        }
+
         reader.advance();
 
         while (!reader.isEoi())
@@ -132,33 +137,6 @@ auto skp(Parser&& parser)
     };
 }
 
-template <class Parser>
-auto til(Parser&& parser)
-{
-    return [parser](lex::Reader reader) -> std::optional<lex::Reader>
-    {
-        if (parser(reader))
-        {
-            return std::nullopt;
-        }
-
-        return skp(parser)(reader);
-    };
-}
-
-template <class Parser>
-auto up2(Parser&& parser)
-{
-    return [parser](lex::Reader reader) -> std::optional<lex::Reader>
-    {
-        if (reader.isEoi())
-        {
-            return std::nullopt;
-        }
-
-        return skp(parser)(reader);
-    };
-}
 
 auto msg(const char* const message)
 {
@@ -178,8 +156,7 @@ auto msg(const char* const message)
   using combinator::rep;  \
   using combinator::alt;  \
   using combinator::opt;  \
-  using combinator::til;  \
-  using combinator::up2;  \
+  using combinator::skp;  \
   using combinator::msg;  \
 
 } // namespace dmit::prs
