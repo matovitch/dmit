@@ -32,11 +32,6 @@ auto tok()
     };
 }
 
-auto err()
-{
-    return [](lex::Reader reader) -> std::optional<lex::Reader> { return std::nullopt; };
-}
-
 auto seq()
 {
     return [](lex::Reader reader) -> std::optional<lex::Reader> { return reader; };
@@ -151,7 +146,6 @@ auto msg(const char* const message)
 
 #define USING_COMBINATORS \
   using combinator::tok;  \
-  using combinator::err;  \
   using combinator::seq;  \
   using combinator::rep;  \
   using combinator::alt;  \
