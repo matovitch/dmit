@@ -11,7 +11,8 @@
 
 #include "dmit/com/unique_id.hpp"
 
-#include <unordered_map>
+#include "robin/map.hpp"
+
 #include <cstdint>
 
 namespace dmit::rt
@@ -19,10 +20,10 @@ namespace dmit::rt
 
 namespace context { class Storage; }
 
-using GlobalMap = std::unordered_map<com::UniqueId,
-                                     uint64_t,
-                                     com::unique_id::Hasher,
-                                     com::unique_id::Comparator>;
+using GlobalMap = robin::map::TMake<com::UniqueId,
+                                    uint64_t,
+                                    com::unique_id::Hasher,
+                                    com::unique_id::Comparator, 4, 3>;
 struct LibraryCore : Library
 {
     LibraryCore(context::Storage& contextStorage, Loop& loop);

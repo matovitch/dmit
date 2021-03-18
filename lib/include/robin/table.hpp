@@ -7,6 +7,9 @@
 #include "robin/details/buffer/manager.hpp"
 #include "robin/details/likely.hpp"
 
+#include <cstring>
+#include <utility>
+
 namespace robin
 {
 
@@ -48,7 +51,7 @@ public:
     template <class... Args>
     void emplace(Args&&... args)
     {
-        Type t{args...};
+        Type t{std::forward<Args>(args)...};
 
         REDO: // goto label
 
@@ -98,7 +101,7 @@ public:
 
                 head->fill(dib, std::move(t));
 
-                t = std::move(tTmp);
+                std::memcpy(&t, &tTmp, sizeof(Type)); // illegal move here
                 dib = dibTmp;
                 goto BUCKET_SCAN;
             }

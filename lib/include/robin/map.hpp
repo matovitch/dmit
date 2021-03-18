@@ -83,12 +83,14 @@ public:
     {
         auto&& fit = find(key);
 
-        if (fit == end())
+        if (fit != end())
         {
-            emplace(key, Value{});
+            return fit->second;
         }
 
-        return fit->second;
+        emplace(key, Value{});
+
+        return find(key)->second;
     }
 
     Value& at(const Key& key)

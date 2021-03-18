@@ -54,7 +54,7 @@ struct Context
     using TMap = robin::map::TMake<com::UniqueId,
                                    Type,
                                    com::unique_id::Hasher,
-                                   com::unique_id::Comparator, 1, 1>;
+                                   com::unique_id::Comparator, 4, 3>;
 
     using MapTask = TMap<Task>;
     using MapFact = TMap<ast::node::Location>;

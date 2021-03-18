@@ -6,7 +6,8 @@
 
 #include "dmit/prs/error.hpp"
 
-#include <unordered_set>
+#include "robin/table.hpp"
+
 #include <sstream>
 #include <string>
 
@@ -28,14 +29,14 @@ std::string asString(const prs::state::error::Set& errorSet)
 {
     std::ostringstream oss;
 
-    using ErrorHashSet = std::unordered_set<prs::state::Error,
-                                            prs::state::error::Hasher,
-                                            prs::state::error::Comparator>;
+    using ErrorHashSet = robin::table::TMake<prs::state::Error,
+                                             prs::state::error::Hasher,
+                                             prs::state::error::Comparator, 4, 3>;
     ErrorHashSet errorHashSet;
 
     for (const auto& error : errorSet.errors())
     {
-        errorHashSet.insert(error);
+        errorHashSet.emplace(error);
     }
 
     oss << "{\"offset\":" << errorSet.offset()

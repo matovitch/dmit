@@ -4,6 +4,8 @@
 
 #include "dmit/com/unique_id.hpp"
 
+#include "robin/map.hpp"
+
 #include <functional>
 #include <cstdint>
 
@@ -57,6 +59,10 @@ class FunctionRegister
 {
     friend function_register::Recorder;
 
+    using CallableMap = robin::map::TMake<com::UniqueId,
+                                          Callable*,
+                                          com::unique_id::Hasher,
+                                          com::unique_id::Comparator, 4, 3>;
 public:
 
     FunctionRegister();
@@ -69,8 +75,7 @@ private:
 
 
     function_register::Recorder _recorder;
-    std::unordered_map<dmit::com::UniqueId, Callable*, dmit::com::unique_id::Hasher
-                                                     , dmit::com::unique_id::Comparator> _callables;
+    CallableMap _callables;
 };
 
 } // namespace dmit::rt
