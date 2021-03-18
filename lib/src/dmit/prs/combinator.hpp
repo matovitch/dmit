@@ -109,7 +109,7 @@ auto skp(Parser&& parser)
 {
     return [parser](lex::Reader reader) -> std::optional<lex::Reader>
     {
-        if (parser(reader) || reader.isEoi())
+        if (reader.isEoi() || parser(reader))
         {
             return std::nullopt;
         }

@@ -269,7 +269,7 @@ Builder::Builder() :
 
     rawScope = seq(braLeft, rep(alt(rcvScopeElem, rawScope)), braRight);
 
-    skpScope = skp(alt(tok<lex::Token::FUNC>()));
+    skpScope = skp(tok<lex::Token::FUNC>());
 
     rcvScope = alt(rawScope, skpScope);
 
