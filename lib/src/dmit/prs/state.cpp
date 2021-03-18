@@ -263,7 +263,8 @@ Builder::Builder() :
                                tok<lex::Token::BRA_RIGHT  >(),
                                tok<lex::Token::FUNC       >())), opt(tok<lex::Token::SEMI_COLON>()));
 
-    rcvScopeElem = alt(rawScopeElem, skpScopeElem);
+    rcvScopeElem = alt(rawScopeElem,
+                       skpScopeElem);
 
     // Scope
 
@@ -271,7 +272,8 @@ Builder::Builder() :
 
     skpScope = skp(tok<lex::Token::FUNC>());
 
-    rcvScope = alt(rawScope, skpScope);
+    rcvScope = alt(rawScope,
+                   skpScope);
 
     scope = rcvScope; // Only here to create a fake scope if we could not parse one
 
@@ -286,8 +288,8 @@ Builder::Builder() :
     skpFunction = seq(opt(tok<lex::Token::FUNC>()),
                       skp(tok<lex::Token::FUNC>()));
 
-    rcvFunction = alt(rawFunction, skpFunction);
-
+    rcvFunction = alt(rawFunction,
+                      skpFunction);
     // Full parser
 
     program = rep(rcvFunction);
