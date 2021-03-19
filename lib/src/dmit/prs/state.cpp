@@ -232,7 +232,7 @@ Builder::Builder() :
 
     comparison = seq(sum, opt(seq(opComparison, sum)));
 
-    opAssign = alt(equal, plusEqual, minusEqual, starEqual, slashEqual);
+    opAssign = alt(equal, plusEqual, minusEqual, starEqual, slashEqual, percentEqual);
 
     assignment = seq(comparison, opt(seq(opAssign, binAssign)));
 
