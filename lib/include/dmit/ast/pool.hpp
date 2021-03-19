@@ -74,11 +74,13 @@ struct TPool
 
     std::tuple<pool::TSub<Kind::DCL_VARIABLE   , LOG2_SIZE>,
                pool::TSub<Kind::EXP_BINOP      , LOG2_SIZE>,
+               pool::TSub<Kind::EXP_MONOP      , LOG2_SIZE>,
                pool::TSub<Kind::EXPRESSION     , LOG2_SIZE>,
                pool::TSub<Kind::FUN_CALL       , LOG2_SIZE>,
                pool::TSub<Kind::FUN_DEFINITION , LOG2_SIZE>,
                pool::TSub<Kind::FUN_RETURN     , LOG2_SIZE>,
                pool::TSub<Kind::LEXEME         , LOG2_SIZE>,
+               pool::TSub<Kind::LIT_DECIMAL    , LOG2_SIZE>,
                pool::TSub<Kind::LIT_IDENTIFIER , LOG2_SIZE>,
                pool::TSub<Kind::LIT_INTEGER    , LOG2_SIZE>,
                pool::TSub<Kind::SCOPE          , LOG2_SIZE>,

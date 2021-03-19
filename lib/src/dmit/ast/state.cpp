@@ -4,6 +4,7 @@
 #include "dmit/prs/tree.hpp"
 
 #include "dmit/com/assert.hpp"
+#include "dmit/com/blit.hpp"
 
 #include <type_traits>
 #include <cstdint>
@@ -33,13 +34,6 @@ bool isExpression(const dmit::prs::state::tree::node::Kind parseNodeKind)
            parseNodeKind == dmit::prs::state::tree::node::Kind::EXP_ASSIGN  ||
            parseNodeKind == dmit::prs::state::tree::node::Kind::LIT_INTEGER ||
            parseNodeKind == dmit::prs::state::tree::node::Kind::LIT_IDENTIFIER;
-}
-
-template <class Variant, class BlipType>
-void blitVariant(const BlipType& toBlip, Variant& variant)
-{
-    const Variant toBlipAsVariant = toBlip;
-    std::memcpy(&variant, &toBlipAsVariant, sizeof(Variant));
 }
 
 dmit::prs::Reader makeSubReaderFor(const dmit::prs::state::tree::node::Kind parseNodeKind,
@@ -115,7 +109,7 @@ void Builder::makeDeclaration(const dmit::prs::Reader& supReader,
     node::TIndex<node::Kind::DCL_VARIABLE> dclVariable;
     _nodePool.make(dclVariable);
     makeDclVariable(reader, _nodePool.get(dclVariable));
-    blitVariant(dclVariable, declaration);
+    com::blit(dclVariable, declaration);
 }
 
 void Builder::makeStatement(const dmit::prs::Reader& reader,
@@ -131,7 +125,7 @@ void Builder::makeStatement(const dmit::prs::Reader& reader,
         node::TIndex<node::Kind::STM_RETURN> stmReturn;
         _nodePool.make(stmReturn);
         makeReturn(subReader, _nodePool.get(stmReturn));
-        blitVariant(stmReturn, statement);
+        com::blit(stmReturn, statement);
     }
     else
     {
@@ -192,14 +186,14 @@ void Builder::makeExpression(const dmit::prs::Reader& reader,
         node::TIndex<node::Kind::LIT_IDENTIFIER> identifier;
         _nodePool.make(identifier);
         makeIdentifier(reader, _nodePool.get(identifier));
-        blitVariant(identifier, expression);
+        com::blit(identifier, expression);
     }
     else if (parseNodeKind == ParseNodeKind::LIT_INTEGER)
     {
         node::TIndex<node::Kind::LIT_INTEGER> integer;
         _nodePool.make(integer);
         makeInteger(reader, _nodePool.get(integer));
-        blitVariant(integer, expression);
+        com::blit(integer, expression);
     }
     else if (parseNodeKind == ParseNodeKind::EXP_BINOP)
     {
@@ -207,7 +201,7 @@ void Builder::makeExpression(const dmit::prs::Reader& reader,
         _nodePool.make(binop);
         auto subReader = makeSubReaderFor(ParseNodeKind::EXP_BINOP, reader);
         makeBinop(subReader, _nodePool.get(binop));
-        blitVariant(binop, expression);
+        com::blit(binop, expression);
     }
     else if (parseNodeKind == ParseNodeKind::EXP_ASSIGN)
     {
@@ -215,7 +209,7 @@ void Builder::makeExpression(const dmit::prs::Reader& reader,
         _nodePool.make(assignment);
         auto subReader = makeSubReaderFor(ParseNodeKind::EXP_ASSIGN, reader);
         makeAssignment(subReader, _nodePool.get(assignment));
-        blitVariant(assignment, expression);
+        com::blit(assignment, expression);
     }
     else if (parseNodeKind == ParseNodeKind::FUN_CALL)
     {
@@ -223,7 +217,7 @@ void Builder::makeExpression(const dmit::prs::Reader& reader,
         _nodePool.make(funCall);
         auto subReader = makeSubReaderFor(ParseNodeKind::FUN_CALL, reader);
         makeFunctionCall(subReader, _nodePool.get(funCall));
-        blitVariant(funCall, expression);
+        com::blit(funCall, expression);
     }
     else
     {
@@ -238,17 +232,17 @@ void Builder::makeScopeVariant(const dmit::prs::Reader& reader,
 
     if (isDeclaration(parseNodeKind))
     {
-        blitVariant(Declaration{}, scopeVariant._value);
+        com::blit(Declaration{}, scopeVariant._value);
         makeDeclaration(reader, std::get<Declaration>(scopeVariant._value));
     }
     else if (isStatement(parseNodeKind))
     {
-        blitVariant(Statement{}, scopeVariant._value);
+        com::blit(Statement{}, scopeVariant._value);
         makeStatement(reader, std::get<Statement>(scopeVariant._value));
     }
     else if (isExpression(parseNodeKind))
     {
-        blitVariant(Expression{}, scopeVariant._value);
+        com::blit(Expression{}, scopeVariant._value);
         makeExpression(reader, std::get<Expression>(scopeVariant._value));
     }
     else if (parseNodeKind == ParseNodeKind::SCOPE)
@@ -256,7 +250,7 @@ void Builder::makeScopeVariant(const dmit::prs::Reader& reader,
         node::TIndex<node::Kind::SCOPE> subScope;
         _nodePool.make(subScope);
         makeScope(reader, _nodePool.get(subScope));
-        blitVariant(subScope, scopeVariant._value);
+        com::blit(subScope, scopeVariant._value);
     }
     else
     {
@@ -287,14 +281,14 @@ void Builder::makeReturnType(const dmit::prs::Reader& supReader,
 
     if (!reader.isValid())
     {
-        blitVariant(std::nullopt, returnType._option);
+        com::blit(std::nullopt, returnType._option);
         return;
     }
 
     node::TIndex<node::Kind::LIT_IDENTIFIER> identifier;
     _nodePool.make(identifier);
     makeIdentifier(reader, _nodePool.get(identifier));
-    blitVariant(identifier, returnType._option);
+    com::blit(identifier, returnType._option);
 }
 
 void Builder::makeArguments(const dmit::prs::Reader& supReader,

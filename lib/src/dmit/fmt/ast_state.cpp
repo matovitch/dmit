@@ -38,6 +38,15 @@ struct Visitor
         _oss << "}";
     }
 
+    void operator()(const ast::node::TIndex<ast::node::Kind::LIT_DECIMAL>& decimalIdx)
+    {
+        const auto& decimal = _nodePool.get(decimalIdx);
+
+        _oss << "{\"node\":\"Decimal\",";
+        _oss << "\"lexeme\":"; (*this)(decimal._lexeme);
+        _oss << "}";
+    }
+
     void operator()(const ast::node::TIndex<ast::node::Kind::LIT_INTEGER>& integerIdx)
     {
         const auto& integer = _nodePool.get(integerIdx);
@@ -76,6 +85,15 @@ struct Visitor
         _oss << "{\"node\":\"Return Statement\",";
         _oss << "\"expression\":"; (*this)(stmReturn._expression);
         _oss << "}";
+    }
+
+    void operator()(const ast::node::TIndex<ast::node::Kind::EXP_MONOP>& expMonopIdx)
+    {
+        const auto& expMonop = _nodePool.get(expMonopIdx);
+
+        _oss << "{\"node\":\"Unary Operation\",";
+        _oss << "\"operator\":"   ; (*this)(expMonop._operator   ); _oss << ",";
+        _oss << "\"expression\":" ; (*this)(expMonop._expression ); _oss << ",";
     }
 
     void operator()(const ast::node::TIndex<ast::node::Kind::EXP_BINOP>& expBinopIdx)

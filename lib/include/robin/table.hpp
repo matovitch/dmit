@@ -7,7 +7,6 @@
 #include "robin/details/buffer/manager.hpp"
 #include "robin/details/likely.hpp"
 
-#include <cstring>
 #include <utility>
 
 namespace robin
@@ -101,8 +100,9 @@ public:
 
                 head->fill(dib, std::move(t));
 
-                std::memcpy(&t, &tTmp, sizeof(Type)); // illegal move here
+                new (&t) Type{std::move(tTmp)};
                 dib = dibTmp;
+
                 goto BUCKET_SCAN;
             }
             else if (_comparator(t, head->value()))

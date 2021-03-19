@@ -29,11 +29,13 @@ struct Kind : com::TEnum<uint8_t>
     {
         DCL_VARIABLE   ,
         EXP_BINOP      ,
+        EXP_MONOP      ,
         EXPRESSION     ,
         FUN_CALL       ,
         FUN_DEFINITION ,
         FUN_RETURN     ,
         LEXEME         ,
+        LIT_DECIMAL    ,
         LIT_IDENTIFIER ,
         LIT_INTEGER    ,
         SCOPE          ,
@@ -85,8 +87,10 @@ using Declaration = std::variant<node::TIndex<node::Kind::DCL_VARIABLE>>;
 using Statement = std::variant<node::TIndex<node::Kind::STM_RETURN>>;
 
 using Expression = std::variant<node::TIndex<node::Kind::LIT_IDENTIFIER >,
+                                node::TIndex<node::Kind::LIT_DECIMAL    >,
                                 node::TIndex<node::Kind::LIT_INTEGER    >,
                                 node::TIndex<node::Kind::EXP_BINOP      >,
+                                node::TIndex<node::Kind::EXP_MONOP      >,
                                 node::TIndex<node::Kind::FUN_CALL       >>;
 
 using ScopeVariant = std::variant<Statement,
@@ -144,11 +148,19 @@ struct TNode<node::Kind::LIT_IDENTIFIER>
 };
 
 template <>
+struct TNode<node::Kind::LIT_DECIMAL>
+{
+    node::TIndex<node::Kind::LEXEME> _lexeme;
+
+    std::optional<double> _value;
+};
+
+template <>
 struct TNode<node::Kind::LIT_INTEGER>
 {
     node::TIndex<node::Kind::LEXEME> _lexeme;
 
-    Integer _value;
+    std::optional<Integer> _value;
 };
 
 template <>
@@ -187,6 +199,14 @@ struct TNode<node::Kind::EXP_BINOP>
 
     Expression _lhs;
     Expression _rhs;
+};
+
+template <>
+struct TNode<node::Kind::EXP_MONOP>
+{
+    node::TIndex<node::Kind::LEXEME> _operator;
+
+    Expression _expression;
 };
 
 template<>
