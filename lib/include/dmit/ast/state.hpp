@@ -16,8 +16,8 @@ struct State : fmt::Formatable
     using NodePool = node::TPool<0x10>;
 
     NodePool                          _nodePool;
-    node::TIndex<node::Kind::PROGRAM> _program;
-    node::TIndex<node::Kind::SOURCE>  _source;
+    node::TIndex<node::Kind::UNIT   > _unit;
+    node::TIndex<node::Kind::SOURCE > _source;
 };
 
 namespace state

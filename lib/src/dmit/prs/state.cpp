@@ -153,7 +153,7 @@ Builder::Builder() :
     auto stmReturn     = makeParserUnary      <tree::node::Kind::STM_RETURN          > (_pool, _state);
     auto declarLet     = makeParserUnary      <tree::node::Kind::DCL_VARIABLE        > (_pool, _state);
     auto rawFunction   = makeParserUnary      <tree::node::Kind::FUN_DEFINITION      > (_pool, _state);
-    auto program       = makeParserUnary      <tree::node::Kind::PROGRAM             > (_pool, _state);
+    auto unit          = makeParserUnary      <tree::node::Kind::UNIT                > (_pool, _state);
     auto rawScope      = makeParserUnary      <tree::node::Kind::SCOPE               > (_pool, _state);
     auto scope         = makeParserVariadic   <tree::node::Kind::SCOPE               > (_pool, _state);
     auto product       = makeParserVariadic   <tree::node::Kind::EXP_BINOP           > (_pool, _state);
@@ -292,9 +292,9 @@ Builder::Builder() :
                       skpFunction);
     // Full parser
 
-    program = rep(rcvFunction);
+    unit = rep(rcvFunction);
 
-    _parser = program;
+    _parser = unit;
 }
 
 const State& Builder::operator()(const std::vector<lex::Token>& tokens)

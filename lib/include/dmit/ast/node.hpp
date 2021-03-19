@@ -10,8 +10,6 @@
 #include "dmit/com/unique_id.hpp"
 #include "dmit/com/enum.hpp"
 
-#include "dmit/fmt/formatable.hpp"
-
 #include <functional>
 #include <optional>
 #include <cstdint>
@@ -25,7 +23,7 @@ namespace dmit::ast
 namespace node
 {
 
-struct Kind : com::TEnum<uint8_t>, fmt::Formatable
+struct Kind : com::TEnum<uint8_t>
 {
     enum : uint8_t
     {
@@ -42,8 +40,8 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
         SCOPE_VARIANT  ,
         STM_RETURN     ,
         TYPE_CLAIM     ,
-        PROGRAM        ,
-        SOURCE
+        UNIT           ,
+        SOURCE         ,
     };
 
     using IntegerSequence = std::make_integer_sequence<uint8_t, SOURCE>;
@@ -100,7 +98,7 @@ template <com::TEnumIntegerType<node::Kind> KIND>
 struct TNode {};
 
 template <>
-struct TNode<node::Kind::PROGRAM>
+struct TNode<node::Kind::UNIT>
 {
     node::TRange<node::Kind::FUN_DEFINITION> _functions;
 };

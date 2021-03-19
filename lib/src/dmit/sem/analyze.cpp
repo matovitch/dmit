@@ -34,9 +34,9 @@ struct VisitorScopeId
         return com::UniqueId{};
     }
 
-    com::UniqueId operator()(ast::node::TIndex<ast::node::Kind::PROGRAM>)
+    com::UniqueId operator()(ast::node::TIndex<ast::node::Kind::UNIT>)
     {
-        std::cout << "[SEM] VisitorScopeId PROGRAM\n";
+        std::cout << "[SEM] VisitorScopeId UNIT\n";
 
         return com::UniqueId{"#Rootscope"};
     }
@@ -178,11 +178,11 @@ struct Visitor
         (*this)(function._body);
     }
 
-    void operator()(ast::node::TIndex<ast::node::Kind::PROGRAM> program)
+    void operator()(ast::node::TIndex<ast::node::Kind::UNIT> unit)
     {
-        _context._astParentScope = program;
+        _context._astParentScope = unit;
 
-        (*this)(_context.get(program)._functions);
+        (*this)(_context.get(unit)._functions);
     }
 
     template <com::TEnumIntegerType<ast::node::Kind> KIND>
@@ -213,7 +213,7 @@ void analyze(ast::State& ast)
 
     Visitor visitor{context};
 
-    visitor(ast._program);
+    visitor(ast._unit);
 }
 
 } // namespace dmit::sem

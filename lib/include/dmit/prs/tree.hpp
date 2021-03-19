@@ -37,7 +37,7 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
         LIT_DECIMAL,
         LIT_IDENTIFIER,
         LIT_INTEGER,
-        PROGRAM,
+        UNIT,
         SCOPE,
         STM_RETURN,
         STM_WHILE,

@@ -169,11 +169,11 @@ std::string asString(const ast::State& state)
 {
     std::ostringstream oss;
 
-    oss << "{\"node\":\"Program\",\"functions\":";
+    oss << "{\"node\":\"Unit\",\"functions\":";
 
     Visitor visitor{state._nodePool, oss};
 
-    visitor(state._nodePool.get(state._program)._functions);
+    visitor(state._nodePool.get(state._unit)._functions);
 
     oss << "}";
 

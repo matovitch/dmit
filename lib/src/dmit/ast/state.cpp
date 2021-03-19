@@ -358,18 +358,18 @@ State& Builder::operator()(const prs::state::Tree& parseTree)
 {
     dmit::prs::Reader reader{parseTree};
 
-    _nodePool.make(_state._program);
+    _nodePool.make(_state._unit);
     _nodePool.make(_state._source);
 
-    auto& program = _nodePool.get(_state._program);
+    auto& unit = _nodePool.get(_state._unit);
 
-    _nodePool.make(reader.size(), program._functions);
+    _nodePool.make(reader.size(), unit._functions);
 
-    uint32_t i = program._functions._size;
+    uint32_t i = unit._functions._size;
 
     while (reader.isValid())
     {
-        makeFunction(reader, _nodePool.get(program._functions[--i]));
+        makeFunction(reader, _nodePool.get(unit._functions[--i]));
         reader.advance();
     }
 

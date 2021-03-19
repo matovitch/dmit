@@ -19,7 +19,7 @@ static const char* K_TREE_NODE_KIND_AS_CSTR[] =
     "LIT_DECIMAL",
     "LIT_IDENTIFIER",
     "LIT_INTEGER",
-    "PROGRAM",
+    "UNIT",
     "SCOPE",
     "STM_RETURN",
     "STM_WHILE",
