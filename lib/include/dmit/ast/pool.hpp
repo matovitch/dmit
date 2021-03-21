@@ -41,10 +41,9 @@ public:
         range._index._value = _storage.make(size);
     }
 
-    void grow(TRange<KIND>& range)
+    void trim(TRange<KIND>& range, const uint32_t size)
     {
-        range._size += 1;
-        _storage.make();
+        _storage.trim(size - range._size);
     }
 
 private:
@@ -95,9 +94,9 @@ struct TPool
     }
 
     template <com::TEnumIntegerType<Kind> KIND>
-    void grow(TRange<KIND>& range)
+    void trim(TRange<KIND>& range, const uint32_t size)
     {
-        std::get<KIND>(_subs).grow(range);
+        std::get<KIND>(_subs).trim(range, size);
     }
 
     std::tuple<pool::TSub<Kind::DCL_IMPORT     , LOG2_SIZE>,

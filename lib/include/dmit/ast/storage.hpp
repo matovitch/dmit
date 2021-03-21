@@ -76,6 +76,11 @@ public:
         return counter;
     }
 
+    void trim(const uint32_t size)
+    {
+        _counter -= size;
+    }
+
     void clear()
     {
         _counter = 0;

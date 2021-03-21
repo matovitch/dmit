@@ -7,16 +7,6 @@
 namespace dmit::prs
 {
 
-namespace reader
-{
-
-struct Head
-{
-    int32_t _offset;
-};
-
-} // namespace reader
-
 class Reader
 {
 

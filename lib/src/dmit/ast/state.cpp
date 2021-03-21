@@ -363,6 +363,8 @@ void Builder::makeModule(dmit::prs::Reader& reader,
     uint32_t indexImport   = 0;
     uint32_t indexModule   = 0;
 
+    bool hasSubModule = false;
+
     while (reader.isValid())
     {
         const auto parseNodeKind = reader.look()._kind;
@@ -382,6 +384,7 @@ void Builder::makeModule(dmit::prs::Reader& reader,
         }
         else if (parseNodeKind == dmit::prs::state::tree::node::Kind::MODULE)
         {
+            hasSubModule = true;
             auto subReader = reader.makeSubReader();
             makeModule(subReader, _nodePool.get(module._modules[indexModule++]));
         }
@@ -391,6 +394,13 @@ void Builder::makeModule(dmit::prs::Reader& reader,
         }
 
         reader.advance();
+    }
+
+    if (!hasSubModule)
+    {
+        _nodePool.trim(module._functions , indexFunction );
+        _nodePool.trim(module._imports   , indexImport   );
+        _nodePool.trim(module._modules   , indexModule   );
     }
 
     module._functions ._size = indexFunction;
