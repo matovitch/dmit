@@ -106,6 +106,9 @@ enum
     NODE_COMMENT_LINE,
     NODE_COMMENT_BLOCK_0,
     NODE_COMMENT_BLOCK_1,
+    NODE_COMMENT_BLOCK_2,
+    NODE_COMMENT_BLOCK_3,
+    NODE_COMMENT_BLOCK_4,
 };
 
 template <>
@@ -244,6 +247,7 @@ struct TNodeIndex<NODE_COMMENT_BLOCK_0>
     using Type = TNode
     <
         Token::UNKNOWN,
+        TGoto<IsSlash    , NODE_COMMENT_BLOCK_2>,
         TGoto<IsStar     , NODE_COMMENT_BLOCK_1>,
         TGoto<IsAnything , NODE_COMMENT_BLOCK_0>
     >;
@@ -257,6 +261,39 @@ struct TNodeIndex<NODE_COMMENT_BLOCK_1>
         Token::UNKNOWN,
         TGoto<IsSlash    , NODE_COMMENT>,
         TGoto<IsAnything , NODE_COMMENT_BLOCK_0>
+    >;
+};
+
+template <>
+struct TNodeIndex<NODE_COMMENT_BLOCK_2>
+{
+    using Type = TNode
+    <
+        Token::UNKNOWN,
+        TGoto<IsStar    , NODE_COMMENT_BLOCK_3>,
+        TGoto<IsAnything, NODE_COMMENT_BLOCK_0>
+    >;
+};
+
+template <>
+struct TNodeIndex<NODE_COMMENT_BLOCK_3>
+{
+    using Type = TNode
+    <
+        Token::UNKNOWN,
+        TGoto<IsStar     , NODE_COMMENT_BLOCK_4>,
+        TGoto<IsAnything , NODE_COMMENT_BLOCK_3>
+    >;
+};
+
+template <>
+struct TNodeIndex<NODE_COMMENT_BLOCK_4>
+{
+    using Type = TNode
+    <
+        Token::UNKNOWN,
+        TGoto<IsSlash    , NODE_COMMENT_BLOCK_0>,
+        TGoto<IsAnything , NODE_COMMENT_BLOCK_3>
     >;
 };
 

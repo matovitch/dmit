@@ -7,3 +7,9 @@ a
 third
 comment
 */
+/*
+    This is a
+    /*
+        nested comment
+    */
+*/
