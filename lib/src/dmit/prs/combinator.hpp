@@ -84,7 +84,7 @@ auto rep(Parser&& parser)
     {
         std::optional<lex::Reader> readerOpt{reader};
 
-        while ((readerOpt = parser(readerOpt.value())))
+        while (!(reader.isEoi()) && (readerOpt = parser(readerOpt.value())))
         {
             reader = readerOpt.value();
         }
