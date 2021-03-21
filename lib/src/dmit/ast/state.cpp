@@ -355,9 +355,13 @@ void Builder::makeImport(const dmit::prs::Reader& supReader,
 void Builder::makeModule(dmit::prs::Reader& reader,
                          TNode<node::Kind::MODULE>& module)
 {
-    _nodePool.make(module._functions , 0 /*size*/);
-    _nodePool.make(module._imports   , 0 /*size*/);
-    _nodePool.make(module._modules   , 0 /*size*/);
+    _nodePool.make(module._functions , reader.size());
+    _nodePool.make(module._imports   , reader.size());
+    _nodePool.make(module._modules   , reader.size());
+
+    uint32_t indexFunction = 0;
+    uint32_t indexImport   = 0;
+    uint32_t indexModule   = 0;
 
     while (reader.isValid())
     {
@@ -370,19 +374,16 @@ void Builder::makeModule(dmit::prs::Reader& reader,
         }
         else if (parseNodeKind == dmit::prs::state::tree::node::Kind::FUN_DEFINITION)
         {
-            _nodePool.grow(module._functions);
-            makeFunction(reader, _nodePool.get(module._functions.back()));
+            makeFunction(reader, _nodePool.get(module._functions[indexFunction++]));
         }
         else if (parseNodeKind == dmit::prs::state::tree::node::Kind::DCL_IMPORT)
         {
-            _nodePool.grow(module._imports);
-            makeImport(reader, _nodePool.get(module._imports.back()));
+            makeImport(reader, _nodePool.get(module._imports[indexImport++]));
         }
         else if (parseNodeKind == dmit::prs::state::tree::node::Kind::MODULE)
         {
             auto subReader = reader.makeSubReader();
-            _nodePool.grow(module._modules);
-            makeModule(subReader, _nodePool.get(module._modules.back()));
+            makeModule(subReader, _nodePool.get(module._modules[indexModule++]));
         }
         else
         {
@@ -391,6 +392,10 @@ void Builder::makeModule(dmit::prs::Reader& reader,
 
         reader.advance();
     }
+
+    module._functions ._size = indexFunction;
+    module._imports   ._size = indexImport;
+    module._modules   ._size = indexModule;
 }
 
 State& Builder::operator()(const prs::state::Tree& parseTree)
