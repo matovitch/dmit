@@ -7,6 +7,7 @@
 
 static const char* K_TREE_NODE_KIND_AS_CSTR[] =
 {
+    "DCL_EXPORT",
     "DCL_IMPORT",
     "DCL_VARIABLE",
     "EXP_ASSIGN",

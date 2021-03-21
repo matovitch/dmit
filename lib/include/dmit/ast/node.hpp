@@ -1,5 +1,6 @@
 #pragma once
 
+#include "dmit/ast/function_status.hpp"
 #include "dmit/ast/integer.hpp"
 
 #include "dmit/src/line_index.hpp"
@@ -112,6 +113,7 @@ struct TNode<node::Kind::MODULE>
     std::optional<node::TIndex<node::Kind::LIT_IDENTIFIER>> _name;
     node::TRange<node::Kind::FUN_DEFINITION >               _functions;
     node::TRange<node::Kind::DCL_IMPORT     >               _imports;
+    node::TRange<node::Kind::MODULE         >               _modules;
 };
 
 template <>
@@ -138,6 +140,8 @@ struct TNode<node::Kind::FUN_DEFINITION>
     node::TIndex<node::Kind::SCOPE          > _body;
 
     std::optional<node::TIndex<node::Kind::LIT_IDENTIFIER>> _returnType;
+
+    FunctionStatus _status;
 };
 
 template<>

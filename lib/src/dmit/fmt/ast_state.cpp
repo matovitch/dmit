@@ -1,5 +1,6 @@
 #include "dmit/fmt/ast/state.hpp"
 
+#include "dmit/fmt/ast/function_status.hpp"
 #include "dmit/fmt/src/slice.hpp"
 
 #include "dmit/ast/lexeme.hpp"
@@ -137,6 +138,7 @@ struct Visitor
         const auto& function = _nodePool.get(functionIdx);
 
         _oss << "{\"node\":\"Function\",";
+        _oss << "\"status\":"     ; _oss << function._status      ; _oss << ',';
         _oss << "\"name\":"       ; (*this)(function._name       ); _oss << ',';
         _oss << "\"arguments\":"  ; (*this)(function._arguments  ); _oss << ',';
         _oss << "\"returnType\":" ; (*this)(function._returnType ); _oss << ',';
@@ -158,7 +160,8 @@ struct Visitor
         _oss << "{\"node\":\"Module\",";
         _oss << "\"name\":"      ; (*this)(module._name      ); _oss << ',';
         _oss << "\"imports\":"   ; (*this)(module._imports   ); _oss << ',';
-        _oss << "\"functions\":" ; (*this)(module._functions ); _oss << '}';
+        _oss << "\"functions\":" ; (*this)(module._functions ); _oss << ',';
+        _oss << "\"modules\":"   ; (*this)(module._modules   ); _oss << '}';
     }
 
     template <com::TEnumIntegerType<ast::node::Kind> KIND>

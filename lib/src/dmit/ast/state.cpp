@@ -324,6 +324,10 @@ void Builder::makeFunction(const dmit::prs::Reader& supReader,
         makeIdentifier(reader, _nodePool.get(function._returnType));
         reader.advance();
     }
+    else
+    {
+        com::blitDefault(function._returnType);
+    }
 
     // Arguments
     makeArguments(reader, function);
@@ -332,6 +336,10 @@ void Builder::makeFunction(const dmit::prs::Reader& supReader,
     // Name
     _nodePool.make(function._name);
     makeIdentifier(reader, _nodePool.get(function._name));
+
+    // Status
+    (reader.isValidNext()) ? com::blit(FunctionStatus::EXPORTED , function._status)
+                           : com::blit(FunctionStatus::LOCAL    , function._status);
 }
 
 void Builder::makeImport(const dmit::prs::Reader& supReader,
@@ -349,6 +357,7 @@ void Builder::makeModule(dmit::prs::Reader& reader,
 {
     _nodePool.make(module._functions , 0 /*size*/);
     _nodePool.make(module._imports   , 0 /*size*/);
+    _nodePool.make(module._modules   , 0 /*size*/);
 
     while (reader.isValid())
     {
@@ -369,6 +378,12 @@ void Builder::makeModule(dmit::prs::Reader& reader,
             _nodePool.grow(module._imports);
             makeImport(reader, _nodePool.get(module._imports.back()));
         }
+        else if (parseNodeKind == dmit::prs::state::tree::node::Kind::MODULE)
+        {
+            auto subReader = reader.makeSubReader();
+            _nodePool.grow(module._modules);
+            makeModule(subReader, _nodePool.get(module._modules.back()));
+        }
         else
         {
             DMIT_COM_ASSERT(!"[AST] Unknown module element");
@@ -385,7 +400,11 @@ State& Builder::operator()(const prs::state::Tree& parseTree)
     _nodePool.make(_state._module);
     _nodePool.make(_state._source);
 
-    makeModule(reader, _nodePool.get(_state._module));
+    auto& rootModule = _nodePool.get(_state._module);
+
+    com::blitDefault(rootModule._name); // root module shall not be named
+
+    makeModule(reader, rootModule);
 
     return _state;
 }

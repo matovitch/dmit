@@ -151,6 +151,7 @@ Builder::Builder() :
     auto funArguments  = makeParserUnary      <tree::node::Kind::FUN_ARGUMENTS       > (_pool, _state);
     auto stmReturn     = makeParserUnary      <tree::node::Kind::STM_RETURN          > (_pool, _state);
     auto dclVariable   = makeParserUnary      <tree::node::Kind::DCL_VARIABLE        > (_pool, _state);
+    auto rawExport     = makeParserUnary      <tree::node::Kind::DCL_EXPORT          > (_pool, _state);
     auto rawImport     = makeParserUnary      <tree::node::Kind::DCL_IMPORT          > (_pool, _state);
     auto rawScope      = makeParserUnary      <tree::node::Kind::SCOPE               > (_pool, _state);
     auto rawFunction   = makeParserUnary      <tree::node::Kind::FUN_DEFINITION      > (_pool, _state);
@@ -267,7 +268,9 @@ Builder::Builder() :
                                tok<lex::Token::BRA_LEFT   >(),
                                tok<lex::Token::BRA_RIGHT  >(),
                                tok<lex::Token::FUNC       >(),
-                               tok<lex::Token::MODULE       >())), opt(tok<lex::Token::SEMI_COLON>()));
+                               tok<lex::Token::MODULE     >(),
+                               tok<lex::Token::EXPORT     >(),
+                               tok<lex::Token::IMPORT     >())), opt(tok<lex::Token::SEMI_COLON>()));
 
     rcvScopeElem = alt(rawScopeElem,
                        skpScopeElem);
@@ -278,6 +281,7 @@ Builder::Builder() :
 
     skpScope = skp(alt(tok<lex::Token::FUNC   >(),
                        tok<lex::Token::MODULE >(),
+                       tok<lex::Token::EXPORT >(),
                        tok<lex::Token::IMPORT >()));
 
     rcvScope = alt(rawScope,
@@ -289,10 +293,13 @@ Builder::Builder() :
 
     funArguments = seq(parLeft, opt(seq(typeClaim, rep(seq(comma, typeClaim)))), parRight);
 
-    rawFunction = seq(keyFunc, identifier, funArguments, opt(seq(minusKetRight, identifier)), scope);
+    rawExport = keyExport;
+
+    rawFunction = seq(opt(rawExport), keyFunc, identifier, funArguments, opt(seq(minusKetRight, identifier)), scope);
 
     skpFunction = seq(opt(tok<lex::Token::FUNC>()), skp(alt(tok<lex::Token::FUNC>(),
                                                             tok<lex::Token::MODULE>(),
+                                                            tok<lex::Token::EXPORT>(),
                                                             tok<lex::Token::IMPORT>(),
                                                             tok<lex::Token::BRA_RIGHT>())));
     rcvFunction = alt(rawFunction,
@@ -306,6 +313,7 @@ Builder::Builder() :
                     skp(alt(tok<lex::Token::SEMI_COLON >(),
                             tok<lex::Token::FUNC       >(),
                             tok<lex::Token::MODULE     >(),
+                            tok<lex::Token::EXPORT     >(),
                             tok<lex::Token::IMPORT     >(),
                             tok<lex::Token::BRA_RIGHT  >())),
                     opt(tok<lex::Token::SEMI_COLON>()));
@@ -319,6 +327,7 @@ Builder::Builder() :
 
     skpModule = seq(opt(tok<lex::Token::MODULE>()), skp(alt(tok<lex::Token::FUNC>(),
                                                             tok<lex::Token::MODULE>(),
+                                                            tok<lex::Token::EXPORT>(),
                                                             tok<lex::Token::IMPORT>())));
     rcvModule = alt(rawModule,
                     skpModule);
