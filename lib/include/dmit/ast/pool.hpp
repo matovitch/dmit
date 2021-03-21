@@ -43,7 +43,8 @@ public:
 
     void trim(TRange<KIND>& range, const uint32_t size)
     {
-        _storage.trim(size - range._size);
+        _storage.trim(range._size - size);
+        range._size = size;
     }
 
 private:

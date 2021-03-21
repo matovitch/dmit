@@ -355,6 +355,8 @@ void Builder::makeImport(const dmit::prs::Reader& supReader,
 void Builder::makeModule(dmit::prs::Reader& reader,
                          TNode<node::Kind::MODULE>& module)
 {
+    auto readerCopy = reader;
+
     _nodePool.make(module._functions , reader.size());
     _nodePool.make(module._imports   , reader.size());
     _nodePool.make(module._modules   , reader.size());
@@ -362,8 +364,6 @@ void Builder::makeModule(dmit::prs::Reader& reader,
     uint32_t indexFunction = 0;
     uint32_t indexImport   = 0;
     uint32_t indexModule   = 0;
-
-    bool hasSubModule = false;
 
     while (reader.isValid())
     {
@@ -384,9 +384,7 @@ void Builder::makeModule(dmit::prs::Reader& reader,
         }
         else if (parseNodeKind == dmit::prs::state::tree::node::Kind::MODULE)
         {
-            hasSubModule = true;
-            auto subReader = reader.makeSubReader();
-            makeModule(subReader, _nodePool.get(module._modules[indexModule++]));
+            indexModule++;
         }
         else
         {
@@ -396,16 +394,20 @@ void Builder::makeModule(dmit::prs::Reader& reader,
         reader.advance();
     }
 
-    if (!hasSubModule)
-    {
-        _nodePool.trim(module._functions , indexFunction );
-        _nodePool.trim(module._imports   , indexImport   );
-        _nodePool.trim(module._modules   , indexModule   );
-    }
+    _nodePool.trim(module._functions , indexFunction );
+    _nodePool.trim(module._imports   , indexImport   );
+    _nodePool.trim(module._modules   , indexModule   );
 
-    module._functions ._size = indexFunction;
-    module._imports   ._size = indexImport;
-    module._modules   ._size = indexModule;
+    while (readerCopy.isValid())
+    {
+        if (readerCopy.look()._kind == dmit::prs::state::tree::node::Kind::MODULE)
+        {
+            auto subReader = readerCopy.makeSubReader();
+            makeModule(subReader, _nodePool.get(module._modules[--indexModule]));
+        }
+
+        readerCopy.advance();
+    }
 }
 
 State& Builder::operator()(const prs::state::Tree& parseTree)
