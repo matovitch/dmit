@@ -277,7 +277,7 @@ Builder::Builder() :
 
     // Scope
 
-    rawScope = seq(braLeft, rep(alt(rcvScopeElem, rawScope)), alt(braRight, rcvScope));
+    rawScope = seq(braLeft, rep(alt(rcvScopeElem, rawScope)), braRight);
 
     skpScope = skp(alt(tok<lex::Token::FUNC   >(),
                        tok<lex::Token::MODULE >(),
@@ -323,7 +323,7 @@ Builder::Builder() :
     // Module
 
     rawModule = seq(keyModule, identifier, alt(seq(semiColon , rep(alt(rcvFunction, rcvImport, rawModule))),
-                                               seq(braLeft   , rep(alt(rcvFunction, rcvImport, rawModule)), alt(braRight, rcvModule))));
+                                               seq(braLeft   , rep(alt(rcvFunction, rcvImport, rawModule)), braRight)));
 
     skpModule = seq(opt(tok<lex::Token::MODULE>()), skp(alt(tok<lex::Token::FUNC>(),
                                                             tok<lex::Token::MODULE>(),
