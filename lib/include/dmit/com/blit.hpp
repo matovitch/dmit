@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstring>
 
 #include <utility>
@@ -10,6 +12,12 @@ template <class TypeSrc,
 void blit(TypeSrc&& src, TypeDst& dst)
 {
     new (&dst) TypeDst{std::forward<TypeSrc>(src)};
+}
+
+template <class TypeDst>
+void blitDefault(TypeDst& dst)
+{
+    new (&dst) TypeDst{};
 }
 
 } // namespace dmit::com

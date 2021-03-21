@@ -3,6 +3,9 @@
 #include "dmit/ast/storage.hpp"
 #include "dmit/ast/node.hpp"
 
+#include "dmit/com/blit.hpp"
+
+#include <optional>
 #include <tuple>
 
 namespace dmit::ast::node
@@ -32,10 +35,16 @@ public:
         return TIndex<KIND>{_storage.make()};
     }
 
-    void make(const uint32_t size, TRange<KIND>& range)
+    void make(TRange<KIND>& range, const uint32_t size)
     {
         range._size = size;
         range._index._value = _storage.make(size);
+    }
+
+    void grow(TRange<KIND>& range)
+    {
+        range._size += 1;
+        _storage.make();
     }
 
 private:
@@ -61,24 +70,43 @@ struct TPool
     }
 
     template <com::TEnumIntegerType<Kind> KIND>
+    TNode<KIND>& get(const std::optional<TIndex<KIND>> indexOpt)
+    {
+        return std::get<KIND>(_subs).get(indexOpt.value());
+    }
+
+    template <com::TEnumIntegerType<Kind> KIND>
     void make(TIndex<KIND>& index)
     {
         index = std::get<KIND>(_subs).make();
     }
 
     template <com::TEnumIntegerType<Kind> KIND>
-    void make(const uint32_t size, TRange<KIND>& range)
+    void make(std::optional<TIndex<KIND>>& indexOpt)
     {
-        std::get<KIND>(_subs).make(size, range);
+        com::blitDefault(indexOpt);
+        indexOpt = std::get<KIND>(_subs).make();
     }
 
-    std::tuple<pool::TSub<Kind::DCL_VARIABLE   , LOG2_SIZE>,
+    template <com::TEnumIntegerType<Kind> KIND>
+    void make(TRange<KIND>& range, const uint32_t size)
+    {
+        std::get<KIND>(_subs).make(range, size);
+    }
+
+    template <com::TEnumIntegerType<Kind> KIND>
+    void grow(TRange<KIND>& range)
+    {
+        std::get<KIND>(_subs).grow(range);
+    }
+
+    std::tuple<pool::TSub<Kind::DCL_IMPORT     , LOG2_SIZE>,
+               pool::TSub<Kind::DCL_VARIABLE   , LOG2_SIZE>,
                pool::TSub<Kind::EXP_BINOP      , LOG2_SIZE>,
                pool::TSub<Kind::EXP_MONOP      , LOG2_SIZE>,
                pool::TSub<Kind::EXPRESSION     , LOG2_SIZE>,
                pool::TSub<Kind::FUN_CALL       , LOG2_SIZE>,
                pool::TSub<Kind::FUN_DEFINITION , LOG2_SIZE>,
-               pool::TSub<Kind::FUN_RETURN     , LOG2_SIZE>,
                pool::TSub<Kind::LEXEME         , LOG2_SIZE>,
                pool::TSub<Kind::LIT_DECIMAL    , LOG2_SIZE>,
                pool::TSub<Kind::LIT_IDENTIFIER , LOG2_SIZE>,
@@ -87,7 +115,7 @@ struct TPool
                pool::TSub<Kind::SCOPE_VARIANT  , LOG2_SIZE>,
                pool::TSub<Kind::STM_RETURN     , LOG2_SIZE>,
                pool::TSub<Kind::TYPE_CLAIM     , LOG2_SIZE>,
-               pool::TSub<Kind::UNIT           , LOG2_SIZE>,
+               pool::TSub<Kind::MODULE         , LOG2_SIZE>,
                pool::TSub<Kind::SOURCE         , LOG2_SIZE>> _subs;
 };
 

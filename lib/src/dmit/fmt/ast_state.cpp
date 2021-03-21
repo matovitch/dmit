@@ -65,19 +65,6 @@ struct Visitor
         _oss << "\"type\":"     ; (*this)(typeClaim._type     ); _oss << "}";
     }
 
-    void operator()(const ast::node::TIndex<ast::node::Kind::FUN_RETURN>& funReturnIdx)
-    {
-        const auto& funReturn = _nodePool.get(funReturnIdx);
-
-        if (!funReturn._option)
-        {
-            _oss << "{}";
-            return;
-        }
-
-        (*this)(funReturn._option.value());
-    }
-
     void operator()(const ast::node::TIndex<ast::node::Kind::STM_RETURN>& stmReturnIdx)
     {
         const auto& stmReturn = _nodePool.get(stmReturnIdx);
@@ -156,6 +143,24 @@ struct Visitor
         _oss << "\"body\":"       ; (*this)(function._body       ); _oss << '}';
     }
 
+    void operator()(const ast::node::TIndex<ast::node::Kind::DCL_IMPORT>& importIdx)
+    {
+        const auto& import = _nodePool.get(importIdx);
+
+        _oss << "{\"node\":\"Import\",";
+        _oss << "\"moduleName\":"; (*this)(import._moduleName); _oss << '}';
+    }
+
+    void operator()(const ast::node::TIndex<ast::node::Kind::MODULE>& moduleIdx)
+    {
+        const auto& module = _nodePool.get(moduleIdx);
+
+        _oss << "{\"node\":\"Module\",";
+        _oss << "\"name\":"      ; (*this)(module._name      ); _oss << ',';
+        _oss << "\"imports\":"   ; (*this)(module._imports   ); _oss << ',';
+        _oss << "\"functions\":" ; (*this)(module._functions ); _oss << '}';
+    }
+
     template <com::TEnumIntegerType<ast::node::Kind> KIND>
     void operator()(const ast::node::TRange<KIND>& range)
     {
@@ -177,6 +182,18 @@ struct Visitor
         std::visit(*this, variant);
     }
 
+    template <com::TEnumIntegerType<ast::node::Kind> KIND>
+    void operator()(const std::optional<ast::node::TIndex<KIND>>& indexOpt)
+    {
+        if (!indexOpt)
+        {
+            _oss << "{}";
+            return;
+        }
+
+        return (*this)(indexOpt.value());
+    }
+
     const ast::State::NodePool & _nodePool;
     std::ostringstream         & _oss;
 };
@@ -187,13 +204,9 @@ std::string asString(const ast::State& state)
 {
     std::ostringstream oss;
 
-    oss << "{\"node\":\"Unit\",\"functions\":";
-
     Visitor visitor{state._nodePool, oss};
 
-    visitor(state._nodePool.get(state._unit)._functions);
-
-    oss << "}";
+    visitor(state._module);
 
     return oss.str();
 }

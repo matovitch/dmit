@@ -27,13 +27,13 @@ struct Kind : com::TEnum<uint8_t>
 {
     enum : uint8_t
     {
+        DCL_IMPORT     ,
         DCL_VARIABLE   ,
         EXP_BINOP      ,
         EXP_MONOP      ,
         EXPRESSION     ,
         FUN_CALL       ,
         FUN_DEFINITION ,
-        FUN_RETURN     ,
         LEXEME         ,
         LIT_DECIMAL    ,
         LIT_IDENTIFIER ,
@@ -42,7 +42,7 @@ struct Kind : com::TEnum<uint8_t>
         SCOPE_VARIANT  ,
         STM_RETURN     ,
         TYPE_CLAIM     ,
-        UNIT           ,
+        MODULE         ,
         SOURCE         ,
     };
 
@@ -63,6 +63,11 @@ struct TRange
     node::TIndex<KIND> operator[](uint32_t offset) const
     {
         return node::TIndex<KIND>{_index._value + offset};
+    }
+
+    node::TIndex<KIND> back() const
+    {
+        return node::TIndex<KIND>{_index._value + _size - 1};
     }
 
     node::TIndex<KIND> _index;
@@ -102,9 +107,11 @@ template <com::TEnumIntegerType<node::Kind> KIND>
 struct TNode {};
 
 template <>
-struct TNode<node::Kind::UNIT>
+struct TNode<node::Kind::MODULE>
 {
-    node::TRange<node::Kind::FUN_DEFINITION> _functions;
+    std::optional<node::TIndex<node::Kind::LIT_IDENTIFIER>> _name;
+    node::TRange<node::Kind::FUN_DEFINITION >               _functions;
+    node::TRange<node::Kind::DCL_IMPORT     >               _imports;
 };
 
 template <>
@@ -118,12 +125,19 @@ struct TNode<node::Kind::SOURCE>
 };
 
 template <>
+struct TNode<node::Kind::DCL_IMPORT>
+{
+    node::TIndex<node::Kind::LIT_IDENTIFIER> _moduleName;
+};
+
+template <>
 struct TNode<node::Kind::FUN_DEFINITION>
 {
     node::TIndex<node::Kind::LIT_IDENTIFIER > _name;
     node::TRange<node::Kind::TYPE_CLAIM     > _arguments;
-    node::TIndex<node::Kind::FUN_RETURN     > _returnType;
     node::TIndex<node::Kind::SCOPE          > _body;
+
+    std::optional<node::TIndex<node::Kind::LIT_IDENTIFIER>> _returnType;
 };
 
 template<>
@@ -131,12 +145,6 @@ struct TNode<node::Kind::TYPE_CLAIM>
 {
     node::TIndex<node::Kind::LIT_IDENTIFIER> _variable;
     node::TIndex<node::Kind::LIT_IDENTIFIER> _type;
-};
-
-template <>
-struct TNode<node::Kind::FUN_RETURN>
-{
-    std::optional<node::TIndex<node::Kind::LIT_IDENTIFIER>> _option;
 };
 
 template <>

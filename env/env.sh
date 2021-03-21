@@ -14,6 +14,7 @@ function cleanSource()
                                    -name "*.hpp"   -o \
                                    -name "*.h"     -o \
                                    -name "*.sh"    -o \
+                                   -name "*.gv"    -o \
                                    -name "Tupfile" -o \
                                    -name "*.tup"      \
                                                       \) | while read file; do sed -i 's/ *$//' $file; done

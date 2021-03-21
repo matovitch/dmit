@@ -15,9 +15,9 @@ struct State : fmt::Formatable
 {
     using NodePool = node::TPool<0x10>;
 
-    NodePool                          _nodePool;
-    node::TIndex<node::Kind::UNIT   > _unit;
-    node::TIndex<node::Kind::SOURCE > _source;
+    NodePool                         _nodePool;
+    node::TIndex<node::Kind::MODULE> _module;
+    node::TIndex<node::Kind::SOURCE> _source;
 };
 
 namespace state
@@ -51,14 +51,14 @@ private:
     void makeScope(const dmit::prs::Reader& supReader,
                    TNode<node::Kind::SCOPE>& scope);
 
-    void makeReturnType(const dmit::prs::Reader& supReader,
-                        TNode<node::Kind::FUN_RETURN>& returnType);
-
     void makeArguments(const dmit::prs::Reader& supReader,
                        TNode<node::Kind::FUN_DEFINITION>& function);
 
     void makeFunction(const dmit::prs::Reader& supReader,
                       TNode<node::Kind::FUN_DEFINITION>& function);
+
+    void makeImport(const dmit::prs::Reader& supReader,
+                    TNode<node::Kind::DCL_IMPORT>& import);
 
     void makeDeclaration(const dmit::prs::Reader& reader,
                          Declaration& declaration);
@@ -86,6 +86,9 @@ private:
 
     void makeFunctionCall(dmit::prs::Reader& reader,
                           TNode<node::Kind::FUN_CALL>& funCall);
+
+    void makeModule(dmit::prs::Reader& reader,
+                    TNode<node::Kind::MODULE>& module);
 
     State            _state;
     State::NodePool& _nodePool;

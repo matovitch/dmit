@@ -1,0 +1,70 @@
+# https://i.ibb.co/YR0S6qn/compilation-model-1.png
+
+digraph G
+{
+    edge [arrowsize=.4]
+
+    subgraph cluster_1
+    {
+        color=darkolivegreen3;
+        style=filled;
+        U1
+        U2
+        U3
+    }
+
+    subgraph cluster_2
+    {
+        color=dodgerblue2;
+        style=filled;
+        Ma
+        Mb
+        Mc
+    }
+
+    subgraph cluster_3
+    {
+        color=brown1;
+        style=filled;
+        Ia
+        Ib
+        Ic
+        Ba
+        Bb
+        Bc
+    }
+
+    subgraph cluster_4
+    {
+        color=brown1;
+        style=filled;
+        Id
+        Bd
+    }
+
+    Ma -> U1
+    Mb -> U2
+    Mc -> U3
+    Mb -> U1
+    Mc -> U2
+
+    Ia -> Ma
+    Ba -> Ma
+
+    Ib -> Mb
+    Bb -> Mb
+
+    Ic -> Mc
+    Bc -> Mc
+
+    Mb -> Ic
+    Mb -> Bc
+
+    Mc -> Ib
+
+    Ma -> Ib
+
+    Mc -> Id
+
+    Bd
+}

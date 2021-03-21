@@ -25,6 +25,7 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
 {
     enum : uint8_t
     {
+        DCL_IMPORT,
         DCL_VARIABLE,
         EXP_ASSIGN,
         EXP_BINOP,
@@ -33,11 +34,10 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
         FUN_ARGUMENTS,
         FUN_CALL,
         FUN_DEFINITION,
-        FUN_RETURN,
         LIT_DECIMAL,
         LIT_IDENTIFIER,
         LIT_INTEGER,
-        UNIT,
+        MODULE,
         SCOPE,
         STM_RETURN,
         STM_WHILE,
