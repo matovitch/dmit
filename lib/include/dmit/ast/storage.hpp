@@ -1,5 +1,7 @@
 #pragma once
 
+#include "dmit/com/log2.hpp"
+
 #include <type_traits>
 #include <cstdint>
 #include <memory>
@@ -14,14 +16,14 @@ namespace storage
 
 template <uint8_t TYPE_SIZE,
           uint8_t ALGN_SIZE,
-          uint8_t LOG2_SIZE>
+          uint8_t LOG2_SIZE_RATIO>
 class TChunk
 {
 
 public:
 
     using Storage      = std::aligned_storage_t<TYPE_SIZE, ALGN_SIZE>;
-    using StorageArray = std::array<Storage, 1 << LOG2_SIZE>;
+    using StorageArray = std::array<Storage, 1 << LOG2_SIZE_RATIO>;
 
     TChunk() : _storage{new StorageArray} {}
 
@@ -47,14 +49,16 @@ template <uint8_t TYPE_SIZE,
           uint8_t LOG2_SIZE>
 class TStorage
 {
+    static constexpr auto LOG2_SIZE_RATIO = LOG2_SIZE / com::log2(TYPE_SIZE);
+
     using Chunk = storage::TChunk<TYPE_SIZE,
                                   ALGN_SIZE,
-                                  LOG2_SIZE>;
+                                  LOG2_SIZE_RATIO>;
 public:
 
     uint32_t make()
     {
-        if ((_counter & ((1 << LOG2_SIZE) - 1)) == 0 && (_counter >> LOG2_SIZE) + 1 > _chunks.size())
+        if ((_counter & ((1 << LOG2_SIZE_RATIO) - 1)) == 0 && (_counter >> LOG2_SIZE_RATIO) + 1 > _chunks.size())
         {
             _chunks.emplace_back();
         }
@@ -68,9 +72,9 @@ public:
 
         _counter += size;
 
-        if ((_counter >> LOG2_SIZE) + 1 > _chunks.size())
+        if ((_counter >> LOG2_SIZE_RATIO) + 1 > _chunks.size())
         {
-            _chunks.resize((_counter >> LOG2_SIZE) + 1);
+            _chunks.resize((_counter >> LOG2_SIZE_RATIO) + 1);
         }
 
         return counter;
@@ -88,12 +92,12 @@ public:
 
     typename Chunk::Storage& get(const uint32_t index)
     {
-        return _chunks[index >> LOG2_SIZE].get(index & ((1 << LOG2_SIZE) - 1));
+        return _chunks[index >> LOG2_SIZE_RATIO].get(index & ((1 << LOG2_SIZE_RATIO) - 1));
     }
 
     const typename Chunk::Storage& get(const uint32_t index) const
     {
-        return _chunks[index >> LOG2_SIZE].get(index & ((1 << LOG2_SIZE) - 1));
+        return _chunks[index >> LOG2_SIZE_RATIO].get(index & ((1 << LOG2_SIZE_RATIO) - 1));
     }
 
 private:
