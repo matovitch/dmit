@@ -85,22 +85,85 @@ public:
 
     std::optional<std::vector<NodeListIt>> makeCycle()
     {
+        // 0. If not cyclic, return the empty cycle
+
         if (!isCyclic())
         {
             return std::nullopt;
         }
 
+        // 1. Build the cycle
+
         std::vector<NodeListIt> cycle;
 
-        NodeListIt nodeIt = _blockeds.begin();
+        auto nodeIt = _blockeds.begin();
 
-        do
+        while (cycle.empty() || nodeIt != cycle.front())
         {
-            cycle.push_back(nodeIt);
+            if (nodeIt->_withinCycle)
+            {
+                cycle.push_back(nodeIt);
+            }
 
-            nodeIt = (*(nodeIt->_dependers.begin()))->_dependerNode;
+            nodeIt->_withinCycle = !(nodeIt->_withinCycle);
+            nodeIt = (*(nodeIt->_dependees.begin()))->_dependeeNode;
         }
-        while (nodeIt != cycle.front());
+
+        // 2. Reset the state of the visited nodes
+
+        nodeIt = _blockeds.begin();
+
+        while (nodeIt->_withinCycle)
+        {
+            nodeIt->_withinCycle = false;
+            nodeIt = (*(nodeIt->_dependees.begin()))->_dependeeNode;
+        }
+
+        return cycle;
+    }
+
+    template <class... Args>
+    std::optional<std::vector<NodeListIt>> solveCycle(Args&&... args)
+    {
+        // 0. If not cyclic, return the empty cycle
+
+        if (!isCyclic())
+        {
+            return std::nullopt;
+        }
+
+        // 1. Build the cycle
+
+        std::vector<NodeListIt> cycle;
+
+        auto cycleNode = makeNode(std::forward<Args>(args)...);
+
+        auto nodeIt = _blockeds.begin();
+
+        while (cycle.empty() || nodeIt != cycle.front())
+        {
+            auto edgeIt = *(nodeIt->_dependers.begin());
+
+            if (nodeIt->_withinCycle)
+            {
+                cycle.push_back(nodeIt);
+                attach(cycleNode, nodeIt);
+                detach(edgeIt);
+            }
+
+            nodeIt->_withinCycle = !(nodeIt->_withinCycle);
+            nodeIt = edgeIt->_dependeeNode;
+        }
+
+        // 2. Reset the state of the visited nodes
+
+        nodeIt = _blockeds.begin();
+
+        while (nodeIt->_withinCycle)
+        {
+            nodeIt->_withinCycle = false;
+            nodeIt = (*(nodeIt->_dependees.begin()))->_dependeeNode;
+        }
 
         return cycle;
     }

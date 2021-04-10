@@ -5,7 +5,7 @@
 #include "list/iterator.hpp"
 #include "list/list.hpp"
 
-#include <cstdint>
+#include <cstddef>
 
 namespace topo
 {
@@ -49,6 +49,8 @@ private:
 
     EdgeListItList _dependees;
     EdgeListItList _dependers;
+
+    bool _withinCycle = false;
 };
 
 namespace node
