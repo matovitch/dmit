@@ -200,6 +200,16 @@ public:
         _pendings.erase(nodeIt);
     }
 
+    std::optional<NodeListIt> nextPending(NodeListIt nodeListIt)
+    {
+        if (!(nodeListIt->isPending()) || ++nodeListIt == _pendings.end())
+        {
+            return std::nullopt;
+        }
+
+        return nodeListIt;
+    }
+
 private:
 
     EdgeList _edges;
