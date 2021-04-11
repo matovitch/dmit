@@ -122,32 +122,27 @@ public:
         return cycle;
     }
 
-    template <class... Args>
-    std::optional<std::vector<NodeListIt>> solveCycle(Args&&... args)
+    void solveCycle(NodeListIt hyperNode)
     {
-        // 0. If not cyclic, return the empty cycle
+        // 1. Find cycle and attach its nodes to the hyperNode
 
-        if (!isCyclic())
-        {
-            return std::nullopt;
-        }
+        std::optional<NodeListIt> cycleFront;
 
-        // 1. Build the cycle
-
-        std::vector<NodeListIt> cycle;
-
-        auto cycleNode = makeNode(std::forward<Args>(args)...);
-
+        auto prevIt = _blockeds.begin();
         auto nodeIt = _blockeds.begin();
 
-        while (cycle.empty() || nodeIt != cycle.front())
+        while (!cycleFront || nodeIt != cycleFront.value())
         {
-            auto edgeIt = *(nodeIt->_dependers.begin());
+            auto edgeIt = *(nodeIt->_dependees.begin());
 
             if (nodeIt->_withinCycle)
             {
-                cycle.push_back(nodeIt);
-                attach(cycleNode, nodeIt);
+                if (nodeIt != hyperNode)
+                {
+                    attach(hyperNode, nodeIt);
+                }
+
+                cycleFront = cycleFront ? cycleFront : nodeIt;
                 detach(edgeIt);
             }
 
@@ -157,7 +152,7 @@ public:
 
         // 2. Reset the state of the visited nodes
 
-        nodeIt = _blockeds.begin();
+        nodeIt = prevIt;
 
         while (nodeIt->_withinCycle)
         {
@@ -165,7 +160,19 @@ public:
             nodeIt = (*(nodeIt->_dependees.begin()))->_dependeeNode;
         }
 
-        return cycle;
+        // 3. Attach depender nodes to hyperNode and detach them from cycle
+
+        for (auto dependee : hyperNode->_dependees)
+        {
+            for (auto depender : dependee->_dependeeNode->_dependers)
+            {
+                if (depender->_dependerNode != hyperNode)
+                {
+                    attach(depender->_dependerNode, hyperNode);
+                    detach(depender);
+                }
+            }
+        }
     }
 
     bool empty() const
