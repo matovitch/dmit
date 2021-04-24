@@ -154,6 +154,11 @@ TEST_CASE("topo::graph_6")
 
     do
     {
+        if (hyperNodeStackSize == 0)
+        {
+            partitions.push_back(nodes.size());
+        }
+
         while (charGraph.isCyclic())
         {
             charGraph.solveCycle();
@@ -174,11 +179,6 @@ TEST_CASE("topo::graph_6")
             continue;
         }
 
-        if (hyperNodeStackSize == 0)
-        {
-            partitions.push_back(nodes.size());
-        }
-
         nodes.push_back(top->_value);
     }
     while (!charGraph.empty() || charGraph.isCyclic());
@@ -192,7 +192,87 @@ TEST_CASE("topo::graph_6")
         CHECK(node == *ptrChar++);
     }
 
-    const int arrInt[] = {0, 5, 6};
+    const int arrInt[] = {0, 0, 5, 6};
+    const int* ptrInt = arrInt;
+
+    for (auto partition : partitions)
+    {
+        CHECK(partition == *ptrInt++);
+    }
+}
+
+TEST_CASE("topo::graph_7")
+{
+    // 1. Build the graph
+
+    CharPoolSet charPoolSet;
+
+    CharGraph charGraph{charPoolSet};
+
+    auto&& aAsNode = charGraph.makeNode('A');
+    auto&& bAsNode = charGraph.makeNode('B');
+    auto&& cAsNode = charGraph.makeNode('C');
+    auto&& dAsNode = charGraph.makeNode('D');
+    auto&& eAsNode = charGraph.makeNode('E');
+    auto&& fAsNode = charGraph.makeNode('F');
+
+    charGraph.attach(aAsNode, bAsNode);
+    charGraph.attach(bAsNode, cAsNode);
+    charGraph.attach(cAsNode, aAsNode);
+
+    charGraph.attach(eAsNode, bAsNode);
+
+    charGraph.attach(dAsNode, eAsNode);
+    charGraph.attach(eAsNode, fAsNode);
+    charGraph.attach(fAsNode, dAsNode);
+
+    // 2. Compute the strongly connected components
+
+    std::vector<char> nodes;
+    std::vector<int> partitions{0};
+    int hyperNodeStackSize = 0;
+
+    do
+    {
+        if (hyperNodeStackSize == 0)
+        {
+            partitions.push_back(nodes.size());
+        }
+
+        while (charGraph.isCyclic())
+        {
+            charGraph.solveCycle();
+        }
+
+        const auto top = charGraph.top();
+                         charGraph.pop(top);
+
+        if (top->isHyperOpen())
+        {
+            hyperNodeStackSize++;
+            continue;
+        }
+
+        if (top->isHyperClose())
+        {
+            hyperNodeStackSize--;
+            continue;
+        }
+
+        nodes.push_back(top->_value);
+    }
+    while (!charGraph.empty() || charGraph.isCyclic());
+
+    // 3. Check the result
+
+    const char* ptrChar = "BCAFDE";
+
+    for (auto node : nodes)
+    {
+        CHECK(node == *ptrChar++);
+    }
+
+    const int arrInt[] = {0, 0, 3};
     const int* ptrInt = arrInt;
 
     for (auto partition : partitions)

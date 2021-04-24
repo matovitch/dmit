@@ -183,7 +183,8 @@ public:
             }
         }
 
-        attach(hyperNodeClose, hyperNodeOpen);
+        attach(hyperNodeClose,
+               hyperNodeOpen);
     }
 
     bool empty() const
