@@ -8,6 +8,8 @@
 namespace dmit::com
 {
 
+static constexpr auto K_DELAY = 100us;
+
 CriticalSection::CriticalSection(std::atomic<bool>& flag) : _flag{flag}
 {
     uint32_t i = 0;
@@ -15,16 +17,21 @@ CriticalSection::CriticalSection(std::atomic<bool>& flag) : _flag{flag}
 
     while (_flag.exchange(true, std::memory_order_relaxed))
     {
-        if ((0xff & (++i)) == 0)
+        if ((0xff & (++i)) != 0)
         {
-            const auto now = std::chrono::steady_clock::now();
+            continue;
+        }
 
-            timePointOpt = timePointOpt ? timePointOpt : now + K_DELAY;
+        const auto now = std::chrono::steady_clock::now();
 
-            if (now > timePointOpt.value())
-            {
-                goto SLEEP_LOOP;
-            }
+        if (!timePointOpt)
+        {
+            timePointOpt = now + K_DELAY;
+        }
+
+        if (now > timePointOpt.value())
+        {
+            goto SLEEP_LOOP;
         }
     }
 

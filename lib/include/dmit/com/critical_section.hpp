@@ -20,8 +20,6 @@ public:
 private:
 
     std::atomic<bool>& _flag;
-
-    static constexpr auto K_DELAY = 100us;
 };
 
 } // namespace dmit::com
