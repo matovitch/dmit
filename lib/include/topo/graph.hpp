@@ -26,9 +26,10 @@ class TGraph
 
 public:
 
-    using NodeListIt = typename Traits::NodeListIt;
-    using EdgeListIt = typename Traits::EdgeListIt;
-    using PoolSet    = typename Traits::PoolSet;
+    using EdgeListItList = typename Traits::EdgeListItList;
+    using EdgeListIt     = typename Traits::EdgeListIt;
+    using NodeListIt     = typename Traits::NodeListIt;
+    using PoolSet        = typename Traits::PoolSet;
 
     TGraph(PoolSet& poolSet) :
         _edges    {poolSet._edges},
@@ -122,9 +123,14 @@ public:
         return cycle;
     }
 
-    void solveCycle(NodeListIt hyperNode)
+    void solveCycle()
     {
-        // 1. Find cycle and attach its nodes to the hyperNode
+        // 0. Create the hypernodes
+
+        auto hyperNodeOpen  = makeNode(graph::node::HyperOpen  {});
+        auto hyperNodeClose = makeNode(graph::node::HyperClose {});
+
+        // 1. Find cycle and attach its nodes to the hyperNodes
 
         std::optional<NodeListIt> cycleFront;
 
@@ -137,11 +143,8 @@ public:
 
             if (nodeIt->_withinCycle)
             {
-                if (nodeIt != hyperNode)
-                {
-                    attach(hyperNode, nodeIt);
-                }
-
+                attach(hyperNodeClose, nodeIt);
+                attach(nodeIt, hyperNodeOpen);
                 cycleFront = cycleFront ? cycleFront : nodeIt;
                 detach(edgeIt);
             }
@@ -160,19 +163,27 @@ public:
             nodeIt = (*(nodeIt->_dependees.begin()))->_dependeeNode;
         }
 
-        // 3. Attach depender nodes to hyperNode and detach them from cycle
+        // 3. Attach depender/dependee nodes to hyperNodes and detach them from cycle
 
-        for (auto dependee : hyperNode->_dependees)
+        auto& cycle = hyperNodeOpen->_dependers;
+        auto getNode = [](auto edgeIt) { return edgeIt->_dependerNode; };
+
+        for (auto edge : cycle)
         {
-            for (auto depender : dependee->_dependeeNode->_dependers)
+            nodeIt = getNode(edge);
+
+            if (!(nodeIt->isHyperClose()))
             {
-                if (depender->_dependerNode != hyperNode)
-                {
-                    attach(depender->_dependerNode, hyperNode);
-                    detach(depender);
-                }
+                attachDetachDependees(hyperNodeOpen, nodeIt->_dependees);
+            }
+
+            if (!(nodeIt->isHyperOpen()))
+            {
+                attachDetachDependers(hyperNodeClose, nodeIt->_dependers);
             }
         }
+
+        attach(hyperNodeClose, hyperNodeOpen);
     }
 
     bool empty() const
@@ -212,6 +223,30 @@ public:
 
 private:
 
+    void attachDetachDependees(NodeListIt nodeIt, EdgeListItList edgeListItList)
+    {
+        for (auto edgeListIt : edgeListItList)
+        {
+            if (edgeListIt->_dependeeNode != nodeIt)
+            {
+                attach(nodeIt, edgeListIt->_dependeeNode);
+                detach(edgeListIt);
+            }
+        }
+    }
+
+    void attachDetachDependers(NodeListIt nodeIt, EdgeListItList edgeListItList)
+    {
+        for (auto edgeListIt : edgeListItList)
+        {
+            if (edgeListIt->_dependerNode != nodeIt)
+            {
+                attach(edgeListIt->_dependerNode, nodeIt);
+                detach(edgeListIt);
+            }
+        }
+    }
+
     EdgeList _edges;
 
     NodeList _pendings;
@@ -234,6 +269,8 @@ struct TTraits
 
     using NodeListIt = typename NodeList::iterator;
     using EdgeListIt = typename EdgeList::iterator;
+
+    using EdgeListItList = list::TMake<EdgeListIt, SIZE>;
 
     using EdgeItPool = typename list::TMake<EdgeListIt, SIZE>::CellPool;
 

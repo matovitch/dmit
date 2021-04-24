@@ -6,7 +6,7 @@ ROOT = $(TUP_CWD)
 
 CX = clang++-11
 
-CXFLAGS += -std=c++17
+CXFLAGS += -std=c++20
 CXFLAGS += -Wall
 
 ifeq (@(IS_DEBUG),y)

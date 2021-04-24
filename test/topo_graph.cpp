@@ -150,42 +150,49 @@ TEST_CASE("topo::graph_6")
 
     std::vector<char> nodes;
     std::vector<int> partitions{0};
-    auto hyperNode = std::make_optional(aAsNode); hyperNode = std::nullopt;
+    int hyperNodeStackSize = 0;
 
     do
     {
-        if (charGraph.isCyclic())
+        while (charGraph.isCyclic())
         {
-            hyperNode = hyperNode ? hyperNode : charGraph.makeNode('Z');
-            charGraph.solveCycle(hyperNode.value());
+            charGraph.solveCycle();
         }
 
         const auto top = charGraph.top();
                          charGraph.pop(top);
 
-        if (!hyperNode || hyperNode.value() != top)
+        if (top->isHyperOpen())
         {
-            nodes.push_back(top->_value);
+            hyperNodeStackSize++;
+            continue;
         }
 
-        if (!hyperNode || hyperNode.value() == top)
+        if (top->isHyperClose())
+        {
+            hyperNodeStackSize--;
+            continue;
+        }
+
+        if (hyperNodeStackSize == 0)
         {
             partitions.push_back(nodes.size());
-            hyperNode = std::nullopt;
         }
+
+        nodes.push_back(top->_value);
     }
     while (!charGraph.empty() || charGraph.isCyclic());
 
     // 3. Check the result
 
-    const char* ptrChar = "EDACBFG";
+    const char* ptrChar = "BDECAGF";
 
     for (auto node : nodes)
     {
         CHECK(node == *ptrChar++);
     }
 
-    const int arrInt[] = {0, 5, 6, 7};
+    const int arrInt[] = {0, 5, 6};
     const int* ptrInt = arrInt;
 
     for (auto partition : partitions)
