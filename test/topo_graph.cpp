@@ -149,7 +149,7 @@ TEST_CASE("topo::graph_6")
     // 2. Compute the strongly connected components
 
     std::vector<char> nodes;
-    std::vector<int> partitions{0};
+    std::vector<int> partitions;
     int hyperNodeStackSize = 0;
 
     do
@@ -192,7 +192,7 @@ TEST_CASE("topo::graph_6")
         CHECK(node == *ptrChar++);
     }
 
-    const int arrInt[] = {0, 0, 5, 6};
+    const int arrInt[] = {0, 5, 6};
     const int* ptrInt = arrInt;
 
     for (auto partition : partitions)
@@ -229,7 +229,7 @@ TEST_CASE("topo::graph_7")
     // 2. Compute the strongly connected components
 
     std::vector<char> nodes;
-    std::vector<int> partitions{0};
+    std::vector<int> partitions;
     int hyperNodeStackSize = 0;
 
     do
@@ -272,7 +272,7 @@ TEST_CASE("topo::graph_7")
         CHECK(node == *ptrChar++);
     }
 
-    const int arrInt[] = {0, 0, 3};
+    const int arrInt[] = {0, 3};
     const int* ptrInt = arrInt;
 
     for (auto partition : partitions)
