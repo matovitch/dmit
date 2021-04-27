@@ -58,6 +58,14 @@ R"(
     );
 )";
 
+static const char K_QUERY_SELECT_UNIT_IDS_PATHS_SOURCES[] =
+R"(
+    SELECT Files.unit_id,
+           Files.path,
+           Units.source FROM Files INNER JOIN Units ON Files.unit_id =
+                                                       Units.unit_id;
+)";
+
 static const char* K_QUERIES[QueryRegister::SIZE] =
 {
     K_QUERY_TRANSACTION_BEGIN,
@@ -68,7 +76,8 @@ static const char* K_QUERIES[QueryRegister::SIZE] =
     K_QUERY_UPDATE_FILE,
     K_QUERY_SELECT_UNIT,
     K_QUERY_INSERT_UNIT,
-    K_QUERY_CLEAN
+    K_QUERY_CLEAN,
+    K_QUERY_SELECT_UNIT_IDS_PATHS_SOURCES
 };
 
 static const std::size_t K_QUERY_SIZES[QueryRegister::SIZE] =
@@ -81,7 +90,8 @@ static const std::size_t K_QUERY_SIZES[QueryRegister::SIZE] =
     sizeof(K_QUERY_UPDATE_FILE),
     sizeof(K_QUERY_SELECT_UNIT),
     sizeof(K_QUERY_INSERT_UNIT),
-    sizeof(K_QUERY_CLEAN)
+    sizeof(K_QUERY_CLEAN),
+    sizeof(K_QUERY_SELECT_UNIT_IDS_PATHS_SOURCES)
 };
 
 QueryRegister::QueryRegister(Connection& connection, int& errorCode) :

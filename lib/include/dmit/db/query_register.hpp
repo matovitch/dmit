@@ -22,6 +22,7 @@ struct QueryRegister
         SELECT_UNIT,
         INSERT_UNIT,
         CLEAN,
+        K_QUERY_SELECT_UNIT_IDS_PATHS_SOURCES,
         SIZE
     };
 

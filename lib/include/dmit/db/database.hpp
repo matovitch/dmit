@@ -38,6 +38,10 @@ public:
                                 const com::UniqueId        & unitId,
                                 const std::vector<uint8_t> & unitSource);
 
+    int selectUnitIdsPathsSources(std::vector<com::UniqueId        >& unitIds,
+                                  std::vector<std::vector<uint8_t> >& paths,
+                                  std::vector<std::vector<uint8_t> >& sources);
+
     int clean();
 
     std::optional<nng::Buffer> asNngBuffer();

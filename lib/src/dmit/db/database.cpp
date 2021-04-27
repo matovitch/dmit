@@ -11,6 +11,7 @@
 
 #include <optional>
 #include <cstdint>
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -85,11 +86,11 @@ int Database::transactionCommit()
 
 int Database::clean()
 {
-    auto queryClean = _queryRegister[QueryRegister::CLEAN];
+    auto query = _queryRegister[QueryRegister::CLEAN];
 
     int resultCode;
 
-    if ((resultCode = executeStatement(queryClean)) != SQLITE_DONE)
+    if ((resultCode = executeStatement(query)) != SQLITE_DONE)
     {
         return resultCode;
     }
@@ -99,11 +100,11 @@ int Database::clean()
 
 int Database::hasFile(const com::UniqueId& fileId, bool& result)
 {
-    auto querySelectFile = _queryRegister[QueryRegister::SELECT_FILE];
+    auto query = _queryRegister[QueryRegister::SELECT_FILE];
 
     int errorCode;
 
-    if ((errorCode = sqlite3_bind_blob(querySelectFile,
+    if ((errorCode = sqlite3_bind_blob(query,
                                        QueryRegister::FILE_ID,
                                        &fileId,
                                        sizeof(decltype(fileId)),
@@ -112,7 +113,7 @@ int Database::hasFile(const com::UniqueId& fileId, bool& result)
         return errorCode;
     }
 
-    int resultCode = executeStatement(querySelectFile);
+    int resultCode = executeStatement(query);
 
     if (resultCode != SQLITE_DONE &&
         resultCode != SQLITE_ROW)
@@ -127,11 +128,11 @@ int Database::hasFile(const com::UniqueId& fileId, bool& result)
 
 int Database::hasUnit(const com::UniqueId& unitId, bool& result)
 {
-    auto querySelectUnit = _queryRegister[QueryRegister::SELECT_UNIT];
+    auto query = _queryRegister[QueryRegister::SELECT_UNIT];
 
     int errorCode;
 
-    if ((errorCode = sqlite3_bind_blob(querySelectUnit,
+    if ((errorCode = sqlite3_bind_blob(query,
                                        QueryRegister::UNIT_ID,
                                        &unitId,
                                        sizeof(decltype(unitId)),
@@ -140,7 +141,7 @@ int Database::hasUnit(const com::UniqueId& unitId, bool& result)
         return errorCode;
     }
 
-    int resultCode = executeStatement(querySelectUnit);
+    int resultCode = executeStatement(query);
 
     if (resultCode != SQLITE_DONE &&
         resultCode != SQLITE_ROW)
@@ -254,11 +255,11 @@ int Database::insertFile(const com::UniqueId & fileId,
                          const com::UniqueId & unitId,
                          const std::string   & filePath)
 {
-    auto queryInsertFile = _queryRegister[QueryRegister::INSERT_FILE];
+    auto query = _queryRegister[QueryRegister::INSERT_FILE];
 
     int errorCode;
 
-    if ((errorCode = sqlite3_bind_blob(queryInsertFile,
+    if ((errorCode = sqlite3_bind_blob(query,
                                        QueryRegister::FILE_ID,
                                        &fileId,
                                        sizeof(decltype(fileId)),
@@ -267,7 +268,7 @@ int Database::insertFile(const com::UniqueId & fileId,
         return errorCode;
     }
 
-    if ((errorCode = sqlite3_bind_blob(queryInsertFile,
+    if ((errorCode = sqlite3_bind_blob(query,
                                        QueryRegister::UNIT_ID,
                                        &unitId,
                                        sizeof(decltype(unitId)),
@@ -276,7 +277,7 @@ int Database::insertFile(const com::UniqueId & fileId,
         return errorCode;
     }
 
-    if ((errorCode = sqlite3_bind_text(queryInsertFile,
+    if ((errorCode = sqlite3_bind_text(query,
                                        QueryRegister::FILE_PATH,
                                        filePath.data(),
                                        filePath.size(),
@@ -285,7 +286,7 @@ int Database::insertFile(const com::UniqueId & fileId,
         return errorCode;
     }
 
-    int resultCode = executeStatement(queryInsertFile);
+    int resultCode = executeStatement(query);
 
     if (resultCode != SQLITE_DONE)
     {
@@ -298,11 +299,11 @@ int Database::insertFile(const com::UniqueId & fileId,
 int Database::updateFile(const com::UniqueId & fileId,
                          const com::UniqueId & unitId)
 {
-    auto queryUpdateFile = _queryRegister[QueryRegister::UPDATE_FILE];
+    auto query = _queryRegister[QueryRegister::UPDATE_FILE];
 
     int errorCode;
 
-    if ((errorCode = sqlite3_bind_blob(queryUpdateFile,
+    if ((errorCode = sqlite3_bind_blob(query,
                                        QueryRegister::FILE_ID,
                                        &fileId,
                                        sizeof(decltype(fileId)),
@@ -311,7 +312,7 @@ int Database::updateFile(const com::UniqueId & fileId,
         return errorCode;
     }
 
-    if ((errorCode = sqlite3_bind_blob(queryUpdateFile,
+    if ((errorCode = sqlite3_bind_blob(query,
                                        QueryRegister::UNIT_ID,
                                        &unitId,
                                        sizeof(decltype(unitId)),
@@ -320,7 +321,7 @@ int Database::updateFile(const com::UniqueId & fileId,
         return errorCode;
     }
 
-    int resultCode = executeStatement(queryUpdateFile);
+    int resultCode = executeStatement(query);
 
     if (resultCode != SQLITE_DONE)
     {
@@ -333,11 +334,11 @@ int Database::updateFile(const com::UniqueId & fileId,
 int Database::insertUnit(const com::UniqueId        & unitId,
                          const std::vector<uint8_t> & unitSource)
 {
-    auto queryInsertUnit = _queryRegister[QueryRegister::INSERT_UNIT];
+    auto query = _queryRegister[QueryRegister::INSERT_UNIT];
 
     int errorCode;
 
-    if ((errorCode = sqlite3_bind_blob(queryInsertUnit,
+    if ((errorCode = sqlite3_bind_blob(query,
                                        QueryRegister::UNIT_ID,
                                        &unitId,
                                        sizeof(decltype(unitId)),
@@ -346,7 +347,7 @@ int Database::insertUnit(const com::UniqueId        & unitId,
         return errorCode;
     }
 
-    if ((errorCode = sqlite3_bind_blob(queryInsertUnit,
+    if ((errorCode = sqlite3_bind_blob(query,
                                        QueryRegister::UNIT_SOURCE,
                                        unitSource.data(),
                                        unitSource.size(),
@@ -355,7 +356,7 @@ int Database::insertUnit(const com::UniqueId        & unitId,
         return errorCode;
     }
 
-    int resultCode = executeStatement(queryInsertUnit);
+    int resultCode = executeStatement(query);
 
     if (resultCode != SQLITE_DONE)
     {
@@ -363,6 +364,53 @@ int Database::insertUnit(const com::UniqueId        & unitId,
     }
 
     return SQLITE_OK;
+}
+
+int Database::selectUnitIdsPathsSources(std::vector<com::UniqueId        >& unitIds,
+                                        std::vector<std::vector<uint8_t> >& paths,
+                                        std::vector<std::vector<uint8_t> >& sources)
+{
+    auto query =
+        _queryRegister[QueryRegister::K_QUERY_SELECT_UNIT_IDS_PATHS_SOURCES];
+
+    int resultCode = sqlite3_step(query);
+
+    while (resultCode != SQLITE_DONE)
+    {
+        if (resultCode != SQLITE_ROW)
+        {
+            return resultCode;
+        }
+
+        // 1. Unit ID
+
+        const void* unitIdAsVoidStar = sqlite3_column_blob(query, 0 /*unit_id*/);
+
+        unitIds.emplace_back();
+
+        memcpy(&(unitIds.back()), unitIdAsVoidStar, sizeof(com::UniqueId));
+
+        // 2. Path
+
+        const uint8_t* pathAsBytes = sqlite3_column_text  (query, 1 /*path*/);
+        int            pathSize    = sqlite3_column_bytes (query, 1 /*path*/);
+
+        paths.emplace_back(pathAsBytes, pathAsBytes + pathSize);
+
+        // 3. Source
+
+        const void* sourceAsVoidStar = sqlite3_column_blob  (query, 2 /*source*/);
+        int         sourceSize       = sqlite3_column_bytes (query, 2 /*source*/);
+
+        sources.emplace_back(reinterpret_cast<const uint8_t*>(sourceAsVoidStar),
+                             reinterpret_cast<const uint8_t*>(sourceAsVoidStar) + sourceSize);
+
+        resultCode = sqlite3_step(query);
+    }
+
+    int errorCode = sqlite3_reset(query);
+
+    return errorCode;
 }
 
 } // namespace dmit::db
