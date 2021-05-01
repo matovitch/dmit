@@ -408,9 +408,9 @@ int Database::selectUnitIdsPathsSources(std::vector<com::UniqueId        >& unit
         resultCode = sqlite3_step(query);
     }
 
-    int errorCode = sqlite3_reset(query);
+    resultCode = sqlite3_reset(query);
 
-    return errorCode;
+    return resultCode;
 }
 
 } // namespace dmit::db

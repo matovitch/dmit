@@ -4,3 +4,4 @@ bin/*
 !bin/tup.config
 vgcore.*
 *.db
+dmit_server.log

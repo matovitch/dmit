@@ -2,12 +2,14 @@
 
 #include "dmit/com/enum.hpp"
 
+#include "cmp/cmp.h"
+
 #include <cstdint>
 
 namespace dmit::drv
 {
 
-struct ReplyCode : com::TEnum<uint8_t>
+struct Reply : com::TEnum<uint8_t>
 {
     enum : uint8_t
     {
@@ -15,7 +17,7 @@ struct ReplyCode : com::TEnum<uint8_t>
         KO
     };
 
-    DMIT_COM_ENUM_IMPLICIT_FROM_INT(ReplyCode);
+    DMIT_COM_ENUM_IMPLICIT_FROM_INT(Reply);
 };
 
 } // namespace dmit::drv

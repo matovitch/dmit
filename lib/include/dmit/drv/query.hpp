@@ -11,10 +11,11 @@ struct Query : com::TEnum<uint8_t>
 {
     enum : uint8_t
     {
-        CREATE_OR_UPDATE_FILE,
-        STOP_SERVER,
+        ADD_FILE,
+        STOP,
         DATABASE_GET,
         DATABASE_CLEAN,
+        MAKE,
         INVALID
     };
 

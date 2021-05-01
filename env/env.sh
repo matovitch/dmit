@@ -5,19 +5,29 @@ PROJECT_NAME=$(basename $ROOT_FOLDER | perl -pe 's/([^_])([A-Z])/\1_\2/g' | tr '
 
 function make()
 {
-    tup && ./test/data/diff.sh && ./bin/test/test -tse=inout
+    tup && /mnt/test/data/diff.sh && /mnt/bin/test/test -tse=inout
 }
 
 function cleanSource()
 {
-    find ${ROOT_FOLDER} -type f \( -name "*.cpp"   -o \
-                                   -name "*.hpp"   -o \
-                                   -name "*.h"     -o \
-                                   -name "*.sh"    -o \
-                                   -name "*.gv"    -o \
-                                   -name "Tupfile" -o \
-                                   -name "*.tup"      \
-                                                      \) | while read file; do sed -i 's/ *$//' $file; done
+    find /mnt -type f \( -name "*.cpp"   -o \
+                         -name "*.hpp"   -o \
+                         -name "*.h"     -o \
+                         -name "*.sh"    -o \
+                         -name "*.gv"    -o \
+                         -name "Tupfile" -o \
+                         -name "*.tup"      \
+                                            \) | while read file; do sed -i 's/ *$//' $file; done
+}
+
+function dmitServer()
+{
+    /mnt/bin/src/dmit_server.bin --url tcp://127.0.0.1:4567 > dmit_server.log&
+}
+
+function dmitClient()
+{
+    /mnt/bin/src/dmit_client.bin --url tcp://127.0.0.1:4567 $@
 }
 
 function makeEnv()

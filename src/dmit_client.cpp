@@ -1,11 +1,11 @@
-#include "dmit/drv/reply_code.hpp"
+#include "dmit/drv/client_add_file.hpp"
+#include "dmit/drv/client_db_clean.hpp"
+#include "dmit/drv/client_db_get.hpp"
+#include "dmit/drv/client_make.hpp"
+#include "dmit/drv/client_stop.hpp"
+#include "dmit/drv/reply.hpp"
+#include "dmit/drv/error.hpp"
 #include "dmit/drv/query.hpp"
-
-#include "dmit/src/file.hpp"
-
-#include "dmit/cmp/drv/query.hpp"
-#include "dmit/cmp/src/file.hpp"
-#include "dmit/cmp/cmp.hpp"
 
 #include "dmit/com/logger.hpp"
 
@@ -14,68 +14,37 @@
 #include "nng/nng.h"
 #include "nng/protocol/reqrep0/req.h"
 
-#include "cmp/cmp.h"
-
 #include "ketopt/ketopt.h"
 
 #include <cstdlib>
-#include <cstdint>
-
-bool queryCreateOrUpdateFile(cmp_ctx_t* context, const dmit::src::File& file)
-{
-    if (!dmit::cmp::write(context, dmit::drv::Query::CREATE_OR_UPDATE_FILE))
-    {
-        return false;
-    }
-
-    return dmit::cmp::write(context, file);
-}
-
-bool queryStopServer(cmp_ctx_t* context)
-{
-    return dmit::cmp::write(context, dmit::drv::Query::STOP_SERVER);
-}
-
-bool queryDatabaseGet(cmp_ctx_t* context)
-{
-    return dmit::cmp::write(context, dmit::drv::Query::DATABASE_GET);
-}
-
-bool queryDatabaseClean(cmp_ctx_t* context)
-{
-    return dmit::cmp::write(context, dmit::drv::Query::DATABASE_CLEAN);
-}
-
-void displayNngError(const char* functionName, int errorCode)
-{
-    DMIT_COM_LOG_ERR << "error: " << functionName << " returned '" << nng_strerror(errorCode) << "'\n";
-}
 
 enum
 {
-    K_OPTION_INVALID        = ':',
-    K_OPTION_HELP           = 'h',
-    K_OPTION_VERSION        = 'v',
-    K_OPTION_STOP_SERVER    = 's',
-    K_OPTION_URL            = 'u',
-    K_OPTION_FILE_PATH      = 'f',
-    K_OPTION_DATABASE_GET   = 0x100, // These options have no char representation
-    K_OPTION_DATABASE_CLEAN
+    K_OPTION_INVALID        = ':'   ,
+    K_OPTION_HELP           = 'h'   ,
+    K_OPTION_VERSION        = 'v'   ,
+    K_OPTION_STOP           = 's'   ,
+    K_OPTION_URL            = 'u'   ,
+    K_OPTION_FILE_PATH      = 'f'   ,
+    K_OPTION_MAKE           = 'm'   ,
+    K_OPTION_DATABASE_GET   = 0x100 , // These options have no char representation
+    K_OPTION_DATABASE_CLEAN         ,
 };
 
 static const ko_longopt_t K_OPTIONS_LONG[] =
 {
-    { "help"        , ko_no_argument       , K_OPTION_HELP           },
-    { "version"     , ko_no_argument       , K_OPTION_VERSION        },
-    { "stop-server" , ko_no_argument       , K_OPTION_STOP_SERVER    },
-    { "url"         , ko_required_argument , K_OPTION_URL            },
-    { "file-path"   , ko_required_argument , K_OPTION_FILE_PATH      },
-    { "db-get"      , ko_no_argument       , K_OPTION_DATABASE_GET   },
-    { "db-clean"    , ko_no_argument       , K_OPTION_DATABASE_CLEAN },
-    { nullptr       , ko_no_argument       , K_OPTION_INVALID        } // sentinel required
+    { "help"      , ko_no_argument       , K_OPTION_HELP           },
+    { "version"   , ko_no_argument       , K_OPTION_VERSION        },
+    { "stop"      , ko_no_argument       , K_OPTION_STOP           },
+    { "make"      , ko_no_argument       , K_OPTION_MAKE           },
+    { "db-get"    , ko_no_argument       , K_OPTION_DATABASE_GET   },
+    { "db-clean"  , ko_no_argument       , K_OPTION_DATABASE_CLEAN },
+    { "url"       , ko_required_argument , K_OPTION_URL            },
+    { "file-path" , ko_required_argument , K_OPTION_FILE_PATH      },
+    { nullptr     , ko_no_argument       , K_OPTION_INVALID        } // sentinel required
 };
 
-static const char* K_OPTIONS_SHORT = "hvsu:f:";
+static const char* K_OPTIONS_SHORT = "hvsmu:f:";
 
 void displayHelp()
 {
@@ -83,7 +52,8 @@ void displayHelp()
     DMIT_COM_LOG_OUT << "Usage:\n";
     DMIT_COM_LOG_OUT << "    " << "-h, --help                   Show this screen\n";
     DMIT_COM_LOG_OUT << "    " << "-v, --version                Display version\n";
-    DMIT_COM_LOG_OUT << "    " << "-s, --stop-server            Stop the server\n";
+    DMIT_COM_LOG_OUT << "    " << "-s, --stop                   Stop the server\n";
+    DMIT_COM_LOG_OUT << "    " << "-m, --make                   Compile all files\n";
     DMIT_COM_LOG_OUT << "    " << "    --db-get                 Dump the database\n";
     DMIT_COM_LOG_OUT << "    " << "    --db-clean               Clean the database\n";
     DMIT_COM_LOG_OUT << "    " << "-u, --url         URL        Connect to URL\n";
@@ -95,233 +65,16 @@ void displayVersion()
     DMIT_COM_LOG_OUT << "dmit_client, version 0.1\n";
 }
 
-void displayFileError(const dmit::src::file::Error& fileError, const char* fileName)
-{
-    if (fileError == dmit::src::file::Error::FILE_NOT_FOUND)
-    {
-        DMIT_COM_LOG_ERR << "error: cannot find file '" << fileName << "'\n";
-    }
-
-    if (fileError == dmit::src::file::Error::FILE_NOT_REGULAR)
-    {
-        DMIT_COM_LOG_ERR << "error: '" << fileName << "' is not a regular file\n";
-    }
-
-    if (fileError == dmit::src::file::Error::FILE_OPEN_FAIL)
-    {
-        DMIT_COM_LOG_ERR << "error: cannot open '" << fileName << "'\n";
-    }
-
-    if (fileError == dmit::src::file::Error::FILE_READ_FAIL)
-    {
-        DMIT_COM_LOG_ERR << "error: failed to read file '" << fileName << "'\n";
-    }
-}
-
-int stopServer(dmit::nng::Socket& socket)
-{
-    // Write query
-
-    auto queryOpt = dmit::cmp::asNngBuffer(queryStopServer);
-
-    if (!queryOpt)
-    {
-        DMIT_COM_LOG_ERR << "error: failed to craft query\n";
-        return EXIT_FAILURE;
-    }
-
-    // Send query
-
-    int errorCode;
-
-    if ((errorCode = nng_send(socket._asNng, &(queryOpt.value()), 0)) != 0)
-    {
-        displayNngError("nng_send", errorCode);
-        return EXIT_FAILURE;
-    }
-
-    // Wait for reply
-
-    dmit::nng::Buffer bufferReply;
-
-    if ((errorCode = nng_recv(socket._asNng, &bufferReply, 0)) != 0)
-    {
-        displayNngError("nng_recv", errorCode);
-        return EXIT_FAILURE;
-    }
-
-    // Decode reply
-
-    cmp_ctx_t cmpContextReply = dmit::cmp::contextFromNngBuffer(bufferReply);
-
-    uint8_t replyCode;
-
-    if (!dmit::cmp::readU8(&cmpContextReply, &replyCode) || replyCode != dmit::drv::ReplyCode::OK)
-    {
-        DMIT_COM_LOG_ERR << "error: badly formed reply\n";
-        return EXIT_FAILURE;
-    }
-
-    return EXIT_SUCCESS;
-}
-
-int databaseGet(dmit::nng::Socket& socket)
-{
-    // Write query
-
-    auto queryOpt = dmit::cmp::asNngBuffer(queryDatabaseGet);
-
-    if (!queryOpt)
-    {
-        DMIT_COM_LOG_ERR << "error: failed to craft query\n";
-        return EXIT_FAILURE;
-    }
-
-    // Send query
-
-    int errorCode;
-
-    if ((errorCode = nng_send(socket._asNng, &(queryOpt.value()), 0)) != 0)
-    {
-        displayNngError("nng_send", errorCode);
-        return EXIT_FAILURE;
-    }
-
-    // Wait for reply
-
-    dmit::nng::Buffer bufferReply;
-
-    if ((errorCode = nng_recv(socket._asNng, &bufferReply, 0)) != 0)
-    {
-        displayNngError("nng_recv", errorCode);
-        return EXIT_FAILURE;
-    }
-
-    // Dump reply
-
-    for (int i = 0; i < bufferReply._size; i++)
-    {
-        DMIT_COM_LOG_OUT << bufferReply._asBytes[i];
-    }
-
-    return EXIT_SUCCESS;
-}
-
-int databaseClean(dmit::nng::Socket& socket)
-{
-    // Write query
-
-    auto queryOpt = dmit::cmp::asNngBuffer(queryDatabaseClean);
-
-    if (!queryOpt)
-    {
-        DMIT_COM_LOG_ERR << "error: failed to craft query\n";
-        return EXIT_FAILURE;
-    }
-
-    // Send query
-
-    int errorCode;
-
-    if ((errorCode = nng_send(socket._asNng, &(queryOpt.value()), 0)) != 0)
-    {
-        displayNngError("nng_send", errorCode);
-        return EXIT_FAILURE;
-    }
-
-    // Wait for reply
-
-    dmit::nng::Buffer bufferReply;
-
-    if ((errorCode = nng_recv(socket._asNng, &bufferReply, 0)) != 0)
-    {
-        displayNngError("nng_recv", errorCode);
-        return EXIT_FAILURE;
-    }
-
-    // Decode reply
-
-    cmp_ctx_t cmpContextReply = dmit::cmp::contextFromNngBuffer(bufferReply);
-
-    uint8_t replyCode;
-
-    if (!dmit::cmp::readU8(&cmpContextReply, &replyCode) || replyCode != dmit::drv::ReplyCode::OK)
-    {
-        DMIT_COM_LOG_ERR << "error: badly formed reply\n";
-        return EXIT_FAILURE;
-    }
-
-    return EXIT_SUCCESS;
-}
-
-int createOrUpdateFile(dmit::nng::Socket& socket, const char* filePath)
-{
-    // Read the file
-
-    const auto& fileErrOpt = dmit::src::file::make(filePath);
-
-    if (fileErrOpt.hasError())
-    {
-        displayFileError(fileErrOpt.error(), filePath);
-        return EXIT_FAILURE;
-    }
-
-    const auto& file = fileErrOpt.value();
-
-    // Write query
-
-    auto queryOpt = dmit::cmp::asNngBuffer(queryCreateOrUpdateFile, file);
-
-    if (!queryOpt)
-    {
-        DMIT_COM_LOG_ERR << "error: failed to craft query\n";
-        return EXIT_FAILURE;
-    }
-
-    // Send query
-
-    int errorCode;
-
-    if ((errorCode = nng_send(socket._asNng, &(queryOpt.value()), 0)) != 0)
-    {
-        displayNngError("nng_send", errorCode);
-        return EXIT_FAILURE;
-    }
-
-    // Wait for reply
-
-    dmit::nng::Buffer bufferReply;
-
-    if ((errorCode = nng_recv(socket._asNng, &bufferReply, 0)) != 0)
-    {
-        displayNngError("nng_recv", errorCode);
-        return EXIT_FAILURE;
-    }
-
-    // Decode reply
-
-    cmp_ctx_t cmpContextReply = dmit::cmp::contextFromNngBuffer(bufferReply);
-
-    uint8_t replyCode;
-
-    if (!dmit::cmp::readU8(&cmpContextReply, &replyCode) || replyCode != dmit::drv::ReplyCode::OK)
-    {
-        DMIT_COM_LOG_ERR << "error: badly formed reply\n";
-        return EXIT_FAILURE;
-    }
-
-    return EXIT_SUCCESS;
-}
-
 int main(int argc, char** argv)
 {
     // Decode the arguments
 
     bool hasHelp          = false;
     bool hasVersion       = false;
-    bool hasStopServer    = false;
+    bool hasStop          = false;
     bool hasDatabaseGet   = false;
     bool hasDatabaseClean = false;
+    bool hasMake          = false;
 
     const char* filePath      = nullptr;
     const char* url           = nullptr;
@@ -338,9 +91,10 @@ int main(int argc, char** argv)
     {
         hasHelp          |= (ketoptOption == K_OPTION_HELP           );
         hasVersion       |= (ketoptOption == K_OPTION_VERSION        );
-        hasStopServer    |= (ketoptOption == K_OPTION_STOP_SERVER    );
+        hasStop          |= (ketoptOption == K_OPTION_STOP           );
         hasDatabaseGet   |= (ketoptOption == K_OPTION_DATABASE_GET   );
         hasDatabaseClean |= (ketoptOption == K_OPTION_DATABASE_CLEAN );
+        hasMake          |= (ketoptOption == K_OPTION_MAKE           );
 
         if (ketoptOption == K_OPTION_FILE_PATH ) { filePath = ketoptStatus.arg; }
         if (ketoptOption == K_OPTION_URL       ) { url      = ketoptStatus.arg; }
@@ -379,7 +133,7 @@ int main(int argc, char** argv)
 
         if ((errorCode = nng_req0_open(&socket._asNng)) != 0)
         {
-            displayNngError("nng_req0_open", errorCode);
+            dmit::drv::displayNngError("nng_req0_open", errorCode);
             returnCode = EXIT_FAILURE;
             goto CLEAN_UP;
         }
@@ -388,34 +142,40 @@ int main(int argc, char** argv)
 
         if ((errorCode = nng_dial(socket._asNng, url, nullptr, 0)) != 0)
         {
-            displayNngError("nng_dial", errorCode);
+            dmit::drv::displayNngError("nng_dial", errorCode);
             returnCode = EXIT_FAILURE;
             goto CLEAN_UP;
         }
 
         // Send Queries
 
-        if (hasStopServer)
+        if (hasStop)
         {
-            returnCode = stopServer(socket);
+            returnCode = dmit::drv::clt::stop(socket);
             goto CLEAN_UP;
         }
 
         if (hasDatabaseGet)
         {
-            returnCode = databaseGet(socket);
+            returnCode = dmit::drv::clt::databaseGet(socket);
             goto CLEAN_UP;
         }
 
         if (hasDatabaseClean)
         {
-            returnCode = databaseClean(socket);
+            returnCode = dmit::drv::clt::databaseClean(socket);
+            goto CLEAN_UP;
+        }
+
+        if (hasMake)
+        {
+            returnCode = dmit::drv::clt::make(socket);
             goto CLEAN_UP;
         }
 
         if (filePath)
         {
-            returnCode = createOrUpdateFile(socket, filePath);
+            returnCode = dmit::drv::clt::addFile(socket, filePath);
             goto CLEAN_UP;
         }
     }

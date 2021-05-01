@@ -6,6 +6,7 @@
 #include "dmit/fmt/formatable.hpp"
 
 #include "dmit/fmt/com/logger.hpp"
+#include "dmit/fmt/ast/state.hpp"
 #include "dmit/fmt/src/file.hpp"
 
 #include <sstream>
