@@ -1,7 +1,5 @@
 #include "dmit/com/logger.hpp"
 
-#include "dmit/fmt/com/logger.hpp"
-
 #include <iostream>
 #include <sstream>
 
@@ -31,7 +29,7 @@ const std::ostringstream& Sub::stream() const
 
 Sub::~Sub()
 {
-    _os << *this;
+    _os << _oss.str();
 }
 
 } // namespace logger

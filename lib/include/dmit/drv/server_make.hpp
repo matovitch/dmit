@@ -10,8 +10,9 @@
 
 #include "dmit/db/database.hpp"
 
+#include "dmit/fmt/logger.hpp"
+
 #include "dmit/com/unique_id.hpp"
-#include "dmit/com/logger.hpp"
 
 #include <cstdint>
 #include <vector>

@@ -3,9 +3,9 @@
 #include "dmit/lex/reader.hpp"
 #include "dmit/lex/token.hpp"
 
-
 #include "dmit/fmt/lex/token.hpp"
-#include "dmit/com/logger.hpp"
+#include "dmit/fmt/logger.hpp"
+
 #include "dmit/com/enum.hpp"
 
 #include <optional>

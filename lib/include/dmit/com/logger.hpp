@@ -3,38 +3,33 @@
 #include "dmit/com/singleton.hpp"
 #include "dmit/com/type_flag.hpp"
 
-#include "dmit/fmt/formatable.hpp"
-
-#include "dmit/fmt/com/logger.hpp"
-#include "dmit/fmt/ast/state.hpp"
-#include "dmit/fmt/src/file.hpp"
-
 #include <sstream>
-#include <string>
+#include <ostream>
 
-namespace dmit::com
+namespace dmit
+{
+
+namespace fmt { struct Formatable; } // To avoid depending upon dmit::fmt
+
+namespace com
 {
 
 namespace logger
 {
 
-class Sub : fmt::Formatable
+class Sub
 {
 
 public:
 
     Sub(std::ostream& os);
 
-    template <class Type, DMIT_COM_TYPE_FLAG_CHECK_IS(fmt::Formatable, Type)>
-    std::ostream& operator<<(const Type& loggable)
-    {
-        return _oss << ::dmit::fmt::asString(loggable);
-    }
-
     template <class Type, DMIT_COM_TYPE_FLAG_CHECK_IS_NOT(fmt::Formatable, Type)>
-    std::ostream& operator<<(const Type& notLoggable)
+    Sub& operator<<(const Type& notLoggable)
     {
-        return _oss << notLoggable;
+        _oss << notLoggable;
+
+        return *this;
     }
 
     const std::ostringstream& stream() const;
@@ -51,7 +46,7 @@ private:
     std::ostream&      _os;
 };
 
-}
+} // namespace logger
 
 struct Logger : Singletonable
 {
@@ -61,7 +56,8 @@ struct Logger : Singletonable
     logger::Sub _err;
 };
 
-} // namespace dmit::com
+} // namespace com
+} // namespace dmit
 
 #define DMIT_COM_LOG_OUT dmit::com::TSingleton<dmit::com::Logger>::instance()._out
 #define DMIT_COM_LOG_ERR dmit::com::TSingleton<dmit::com::Logger>::instance()._err

@@ -10,7 +10,7 @@
 
 #include "dmit/db/database.hpp"
 
-#include "dmit/com/logger.hpp"
+#include "dmit/fmt/logger.hpp"
 
 #include "dmit/cmp/cmp.hpp"
 

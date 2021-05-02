@@ -2,6 +2,7 @@
 
 #include "dmit/com/logger.hpp"
 
+#include <iostream>
 #include <cstdlib>
 
 template <class Assertion>

@@ -7,7 +7,7 @@
 #include "dmit/drv/error.hpp"
 #include "dmit/drv/query.hpp"
 
-#include "dmit/com/logger.hpp"
+#include "dmit/fmt/logger.hpp"
 
 #include "dmit/nng/nng.hpp"
 

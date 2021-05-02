@@ -7,11 +7,7 @@
 
 #include "dmit/src/file.hpp"
 
-#include "dmit/fmt/lex/state.hpp"
-#include "dmit/fmt/prs/state.hpp"
-#include "dmit/fmt/ast/state.hpp"
-
-#include "dmit/com/logger.hpp"
+#include "dmit/fmt/logger.hpp"
 
 #include "ketopt/ketopt.h"
 
