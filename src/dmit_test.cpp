@@ -1,9 +1,4 @@
-#include "dmit/src/file.hpp"
-
-#include "dmit/ast/source_register.hpp"
-#include "dmit/ast/state.hpp"
-#include "dmit/lex/state.hpp"
-#include "dmit/prs/state.hpp"
+#include "dmit/ast/from_path_and_source.hpp"
 
 #include "dmit/src/file.hpp"
 
@@ -146,7 +141,7 @@ int main(int argc, char** argv)
         const auto& lex = lexer(file.content().data(),
                                 file.content().size());
 
-        DMIT_COM_LOG_OUT << lex;
+        DMIT_COM_LOG_OUT << lex << '\n';
     }
 
     if (hasPrs)
@@ -159,43 +154,19 @@ int main(int argc, char** argv)
 
         const auto& prs = parser(lex._tokens);
 
-        DMIT_COM_LOG_OUT << prs;
+        DMIT_COM_LOG_OUT << prs << '\n';
     }
 
     if (hasAst)
     {
-        dmit::lex::state::Builder lexer;
-        dmit::prs::state::Builder parser;
-        dmit::ast::state::Builder aster;
-
-        dmit::ast::SourceRegister sourceRegister;
+        dmit::ast::FromPathAndSource astFromPathAndSource;
 
         const auto& toParse = file.content();
 
-        auto&& lex = lexer(toParse.data(),
-                           toParse.size());
+        std::vector<uint8_t> filePathAsVector{reinterpret_cast<const uint8_t*>(filePath),
+                                              reinterpret_cast<const uint8_t*>(filePath) + sizeof(filePath)};
 
-        auto&& prs = parser(lex._tokens);
-
-        auto&& ast = aster(prs._tree);
-
-        auto& source = ast._nodePool.get(ast._source);
-
-        sourceRegister.add(source);
-
-        source._srcPath = std::vector<uint8_t>{reinterpret_cast<const uint8_t*>(filePath),
-                                               reinterpret_cast<const uint8_t*>(filePath) + sizeof(filePath)};
-
-        source._srcContent.resize(toParse.size());
-
-        std::memcpy(source._srcContent.data(), toParse.data(), toParse.size());
-
-        source._srcOffsets = dmit::src::line_index::makeOffsets(source._srcContent);
-
-        source._lexOffsets .swap(lex._offsets );
-        source._lexTokens  .swap(lex._tokens  );
-
-        DMIT_COM_LOG_OUT << ast;
+        DMIT_COM_LOG_OUT << astFromPathAndSource.make(filePathAsVector, toParse) << '\n';
     }
 
     return EXIT_SUCCESS;
