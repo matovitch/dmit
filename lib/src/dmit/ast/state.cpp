@@ -11,7 +11,7 @@
 #include <variant>
 #include <cstring>
 
-namespace dmit::ast::state
+namespace dmit::ast
 {
 
 namespace
@@ -45,7 +45,12 @@ dmit::prs::Reader makeSubReaderFor(const dmit::prs::state::tree::node::Kind pars
 
 } // namespace
 
-Builder::Builder() : _state{}, _nodePool{_state._nodePool} {}
+State::State(NodePool& nodePool) : _nodePool{nodePool} {}
+
+namespace state
+{
+
+Builder::Builder() : _nodePool{}, _state{_nodePool} {}
 
 void Builder::makeLexeme(const dmit::prs::Reader& reader,
                          TNode<node::Kind::LEXEME>& lexeme)
@@ -426,4 +431,5 @@ State& Builder::operator()(const prs::state::Tree& parseTree)
     return _state;
 }
 
-} // namespace dmit::ast::state
+} // namespace state
+} // namespace dmit::ast

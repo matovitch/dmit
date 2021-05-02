@@ -15,7 +15,9 @@ struct State : fmt::Formatable
 {
     using NodePool = node::TPool<0x10>;
 
-    NodePool                         _nodePool;
+    State(NodePool&);
+
+    NodePool&                        _nodePool;
     node::TIndex<node::Kind::MODULE> _module;
     node::TIndex<node::Kind::SOURCE> _source;
 };
@@ -90,8 +92,8 @@ private:
     void makeModule(dmit::prs::Reader& reader,
                     TNode<node::Kind::MODULE>& module);
 
-    State            _state;
-    State::NodePool& _nodePool;
+    State::NodePool _nodePool;
+    State           _state;
 };
 
 } // namespace state
