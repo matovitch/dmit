@@ -39,7 +39,7 @@ TEST_CASE("sem")
 
     dmit::ast::SourceRegister sourceRegister;
 
-    auto& source = ast._nodePool.get(ast._source);
+    auto& source = ast._nodePool->get(ast._source);
 
     sourceRegister.add(source);
 

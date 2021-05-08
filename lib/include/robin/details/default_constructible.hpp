@@ -20,7 +20,7 @@ public:
     template<class... Args>
     void construct(Args&&... args)
     {
-        new (static_cast<void*>(&_value)) Type(std::forward<Args>(args)...);
+        new (&_value) Type(std::forward<Args>(args)...);
     }
 
     void destroy()

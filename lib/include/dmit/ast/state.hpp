@@ -8,6 +8,8 @@
 
 #include "dmit/fmt/formatable.hpp"
 
+#include <memory>
+
 namespace dmit::ast
 {
 
@@ -15,9 +17,9 @@ struct State : fmt::Formatable
 {
     using NodePool = node::TPool<0x10>;
 
-    State(NodePool&);
+    State(std::shared_ptr<NodePool>&);
 
-    NodePool&                        _nodePool;
+    std::shared_ptr<NodePool>        _nodePool;
     node::TIndex<node::Kind::MODULE> _module;
     node::TIndex<node::Kind::SOURCE> _source;
 };
@@ -92,8 +94,8 @@ private:
     void makeModule(dmit::prs::Reader& reader,
                     TNode<node::Kind::MODULE>& module);
 
-    State::NodePool _nodePool;
-    State           _state;
+    std::shared_ptr<State::NodePool> _nodePool;
+    State                            _state;
 };
 
 } // namespace state

@@ -21,7 +21,7 @@ State FromPathAndSource::make(const std::vector<uint8_t> & path,
 
     auto&& ast = _aster(prs._tree);
 
-    auto& source = ast._nodePool.get(ast._source);
+    auto& source = ast._nodePool->get(ast._source);
 
     _sourceRegister.add(source);
 

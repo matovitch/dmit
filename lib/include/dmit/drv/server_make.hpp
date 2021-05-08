@@ -10,20 +10,46 @@
 
 #include "dmit/fmt/logger.hpp"
 
+#include "dmit/com/parallel_for.hpp"
 #include "dmit/com/unique_id.hpp"
 
-#include "robin/map.hpp"
-
+#include <unordered_map>
 #include <cstdint>
 #include <vector>
 
 namespace dmit::drv::srv
 {
 
-using AstMap = robin::map::TMake<com::UniqueId,
-                                 dmit::ast::State,
-                                 com::unique_id::Hasher,
-                                 com::unique_id::Comparator, 4, 3>;
+using AstMap = std::unordered_map<com::UniqueId,
+                                  ast::State,
+                                  com::unique_id::Hasher,
+                                  com::unique_id::Comparator>;
+struct AstBuilder
+{
+    using ReturnType = ast::State;
+
+    AstBuilder(const std::vector<std::vector<uint8_t>>& paths,
+               const std::vector<std::vector<uint8_t>>& sources) :
+        _paths{paths},
+        _sources{sources}
+    {}
+
+    dmit::ast::State run(const uint32_t index)
+    {
+        return _astFromPathAndSource.make(_paths   [index],
+                                          _sources [index]);
+    }
+
+    uint32_t size() const
+    {
+        return _paths.size();
+    }
+
+    const std::vector<std::vector<uint8_t>>& _paths   ;
+    const std::vector<std::vector<uint8_t>>& _sources ;
+
+    ast::FromPathAndSource _astFromPathAndSource;
+};
 
 void make(dmit::nng::Socket& socket, dmit::db::Database& database)
 {
@@ -44,12 +70,12 @@ void make(dmit::nng::Socket& socket, dmit::db::Database& database)
         return;
     }
 
-    ast::FromPathAndSource astFromPathAndSource;
-    AstMap                 astMap;
+    dmit::com::TParallelFor<AstBuilder> parallelAstBuilder(paths, sources);
+    AstMap astMap;
 
     for (int i = 0; i < paths.size(); i++)
     {
-        astMap.emplace(unitIds[i], astFromPathAndSource.make(paths[i], sources[i]));
+        astMap.emplace(unitIds[i], parallelAstBuilder.result(i));
 
         DMIT_COM_LOG_OUT << astMap.at(unitIds[i]) << '\n';
     }

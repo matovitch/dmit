@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <variant>
 #include <cstring>
+#include <memory>
 
 namespace dmit::ast
 {
@@ -45,12 +46,12 @@ dmit::prs::Reader makeSubReaderFor(const dmit::prs::state::tree::node::Kind pars
 
 } // namespace
 
-State::State(NodePool& nodePool) : _nodePool{nodePool} {}
+State::State(std::shared_ptr<NodePool>& nodePool) : _nodePool{nodePool} {}
 
 namespace state
 {
 
-Builder::Builder() : _nodePool{}, _state{_nodePool} {}
+Builder::Builder() : _nodePool{std::make_shared<State::NodePool>()}, _state{_nodePool} {}
 
 void Builder::makeLexeme(const dmit::prs::Reader& reader,
                          TNode<node::Kind::LEXEME>& lexeme)
@@ -68,8 +69,8 @@ void Builder::makeAssignment(dmit::prs::Reader& reader,
     DMIT_COM_ASSERT(reader.isValid());
 
     // Operator
-    _nodePool.make(expAssign._operator);
-    makeLexeme(reader, _nodePool.get(expAssign._operator));
+    _nodePool->make(expAssign._operator);
+    makeLexeme(reader, _nodePool->get(expAssign._operator));
     reader.advance();
     DMIT_COM_ASSERT(reader.isValid());
 
@@ -86,8 +87,8 @@ void Builder::makeReturn(dmit::prs::Reader& reader,
 void Builder::makeDclVariable(dmit::prs::Reader& reader,
                               TNode<node::Kind::DCL_VARIABLE>& dclVariable)
 {
-    _nodePool.make(dclVariable._typeClaim);
-    makeTypeClaim(reader, _nodePool.get(dclVariable._typeClaim));
+    _nodePool->make(dclVariable._typeClaim);
+    makeTypeClaim(reader, _nodePool->get(dclVariable._typeClaim));
 }
 
 void Builder::makeTypeClaim(dmit::prs::Reader& reader,
@@ -95,15 +96,15 @@ void Builder::makeTypeClaim(dmit::prs::Reader& reader,
 {
     // Type
     DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::LIT_IDENTIFIER);
-    _nodePool.make(typeClaim._type);
-    makeIdentifier(reader, _nodePool.get(typeClaim._type));
+    _nodePool->make(typeClaim._type);
+    makeIdentifier(reader, _nodePool->get(typeClaim._type));
     reader.advance();
     DMIT_COM_ASSERT(reader.isValid());
 
     // Variable
     DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::LIT_IDENTIFIER);
-    _nodePool.make(typeClaim._variable);
-    makeIdentifier(reader, _nodePool.get(typeClaim._variable));
+    _nodePool->make(typeClaim._variable);
+    makeIdentifier(reader, _nodePool->get(typeClaim._variable));
 }
 
 void Builder::makeDeclaration(const dmit::prs::Reader& supReader,
@@ -112,8 +113,8 @@ void Builder::makeDeclaration(const dmit::prs::Reader& supReader,
     auto reader = makeSubReaderFor(ParseNodeKind::DCL_VARIABLE, supReader);
 
     node::TIndex<node::Kind::DCL_VARIABLE> dclVariable;
-    _nodePool.make(dclVariable);
-    makeDclVariable(reader, _nodePool.get(dclVariable));
+    _nodePool->make(dclVariable);
+    makeDclVariable(reader, _nodePool->get(dclVariable));
     com::blit(dclVariable, declaration);
 }
 
@@ -128,8 +129,8 @@ void Builder::makeStatement(const dmit::prs::Reader& reader,
     if (parseNodeKind == ParseNodeKind::STM_RETURN)
     {
         node::TIndex<node::Kind::STM_RETURN> stmReturn;
-        _nodePool.make(stmReturn);
-        makeReturn(subReader, _nodePool.get(stmReturn));
+        _nodePool->make(stmReturn);
+        makeReturn(subReader, _nodePool->get(stmReturn));
         com::blit(stmReturn, statement);
     }
     else
@@ -147,8 +148,8 @@ void Builder::makeBinop(dmit::prs::Reader& reader,
     DMIT_COM_ASSERT(reader.isValid());
 
     // Operator
-    _nodePool.make(binop._operator);
-    makeLexeme(reader, _nodePool.get(binop._operator));
+    _nodePool->make(binop._operator);
+    makeLexeme(reader, _nodePool->get(binop._operator));
     reader.advance();
     DMIT_COM_ASSERT(reader.isValid());
 
@@ -160,25 +161,25 @@ void Builder::makeBinop(dmit::prs::Reader& reader,
 
     binop._lhs = node::TIndex<node::Kind::EXP_BINOP>{};
     auto& binopLhs = std::get<node::TIndex<node::Kind::EXP_BINOP>>(binop._lhs);
-    _nodePool.make(binopLhs);
-    makeBinop(reader, _nodePool.get(binopLhs));
+    _nodePool->make(binopLhs);
+    makeBinop(reader, _nodePool->get(binopLhs));
 }
 
 void Builder::makeFunctionCall(dmit::prs::Reader& reader,
                                TNode<node::Kind::FUN_CALL>& funCall)
 {
-    _nodePool.make(funCall._arguments, reader.size() - 1);
+    _nodePool->make(funCall._arguments, reader.size() - 1);
 
     uint32_t i = funCall._arguments._size;
 
     while (reader.isValidNext())
     {
-        makeExpression(reader, _nodePool.get(funCall._arguments[--i])._value);
+        makeExpression(reader, _nodePool->get(funCall._arguments[--i])._value);
         reader.advance();
     }
 
-    _nodePool.make(funCall._callee);
-    makeIdentifier(reader, _nodePool.get(funCall._callee));
+    _nodePool->make(funCall._callee);
+    makeIdentifier(reader, _nodePool->get(funCall._callee));
 }
 
 void Builder::makeExpression(const dmit::prs::Reader& reader,
@@ -189,39 +190,39 @@ void Builder::makeExpression(const dmit::prs::Reader& reader,
     if (parseNodeKind == ParseNodeKind::LIT_IDENTIFIER)
     {
         node::TIndex<node::Kind::LIT_IDENTIFIER> identifier;
-        _nodePool.make(identifier);
-        makeIdentifier(reader, _nodePool.get(identifier));
+        _nodePool->make(identifier);
+        makeIdentifier(reader, _nodePool->get(identifier));
         com::blit(identifier, expression);
     }
     else if (parseNodeKind == ParseNodeKind::LIT_INTEGER)
     {
         node::TIndex<node::Kind::LIT_INTEGER> integer;
-        _nodePool.make(integer);
-        makeInteger(reader, _nodePool.get(integer));
+        _nodePool->make(integer);
+        makeInteger(reader, _nodePool->get(integer));
         com::blit(integer, expression);
     }
     else if (parseNodeKind == ParseNodeKind::EXP_BINOP)
     {
         node::TIndex<node::Kind::EXP_BINOP> binop;
-        _nodePool.make(binop);
+        _nodePool->make(binop);
         auto subReader = makeSubReaderFor(ParseNodeKind::EXP_BINOP, reader);
-        makeBinop(subReader, _nodePool.get(binop));
+        makeBinop(subReader, _nodePool->get(binop));
         com::blit(binop, expression);
     }
     else if (parseNodeKind == ParseNodeKind::EXP_ASSIGN)
     {
         node::TIndex<node::Kind::EXP_BINOP> assignment;
-        _nodePool.make(assignment);
+        _nodePool->make(assignment);
         auto subReader = makeSubReaderFor(ParseNodeKind::EXP_ASSIGN, reader);
-        makeAssignment(subReader, _nodePool.get(assignment));
+        makeAssignment(subReader, _nodePool->get(assignment));
         com::blit(assignment, expression);
     }
     else if (parseNodeKind == ParseNodeKind::FUN_CALL)
     {
         node::TIndex<node::Kind::FUN_CALL> funCall;
-        _nodePool.make(funCall);
+        _nodePool->make(funCall);
         auto subReader = makeSubReaderFor(ParseNodeKind::FUN_CALL, reader);
-        makeFunctionCall(subReader, _nodePool.get(funCall));
+        makeFunctionCall(subReader, _nodePool->get(funCall));
         com::blit(funCall, expression);
     }
     else
@@ -253,8 +254,8 @@ void Builder::makeScopeVariant(const dmit::prs::Reader& reader,
     else if (parseNodeKind == ParseNodeKind::SCOPE)
     {
         node::TIndex<node::Kind::SCOPE> subScope;
-        _nodePool.make(subScope);
-        makeScope(reader, _nodePool.get(subScope));
+        _nodePool->make(subScope);
+        makeScope(reader, _nodePool->get(subScope));
         com::blit(subScope, scopeVariant._value);
     }
     else
@@ -268,13 +269,13 @@ void Builder::makeScope(const dmit::prs::Reader& supReader,
 {
     auto reader = makeSubReaderFor(ParseNodeKind::SCOPE, supReader);
 
-    _nodePool.make(scope._variants, reader.size());
+    _nodePool->make(scope._variants, reader.size());
 
     uint32_t i = scope._variants._size;
 
     while (reader.isValid())
     {
-        makeScopeVariant(reader, _nodePool.get(scope._variants[--i]));
+        makeScopeVariant(reader, _nodePool->get(scope._variants[--i]));
         reader.advance();
     }
 }
@@ -285,13 +286,13 @@ void Builder::makeArguments(const dmit::prs::Reader& supReader,
     DMIT_COM_ASSERT(supReader.look()._kind == ParseNodeKind::FUN_ARGUMENTS);
     auto reader = supReader.makeSubReader();
 
-    _nodePool.make(function._arguments, reader.size() >> 1);
+    _nodePool->make(function._arguments, reader.size() >> 1);
 
     uint32_t i = function._arguments._size;
 
     while (reader.isValid())
     {
-        makeTypeClaim(reader, _nodePool.get(function._arguments[--i]));
+        makeTypeClaim(reader, _nodePool->get(function._arguments[--i]));
         reader.advance();
     }
 }
@@ -300,16 +301,16 @@ void Builder::makeInteger(const dmit::prs::Reader& reader,
                           TNode<node::Kind::LIT_INTEGER>& integer)
 {
     DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::LIT_INTEGER);
-    _nodePool.make(integer._lexeme);
-    makeLexeme(reader, _nodePool.get(integer._lexeme));
+    _nodePool->make(integer._lexeme);
+    makeLexeme(reader, _nodePool->get(integer._lexeme));
 }
 
 void Builder::makeIdentifier(const dmit::prs::Reader& reader,
                              TNode<node::Kind::LIT_IDENTIFIER>& identifier)
 {
     DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::LIT_IDENTIFIER);
-    _nodePool.make(identifier._lexeme);
-    makeLexeme(reader, _nodePool.get(identifier._lexeme));
+    _nodePool->make(identifier._lexeme);
+    makeLexeme(reader, _nodePool->get(identifier._lexeme));
 }
 
 void Builder::makeFunction(const dmit::prs::Reader& supReader,
@@ -318,15 +319,15 @@ void Builder::makeFunction(const dmit::prs::Reader& supReader,
     auto reader = makeSubReaderFor(ParseNodeKind::FUN_DEFINITION, supReader);
 
     // Body
-    _nodePool.make(function._body);
-    makeScope(reader, _nodePool.get(function._body));
+    _nodePool->make(function._body);
+    makeScope(reader, _nodePool->get(function._body));
     reader.advance();
 
     // Return type
     if (reader.look()._kind == dmit::prs::state::tree::node::Kind::LIT_IDENTIFIER)
     {
-        _nodePool.make(function._returnType);
-        makeIdentifier(reader, _nodePool.get(function._returnType));
+        _nodePool->make(function._returnType);
+        makeIdentifier(reader, _nodePool->get(function._returnType));
         reader.advance();
     }
     else
@@ -339,8 +340,8 @@ void Builder::makeFunction(const dmit::prs::Reader& supReader,
     reader.advance();
 
     // Name
-    _nodePool.make(function._name);
-    makeIdentifier(reader, _nodePool.get(function._name));
+    _nodePool->make(function._name);
+    makeIdentifier(reader, _nodePool->get(function._name));
 
     // Status
     (reader.isValidNext()) ? com::blit(FunctionStatus::EXPORTED , function._status)
@@ -353,8 +354,8 @@ void Builder::makeImport(const dmit::prs::Reader& supReader,
     auto reader = makeSubReaderFor(ParseNodeKind::DCL_IMPORT, supReader);
 
     DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::LIT_IDENTIFIER);
-    _nodePool.make(import._moduleName);
-    makeIdentifier(reader, _nodePool.get(import._moduleName));
+    _nodePool->make(import._moduleName);
+    makeIdentifier(reader, _nodePool->get(import._moduleName));
 }
 
 void Builder::makeModule(dmit::prs::Reader& reader,
@@ -362,9 +363,9 @@ void Builder::makeModule(dmit::prs::Reader& reader,
 {
     auto readerCopy = reader;
 
-    _nodePool.make(module._functions , reader.size());
-    _nodePool.make(module._imports   , reader.size());
-    _nodePool.make(module._modules   , reader.size());
+    _nodePool->make(module._functions , reader.size());
+    _nodePool->make(module._imports   , reader.size());
+    _nodePool->make(module._modules   , reader.size());
 
     uint32_t indexFunction = 0;
     uint32_t indexImport   = 0;
@@ -376,16 +377,16 @@ void Builder::makeModule(dmit::prs::Reader& reader,
 
         if (parseNodeKind == dmit::prs::state::tree::node::Kind::LIT_IDENTIFIER)
         {
-            _nodePool.make(module._name);
-            makeIdentifier(reader, _nodePool.get(module._name));
+            _nodePool->make(module._name);
+            makeIdentifier(reader, _nodePool->get(module._name));
         }
         else if (parseNodeKind == dmit::prs::state::tree::node::Kind::FUN_DEFINITION)
         {
-            makeFunction(reader, _nodePool.get(module._functions[indexFunction++]));
+            makeFunction(reader, _nodePool->get(module._functions[indexFunction++]));
         }
         else if (parseNodeKind == dmit::prs::state::tree::node::Kind::DCL_IMPORT)
         {
-            makeImport(reader, _nodePool.get(module._imports[indexImport++]));
+            makeImport(reader, _nodePool->get(module._imports[indexImport++]));
         }
         else if (parseNodeKind == dmit::prs::state::tree::node::Kind::MODULE)
         {
@@ -399,16 +400,16 @@ void Builder::makeModule(dmit::prs::Reader& reader,
         reader.advance();
     }
 
-    _nodePool.trim(module._functions , indexFunction );
-    _nodePool.trim(module._imports   , indexImport   );
-    _nodePool.trim(module._modules   , indexModule   );
+    _nodePool->trim(module._functions , indexFunction );
+    _nodePool->trim(module._imports   , indexImport   );
+    _nodePool->trim(module._modules   , indexModule   );
 
     while (readerCopy.isValid())
     {
         if (readerCopy.look()._kind == dmit::prs::state::tree::node::Kind::MODULE)
         {
             auto subReader = readerCopy.makeSubReader();
-            makeModule(subReader, _nodePool.get(module._modules[--indexModule]));
+            makeModule(subReader, _nodePool->get(module._modules[--indexModule]));
         }
 
         readerCopy.advance();
@@ -419,10 +420,10 @@ State& Builder::operator()(const prs::state::Tree& parseTree)
 {
     dmit::prs::Reader reader{parseTree};
 
-    _nodePool.make(_state._module);
-    _nodePool.make(_state._source);
+    _nodePool->make(_state._module);
+    _nodePool->make(_state._source);
 
-    auto& rootModule = _nodePool.get(_state._module);
+    auto& rootModule = _nodePool->get(_state._module);
 
     com::blitDefault(rootModule._name); // root module shall not be named
 
