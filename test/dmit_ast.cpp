@@ -32,7 +32,7 @@ struct Aster
 
         // Build the source
 
-        auto& source = ast._nodePool->get(ast._source);
+        auto& source = ast._nodePool.get(ast._source);
 
         _sourceRegister.add(source);
 

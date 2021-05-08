@@ -207,7 +207,7 @@ std::string asString(const ast::State& state)
 {
     std::ostringstream oss;
 
-    Visitor visitor{*(state._nodePool), oss};
+    Visitor visitor{state._nodePool, oss};
 
     visitor(state._module);
 

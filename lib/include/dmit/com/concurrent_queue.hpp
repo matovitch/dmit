@@ -1,6 +1,6 @@
 #pragma once
 
-#include "dmit/com/critical_section.hpp"
+#include "dmit/com/concurrent_counter.hpp"
 #include "dmit/com/storage.hpp"
 
 #include <cstdint>
@@ -15,38 +15,34 @@ class TConcurrentQueue
 
 public:
 
-    TConcurrentQueue(uint32_t size) : _storage(size) {}
+    TConcurrentQueue(uint64_t size) : _storage(size) {}
 
-    Type* next()
+    bool isValid(const ConcurentU64 concurrentU64)
     {
-        DMIT_COM_CRITICAL_SECTION(_flag);
-
-        return (_offset < _storage._size) ? _storage.data() + (_offset++) : nullptr;
+        return concurrentU64._value < _storage._size;
     }
 
-    const uint32_t index(Type* nextPtr) const
+    Type& operator[](const ConcurentU64 concurrentU64)
     {
-        return nextPtr - _storage.data();
+        return (_storage.data())[concurrentU64._value];
+    }
+
+    const Type& operator[](const uint64_t index) const
+    {
+        return (_storage.data())[index];
     }
 
     void clean()
     {
-        for (uint32_t i = 0; i < _storage._size; i++)
+        for (uint64_t i = 0; i < _storage._size; i++)
         {
             (_storage.data())[i].~Type();
         }
     }
 
-    const Type& operator[](const uint32_t index) const
-    {
-        return (_storage.data())[index];
-    }
-
 private:
 
-    std::atomic<bool> _flag = false;
-    uint32_t          _offset = 0;
-    TStorage<Type>    _storage;
+    TStorage<Type> _storage;
 };
 
 } // namespace dmit::com

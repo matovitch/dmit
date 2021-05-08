@@ -13,17 +13,18 @@
 #include "dmit/com/parallel_for.hpp"
 #include "dmit/com/unique_id.hpp"
 
-#include <unordered_map>
+#include "robin/map.hpp"
+
 #include <cstdint>
 #include <vector>
 
 namespace dmit::drv::srv
 {
 
-using AstMap = std::unordered_map<com::UniqueId,
-                                  ast::State,
-                                  com::unique_id::Hasher,
-                                  com::unique_id::Comparator>;
+using AstMap = robin::map::TMake<com::UniqueId,
+                                 ast::State,
+                                 com::unique_id::Hasher,
+                                 com::unique_id::Comparator, 4, 3>;
 struct AstBuilder
 {
     using ReturnType = ast::State;
@@ -34,7 +35,7 @@ struct AstBuilder
         _sources{sources}
     {}
 
-    dmit::ast::State run(const uint32_t index)
+    dmit::ast::State run(const uint64_t index)
     {
         return _astFromPathAndSource.make(_paths   [index],
                                           _sources [index]);

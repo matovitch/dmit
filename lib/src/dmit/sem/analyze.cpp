@@ -203,7 +203,7 @@ struct Visitor
 
 void analyze(ast::State& ast)
 {
-    Context context{*(ast._nodePool)};
+    Context context{ast._nodePool};
 
     Visitor visitor{context};
 
