@@ -32,8 +32,8 @@ public:
         _taskGraph {taskGraphPoolSet}
     {}
 
-    template <std::size_t STACK_SIZE>
-    TaskNode makeTask(PoolTask& taskPool, TCoroutinePool<STACK_SIZE>& coroutinePool)
+    template <class CoroutinePool>
+    TaskNode makeTask(PoolTask& taskPool, CoroutinePool& coroutinePool)
     {
         auto& task = taskPool.make(*this, coroutinePool);
         TaskNode taskNode{_taskGraph.makeNode(&task)};
