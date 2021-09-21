@@ -1,7 +1,5 @@
 #pragma once
 
-#include "robin/details/default_constructible.hpp"
-
 #include <utility>
 
 namespace robin_details
