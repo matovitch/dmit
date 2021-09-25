@@ -1,7 +1,6 @@
 #pragma once
 
 #include "dmit/ast/function_status.hpp"
-#include "dmit/ast/integer.hpp"
 
 #include "dmit/src/line_index.hpp"
 #include "dmit/src/slice.hpp"
@@ -155,8 +154,6 @@ template <>
 struct TNode<node::Kind::LIT_IDENTIFIER>
 {
     node::TIndex<node::Kind::LEXEME> _lexeme;
-
-    std::optional<node::Location> _parentScope;
 };
 
 template <>
@@ -171,8 +168,6 @@ template <>
 struct TNode<node::Kind::LIT_INTEGER>
 {
     node::TIndex<node::Kind::LEXEME> _lexeme;
-
-    std::optional<Integer> _value;
 };
 
 template <>
@@ -188,8 +183,6 @@ template <>
 struct TNode<node::Kind::SCOPE>
 {
     node::TRange<node::Kind::SCOPE_VARIANT> _variants;
-
-    std::optional<node::Location> _parentScope;
 };
 
 template <>
