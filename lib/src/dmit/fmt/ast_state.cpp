@@ -3,6 +3,7 @@
 #include "dmit/fmt/ast/function_status.hpp"
 #include "dmit/fmt/src/slice.hpp"
 
+#include "dmit/ast/visitor.hpp"
 #include "dmit/ast/lexeme.hpp"
 #include "dmit/ast/state.hpp"
 #include "dmit/ast/node.hpp"
@@ -17,188 +18,188 @@ namespace dmit::fmt
 namespace
 {
 
-struct Visitor
+struct Visitor : ast::TVisitor<Visitor>
 {
-    Visitor(const ast::State::NodePool& nodePool, std::ostringstream& oss) :
-        _nodePool{nodePool},
+    Visitor(ast::State::NodePool& nodePool, std::ostringstream& oss) :
+        ast::TVisitor<Visitor>{nodePool},
         _oss{oss}
     {}
 
-    void operator()(const ast::node::TIndex<ast::node::Kind::LEXEME>& lexemeIdx)
+    ast::TVisitor<Visitor>& base()
+    {
+        return static_cast<ast::TVisitor<Visitor>&>(*this);
+    }
+
+    void operator()(ast::node::TIndex<ast::node::Kind::LEXEME> lexemeIdx)
     {
         _oss << "{\"node\":\"Lexeme\",";
         _oss << "\"slice\":" << ast::lexeme::getSlice(lexemeIdx, _nodePool) << "}";
     }
 
-    void operator()(const ast::node::TIndex<ast::node::Kind::LIT_IDENTIFIER>& identifierIdx)
+    void operator()(ast::node::TIndex<ast::node::Kind::LIT_IDENTIFIER> identifierIdx)
     {
-        const auto& identifier = _nodePool.get(identifierIdx);
+        auto& identifier = get(identifierIdx);
 
         _oss << "{\"node\":\"Identifier\",";
-        _oss << "\"lexeme\":"; (*this)(identifier._lexeme);
+        _oss << "\"lexeme\":"; base()(identifier._lexeme);
         _oss << "}";
     }
 
-    void operator()(const ast::node::TIndex<ast::node::Kind::LIT_DECIMAL>& decimalIdx)
+    void operator()(ast::node::TIndex<ast::node::Kind::LIT_DECIMAL> decimalIdx)
     {
-        const auto& decimal = _nodePool.get(decimalIdx);
+        auto& decimal = get(decimalIdx);
 
         _oss << "{\"node\":\"Decimal\",";
-        _oss << "\"lexeme\":"; (*this)(decimal._lexeme);
+        _oss << "\"lexeme\":"; base()(decimal._lexeme);
         _oss << "}";
     }
 
-    void operator()(const ast::node::TIndex<ast::node::Kind::LIT_INTEGER>& integerIdx)
+    void operator()(ast::node::TIndex<ast::node::Kind::LIT_INTEGER> integerIdx)
     {
-        const auto& integer = _nodePool.get(integerIdx);
+        auto& integer = get(integerIdx);
 
         _oss << "{\"node\":\"Integer\",";
-        _oss << "\"lexeme\":"; (*this)(integer._lexeme);
+        _oss << "\"lexeme\":"; base()(integer._lexeme);
         _oss << "}";
     }
 
-    void operator()(const ast::node::TIndex<ast::node::Kind::TYPE_CLAIM>& typeClaimIdx)
+    void operator()(ast::node::TIndex<ast::node::Kind::TYPE_CLAIM> typeClaimIdx)
     {
-        const auto& typeClaim = _nodePool.get(typeClaimIdx);
+        auto& typeClaim = get(typeClaimIdx);
 
         _oss << "{\"node\":\"Type Claim\",";
-        _oss << "\"variable\":" ; (*this)(typeClaim._variable ); _oss << ',';
-        _oss << "\"type\":"     ; (*this)(typeClaim._type     ); _oss << "}";
+        _oss << "\"variable\":" ; base()(typeClaim._variable ); _oss << ',';
+        _oss << "\"type\":"     ; base()(typeClaim._type     ); _oss << "}";
     }
 
-    void operator()(const ast::node::TIndex<ast::node::Kind::STM_RETURN>& stmReturnIdx)
+    void operator()(ast::node::TIndex<ast::node::Kind::STM_RETURN> stmReturnIdx)
     {
-        const auto& stmReturn = _nodePool.get(stmReturnIdx);
+        auto& stmReturn = get(stmReturnIdx);
 
         _oss << "{\"node\":\"Return Statement\",";
-        _oss << "\"expression\":"; (*this)(stmReturn._expression);
+        _oss << "\"expression\":"; base()(stmReturn._expression);
         _oss << "}";
     }
 
-    void operator()(const ast::node::TIndex<ast::node::Kind::EXP_MONOP>& expMonopIdx)
+    void operator()(ast::node::TIndex<ast::node::Kind::EXP_MONOP> expMonopIdx)
     {
-        const auto& expMonop = _nodePool.get(expMonopIdx);
+        auto& expMonop = get(expMonopIdx);
 
         _oss << "{\"node\":\"Unary Operation\",";
-        _oss << "\"operator\":"   ; (*this)(expMonop._operator   ); _oss << ",";
-        _oss << "\"expression\":" ; (*this)(expMonop._expression ); _oss << ",";
+        _oss << "\"operator\":"   ; base()(expMonop._operator   ); _oss << ",";
+        _oss << "\"expression\":" ; base()(expMonop._expression ); _oss << ",";
     }
 
-    void operator()(const ast::node::TIndex<ast::node::Kind::EXP_BINOP>& expBinopIdx)
+    void operator()(ast::node::TIndex<ast::node::Kind::EXP_BINOP> expBinopIdx)
     {
-        const auto& expBinop = _nodePool.get(expBinopIdx);
+        auto& expBinop = get(expBinopIdx);
 
         _oss << "{\"node\":\"Binary Operation\",";
-        _oss << "\"operator\":" ; (*this)(expBinop._operator ); _oss << ",";
-        _oss << "\"lhs\":"      ; (*this)(expBinop._lhs      ); _oss << ",";
-        _oss << "\"rhs\":"      ; (*this)(expBinop._rhs      ); _oss << "}";
+        _oss << "\"operator\":" ; base()(expBinop._operator ); _oss << ",";
+        _oss << "\"lhs\":"      ; base()(expBinop._lhs      ); _oss << ",";
+        _oss << "\"rhs\":"      ; base()(expBinop._rhs      ); _oss << "}";
     }
 
-    void operator()(const ast::node::TIndex<ast::node::Kind::EXPRESSION>& expressionIdx)
+    void operator()(ast::node::TIndex<ast::node::Kind::EXPRESSION> expressionIdx)
     {
-        const auto& expression = _nodePool.get(expressionIdx);
+        auto& expression = get(expressionIdx);
 
-        (*this)(expression._value);
+        base()(expression._value);
     }
 
-    void operator()(const ast::node::TIndex<ast::node::Kind::FUN_CALL>& funCallIdx)
+    void operator()(ast::node::TIndex<ast::node::Kind::FUN_CALL> funCallIdx)
     {
-        const auto& funCall = _nodePool.get(funCallIdx);
+        auto& funCall = get(funCallIdx);
 
         _oss << "{\"node\":\"Function Call\",";
-        _oss << "\"callee\":"    ; (*this)(funCall._callee    ); _oss << ",";
-        _oss << "\"arguments\":" ; (*this)(funCall._arguments ); _oss << "}";
+        _oss << "\"callee\":"    ; base()(funCall._callee    ); _oss << ",";
+        _oss << "\"arguments\":" ; base()(funCall._arguments ); _oss << "}";
     }
 
-    void operator()(const ast::node::TIndex<ast::node::Kind::DCL_VARIABLE>& dclVariableIdx)
+    void operator()(ast::node::TIndex<ast::node::Kind::DCL_VARIABLE> dclVariableIdx)
     {
-        const auto& dclVariable = _nodePool.get(dclVariableIdx);
+        auto& dclVariable = get(dclVariableIdx);
 
         _oss << "{\"node\":\"Variable Declaration\",";
-        _oss << "\"typeClaim\":"; (*this)(dclVariable._typeClaim);
+        _oss << "\"typeClaim\":"; base()(dclVariable._typeClaim);
         _oss << '}';
     }
 
-    void operator()(const ast::node::TIndex<ast::node::Kind::SCOPE_VARIANT>& scopeVariantIdx)
+    void operator()(ast::node::TIndex<ast::node::Kind::SCOPE_VARIANT> scopeVariantIdx)
     {
-        const auto& scopeVariant = _nodePool.get(scopeVariantIdx);
+        auto& scopeVariant = get(scopeVariantIdx);
 
-        (*this)(scopeVariant._value);
+        base()(scopeVariant._value);
     }
 
-    void operator()(const ast::node::TIndex<ast::node::Kind::SCOPE>& scopeIdx)
+    void operator()(ast::node::TIndex<ast::node::Kind::SCOPE> scopeIdx)
     {
-        const auto& scope = _nodePool.get(scopeIdx);
+        auto& scope = get(scopeIdx);
 
-        (*this)(scope._variants);
+        base()(scope._variants);
     }
 
-    void operator()(const ast::node::TIndex<ast::node::Kind::FUN_DEFINITION>& functionIdx)
+    void operator()(ast::node::TIndex<ast::node::Kind::FUN_DEFINITION> functionIdx)
     {
-        const auto& function = _nodePool.get(functionIdx);
+        auto& function = get(functionIdx);
 
         _oss << "{\"node\":\"Function\",";
         _oss << "\"status\":"     ; _oss << function._status      ; _oss << ',';
-        _oss << "\"name\":"       ; (*this)(function._name       ); _oss << ',';
-        _oss << "\"arguments\":"  ; (*this)(function._arguments  ); _oss << ',';
-        _oss << "\"returnType\":" ; (*this)(function._returnType ); _oss << ',';
-        _oss << "\"body\":"       ; (*this)(function._body       ); _oss << '}';
+        _oss << "\"name\":"       ; base()(function._name       ); _oss << ',';
+        _oss << "\"arguments\":"  ; base()(function._arguments  ); _oss << ',';
+        _oss << "\"returnType\":" ; base()(function._returnType ); _oss << ',';
+        _oss << "\"body\":"       ; base()(function._body       ); _oss << '}';
     }
 
-    void operator()(const ast::node::TIndex<ast::node::Kind::DCL_IMPORT>& importIdx)
+    void operator()(ast::node::TIndex<ast::node::Kind::DCL_IMPORT> importIdx)
     {
-        const auto& import = _nodePool.get(importIdx);
+        auto& import = get(importIdx);
 
         _oss << "{\"node\":\"Import\",";
-        _oss << "\"moduleName\":"; (*this)(import._moduleName); _oss << '}';
+        _oss << "\"moduleName\":"; base()(import._moduleName); _oss << '}';
     }
 
-    void operator()(const ast::node::TIndex<ast::node::Kind::MODULE>& moduleIdx)
+    void operator()(ast::node::TIndex<ast::node::Kind::MODULE> moduleIdx)
     {
-        const auto& module = _nodePool.get(moduleIdx);
+        auto& module = get(moduleIdx);
 
         _oss << "{\"node\":\"Module\",";
-        _oss << "\"name\":"      ; (*this)(module._name      ); _oss << ',';
-        _oss << "\"imports\":"   ; (*this)(module._imports   ); _oss << ',';
-        _oss << "\"functions\":" ; (*this)(module._functions ); _oss << ',';
-        _oss << "\"modules\":"   ; (*this)(module._modules   ); _oss << '}';
+        _oss << "\"name\":"      ; base()(module._name      ); _oss << ',';
+        _oss << "\"imports\":"   ; base()(module._imports   ); _oss << ',';
+        _oss << "\"functions\":" ; base()(module._functions ); _oss << ',';
+        _oss << "\"modules\":"   ; base()(module._modules   ); _oss << '}';
     }
 
     template <com::TEnumIntegerType<ast::node::Kind> KIND>
-    void operator()(const ast::node::TRange<KIND>& range)
+    void loopConclusion(ast::node::TRange<KIND>& range)
     {
-        _oss << "[";
-
-        for (uint32_t i = 0; i < range._size; i++)
-        {
-            (*this)(range[i]); _oss << ',';
-        }
-
         _oss.seekp(range._size ? -1 : 0, std::ios_base::end);
 
         _oss << "]";
     }
 
-    template <class... Types>
-    void operator()(const std::variant<Types...>& variant)
+    template <com::TEnumIntegerType<ast::node::Kind> KIND>
+    void loopPreamble(ast::node::TRange<KIND>&)
     {
-        std::visit(*this, variant);
+        _oss << "[";
     }
 
     template <com::TEnumIntegerType<ast::node::Kind> KIND>
-    void operator()(const std::optional<ast::node::TIndex<KIND>>& indexOpt)
+    void loopIterationConclusion(ast::node::TIndex<KIND>)
     {
-        if (!indexOpt)
-        {
-            _oss << "{}";
-            return;
-        }
-
-        return (*this)(indexOpt.value());
+        _oss << ',';
     }
 
-    const ast::State::NodePool & _nodePool;
-    std::ostringstream         & _oss;
+    template <com::TEnumIntegerType<ast::node::Kind> KIND>
+    void loopIterationPreamble(ast::node::TIndex<KIND>) {}
+
+    template <com::TEnumIntegerType<ast::node::Kind> KIND>
+    void emptyOption()
+    {
+        _oss << "{}";
+    }
+
+    std::ostringstream& _oss;
 };
 
 } // namespace

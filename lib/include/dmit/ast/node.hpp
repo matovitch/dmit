@@ -113,6 +113,9 @@ struct TNode<node::Kind::MODULE>
     node::TRange<node::Kind::FUN_DEFINITION >               _functions;
     node::TRange<node::Kind::DCL_IMPORT     >               _imports;
     node::TRange<node::Kind::MODULE         >               _modules;
+
+    node::Location _parent;
+    com::UniqueId  _id;
 };
 
 template <>
@@ -129,6 +132,9 @@ template <>
 struct TNode<node::Kind::DCL_IMPORT>
 {
     node::TIndex<node::Kind::LIT_IDENTIFIER> _moduleName;
+
+    node::Location _parent;
+    com::UniqueId  _id;
 };
 
 template <>
