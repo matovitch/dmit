@@ -21,7 +21,7 @@ struct Context
 
     ast::State& _ast;
 
-    TMap<ast::node::Location> _mapFact;
+    TMap<ast::node::Location> _factMap;
 };
 
 } // namespace dmit::sem

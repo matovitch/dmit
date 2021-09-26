@@ -58,6 +58,20 @@ struct TIndex
 };
 
 template <com::TEnumIntegerType<Kind> KIND>
+bool operator==(TIndex<KIND> lhs,
+                TIndex<KIND> rhs)
+{
+    return lhs._value == rhs._value;
+}
+
+template <com::TEnumIntegerType<Kind> KIND>
+bool operator!=(TIndex<KIND> lhs,
+                TIndex<KIND> rhs)
+{
+    return lhs._value == rhs._value;
+}
+
+template <com::TEnumIntegerType<Kind> KIND>
 struct TRange
 {
     node::TIndex<KIND> operator[](uint32_t offset) const

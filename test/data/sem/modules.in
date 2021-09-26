@@ -1,0 +1,14 @@
+module A
+{
+    module B
+    {}
+
+    import B;
+
+    module C
+    {
+        import B;
+    }
+}
+
+import A;

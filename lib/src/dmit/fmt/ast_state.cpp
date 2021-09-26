@@ -18,6 +18,9 @@ namespace dmit::fmt
 namespace
 {
 
+
+struct Stack{};
+
 struct Visitor : ast::TVisitor<Visitor>
 {
     Visitor(ast::State::NodePool& nodePool, std::ostringstream& oss) :
