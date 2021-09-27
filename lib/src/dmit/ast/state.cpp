@@ -60,24 +60,6 @@ void Builder::makeLexeme(const dmit::prs::Reader& reader,
     lexeme._source = _state._source;
 }
 
-void Builder::makeAssignment(dmit::prs::Reader& reader,
-                             TNode<node::Kind::EXP_BINOP>& expAssign)
-{
-    // RHS
-    makeExpression(reader, expAssign._rhs);
-    reader.advance();
-    DMIT_COM_ASSERT(reader.isValid());
-
-    // Operator
-    _nodePool.make(expAssign._operator);
-    makeLexeme(reader, _nodePool.get(expAssign._operator));
-    reader.advance();
-    DMIT_COM_ASSERT(reader.isValid());
-
-    // LHS
-    makeExpression(reader, expAssign._lhs);
-}
-
 void Builder::makeReturn(dmit::prs::Reader& reader,
                          TNode<node::Kind::STM_RETURN>& stmReturn)
 {
@@ -163,6 +145,24 @@ void Builder::makeBinop(dmit::prs::Reader& reader,
     auto& binopLhs = std::get<node::TIndex<node::Kind::EXP_BINOP>>(binop._lhs);
     _nodePool.make(binopLhs);
     makeBinop(reader, _nodePool.get(binopLhs));
+}
+
+void Builder::makeAssignment(dmit::prs::Reader& reader,
+                             TNode<node::Kind::EXP_BINOP>& expAssign)
+{
+    // RHS
+    makeExpression(reader, expAssign._rhs);
+    reader.advance();
+    DMIT_COM_ASSERT(reader.isValid());
+
+    // Operator
+    _nodePool.make(expAssign._operator);
+    makeLexeme(reader, _nodePool.get(expAssign._operator));
+    reader.advance();
+    DMIT_COM_ASSERT(reader.isValid());
+
+    // LHS
+    makeExpression(reader, expAssign._lhs);
 }
 
 void Builder::makeFunctionCall(dmit::prs::Reader& reader,
@@ -353,15 +353,15 @@ void Builder::makeImport(const dmit::prs::Reader& supReader,
 {
     auto reader = makeSubReaderFor(ParseNodeKind::DCL_IMPORT, supReader);
 
-    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::LIT_IDENTIFIER);
-    _nodePool.make(import._moduleName);
-    makeIdentifier(reader, _nodePool.get(import._moduleName));
+    makeExpression(reader, import._path);
 }
 
 void Builder::makeModule(dmit::prs::Reader& reader,
                          TNode<node::Kind::MODULE>& module)
 {
     auto readerCopy = reader;
+
+    com::blitDefault(module._path);
 
     _nodePool.make(module._functions , reader.size());
     _nodePool.make(module._imports   , reader.size());
@@ -375,10 +375,11 @@ void Builder::makeModule(dmit::prs::Reader& reader,
     {
         const auto parseNodeKind = reader.look()._kind;
 
-        if (parseNodeKind == dmit::prs::state::tree::node::Kind::LIT_IDENTIFIER)
+        if (parseNodeKind == dmit::prs::state::tree::node::Kind::LIT_IDENTIFIER ||
+            parseNodeKind == dmit::prs::state::tree::node::Kind::EXP_BINOP)
         {
-            _nodePool.make(module._name);
-            makeIdentifier(reader, _nodePool.get(module._name));
+            module._path = node::TIndex<node::Kind::FUN_CALL>{0};
+            makeExpression(reader, module._path.value());
         }
         else if (parseNodeKind == dmit::prs::state::tree::node::Kind::FUN_DEFINITION)
         {
@@ -424,8 +425,6 @@ State& Builder::operator()(const prs::state::Tree& parseTree)
     _nodePool.make(_state._source);
 
     auto& rootModule = _nodePool.get(_state._module);
-
-    com::blitDefault(rootModule._name); // root module shall not be named
 
     makeModule(reader, rootModule);
 

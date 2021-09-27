@@ -146,6 +146,7 @@ Builder::Builder() :
     auto opProduct     = makeParserUnary      <tree::node::Kind::EXP_OPERATOR        > (_pool, _state);
     auto opComparison  = makeParserUnary      <tree::node::Kind::EXP_OPERATOR        > (_pool, _state);
     auto opAssign      = makeParserUnary      <tree::node::Kind::EXP_OPERATOR        > (_pool, _state);
+    auto opPath        = makeParserUnary      <tree::node::Kind::EXP_OPERATOR        > (_pool, _state);
     auto negAtom       = makeParserUnary      <tree::node::Kind::EXP_OPPOSE          > (_pool, _state);
     auto funCall       = makeParserUnary      <tree::node::Kind::FUN_CALL            > (_pool, _state);
     auto funArguments  = makeParserUnary      <tree::node::Kind::FUN_ARGUMENTS       > (_pool, _state);
@@ -161,6 +162,7 @@ Builder::Builder() :
     auto product       = makeParserVariadic   <tree::node::Kind::EXP_BINOP           > (_pool, _state);
     auto sum           = makeParserVariadic   <tree::node::Kind::EXP_BINOP           > (_pool, _state);
     auto comparison    = makeParserVariadic   <tree::node::Kind::EXP_BINOP           > (_pool, _state);
+    auto path          = makeParserVariadic   <tree::node::Kind::EXP_BINOP           > (_pool, _state);
     auto assignment    = makeParserVariadic   <tree::node::Kind::EXP_ASSIGN          > (_pool, _state);
     auto rcvScopeElem  = makeParserRecoverable                                         (_pool, _state);
     auto rcvScope      = makeParserRecoverable                                         (_pool, _state);
@@ -177,7 +179,6 @@ Builder::Builder() :
     auto atom          = makeParser                                                    (_pool, _state);
     auto typeClaim     = makeParser                                                    (_pool, _state);
     auto posAtom       = makeParser                                                    (_pool, _state);
-    auto binAssign     = makeParser                                                    (_pool, _state);
 
     USING_COMBINATORS;
 
@@ -220,7 +221,11 @@ Builder::Builder() :
 
     // Expression
 
-    posAtom = seq(opt(plus), alt(identifier, integer, decimal, seq(parLeft, expression, parRight)));
+    opPath = dot;
+
+    path = seq(identifier, rep(seq(opPath, path)));
+
+    posAtom = seq(opt(plus), alt(path, integer, decimal, seq(parLeft, expression, parRight)));
 
     negAtom = seq(minus, posAtom);
 
@@ -240,9 +245,7 @@ Builder::Builder() :
 
     opAssign = alt(equal, plusEqual, minusEqual, starEqual, slashEqual, percentEqual);
 
-    assignment = seq(comparison, opt(seq(opAssign, binAssign)));
-
-    binAssign = assignment;
+    assignment = seq(comparison, opt(seq(opAssign, assignment)));
 
     funCall = seq(identifier, parLeft, opt(seq(expression, rep(seq(comma, expression)))), parRight);
 
@@ -304,10 +307,9 @@ Builder::Builder() :
                                                             tok<lex::Token::BRA_RIGHT>())));
     rcvFunction = alt(rawFunction,
                       skpFunction);
-
     // Import
 
-    rawImport = seq(keyImport, identifier, semiColon);
+    rawImport = seq(keyImport, path, semiColon);
 
     skpImport = seq(opt(tok<lex::Token::IMPORT>()),
                     skp(alt(tok<lex::Token::SEMI_COLON >(),
@@ -322,8 +324,8 @@ Builder::Builder() :
                     skpImport);
     // Module
 
-    rawModule = seq(keyModule, identifier, alt(seq(semiColon , rep(alt(rcvFunction, rcvImport, rawModule))),
-                                               seq(braLeft   , rep(alt(rcvFunction, rcvImport, rawModule)), braRight)));
+    rawModule = seq(keyModule, path, alt(seq(semiColon , rep(alt(rcvFunction, rcvImport, rawModule))),
+                                             seq(braLeft   , rep(alt(rcvFunction, rcvImport, rawModule)), braRight)));
 
     skpModule = seq(opt(tok<lex::Token::MODULE>()), skp(alt(tok<lex::Token::FUNC>(),
                                                             tok<lex::Token::MODULE>(),

@@ -28,11 +28,6 @@ struct Visitor : ast::TVisitor<Visitor>
         _oss{oss}
     {}
 
-    ast::TVisitor<Visitor>& base()
-    {
-        return static_cast<ast::TVisitor<Visitor>&>(*this);
-    }
-
     void operator()(ast::node::TIndex<ast::node::Kind::LEXEME> lexemeIdx)
     {
         _oss << "{\"node\":\"Lexeme\",";
@@ -159,7 +154,7 @@ struct Visitor : ast::TVisitor<Visitor>
         auto& import = get(importIdx);
 
         _oss << "{\"node\":\"Import\",";
-        _oss << "\"moduleName\":"; base()(import._moduleName); _oss << '}';
+        _oss << "\"path\":"; base()(import._path); _oss << '}';
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::MODULE> moduleIdx)
@@ -167,10 +162,16 @@ struct Visitor : ast::TVisitor<Visitor>
         auto& module = get(moduleIdx);
 
         _oss << "{\"node\":\"Module\",";
-        _oss << "\"name\":"      ; base()(module._name      ); _oss << ',';
+        _oss << "\"path\":"      ; base()(module._path      ); _oss << ',';
         _oss << "\"imports\":"   ; base()(module._imports   ); _oss << ',';
         _oss << "\"functions\":" ; base()(module._functions ); _oss << ',';
         _oss << "\"modules\":"   ; base()(module._modules   ); _oss << '}';
+    }
+
+    template <class Type>
+    void emptyOption()
+    {
+        _oss << "{}";
     }
 
     template <com::TEnumIntegerType<ast::node::Kind> KIND>
@@ -195,12 +196,6 @@ struct Visitor : ast::TVisitor<Visitor>
 
     template <com::TEnumIntegerType<ast::node::Kind> KIND>
     void loopIterationPreamble(ast::node::TIndex<KIND>) {}
-
-    template <com::TEnumIntegerType<ast::node::Kind> KIND>
-    void emptyOption()
-    {
-        _oss << "{}";
-    }
 
     std::ostringstream& _oss;
 };

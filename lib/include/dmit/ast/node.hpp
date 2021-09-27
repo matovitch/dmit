@@ -123,10 +123,11 @@ struct TNode {};
 template <>
 struct TNode<node::Kind::MODULE>
 {
-    std::optional<node::TIndex<node::Kind::LIT_IDENTIFIER>> _name;
-    node::TRange<node::Kind::FUN_DEFINITION >               _functions;
-    node::TRange<node::Kind::DCL_IMPORT     >               _imports;
-    node::TRange<node::Kind::MODULE         >               _modules;
+    std::optional<Expression> _path;
+
+    node::TRange<node::Kind::FUN_DEFINITION > _functions;
+    node::TRange<node::Kind::DCL_IMPORT     > _imports;
+    node::TRange<node::Kind::MODULE         > _modules;
 
     node::Location _parent;
     com::UniqueId  _id;
@@ -145,7 +146,7 @@ struct TNode<node::Kind::SOURCE>
 template <>
 struct TNode<node::Kind::DCL_IMPORT>
 {
-    node::TIndex<node::Kind::LIT_IDENTIFIER> _moduleName;
+    Expression _path;
 
     node::Location _parent;
     com::UniqueId  _id;

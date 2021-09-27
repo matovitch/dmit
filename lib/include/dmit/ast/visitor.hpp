@@ -12,39 +12,50 @@ namespace dmit::ast
 
 struct StackDummy{};
 
-template <class Derived, class Stack = StackDummy>
+template <class Derived, class StackIn  = StackDummy,
+                         class StackOut = StackDummy>
 struct TVisitor
 {
     template <class... Args>
-    TVisitor(ast::State::NodePool& nodePool, Args&&... args) :
+    TVisitor(State::NodePool& nodePool, Args&&... args) :
         _nodePool{nodePool},
-        _stack{std::forward<Args>(args)...},
-        _stackPtr{&_stack}
+        _stackIn{std::forward<Args>(args)...},
+        _stackPtrIn  {&_stackIn  },
+        _stackPtrOut {&_stackOut }
     {}
 
     template <>
-    TVisitor(ast::State::NodePool& nodePool) :
+    TVisitor(State::NodePool& nodePool) :
         _nodePool{nodePool},
-        _stack{},
-        _stackPtr{&_stack}
+        _stackIn{},
+        _stackPtrIn  {&_stackIn  },
+        _stackPtrOut {&_stackOut }
     {}
 
     template <com::TEnumIntegerType<node::Kind> KIND>
-    void operator()(ast::node::TIndex<KIND> nodeIndex)
+    void operator()(node::TIndex<KIND> nodeIndex)
     {
-        Stack stack = *_stackPtr;        // Copy the parent stack
+        StackOut stackOut; // Create the output stack
+        StackIn  stackIn ; // create the input  stack
 
-        Stack* stackPtrCopy = _stackPtr; // Save parent stack pointer
+        stackIn = *_stackPtrIn; // Copy the parent input stack
 
-        _stackPtr = &stack;              // Update stack pointer
+        StackOut * stackPtrOutCopy = _stackPtrOut ; // Save parent output stack pointer
+        StackIn  * stackPtrInCopy  = _stackPtrIn  ; // Save parent input  stack pointer
+
+        _stackPtrOut = &stackOut ; // Update output stack pointer
+        _stackPtrIn  = &stackIn  ; // Update input  stack pointer
 
         static_cast<Derived*>(this)->operator()(nodeIndex);
 
-        _stackPtr = stackPtrCopy; // Restore parent stack pointer
+        _stackPtrOut = stackPtrOutCopy ; // Restore parent output stack pointer
+        _stackPtrIn  = stackPtrInCopy  ; // Restore parent input  stack pointer
+
+        *_stackPtrOut = stackOut; // Copy the child ouput stack
     }
 
     template <com::TEnumIntegerType<node::Kind> KIND>
-    void operator()(ast::node::TRange<KIND>& nodeRange)
+    void operator()(node::TRange<KIND>& nodeRange)
     {
         static_cast<Derived*>(this)->template loopPreamble<KIND>(nodeRange);
 
@@ -64,28 +75,51 @@ struct TVisitor
         std::visit(*this, variant);
     }
 
-    template <com::TEnumIntegerType<ast::node::Kind> KIND>
-    void operator()(std::optional<node::TIndex<KIND>>& nodeIndexOpt)
+    template <class Type>
+    void operator()(std::optional<Type>& opt)
     {
-        if (!nodeIndexOpt)
+        if (!opt)
         {
-            static_cast<Derived*>(this)->template emptyOption<KIND>();
+            static_cast<Derived*>(this)->template emptyOption<Type>();
             return;
         }
 
-        (*this)(nodeIndexOpt.value());
+        (*this)(opt.value());
     }
 
-    template <com::TEnumIntegerType<ast::node::Kind> KIND>
+    template <com::TEnumIntegerType<node::Kind> KIND>
     TNode<KIND>& get(node::TIndex<KIND>& nodeIndex)
     {
         return _nodePool.get(nodeIndex);
     }
 
-    ast::State::NodePool& _nodePool;
+    TVisitor<Derived, StackIn, StackOut>& base()
+    {
+        return (*this);
+    }
 
-    Stack  _stack;
-    Stack* _stackPtr;
+    State::NodePool& _nodePool;
+
+    StackIn    _stackIn;
+    StackOut   _stackOut;
+    StackIn  * _stackPtrIn;
+    StackOut * _stackPtrOut;
 };
 
 } // namespace dmit::ast
+
+#define DMIT_AST_VISITOR_SIMPLE()                                  \
+    template <com::TEnumIntegerType<dmit::ast::node::Kind> KIND>   \
+    void loopConclusion(dmit::ast::node::TRange<KIND>& range) {}   \
+                                                                   \
+    template <com::TEnumIntegerType<dmit::ast::node::Kind> KIND>   \
+    void loopPreamble(dmit::ast::node::TRange<KIND>&) {}           \
+                                                                   \
+    template <com::TEnumIntegerType<dmit::ast::node::Kind> KIND>   \
+    void loopIterationConclusion(dmit::ast::node::TIndex<KIND>) {} \
+                                                                   \
+    template <com::TEnumIntegerType<dmit::ast::node::Kind> KIND>   \
+    void loopIterationPreamble(dmit::ast::node::TIndex<KIND>) {}   \
+                                                                   \
+    template <class Type>                                          \
+    void emptyOption() {}                                          \

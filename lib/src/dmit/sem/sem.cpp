@@ -16,6 +16,56 @@ namespace dmit::sem
 namespace
 {
 
+struct StackIn
+{
+    com::UniqueId _id;
+};
+
+struct StackOut
+{
+    com::UniqueId _id;
+};
+
+struct PathId : ast::TVisitor<PathId, StackIn, StackOut>
+{
+    PathId(Context& context, com::UniqueId rootId) :
+        ast::TVisitor<PathId, StackIn, StackOut>{context._ast._nodePool, rootId}
+    {}
+
+    DMIT_AST_VISITOR_SIMPLE();
+
+    template <com::TEnumIntegerType<ast::node::Kind> KIND>
+    void operator()(ast::node::TIndex<KIND> nodeIndex) {}
+
+    void operator()(ast::node::TIndex<ast::node::Kind::LIT_IDENTIFIER> idIdx)
+    {
+        auto&& slice = ast::lexeme::getSlice(get(idIdx)._lexeme, _nodePool);
+
+        _stackPtrOut->_id = _stackPtrIn->_id;
+
+        com::murmur::combine(
+            com::UniqueId{slice._head, slice.size()},
+            _stackPtrOut->_id
+        );
+    }
+
+    void operator()(ast::node::TIndex<ast::node::Kind::EXP_BINOP> binopIdx)
+    {
+        auto& binop = get(binopIdx);
+
+        base()(binop._lhs);
+
+        _stackPtrIn->_id = _stackPtrOut->_id;
+
+        base()(binop._rhs);
+    }
+
+    com::UniqueId id()
+    {
+        return _stackPtrOut->_id;
+    }
+};
+
 struct Stack
 {
     ast::node::Location _parent;
@@ -31,57 +81,39 @@ struct DeclareModulesAndLocateImports : ast::TVisitor<DeclareModulesAndLocateImp
         _context{context}
     {}
 
-    ast::TVisitor<DeclareModulesAndLocateImports, Stack>& base()
-    {
-        return static_cast<ast::TVisitor<DeclareModulesAndLocateImports, Stack>&>(*this);
-    }
-
-    template <com::TEnumIntegerType<ast::node::Kind> KIND>
-    void loopConclusion(ast::node::TRange<KIND>& range) {}
-
-    template <com::TEnumIntegerType<ast::node::Kind> KIND>
-    void loopPreamble(ast::node::TRange<KIND>&) {}
-
-    template <com::TEnumIntegerType<ast::node::Kind> KIND>
-    void loopIterationConclusion(ast::node::TIndex<KIND>) {}
-
-    template <com::TEnumIntegerType<ast::node::Kind> KIND>
-    void loopIterationPreamble(ast::node::TIndex<KIND>) {}
-
-    template <com::TEnumIntegerType<ast::node::Kind> KIND>
-    void emptyOption() {}
+    DMIT_AST_VISITOR_SIMPLE();
 
     com::UniqueId getModuleId(ast::TNode<ast::node::Kind::MODULE> module)
     {
-        if (!module._name)
+        if (!module._path)
         {
             return com::UniqueId{"#root"};
         }
 
-        auto& name = base().get(module._name.value());
+        PathId pathId{_context, _stackPtrIn->_id};
 
-        auto&& slice = ast::lexeme::getSlice(name._lexeme, _nodePool);
+        pathId.base()(module._path);
 
-        return com::UniqueId{slice._head, slice.size()};
+        return pathId.id();
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DCL_IMPORT> importIdx)
     {
         auto& import = base().get(importIdx);
 
-        com::blit(_stackPtr->_parent , import._parent );
+        com::blit(_stackPtrIn->_parent , import._parent);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::MODULE> moduleIdx)
     {
         auto& module = base().get(moduleIdx);
 
-        com::murmur::combine(getModuleId(module), _stackPtr->_id);
+        _stackPtrIn->_id = getModuleId(module);
 
-        com::blit(_stackPtr->_id     , module._id     );
-        com::blit(_stackPtr->_parent , module._parent );
+        com::blit(_stackPtrIn->_id     , module._id     );
+        com::blit(_stackPtrIn->_parent , module._parent );
 
-        _stackPtr->_parent = moduleIdx;
+        _stackPtrIn->_parent = moduleIdx;
 
         base()(module._imports);
         base()(module._modules);
@@ -92,7 +124,6 @@ struct DeclareModulesAndLocateImports : ast::TVisitor<DeclareModulesAndLocateImp
     Context& _context;
 };
 
-
 struct SolveImports : ast::TVisitor<SolveImports>
 {
     SolveImports(Context& context) :
@@ -100,38 +131,21 @@ struct SolveImports : ast::TVisitor<SolveImports>
         _context{context}
     {}
 
-    ast::TVisitor<SolveImports>& base()
-    {
-        return static_cast<ast::TVisitor<SolveImports>&>(*this);
-    }
+    DMIT_AST_VISITOR_SIMPLE();
 
-    template <com::TEnumIntegerType<ast::node::Kind> KIND>
-    void loopConclusion(ast::node::TRange<KIND>& range) {}
-
-    template <com::TEnumIntegerType<ast::node::Kind> KIND>
-    void loopPreamble(ast::node::TRange<KIND>&) {}
-
-    template <com::TEnumIntegerType<ast::node::Kind> KIND>
-    void loopIterationConclusion(ast::node::TIndex<KIND>) {}
-
-    template <com::TEnumIntegerType<ast::node::Kind> KIND>
-    void loopIterationPreamble(ast::node::TIndex<KIND>) {}
-
-    template <com::TEnumIntegerType<ast::node::Kind> KIND>
-    void emptyOption() {}
-
-    std::optional<com::UniqueId> getId(com::UniqueId name,
+    std::optional<com::UniqueId> getId(ast::Expression path,
                                        ast::node::TIndex<ast::node::Kind::MODULE> parent)
     {
         auto& module = base().get(parent);
 
-        com::UniqueId moduleIdCopy = module._id;
+        PathId pathId{_context, module._id};
 
-        com::murmur::combine(name, moduleIdCopy);
+        pathId.base()(path);
 
-        if (_context._factMap.find(moduleIdCopy) != _context._factMap.end())
+        if (_context._factMap._asRobinMap.find(pathId.id()) !=
+            _context._factMap._asRobinMap.end())
         {
-            return moduleIdCopy;
+            return pathId.id();
         }
 
         auto& moduleParent = std::get<decltype(parent)>(module._parent);
@@ -141,7 +155,7 @@ struct SolveImports : ast::TVisitor<SolveImports>
             return std::nullopt;
         }
 
-        return getId(name, moduleParent);
+        return getId(path, moduleParent);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DCL_IMPORT> importIdx)
@@ -150,11 +164,7 @@ struct SolveImports : ast::TVisitor<SolveImports>
 
         auto& moduleParent = std::get<ast::node::TIndex<ast::node::Kind::MODULE>>(import._parent);
 
-        auto& moduleName = base().get(import._moduleName);
-
-        auto&& slice = ast::lexeme::getSlice(moduleName._lexeme, _nodePool);
-
-        auto&& idOpt = getId(com::UniqueId{slice._head, slice.size()}, moduleParent);
+        auto&& idOpt = getId(import._path, moduleParent);
 
         DMIT_COM_ASSERT(idOpt && "error: failed to find import!");
 

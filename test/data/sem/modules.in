@@ -1,14 +1,5 @@
-module A
-{
-    module B
-    {}
+module A {}
 
-    import B;
-
-    module C
-    {
-        import B;
-    }
-}
+module A {}
 
 import A;
