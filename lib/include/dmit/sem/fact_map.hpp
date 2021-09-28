@@ -4,7 +4,6 @@
 #include "dmit/ast/node.hpp"
 
 #include "dmit/com/unique_id.hpp"
-#include "dmit/com/murmur.hpp"
 
 #include "robin/map.hpp"
 
@@ -20,8 +19,9 @@ com::UniqueId next(com::UniqueId key);
 
 struct Fact
 {
-    ast::node::Location _location;
-    uint32_t            _count;
+    ast::State::NodePool* _nodePool;
+    ast::node::Location   _location;
+    uint32_t              _count;
 };
 
 struct FactMap
@@ -32,23 +32,9 @@ struct FactMap
                                    com::unique_id::Hasher,
                                    com::unique_id::Comparator, 4, 3>;
 
-    void emplace(com::UniqueId key, ast::node::Location value);
+    void emplace(com::UniqueId, ast::State::NodePool&, ast::node::Location);
 
     TMap<Fact> _asRobinMap;
-};
-
-struct Context
-{
-    template <class Type>
-    using TMap = robin::map::TMake<com::UniqueId,
-                                   Type,
-                                   com::unique_id::Hasher,
-                                   com::unique_id::Comparator, 4, 3>;
-    Context(ast::State& ast);
-
-    ast::State& _ast;
-
-    FactMap _factMap;
 };
 
 } // namespace dmit::sem

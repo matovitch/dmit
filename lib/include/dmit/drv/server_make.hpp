@@ -3,6 +3,9 @@
 #include "dmit/drv/server_reply.hpp"
 #include "dmit/drv/reply.hpp"
 
+#include "dmit/sem/fact_map.hpp"
+#include "dmit/sem/sem.hpp"
+
 #include "dmit/ast/from_path_and_source.hpp"
 #include "dmit/ast/state.hpp"
 
@@ -79,6 +82,20 @@ void make(dmit::nng::Socket& socket, dmit::db::Database& database)
         astMap.emplace(unitIds[i], parallelAstBuilder.result(i));
 
         DMIT_COM_LOG_OUT << astMap.at(unitIds[i]) << '\n';
+    }
+
+    dmit::sem::FactMap factMap;
+
+    for (auto it  = astMap.begin() ;
+              it != astMap.end()   ; ++it)
+    {
+        dmit::sem::declareModulesAndLocateImports(it->second, factMap);
+    }
+
+    for (auto it  = astMap.begin() ;
+              it != astMap.end()   ; ++it)
+    {
+        dmit::sem::solveImports(it->second, factMap);
     }
 
     // 2. Write reply

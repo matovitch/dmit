@@ -1,12 +1,16 @@
 #pragma once
 
-#include "dmit/sem/context.hpp"
+#include "dmit/sem/fact_map.hpp"
+
+#include "dmit/ast/state.hpp"
+
+#include <cstdint>
 
 namespace dmit::sem
 {
 
-void declareModulesAndLocateImports(Context& context);
+void declareModulesAndLocateImports(ast::State& ast, FactMap& factMap);
 
-void solveImports(Context& context);
+void solveImports(ast::State& ast, FactMap& factMap);
 
 } // namespace dmit::sem

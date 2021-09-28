@@ -1,11 +1,11 @@
 #include "dmit/sem/sem.hpp"
 
-#include "dmit/sem/context.hpp"
+#include "dmit/sem/fact_map.hpp"
 
 #include "dmit/ast/visitor.hpp"
 #include "dmit/ast/lexeme.hpp"
+#include "dmit/ast/state.hpp"
 #include "dmit/ast/node.hpp"
-#include "dmit/ast/pool.hpp"
 
 #include "dmit/com/unique_id.hpp"
 #include "dmit/com/murmur.hpp"
@@ -28,8 +28,8 @@ struct StackOut
 
 struct PathId : ast::TVisitor<PathId, StackIn, StackOut>
 {
-    PathId(Context& context, com::UniqueId rootId) :
-        ast::TVisitor<PathId, StackIn, StackOut>{context._ast._nodePool, rootId}
+    PathId(ast::State::NodePool& astNodePool, com::UniqueId rootId) :
+        ast::TVisitor<PathId, StackIn, StackOut>{astNodePool, rootId}
     {}
 
     DMIT_AST_VISITOR_SIMPLE();
@@ -74,11 +74,11 @@ struct Stack
 
 struct DeclareModulesAndLocateImports : ast::TVisitor<DeclareModulesAndLocateImports, Stack>
 {
-    DeclareModulesAndLocateImports(Context& context) :
-        ast::TVisitor<DeclareModulesAndLocateImports, Stack>{context._ast._nodePool,
-                                                             context._ast._module,
+    DeclareModulesAndLocateImports(ast::State& ast, FactMap& factMap) :
+        ast::TVisitor<DeclareModulesAndLocateImports, Stack>{ast._nodePool,
+                                                             ast._module,
                                                              com::UniqueId{}},
-        _context{context}
+        _factMap{factMap}
     {}
 
     DMIT_AST_VISITOR_SIMPLE();
@@ -90,7 +90,7 @@ struct DeclareModulesAndLocateImports : ast::TVisitor<DeclareModulesAndLocateImp
             return com::UniqueId{"#root"};
         }
 
-        PathId pathId{_context, _stackPtrIn->_id};
+        PathId pathId{_nodePool, _stackPtrIn->_id};
 
         pathId.base()(module._path);
 
@@ -118,17 +118,17 @@ struct DeclareModulesAndLocateImports : ast::TVisitor<DeclareModulesAndLocateImp
         base()(module._imports);
         base()(module._modules);
 
-        _context._factMap.emplace(module._id, moduleIdx);
+        _factMap.emplace(module._id, _nodePool, moduleIdx);
     }
 
-    Context& _context;
+    FactMap& _factMap;
 };
 
 struct SolveImports : ast::TVisitor<SolveImports>
 {
-    SolveImports(Context& context) :
-        ast::TVisitor<SolveImports>{context._ast._nodePool},
-        _context{context}
+    SolveImports(ast::State& ast, FactMap& factMap) :
+        ast::TVisitor<SolveImports>{ast._nodePool},
+        _factMap{factMap}
     {}
 
     DMIT_AST_VISITOR_SIMPLE();
@@ -138,12 +138,12 @@ struct SolveImports : ast::TVisitor<SolveImports>
     {
         auto& module = base().get(parent);
 
-        PathId pathId{_context, module._id};
+        PathId pathId{_nodePool, module._id};
 
         pathId.base()(path);
 
-        if (_context._factMap._asRobinMap.find(pathId.id()) !=
-            _context._factMap._asRobinMap.end())
+        if (_factMap._asRobinMap.find(pathId.id()) !=
+            _factMap._asRobinMap.end())
         {
             return pathId.id();
         }
@@ -179,23 +179,23 @@ struct SolveImports : ast::TVisitor<SolveImports>
         base()(module._modules);
     }
 
-    Context& _context;
+    FactMap& _factMap;
 };
 
 } // namespace
 
-void declareModulesAndLocateImports(Context& context)
+void declareModulesAndLocateImports(ast::State& ast, FactMap& factMap)
 {
-    DeclareModulesAndLocateImports visitor{context};
+    DeclareModulesAndLocateImports visitor{ast, factMap};
 
-    visitor.base()(context._ast._module);
+    visitor.base()(ast._module);
 }
 
-void solveImports(Context& context)
+void solveImports(ast::State& ast, FactMap& factMap)
 {
-    SolveImports visitor{context};
+    SolveImports visitor{ast, factMap};
 
-    visitor.base()(context._ast._module);
+    visitor.base()(ast._module);
 }
 
 } // namespace dmit::sem

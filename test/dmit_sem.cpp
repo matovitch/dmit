@@ -1,5 +1,6 @@
 #include "test.hpp"
 
+#include "dmit/sem/fact_map.hpp"
 #include "dmit/sem/sem.hpp"
 
 #include "dmit/ast/source_register.hpp"
@@ -57,8 +58,8 @@ TEST_CASE("sem")
 
     // 2. Analyze
 
-    dmit::sem::Context semContext{ast};
+    dmit::sem::FactMap factMap;
 
-    dmit::sem::declareModulesAndLocateImports(semContext);
-    dmit::sem::solveImports(semContext);
+    dmit::sem::declareModulesAndLocateImports (ast, factMap);
+    dmit::sem::solveImports                   (ast, factMap);
 }
