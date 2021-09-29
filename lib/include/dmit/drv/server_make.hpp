@@ -3,6 +3,7 @@
 #include "dmit/drv/server_reply.hpp"
 #include "dmit/drv/reply.hpp"
 
+#include "dmit/sem/import_graph.hpp"
 #include "dmit/sem/fact_map.hpp"
 #include "dmit/sem/sem.hpp"
 
@@ -97,6 +98,23 @@ void make(dmit::nng::Socket& socket, dmit::db::Database& database)
     {
         dmit::sem::solveImports(it->second, factMap);
     }
+
+    dmit::sem::ImportGraph importGraph;
+
+    for (auto it  = astMap.begin() ;
+              it != astMap.end()   ; ++it)
+    {
+        importGraph.registerAst(it->second);
+    }
+
+    std::vector<com::UniqueId > moduleOrder;
+    std::vector<uint32_t      > moduleBundles;
+
+    importGraph.makeBundles(moduleOrder,
+                            moduleBundles);
+
+    DMIT_COM_LOG_OUT << "moduleOrder   .size(): " << moduleOrder   .size() << '\n';
+    DMIT_COM_LOG_OUT << "moduleBundles .size(): " << moduleBundles .size() << '\n';
 
     // 2. Write reply
 

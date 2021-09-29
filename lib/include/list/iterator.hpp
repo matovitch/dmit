@@ -40,16 +40,10 @@ public:
         _cellPtr{cellPtr}
     {}
 
-    TIterator(const TIterator& iterator) :
-        _cellPtr{iterator._cellPtr}
-    {}
+    TIterator(const TIterator& iterator) = default;
 
-    TIterator operator=(const TIterator& iterator)
-    {
-        _cellPtr = iterator._cellPtr;
+    TIterator& operator=(const TIterator& iterator) = default;
 
-        return *this;
-    }
           Type& operator*()       { return _cellPtr->value; }
     const Type& operator*() const { return _cellPtr->value; }
 
