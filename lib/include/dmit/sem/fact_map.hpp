@@ -34,6 +34,10 @@ struct FactMap
 
     void emplace(com::UniqueId, ast::State::NodePool&, ast::node::Location);
 
+    void declareModulesAndLocateImports(ast::State& ast);
+
+    void solveImports(ast::State& ast);
+
     TMap<Fact> _asRobinMap;
 };
 

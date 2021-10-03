@@ -43,10 +43,11 @@ struct Kind : com::TEnum<uint8_t>
         STM_RETURN     ,
         TYPE_CLAIM     ,
         MODULE         ,
-        SOURCE         ,
+        VIEW           ,
+        SOURCE
     };
 
-    using IntegerSequence = std::make_integer_sequence<uint8_t, SOURCE>;
+    using IntegerSequence = std::make_integer_sequence<uint8_t, SOURCE + 1>;
 
     DMIT_COM_ENUM_IMPLICIT_FROM_INT(Kind);
 };
@@ -88,7 +89,7 @@ struct TRange
     uint32_t _size;
 };
 
-template<class>
+template <class>
 struct TVariantHelper;
 
 template<com::TEnumIntegerType<Kind>... Kinds>
@@ -119,6 +120,12 @@ using ScopeVariant = std::variant<Statement,
 
 template <com::TEnumIntegerType<node::Kind> KIND>
 struct TNode {};
+
+template <>
+struct TNode<node::Kind::VIEW>
+{
+    node::TRange<node::Kind::MODULE> _modules;
+};
 
 template <>
 struct TNode<node::Kind::MODULE>

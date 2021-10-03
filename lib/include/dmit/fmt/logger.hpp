@@ -1,5 +1,6 @@
 #pragma once
 
+#include "dmit/fmt/ast/bundle.hpp"
 #include "dmit/fmt/ast/state.hpp"
 #include "dmit/fmt/lex/state.hpp"
 #include "dmit/fmt/prs/state.hpp"

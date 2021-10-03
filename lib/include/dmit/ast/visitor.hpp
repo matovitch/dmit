@@ -3,6 +3,7 @@
 #include "dmit/ast/node.hpp"
 #include "dmit/ast/pool.hpp"
 
+#include "dmit/com/assert.hpp"
 #include "dmit/com/enum.hpp"
 
 #include <utility>
@@ -108,18 +109,24 @@ struct TVisitor
 
 } // namespace dmit::ast
 
-#define DMIT_AST_VISITOR_SIMPLE()                                  \
-    template <com::TEnumIntegerType<dmit::ast::node::Kind> KIND>   \
-    void loopConclusion(dmit::ast::node::TRange<KIND>& range) {}   \
-                                                                   \
-    template <com::TEnumIntegerType<dmit::ast::node::Kind> KIND>   \
-    void loopPreamble(dmit::ast::node::TRange<KIND>&) {}           \
-                                                                   \
-    template <com::TEnumIntegerType<dmit::ast::node::Kind> KIND>   \
-    void loopIterationConclusion(dmit::ast::node::TIndex<KIND>) {} \
-                                                                   \
-    template <com::TEnumIntegerType<dmit::ast::node::Kind> KIND>   \
-    void loopIterationPreamble(dmit::ast::node::TIndex<KIND>) {}   \
-                                                                   \
-    template <class Type>                                          \
-    void emptyOption() {}                                          \
+#define DMIT_AST_VISITOR_SIMPLE()                                        \
+    template <dmit::com::TEnumIntegerType<dmit::ast::node::Kind> KIND>   \
+    void loopConclusion(dmit::ast::node::TRange<KIND>&) {}               \
+                                                                         \
+    template <dmit::com::TEnumIntegerType<dmit::ast::node::Kind> KIND>   \
+    void loopPreamble(dmit::ast::node::TRange<KIND>&) {}                 \
+                                                                         \
+    template <dmit::com::TEnumIntegerType<dmit::ast::node::Kind> KIND>   \
+    void loopIterationConclusion(dmit::ast::node::TIndex<KIND>) {}       \
+                                                                         \
+    template <dmit::com::TEnumIntegerType<dmit::ast::node::Kind> KIND>   \
+    void loopIterationPreamble(dmit::ast::node::TIndex<KIND>) {}         \
+                                                                         \
+    template <class Type>                                                \
+    void emptyOption() {}                                                \
+                                                                         \
+    template <dmit::com::TEnumIntegerType<dmit::ast::node::Kind> KIND>   \
+    void operator()(dmit::ast::node::TIndex<KIND>)                       \
+    {                                                                    \
+        DMIT_COM_ASSERT(!"Not implemented");                             \
+    }                                                                    \

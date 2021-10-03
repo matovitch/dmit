@@ -121,6 +121,8 @@ void ImportGraph::makeBundles(std::vector<com::UniqueId> & moduleOrder,
     }
     while (!_topoGraph.empty() ||
             _topoGraph.isCyclic());
+
+    moduleBundles.push_back(moduleOrder.size());
 }
 
 void ImportGraph::registerAst(ast::State& ast)

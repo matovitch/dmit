@@ -100,6 +100,8 @@ struct TPool
         std::get<KIND>(_subs).trim(range, size);
     }
 
+    // Note we should be able to generate this type
+    // though I have not figured out the template to do it :/
     std::tuple<pool::TSub<Kind::DCL_IMPORT     , LOG2_SIZE>,
                pool::TSub<Kind::DCL_VARIABLE   , LOG2_SIZE>,
                pool::TSub<Kind::EXP_BINOP      , LOG2_SIZE>,
@@ -116,6 +118,7 @@ struct TPool
                pool::TSub<Kind::STM_RETURN     , LOG2_SIZE>,
                pool::TSub<Kind::TYPE_CLAIM     , LOG2_SIZE>,
                pool::TSub<Kind::MODULE         , LOG2_SIZE>,
+               pool::TSub<Kind::VIEW           , LOG2_SIZE>,
                pool::TSub<Kind::SOURCE         , LOG2_SIZE>> _subs;
 };
 

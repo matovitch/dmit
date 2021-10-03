@@ -5,9 +5,10 @@
 
 #include "dmit/sem/import_graph.hpp"
 #include "dmit/sem/fact_map.hpp"
-#include "dmit/sem/sem.hpp"
+#include "dmit/sem/bundle.hpp"
 
 #include "dmit/ast/from_path_and_source.hpp"
+#include "dmit/ast/bundle.hpp"
 #include "dmit/ast/state.hpp"
 
 #include "dmit/db/database.hpp"
@@ -17,18 +18,12 @@
 #include "dmit/com/parallel_for.hpp"
 #include "dmit/com/unique_id.hpp"
 
-#include "robin/map.hpp"
-
 #include <cstdint>
 #include <vector>
 
 namespace dmit::drv::srv
 {
 
-using AstMap = robin::map::TMake<com::UniqueId,
-                                 ast::State,
-                                 com::unique_id::Hasher,
-                                 com::unique_id::Comparator, 4, 3>;
 struct AstBuilder
 {
     using ReturnType = ast::State;
@@ -39,7 +34,7 @@ struct AstBuilder
         _sources{sources}
     {}
 
-    dmit::ast::State run(const uint64_t index)
+    ast::State run(const uint64_t index)
     {
         return _astFromPathAndSource.make(_paths   [index],
                                           _sources [index]);
@@ -56,13 +51,47 @@ struct AstBuilder
     ast::FromPathAndSource _astFromPathAndSource;
 };
 
-void make(dmit::nng::Socket& socket, dmit::db::Database& database)
+struct BundleBuilder
 {
-    // 1. Process query
+    using ReturnType = ast::Bundle;
+
+    BundleBuilder(const std::vector<com::UniqueId > & moduleOrder,
+                  const std::vector<uint32_t      > & moduleBundles,
+                  const sem::FactMap                & factMap) :
+        _moduleOrder   {moduleOrder},
+        _moduleBundles {moduleBundles},
+        _factMap       {factMap}
+    {}
+
+    ast::Bundle run(const uint64_t index)
+    {
+        return sem::bundle::make(index,
+                                 _moduleOrder,
+                                 _moduleBundles,
+                                 _factMap,
+                                 _nodePool);
+    }
+
+    uint32_t size() const
+    {
+        return _moduleBundles.size() - 1;
+    }
+
+    const std::vector<com::UniqueId >& _moduleOrder;
+    const std::vector<uint32_t      >& _moduleBundles;
+
+    const sem::FactMap& _factMap;
+
+    ast::State::NodePool _nodePool;
+};
+
+void make(nng::Socket& socket, db::Database& database)
+{
+    // 1. Retrive sources from db
 
     int errorCode;
 
-    std::vector<dmit::com::UniqueId  > unitIds ;
+    std::vector<com::UniqueId        > unitIds ;
     std::vector<std::vector<uint8_t> > paths   ;
     std::vector<std::vector<uint8_t> > sources ;
 
@@ -75,36 +104,40 @@ void make(dmit::nng::Socket& socket, dmit::db::Database& database)
         return;
     }
 
-    dmit::com::TParallelFor<AstBuilder> parallelAstBuilder(paths, sources);
-    AstMap astMap;
+    // 2. Make the ASTs
 
-    for (int i = 0; i < paths.size(); i++)
+    std::vector<ast::State> asts;
+
+    asts.reserve(unitIds.size());
+
+    com::TParallelFor<AstBuilder> parallelAstBuilder(paths, sources);
+
+    for (int i = 0; i < paths.size(); ++i)
     {
-        astMap.emplace(unitIds[i], parallelAstBuilder.result(i));
-
-        DMIT_COM_LOG_OUT << astMap.at(unitIds[i]) << '\n';
+        asts.emplace_back(parallelAstBuilder.result(i));
     }
 
-    dmit::sem::FactMap factMap;
+    // 3. Declare modules and resolve imports
 
-    for (auto it  = astMap.begin() ;
-              it != astMap.end()   ; ++it)
+    sem::FactMap factMap;
+
+    for (auto& ast : asts)
     {
-        dmit::sem::declareModulesAndLocateImports(it->second, factMap);
+        factMap.declareModulesAndLocateImports(ast);
     }
 
-    for (auto it  = astMap.begin() ;
-              it != astMap.end()   ; ++it)
+    for (auto& ast : asts)
     {
-        dmit::sem::solveImports(it->second, factMap);
+        factMap.solveImports(ast);
     }
 
-    dmit::sem::ImportGraph importGraph;
+    // 4. Make the import graph
 
-    for (auto it  = astMap.begin() ;
-              it != astMap.end()   ; ++it)
+    sem::ImportGraph importGraph;
+
+    for (auto& ast : asts)
     {
-        importGraph.registerAst(it->second);
+        importGraph.registerAst(ast);
     }
 
     std::vector<com::UniqueId > moduleOrder;
@@ -113,10 +146,25 @@ void make(dmit::nng::Socket& socket, dmit::db::Database& database)
     importGraph.makeBundles(moduleOrder,
                             moduleBundles);
 
-    DMIT_COM_LOG_OUT << "moduleOrder   .size(): " << moduleOrder   .size() << '\n';
-    DMIT_COM_LOG_OUT << "moduleBundles .size(): " << moduleBundles .size() << '\n';
+    // 5. Make the bundles
 
-    // 2. Write reply
+    std::vector<ast::Bundle> bundles;
+
+    bundles.reserve(moduleBundles.size() - 1);
+
+    com::TParallelFor<BundleBuilder> parallelBundleBuilder(moduleOrder,
+                                                           moduleBundles,
+                                                           factMap);
+    for (int i = 0; i < moduleBundles.size() - 1; ++i)
+    {
+        bundles.emplace_back(parallelBundleBuilder.result(i));
+
+        DMIT_COM_LOG_OUT << bundles[i] << '\n';
+    }
+
+    // 6. Make the interfaces
+    // 7. End of semantic analysis
+    // 8. Write reply
 
     replyWith(socket, Reply::OK);
 }
