@@ -117,6 +117,7 @@ struct TPool
                pool::TSub<Kind::SCOPE_VARIANT  , LOG2_SIZE>,
                pool::TSub<Kind::STM_RETURN     , LOG2_SIZE>,
                pool::TSub<Kind::TYPE_CLAIM     , LOG2_SIZE>,
+               pool::TSub<Kind::TYP_DEFINITION , LOG2_SIZE>,
                pool::TSub<Kind::MODULE         , LOG2_SIZE>,
                pool::TSub<Kind::VIEW           , LOG2_SIZE>,
                pool::TSub<Kind::SOURCE         , LOG2_SIZE>> _subs;

@@ -1,5 +1,10 @@
 module C;
 
+class A
+{
+    a : i64;
+}
+
 func increment(x : i64) -> i64
 {
     let y : i64;

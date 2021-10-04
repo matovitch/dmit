@@ -313,6 +313,37 @@ void Builder::makeIdentifier(const dmit::prs::Reader& reader,
     makeLexeme(reader, _nodePool.get(identifier._lexeme));
 }
 
+void Builder::makeMembers(const dmit::prs::Reader& supReader,
+                          TNode<node::Kind::TYP_DEFINITION>& type)
+{
+    DMIT_COM_ASSERT(supReader.look()._kind == ParseNodeKind::CLS_MEMBERS);
+    auto reader = supReader.makeSubReader();
+
+    _nodePool.make(type._members, reader.size() >> 1);
+
+    uint32_t i = type._members._size;
+
+    while (reader.isValid())
+    {
+        makeTypeClaim(reader, _nodePool.get(type._members[--i]));
+        reader.advance();
+    }
+}
+
+void Builder::makeType(const dmit::prs::Reader& supReader,
+                       TNode<node::Kind::TYP_DEFINITION>& type)
+{
+    auto reader = makeSubReaderFor(ParseNodeKind::CLS_DEFINITION, supReader);
+
+    // Members
+    makeMembers(reader, type);
+    reader.advance();
+
+    // Name
+    _nodePool.make(type._name);
+    makeIdentifier(reader, _nodePool.get(type._name));
+}
+
 void Builder::makeFunction(const dmit::prs::Reader& supReader,
                            TNode<node::Kind::FUN_DEFINITION>& function)
 {
@@ -363,10 +394,12 @@ void Builder::makeModule(dmit::prs::Reader& reader,
 
     com::blitDefault(module._path);
 
+    _nodePool.make(module._types     , reader.size());
     _nodePool.make(module._functions , reader.size());
     _nodePool.make(module._imports   , reader.size());
     _nodePool.make(module._modules   , reader.size());
 
+    uint32_t indexTypes    = 0;
     uint32_t indexFunction = 0;
     uint32_t indexImport   = 0;
     uint32_t indexModule   = 0;
@@ -381,15 +414,19 @@ void Builder::makeModule(dmit::prs::Reader& reader,
             module._path = node::TIndex<node::Kind::FUN_CALL>{0};
             makeExpression(reader, module._path.value());
         }
-        else if (parseNodeKind == dmit::prs::state::tree::node::Kind::FUN_DEFINITION)
+        else if (parseNodeKind == ParseNodeKind::CLS_DEFINITION)
+        {
+            makeType(reader, _nodePool.get(module._types[indexTypes++]));
+        }
+        else if (parseNodeKind == ParseNodeKind::FUN_DEFINITION)
         {
             makeFunction(reader, _nodePool.get(module._functions[indexFunction++]));
         }
-        else if (parseNodeKind == dmit::prs::state::tree::node::Kind::DCL_IMPORT)
+        else if (parseNodeKind == ParseNodeKind::DCL_IMPORT)
         {
             makeImport(reader, _nodePool.get(module._imports[indexImport++]));
         }
-        else if (parseNodeKind == dmit::prs::state::tree::node::Kind::MODULE)
+        else if (parseNodeKind == ParseNodeKind::MODULE)
         {
             indexModule++;
         }
@@ -401,6 +438,7 @@ void Builder::makeModule(dmit::prs::Reader& reader,
         reader.advance();
     }
 
+    _nodePool.trim(module._types     , indexTypes    );
     _nodePool.trim(module._functions , indexFunction );
     _nodePool.trim(module._imports   , indexImport   );
     _nodePool.trim(module._modules   , indexModule   );

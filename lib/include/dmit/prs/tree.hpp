@@ -25,6 +25,8 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
 {
     enum : uint8_t
     {
+        CLS_DEFINITION,
+        CLS_MEMBERS,
         DCL_EXPORT,
         DCL_IMPORT,
         DCL_VARIABLE,

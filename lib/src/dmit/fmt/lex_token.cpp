@@ -13,6 +13,7 @@ static const char* const K_TOKEN_AS_CSTR[] =
     "ELSE",
     "LET",
     "FUNC",
+    "CLASS",
     "WHILE",
     "EXPORT",
     "IMPORT",

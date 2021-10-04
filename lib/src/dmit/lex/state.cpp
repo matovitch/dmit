@@ -30,6 +30,7 @@ static const char* const KEYWORDS[] =
     "else",
     "let",
     "func",
+    "class",
     "while",
     "export",
     "import",

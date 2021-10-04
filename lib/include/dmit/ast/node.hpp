@@ -42,6 +42,7 @@ struct Kind : com::TEnum<uint8_t>
         SCOPE_VARIANT  ,
         STM_RETURN     ,
         TYPE_CLAIM     ,
+        TYP_DEFINITION ,
         MODULE         ,
         VIEW           ,
         SOURCE
@@ -132,6 +133,7 @@ struct TNode<node::Kind::MODULE>
 {
     std::optional<Expression> _path;
 
+    node::TRange<node::Kind::TYP_DEFINITION > _types;
     node::TRange<node::Kind::FUN_DEFINITION > _functions;
     node::TRange<node::Kind::DCL_IMPORT     > _imports;
     node::TRange<node::Kind::MODULE         > _modules;
@@ -157,6 +159,13 @@ struct TNode<node::Kind::DCL_IMPORT>
 
     node::Location _parent;
     com::UniqueId  _id;
+};
+
+template <>
+struct TNode<node::Kind::TYP_DEFINITION>
+{
+    node::TIndex<node::Kind::LIT_IDENTIFIER > _name;
+    node::TRange<node::Kind::TYPE_CLAIM     > _members;
 };
 
 template <>

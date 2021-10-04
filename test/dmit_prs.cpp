@@ -45,6 +45,7 @@ TEST_CASE("prs")
     CHECK(dmit::fmt::asString(parser(VALID "import.in"        )) == fileAsString(VALID "import.out"         ));
     CHECK(dmit::fmt::asString(parser(VALID "module.in"        )) == fileAsString(VALID "module.out"         ));
     CHECK(dmit::fmt::asString(parser(VALID "scope.in"         )) == fileAsString(VALID "scope.out"          ));
+    CHECK(dmit::fmt::asString(parser(VALID "class.in"         )) == fileAsString(VALID "class.out"          ));
 
     CHECK(dmit::fmt::asString(parser(INVALID "expression.in"        )) == fileAsString(INVALID "expression.out"        ));
     CHECK(dmit::fmt::asString(parser(INVALID "function.in"          )) == fileAsString(INVALID "function.out"          ));

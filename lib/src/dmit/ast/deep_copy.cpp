@@ -296,6 +296,21 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
                   destScope._variants);
     }
 
+    void operator()(node::TIndex<node::Kind::TYP_DEFINITION> srceTypeIdx)
+    {
+        auto& srceType = get(srceTypeIdx);
+        auto& destType = _destNodePool.get(
+            std::get<decltype(srceTypeIdx)>(_stackPtrIn->_location)
+        );
+
+        _destNodePool.make(destType._name);
+        _stackPtrIn->_location = destType._name;
+        base()(srceType._name);
+
+        copyRange(srceType._members,
+                  destType._members);
+    }
+
     void operator()(node::TIndex<node::Kind::FUN_DEFINITION> srceFunctionIdx)
     {
         auto& srceFunction = get(srceFunctionIdx);
@@ -349,6 +364,9 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
 
         copyRange(srceModule._imports,
                   destModule._imports);
+
+        copyRange(srceModule._types,
+                  destModule._types);
 
         copyRange(srceModule._functions,
                   destModule._functions);

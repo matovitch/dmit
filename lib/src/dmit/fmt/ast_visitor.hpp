@@ -142,6 +142,15 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
         _oss << "\"body\":"       ; base()(function._body       ); _oss << '}';
     }
 
+    void operator()(ast::node::TIndex<ast::node::Kind::TYP_DEFINITION> typeIdx)
+    {
+        auto& type = get(typeIdx);
+
+        _oss << "{\"node\":\"Type\",";
+        _oss << "\"name\":"    ; base()(type._name    ); _oss << ',';
+        _oss << "\"members\":" ; base()(type._members ); _oss << '}';
+    }
+
     void operator()(ast::node::TIndex<ast::node::Kind::DCL_IMPORT> importIdx)
     {
         auto& import = get(importIdx);
@@ -158,6 +167,7 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
         _oss << "\"path\":"      ; base()(module._path      ); _oss << ',';
         _oss << "\"imports\":"   ; base()(module._imports   ); _oss << ',';
         _oss << "\"functions\":" ; base()(module._functions ); _oss << ',';
+        _oss << "\"types\":"     ; base()(module._types      ); _oss << ',';
         _oss << "\"modules\":"   ; base()(module._modules   ); _oss << '}';
     }
 

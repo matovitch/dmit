@@ -19,6 +19,7 @@ struct Token : com::TEnum<uint8_t>, fmt::Formatable
         ELSE,
         LET,
         FUNC,
+        CLASS,
         WHILE,
         EXPORT,
         IMPORT,

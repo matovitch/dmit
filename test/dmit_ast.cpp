@@ -68,6 +68,7 @@ TEST_CASE("ast")
 
     CHECK(dmit::fmt::asString(aster("test/data/ast/add.in"       )) == fileAsString("test/data/ast/add.out"       ));
     CHECK(dmit::fmt::asString(aster("test/data/ast/call.in"      )) == fileAsString("test/data/ast/call.out"      ));
+    CHECK(dmit::fmt::asString(aster("test/data/ast/class.in"     )) == fileAsString("test/data/ast/class.out"     ));
     CHECK(dmit::fmt::asString(aster("test/data/ast/increment.in" )) == fileAsString("test/data/ast/increment.out" ));
     CHECK(dmit::fmt::asString(aster("test/data/ast/module.in"    )) == fileAsString("test/data/ast/module.out"    ));
 }
