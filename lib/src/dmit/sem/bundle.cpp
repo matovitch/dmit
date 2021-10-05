@@ -22,6 +22,8 @@ void makeView(const com::UniqueId  & viewId,
 {
     auto& view = nodePool.get(viewIdx);
 
+    com::blit(viewId, view._id);
+
     auto key = viewId;
 
     auto fit = factMap._asRobinMap.find(key);

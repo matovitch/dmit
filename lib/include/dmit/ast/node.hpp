@@ -126,6 +126,8 @@ template <>
 struct TNode<node::Kind::VIEW>
 {
     node::TRange<node::Kind::MODULE> _modules;
+
+    com::UniqueId _id;
 };
 
 template <>

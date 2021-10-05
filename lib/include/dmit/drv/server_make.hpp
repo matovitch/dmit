@@ -3,8 +3,10 @@
 #include "dmit/drv/server_reply.hpp"
 #include "dmit/drv/reply.hpp"
 
+#include "dmit/sem/interface_map.hpp"
 #include "dmit/sem/import_graph.hpp"
 #include "dmit/sem/fact_map.hpp"
+#include "dmit/sem/analyze.hpp"
 #include "dmit/sem/bundle.hpp"
 
 #include "dmit/ast/from_path_and_source.hpp"
@@ -85,6 +87,48 @@ struct BundleBuilder
     ast::State::NodePool _nodePool;
 };
 
+struct SemanticAnalysis
+{
+    using ReturnType = int8_t;
+
+    SemanticAnalysis(sem::InterfaceMap        & interfaceMap,
+                     std::vector<ast::Bundle> & bundles) :
+        _interfaceMap{interfaceMap},
+        _bundles{bundles}
+    {}
+
+    int8_t run(const uint64_t index)
+    {
+        if (index)
+        {
+            while (_interfaceAtomCount.load(std::memory_order_acquire) < index);
+
+            sem::analyze(_bundles[index - 1]);
+        }
+
+        for (auto& bundle : _bundles)
+        {
+            _interfaceMap.registerBundle(bundle);
+
+            int interfaceCount = _interfaceAtomCount.load(std::memory_order_relaxed);
+
+            _interfaceAtomCount.store(interfaceCount + 1, std::memory_order_release);
+        }
+
+        return 0;
+    }
+
+    uint32_t size() const
+    {
+        return _bundles.size() + 1;
+    }
+
+    std::atomic<int> _interfaceAtomCount = 0;
+
+    sem::InterfaceMap        & _interfaceMap;
+    std::vector<ast::Bundle> & _bundles;
+};
+
 void make(nng::Socket& socket, db::Database& database)
 {
     // 1. Retrive sources from db
@@ -158,13 +202,20 @@ void make(nng::Socket& socket, db::Database& database)
     for (int i = 0; i < moduleBundles.size() - 1; ++i)
     {
         bundles.emplace_back(parallelBundleBuilder.result(i));
-
-        DMIT_COM_LOG_OUT << bundles[i] << '\n';
     }
 
-    // 6. Make the interfaces
-    // 7. End of semantic analysis
-    // 8. Write reply
+    // 6. End of semantic analysis
+
+    sem::InterfaceMap interfaceMap;
+
+    com::TParallelFor<SemanticAnalysis> parallelSemanticAnalysis(interfaceMap,
+                                                                 bundles);
+    for (auto& bundle : bundles)
+    {
+        DMIT_COM_LOG_OUT << bundle << '\n';
+    }
+
+    // 7. Write reply
 
     replyWith(socket, Reply::OK);
 }

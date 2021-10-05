@@ -10,7 +10,7 @@ CXFLAGS += -std=c++20
 CXFLAGS += -Wall
 
 ifeq (@(IS_DEBUG),y)
-    CXFLAGS += -g
+    CXFLAGS += -g -fno-omit-frame-pointer
 endif
 
 ifeq (@(IS_USING_ASSERT),y)
