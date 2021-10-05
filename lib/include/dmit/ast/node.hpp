@@ -45,7 +45,8 @@ struct Kind : com::TEnum<uint8_t>
         TYP_DEFINITION ,
         MODULE         ,
         VIEW           ,
-        SOURCE
+        SOURCE         ,
+        PARENT_PATH
     };
 
     using IntegerSequence = std::make_integer_sequence<uint8_t, SOURCE + 1>;
@@ -70,7 +71,7 @@ template <com::TEnumIntegerType<Kind> KIND>
 bool operator!=(TIndex<KIND> lhs,
                 TIndex<KIND> rhs)
 {
-    return lhs._value == rhs._value;
+    return lhs._value != rhs._value;
 }
 
 template <com::TEnumIntegerType<Kind> KIND>
@@ -123,6 +124,14 @@ template <com::TEnumIntegerType<node::Kind> KIND>
 struct TNode {};
 
 template <>
+struct TNode<node::Kind::PARENT_PATH>
+{
+    Expression _expression;
+
+    std::optional<node::TIndex<node::Kind::PARENT_PATH>> _next;
+};
+
+template <>
 struct TNode<node::Kind::VIEW>
 {
     node::TRange<node::Kind::MODULE> _modules;
@@ -142,6 +151,8 @@ struct TNode<node::Kind::MODULE>
 
     node::Location _parent;
     com::UniqueId  _id;
+
+    std::optional<node::TIndex<node::Kind::PARENT_PATH>> _parentPath;
 };
 
 template <>

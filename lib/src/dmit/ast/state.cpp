@@ -393,6 +393,7 @@ void Builder::makeModule(dmit::prs::Reader& reader,
     auto readerCopy = reader;
 
     com::blitDefault(module._path);
+    com::blitDefault(module._parentPath);
 
     _nodePool.make(module._types     , reader.size());
     _nodePool.make(module._functions , reader.size());

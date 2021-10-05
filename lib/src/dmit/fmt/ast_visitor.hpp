@@ -159,16 +159,26 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
         _oss << "\"path\":"; base()(import._path); _oss << '}';
     }
 
+    void operator()(ast::node::TIndex<ast::node::Kind::PARENT_PATH> parentPathIdx)
+    {
+        auto& parentPath = get(parentPathIdx);
+
+        _oss << "{\"node\":\"ParentPath\",";
+        _oss << "\"expression\":" ; base()(parentPath._expression ); _oss << ',';
+        _oss << "\"next\":"       ; base()(parentPath._next       ); _oss << '}';
+    }
+
     void operator()(ast::node::TIndex<ast::node::Kind::MODULE> moduleIdx)
     {
         auto& module = get(moduleIdx);
 
         _oss << "{\"node\":\"Module\",";
-        _oss << "\"path\":"      ; base()(module._path      ); _oss << ',';
-        _oss << "\"imports\":"   ; base()(module._imports   ); _oss << ',';
-        _oss << "\"functions\":" ; base()(module._functions ); _oss << ',';
+        _oss << "\"path\":"      ; base()(module._path       ); _oss << ',';
+        _oss << "\"parentPath\":"; base()(module._parentPath ); _oss << ',';
+        _oss << "\"imports\":"   ; base()(module._imports    ); _oss << ',';
+        _oss << "\"functions\":" ; base()(module._functions  ); _oss << ',';
         _oss << "\"types\":"     ; base()(module._types      ); _oss << ',';
-        _oss << "\"modules\":"   ; base()(module._modules   ); _oss << '}';
+        _oss << "\"modules\":"   ; base()(module._modules    ); _oss << '}';
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::VIEW> viewIdx)

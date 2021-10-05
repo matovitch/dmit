@@ -372,6 +372,28 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
                   destModule._functions);
 
         _destNodePool.make(destModule._modules, 0);
+
+        // Copy parent path
+
+        com::blitDefault(destModule._parentPath);
+
+        auto parent = std::get<decltype(srceModuleIdx)>(srceModule._parent);
+
+        while (get(parent)._path)
+        {
+            auto& parentPath = get(parent)._path;
+            auto  prefix     = destModule._parentPath;
+
+                                         _destNodePool.make (destModule._parentPath);
+            auto& destModuleParentPath = _destNodePool.get  (destModule._parentPath);
+
+            auto blitter = blitter::make(_destNodePool, destModuleParentPath._expression);
+            _stackPtrIn->_location = blitter(parentPath.value());
+            base()(parentPath);
+
+            destModuleParentPath._next = prefix;
+            parent = std::get<decltype(srceModuleIdx)>(get(parent)._parent);
+        }
     }
 
     State::NodePool& _destNodePool;
