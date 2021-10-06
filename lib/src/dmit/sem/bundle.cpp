@@ -34,7 +34,7 @@ void makeView(const com::UniqueId  & viewId,
 
     do
     {
-        ast::deepCopy(std::get<decltype(view._modules[0])>(fit->second._location),
+        ast::deepCopy(as<ast::node::Kind::MODULE>(fit->second._index),
                       *(fit->second._nodePool),
                       view._modules[--count],
                       nodePool);

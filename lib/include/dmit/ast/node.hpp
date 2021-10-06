@@ -16,6 +16,7 @@
 #include <utility>
 #include <variant>
 #include <vector>
+#include <limits>
 
 namespace dmit::ast
 {
@@ -54,11 +55,69 @@ struct Kind : com::TEnum<uint8_t>
     DMIT_COM_ENUM_IMPLICIT_FROM_INT(Kind);
 };
 
+template <com::TEnumIntegerType<Kind>>
+struct TIndex;
+
+template <class>
+struct TVariantHelper;
+
+template<com::TEnumIntegerType<Kind>... Kinds>
+struct TVariantHelper<std::integer_sequence<com::TEnumIntegerType<Kind>, Kinds...>>
+{
+    using Type = std::variant<TIndex<Kinds>...>;
+};
+
+struct Index
+{
+    Index() : _value{std::numeric_limits<uint32_t>::max()} {}
+
+    template <com::TEnumIntegerType<Kind> KIND>
+    Index(const node::TIndex<KIND> index) : _value{index._value} {}
+
+    uint32_t _value;
+};
+
 template <com::TEnumIntegerType<Kind> KIND>
 struct TIndex
 {
+    TIndex() : _value{std::numeric_limits<uint32_t>::max()} {}
+
+    TIndex(const uint32_t value) : _value{value} {}
+
+    TIndex(const Index index) : _value{index._value} {}
+
     uint32_t _value;
 };
+
+struct VIndex
+{
+    using Variant = typename TVariantHelper<Kind::IntegerSequence>::Type;
+
+    VIndex() : _variant{} {}
+
+    template <com::TEnumIntegerType<Kind> KIND>
+    VIndex(const node::TIndex<KIND> index) : _variant{index} {}
+
+    Variant _variant;
+};
+
+template <com::TEnumIntegerType<Kind> KIND>
+node::TIndex<KIND> as(const Index index)
+{
+    return node::TIndex<KIND>{index._value};
+}
+
+template <com::TEnumIntegerType<Kind> KIND>
+node::TIndex<KIND> as(const TIndex<KIND> index)
+{
+    return index;
+}
+
+template <com::TEnumIntegerType<Kind> KIND>
+node::TIndex<KIND> as(const VIndex& index)
+{
+    return std::get<node::TIndex<KIND>>(index);
+}
 
 template <com::TEnumIntegerType<Kind> KIND>
 bool operator==(TIndex<KIND> lhs,
@@ -90,17 +149,6 @@ struct TRange
     node::TIndex<KIND> _index;
     uint32_t _size;
 };
-
-template <class>
-struct TVariantHelper;
-
-template<com::TEnumIntegerType<Kind>... Kinds>
-struct TVariantHelper<std::integer_sequence<com::TEnumIntegerType<Kind>, Kinds...>>
-{
-    using Type = std::variant<TIndex<Kinds>...>;
-};
-
-using Location = typename TVariantHelper<Kind::IntegerSequence>::Type;
 
 } // namespace node
 
@@ -149,8 +197,8 @@ struct TNode<node::Kind::MODULE>
     node::TRange<node::Kind::DCL_IMPORT     > _imports;
     node::TRange<node::Kind::MODULE         > _modules;
 
-    node::Location _parent;
-    com::UniqueId  _id;
+    node::TIndex<node::Kind::MODULE> _parent;
+    com::UniqueId                    _id;
 
     std::optional<node::TIndex<node::Kind::PARENT_PATH>> _parentPath;
 };
@@ -170,8 +218,8 @@ struct TNode<node::Kind::DCL_IMPORT>
 {
     Expression _path;
 
-    node::Location _parent;
-    com::UniqueId  _id;
+    node::TIndex<node::Kind::MODULE> _parent;
+    com::UniqueId                    _id;
 };
 
 template <>

@@ -89,7 +89,7 @@ struct TVisitor
     }
 
     template <com::TEnumIntegerType<node::Kind> KIND>
-    TNode<KIND>& get(node::TIndex<KIND>& nodeIndex)
+    TNode<KIND>& get(const node::TIndex<KIND> nodeIndex)
     {
         return _nodePool.get(nodeIndex);
     }

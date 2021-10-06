@@ -65,8 +65,8 @@ struct PathId : ast::TVisitor<PathId, StackIn, StackOut>
 
 struct Stack
 {
-    ast::node::Location _parent;
-    com::UniqueId       _id;
+    ast::node::Index _parent;
+    com::UniqueId    _id;
 };
 
 struct DeclareModulesAndLocateImports : ast::TVisitor<DeclareModulesAndLocateImports, Stack>
@@ -145,7 +145,7 @@ struct SolveImports : ast::TVisitor<SolveImports>
             return pathId.id();
         }
 
-        auto& moduleParent = std::get<decltype(parent)>(module._parent);
+        auto moduleParent = as<ast::node::Kind::MODULE>(module._parent);
 
         if (parent == moduleParent)
         {
@@ -159,7 +159,7 @@ struct SolveImports : ast::TVisitor<SolveImports>
     {
         auto& import = base().get(importIdx);
 
-        auto& moduleParent = std::get<ast::node::TIndex<ast::node::Kind::MODULE>>(import._parent);
+        auto moduleParent = as<ast::node::Kind::MODULE>(import._parent);
 
         auto&& idOpt = getId(import._path, moduleParent);
 
@@ -195,19 +195,19 @@ com::UniqueId next(com::UniqueId key)
 
 void FactMap::emplace(com::UniqueId key,
                       ast::State::NodePool& astNodePool,
-                      ast::node::Location location)
+                      ast::node::Index index)
 {
     auto fit = _asRobinMap.find(key);
 
     if (fit == _asRobinMap.end())
     {
-        _asRobinMap.emplace(key, Fact{&astNodePool, location, 1});
+        _asRobinMap.emplace(key, Fact{&astNodePool, index, 1});
         return;
     }
 
     fit->second._count++;
 
-    emplace(fact_map::next(key), astNodePool, location);
+    emplace(fact_map::next(key), astNodePool, index);
 }
 
 void FactMap::declareModulesAndLocateImports(ast::State& ast)

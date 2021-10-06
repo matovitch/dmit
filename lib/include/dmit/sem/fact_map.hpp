@@ -20,7 +20,7 @@ com::UniqueId next(com::UniqueId key);
 struct Fact
 {
     ast::State::NodePool* _nodePool;
-    ast::node::Location   _location;
+    ast::node::Index      _index;
     uint32_t              _count;
 };
 
@@ -32,7 +32,7 @@ struct FactMap
                                    com::unique_id::Hasher,
                                    com::unique_id::Comparator, 4, 3>;
 
-    void emplace(com::UniqueId, ast::State::NodePool&, ast::node::Location);
+    void emplace(com::UniqueId, ast::State::NodePool&, ast::node::Index);
 
     void declareModulesAndLocateImports(ast::State& ast);
 
