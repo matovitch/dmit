@@ -28,6 +28,8 @@ public:
         _value.~Type();
     }
 
+    ~TDefaultConstructible() {}
+
           Type&  value()       &  { return _value; }
           Type&& value()       && { return _value; }
     const Type&  value() const &  { return _value; }

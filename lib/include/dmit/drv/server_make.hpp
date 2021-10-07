@@ -206,7 +206,9 @@ void make(nng::Socket& socket, db::Database& database)
 
     // 6. End of semantic analysis
 
-    sem::InterfaceMap interfaceMap;
+    ast::State::NodePool astNodePool;
+
+    sem::InterfaceMap interfaceMap{bundles, astNodePool};
 
     com::TParallelFor<SemanticAnalysis> parallelSemanticAnalysis(interfaceMap,
                                                                  bundles);

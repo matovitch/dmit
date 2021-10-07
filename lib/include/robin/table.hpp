@@ -188,8 +188,8 @@ private:
 
     void rehash()
     {
-        const Bucket* const oldBuckets  = _buckets;
-        const std::size_t   oldCapacity = _capacity;
+        Bucket* const     oldBuckets  = _buckets;
+        const std::size_t oldCapacity = _capacity;
 
                                  _bufferManager.makeNext();
         const auto& bufferView = _bufferManager.makeView();
@@ -204,7 +204,7 @@ private:
                          bucketIndex < oldCapacity;
                          bucketIndex++)
         {
-            const auto& oldBucket = oldBuckets[bucketIndex];
+            auto& oldBucket = oldBuckets[bucketIndex];
 
             if (oldBucket.isFilled())
             {

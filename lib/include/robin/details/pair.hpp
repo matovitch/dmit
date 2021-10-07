@@ -46,6 +46,12 @@ struct TPair
         first{std::forward<Args1>(firstArgs)...},
         second{std::forward<Args2>(secondArgs)...}
     {}
+
+    ~TPair()
+    {
+        first  .~Key   ();
+        second .~Value ();
+    }
 };
 
 namespace pair
