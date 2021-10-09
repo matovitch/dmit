@@ -18,13 +18,11 @@ InterfaceMap::InterfaceMap(const std::vector<ast::Bundle>& bundles, ast::State::
             continue;
         }
 
-        auto views = _viewsPool.make();
-
-        _astNodePool.make(views, bundle._views._size);
+        _astNodePool.make(_views, bundle._views._size);
 
         for (uint32_t i = 0; i < bundle._views._size; i++)
         {
-            _asSimpleMap.emplace(bundle._nodePool.get(bundle._views[i])._id, views[i]);
+            _asSimpleMap.emplace(bundle._nodePool.get(bundle._views[i])._id, _views[i]);
         }
     }
 }

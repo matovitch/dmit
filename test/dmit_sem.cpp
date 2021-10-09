@@ -59,6 +59,6 @@ TEST_CASE("sem")
 
     dmit::sem::FactMap factMap;
 
-    factMap.declareModulesAndLocateImports (ast);
-    factMap.solveImports                   (ast);
+    factMap.findModulesAndBindImports (ast);
+    factMap.solveImports              (ast);
 }

@@ -69,12 +69,12 @@ struct Stack
     com::UniqueId    _id;
 };
 
-struct DeclareModulesAndLocateImports : ast::TVisitor<DeclareModulesAndLocateImports, Stack>
+struct FindModulesAndBindImports : ast::TVisitor<FindModulesAndBindImports, Stack>
 {
-    DeclareModulesAndLocateImports(ast::State& ast, FactMap& factMap) :
-        ast::TVisitor<DeclareModulesAndLocateImports, Stack>{ast._nodePool,
-                                                             ast._module,
-                                                             com::UniqueId{}},
+    FindModulesAndBindImports(ast::State& ast, FactMap& factMap) :
+        ast::TVisitor<FindModulesAndBindImports, Stack>{ast._nodePool,
+                                                        ast._module,
+                                                        com::UniqueId{}},
         _factMap{factMap}
     {}
 
@@ -210,9 +210,9 @@ void FactMap::emplace(com::UniqueId key,
     emplace(fact_map::next(key), astNodePool, index);
 }
 
-void FactMap::declareModulesAndLocateImports(ast::State& ast)
+void FactMap::findModulesAndBindImports(ast::State& ast)
 {
-    DeclareModulesAndLocateImports visitor{ast, *this};
+    FindModulesAndBindImports visitor{ast, *this};
 
     visitor.base()(ast._module);
 }

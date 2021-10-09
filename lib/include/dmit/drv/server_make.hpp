@@ -167,7 +167,7 @@ void make(nng::Socket& socket, db::Database& database)
 
     for (auto& ast : asts)
     {
-        factMap.declareModulesAndLocateImports(ast);
+        factMap.findModulesAndBindImports(ast);
     }
 
     for (auto& ast : asts)

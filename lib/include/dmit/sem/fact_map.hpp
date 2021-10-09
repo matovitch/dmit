@@ -34,7 +34,7 @@ struct FactMap
 
     void emplace(com::UniqueId, ast::State::NodePool&, ast::node::Index);
 
-    void declareModulesAndLocateImports(ast::State& ast);
+    void findModulesAndBindImports(ast::State& ast);
 
     void solveImports(ast::State& ast);
 
