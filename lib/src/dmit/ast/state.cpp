@@ -1,5 +1,7 @@
 #include "dmit/ast/state.hpp"
 
+#include "dmit/ast/definition_status.hpp"
+
 #include "dmit/prs/reader.hpp"
 #include "dmit/prs/tree.hpp"
 
@@ -373,10 +375,6 @@ void Builder::makeFunction(const dmit::prs::Reader& supReader,
     // Name
     _nodePool.make(function._name);
     makeIdentifier(reader, _nodePool.get(function._name));
-
-    // Status
-    (reader.isValidNext()) ? com::blit(FunctionStatus::EXPORTED , function._status)
-                           : com::blit(FunctionStatus::LOCAL    , function._status);
 }
 
 void Builder::makeImport(const dmit::prs::Reader& supReader,
@@ -387,6 +385,38 @@ void Builder::makeImport(const dmit::prs::Reader& supReader,
     makeExpression(reader, import._path);
 }
 
+void Builder::makeDefinition(const dmit::prs::Reader& supReader,
+                             TNode<node::Kind::DEFINITION>& definition)
+{
+    auto reader = makeSubReaderFor(ParseNodeKind::DEFINITION, supReader);
+
+    auto parseNodeKind = reader.look()._kind;
+
+    if (parseNodeKind == ParseNodeKind::CLS_DEFINITION)
+    {
+        node::TIndex<node::Kind::TYP_DEFINITION> type;
+        _nodePool.make(type);
+        makeType(reader, _nodePool.get(type));
+        com::blit(type, definition._value);
+    }
+    else if (parseNodeKind == ParseNodeKind::FUN_DEFINITION)
+    {
+        node::TIndex<node::Kind::FUN_DEFINITION> function;
+        _nodePool.make(function);
+        makeFunction(reader, _nodePool.get(function));
+        com::blit(function, definition._value);
+    }
+    else
+    {
+        DMIT_COM_ASSERT(!"[AST] Unknown definition kind");
+    }
+
+    // Status
+    (reader.isValidNext()) ? com::blit(DefinitionStatus::EXPORTED , definition._status)
+                           : com::blit(DefinitionStatus::LOCAL    , definition._status);
+
+}
+
 void Builder::makeModule(dmit::prs::Reader& reader,
                          TNode<node::Kind::MODULE>& module)
 {
@@ -395,15 +425,13 @@ void Builder::makeModule(dmit::prs::Reader& reader,
     com::blitDefault(module._path);
     com::blitDefault(module._parentPath);
 
-    _nodePool.make(module._types     , reader.size());
-    _nodePool.make(module._functions , reader.size());
-    _nodePool.make(module._imports   , reader.size());
-    _nodePool.make(module._modules   , reader.size());
+    _nodePool.make(module._definitions , reader.size());
+    _nodePool.make(module._imports     , reader.size());
+    _nodePool.make(module._modules     , reader.size());
 
-    uint32_t indexTypes    = 0;
-    uint32_t indexFunction = 0;
-    uint32_t indexImport   = 0;
-    uint32_t indexModule   = 0;
+    uint32_t indexDefinitions = 0;
+    uint32_t indexImport      = 0;
+    uint32_t indexModule      = 0;
 
     while (reader.isValid())
     {
@@ -415,13 +443,9 @@ void Builder::makeModule(dmit::prs::Reader& reader,
             module._path = node::TIndex<node::Kind::FUN_CALL>{0};
             makeExpression(reader, module._path.value());
         }
-        else if (parseNodeKind == ParseNodeKind::CLS_DEFINITION)
+        else if (parseNodeKind == ParseNodeKind::DEFINITION)
         {
-            makeType(reader, _nodePool.get(module._types[indexTypes++]));
-        }
-        else if (parseNodeKind == ParseNodeKind::FUN_DEFINITION)
-        {
-            makeFunction(reader, _nodePool.get(module._functions[indexFunction++]));
+            makeDefinition(reader, _nodePool.get(module._definitions[indexDefinitions++]));
         }
         else if (parseNodeKind == ParseNodeKind::DCL_IMPORT)
         {
@@ -439,10 +463,9 @@ void Builder::makeModule(dmit::prs::Reader& reader,
         reader.advance();
     }
 
-    _nodePool.trim(module._types     , indexTypes    );
-    _nodePool.trim(module._functions , indexFunction );
-    _nodePool.trim(module._imports   , indexImport   );
-    _nodePool.trim(module._modules   , indexModule   );
+    _nodePool.trim(module._definitions , indexDefinitions );
+    _nodePool.trim(module._imports     , indexImport      );
+    _nodePool.trim(module._modules     , indexModule      );
 
     while (readerCopy.isValid())
     {

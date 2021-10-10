@@ -299,9 +299,21 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
         {
             com::blitDefault(destFunction._returnType);
         }
+    }
 
-        com::blit(srceFunction._status,
-                  destFunction._status);
+    void operator()(node::TIndex<node::Kind::DEFINITION> srceDefinitionIdx)
+    {
+        auto& srceDefinition = get(srceDefinitionIdx);
+        auto& destDefinition = _destNodePool.get(
+            as<node::Kind::DEFINITION>(_stackPtrIn->_index)
+        );
+
+        auto blitter = blitter::make(_destNodePool, destDefinition._value);
+        _stackPtrIn->_index = blitter(srceDefinition._value);
+        base()(srceDefinition._value);
+
+        com::blit(srceDefinition._status,
+                  destDefinition._status);
     }
 
     void operator()(node::TIndex<node::Kind::MODULE> srceModuleIdx)
@@ -325,11 +337,8 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
         copyRange(srceModule._imports,
                   destModule._imports);
 
-        copyRange(srceModule._types,
-                  destModule._types);
-
-        copyRange(srceModule._functions,
-                  destModule._functions);
+        copyRange(srceModule._definitions,
+                  destModule._definitions);
 
         _destNodePool.make(destModule._modules, 0);
 

@@ -1,4 +1,4 @@
-#include "dmit/fmt/ast/function_status.hpp"
+#include "dmit/fmt/ast/definition_status.hpp"
 #include "dmit/fmt/src/slice.hpp"
 
 #include "dmit/ast/visitor.hpp"
@@ -135,7 +135,6 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
         auto& function = get(functionIdx);
 
         _oss << "{\"node\":\"Function\",";
-        _oss << "\"status\":"     ; _oss << function._status      ; _oss << ',';
         _oss << "\"name\":"       ; base()(function._name       ); _oss << ',';
         _oss << "\"arguments\":"  ; base()(function._arguments  ); _oss << ',';
         _oss << "\"returnType\":" ; base()(function._returnType ); _oss << ',';
@@ -168,17 +167,25 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
         _oss << "\"next\":"       ; base()(parentPath._next       ); _oss << '}';
     }
 
+    void operator()(ast::node::TIndex<ast::node::Kind::DEFINITION> definitionIdx)
+    {
+        auto& definition = get(definitionIdx);
+
+        _oss << "{\"node\":\"Definition\",";
+        _oss << "\"status\":" ; _oss << definition._status ; _oss << ',';
+        _oss << "\"value\":"  ; base()(definition._value)  ; _oss << '}';
+    }
+
     void operator()(ast::node::TIndex<ast::node::Kind::MODULE> moduleIdx)
     {
         auto& module = get(moduleIdx);
 
         _oss << "{\"node\":\"Module\",";
-        _oss << "\"path\":"      ; base()(module._path       ); _oss << ',';
-        _oss << "\"parentPath\":"; base()(module._parentPath ); _oss << ',';
-        _oss << "\"imports\":"   ; base()(module._imports    ); _oss << ',';
-        _oss << "\"functions\":" ; base()(module._functions  ); _oss << ',';
-        _oss << "\"types\":"     ; base()(module._types      ); _oss << ',';
-        _oss << "\"modules\":"   ; base()(module._modules    ); _oss << '}';
+        _oss << "\"path\":"        ; base()(module._path        ); _oss << ',';
+        _oss << "\"parentPath\":"  ; base()(module._parentPath  ); _oss << ',';
+        _oss << "\"imports\":"     ; base()(module._imports     ); _oss << ',';
+        _oss << "\"definitions\":" ; base()(module._definitions ); _oss << ',';
+        _oss << "\"modules\":"     ; base()(module._modules     ); _oss << '}';
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::VIEW> viewIdx)

@@ -150,11 +150,6 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
             as<node::Kind::FUN_DEFINITION>(_stackPtrIn->_index)
         );
 
-        if (srceFunction._status != FunctionStatus::EXPORTED)
-        {
-            return;
-        }
-
         _destNodePool.make(destFunction._name);
         _stackPtrIn->_index = destFunction._name;
         base()(srceFunction._name);
@@ -172,9 +167,6 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
         {
             com::blitDefault(destFunction._returnType);
         }
-
-        com::blit(srceFunction._status,
-                  destFunction._status);
     }
 
     void operator()(node::TIndex<node::Kind::TYP_DEFINITION> srceTypeIdx)
@@ -215,6 +207,23 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
         }
     }
 
+    void operator()(node::TIndex<node::Kind::DEFINITION> srceDefinitionIdx)
+    {
+        auto& srceDefinition = get(srceDefinitionIdx);
+        auto& destDefinition = _destNodePool.get(
+            as<node::Kind::DEFINITION>(_stackPtrIn->_index)
+        );
+
+        if (srceDefinition._status != DefinitionStatus::EXPORTED)
+        {
+            return;
+        }
+
+        auto blitter = blitter::make(_destNodePool, destDefinition._value);
+        _stackPtrIn->_index = blitter(srceDefinition._value);
+        base()(srceDefinition._value);
+    }
+
     void operator()(node::TIndex<node::Kind::MODULE> srceModuleIdx)
     {
         auto& srceModule = get(srceModuleIdx)   ;
@@ -233,11 +242,8 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
             com::blitDefault(destModule._path);
         }
 
-        copyRange(srceModule._types,
-                  destModule._types);
-
-        copyRange(srceModule._functions,
-                  destModule._functions);
+        copyRange(srceModule._definitions,
+                  destModule._definitions);
 
         if (srceModule._parentPath)
         {

@@ -159,6 +159,7 @@ Builder::Builder() :
     auto rawScope      = makeParserUnary      <tree::node::Kind::SCOPE               > (_pool, _state);
     auto rawClass      = makeParserUnary      <tree::node::Kind::CLS_DEFINITION      > (_pool, _state);
     auto rawFunction   = makeParserUnary      <tree::node::Kind::FUN_DEFINITION      > (_pool, _state);
+    auto rawDefinition = makeParserUnary      <tree::node::Kind::DEFINITION          > (_pool, _state);
     auto rawModule     = makeParserUnary      <tree::node::Kind::MODULE              > (_pool, _state);
     auto rootModule    = makeParserUnary      <tree::node::Kind::MODULE              > (_pool, _state);
     auto scope         = makeParserVariadic   <tree::node::Kind::SCOPE               > (_pool, _state);
@@ -171,6 +172,7 @@ Builder::Builder() :
     auto rcvScope      = makeParserRecoverable                                         (_pool, _state);
     auto rcvClass      = makeParserRecoverable                                         (_pool, _state);
     auto rcvFunction   = makeParserRecoverable                                         (_pool, _state);
+    auto rcvDefinition = makeParserRecoverable                                         (_pool, _state);
     auto rcvImport     = makeParserRecoverable                                         (_pool, _state);
     auto rcvModule     = makeParserRecoverable                                         (_pool, _state);
     auto rawScopeElem  = makeParser                                                    (_pool, _state);
@@ -178,6 +180,7 @@ Builder::Builder() :
     auto skpScope      = makeParser                                                    (_pool, _state);
     auto skpClass      = makeParser                                                    (_pool, _state);
     auto skpFunction   = makeParser                                                    (_pool, _state);
+    auto skpDefinition = makeParser                                                    (_pool, _state);
     auto skpImport     = makeParser                                                    (_pool, _state);
     auto skpModule     = makeParser                                                    (_pool, _state);
     auto expression    = makeParser                                                    (_pool, _state);
@@ -304,9 +307,7 @@ Builder::Builder() :
 
     funArguments = seq(parLeft, opt(seq(typeClaim, rep(seq(comma, typeClaim)))), parRight);
 
-    rawExport = keyExport;
-
-    rawFunction = seq(opt(rawExport), keyFunc, identifier, funArguments, opt(seq(minusKetRight, identifier)), scope);
+    rawFunction = seq(keyFunc, identifier, funArguments, opt(seq(minusKetRight, identifier)), scope);
 
     skpFunction = seq(opt(tok<lex::Token::FUNC>()), skp(alt(tok<lex::Token::FUNC>(),
                                                             tok<lex::Token::CLASS>(),
@@ -323,14 +324,26 @@ Builder::Builder() :
 
     rawClass = seq(keyClass, identifier, clsMembers);
 
-    skpClass = seq(opt(tok<lex::Token::CLASS>()), skp(alt(tok<lex::Token::CLASS>(),
-                                                          tok<lex::Token::FUNC>(),
+    skpClass = seq(opt(tok<lex::Token::CLASS>()), skp(alt(tok<lex::Token::FUNC>(),
+                                                          tok<lex::Token::CLASS>(),
                                                           tok<lex::Token::MODULE>(),
                                                           tok<lex::Token::EXPORT>(),
                                                           tok<lex::Token::IMPORT>(),
                                                           tok<lex::Token::BRA_RIGHT>())));
     rcvClass = alt(rawClass,
                    skpClass);
+
+    rawExport = keyExport;
+
+    rawDefinition = seq(opt(rawExport), alt(rcvFunction, rcvClass));
+
+    skpDefinition = seq(opt(tok<lex::Token::EXPORT>()), skp(alt(tok<lex::Token::FUNC>(),
+                                                                tok<lex::Token::CLASS>(),
+                                                                tok<lex::Token::MODULE>(),
+                                                                tok<lex::Token::EXPORT>(),
+                                                                tok<lex::Token::IMPORT>(),
+                                                                tok<lex::Token::BRA_RIGHT>())));
+    rcvDefinition = alt(rawDefinition, skpDefinition);
 
     // Import
 
@@ -350,8 +363,8 @@ Builder::Builder() :
                     skpImport);
     // Module
 
-    rawModule = seq(keyModule, path, alt(seq(semiColon , rep(alt(rcvClass, rcvFunction, rcvImport, rawModule))),
-                                             seq(braLeft   , rep(alt(rcvClass, rcvFunction, rcvImport, rawModule)), braRight)));
+    rawModule = seq(keyModule, path, alt(seq(semiColon , rep(alt(rcvDefinition, rcvImport, rawModule))),
+                                         seq(braLeft   , rep(alt(rcvDefinition, rcvImport, rawModule)), braRight)));
 
     skpModule = seq(opt(tok<lex::Token::MODULE>()), skp(alt(tok<lex::Token::FUNC>(),
                                                             tok<lex::Token::CLASS>(),
@@ -362,7 +375,7 @@ Builder::Builder() :
                     skpModule);
     // Full parser
 
-    rootModule = rep(alt(rcvClass, rcvFunction, rcvImport, rcvModule));
+    rootModule = rep(alt(rcvDefinition, rcvImport, rcvModule));
 
     _parser = rootModule;
 }

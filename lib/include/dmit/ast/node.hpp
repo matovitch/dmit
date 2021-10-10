@@ -1,6 +1,6 @@
 #pragma once
 
-#include "dmit/ast/function_status.hpp"
+#include "dmit/ast/definition_status.hpp"
 
 #include "dmit/src/line_index.hpp"
 #include "dmit/src/slice.hpp"
@@ -30,6 +30,7 @@ struct Kind : com::TEnum<uint8_t>
     {
         DCL_IMPORT     ,
         DCL_VARIABLE   ,
+        DEFINITION     ,
         EXP_BINOP      ,
         EXP_MONOP      ,
         EXPRESSION     ,
@@ -156,6 +157,9 @@ using Declaration = std::variant<node::TIndex<node::Kind::DCL_VARIABLE>>;
 
 using Statement = std::variant<node::TIndex<node::Kind::STM_RETURN>>;
 
+using Definition = std::variant<node::TIndex<node::Kind::TYP_DEFINITION>,
+                                node::TIndex<node::Kind::FUN_DEFINITION>>;
+
 using Expression = std::variant<node::TIndex<node::Kind::LIT_IDENTIFIER >,
                                 node::TIndex<node::Kind::LIT_DECIMAL    >,
                                 node::TIndex<node::Kind::LIT_INTEGER    >,
@@ -192,10 +196,9 @@ struct TNode<node::Kind::MODULE>
 {
     std::optional<Expression> _path;
 
-    node::TRange<node::Kind::TYP_DEFINITION > _types;
-    node::TRange<node::Kind::FUN_DEFINITION > _functions;
-    node::TRange<node::Kind::DCL_IMPORT     > _imports;
-    node::TRange<node::Kind::MODULE         > _modules;
+    node::TRange<node::Kind::DEFINITION > _definitions;
+    node::TRange<node::Kind::DCL_IMPORT > _imports;
+    node::TRange<node::Kind::MODULE     > _modules;
 
     node::TIndex<node::Kind::MODULE> _parent;
     com::UniqueId                    _id;
@@ -223,6 +226,14 @@ struct TNode<node::Kind::DCL_IMPORT>
 };
 
 template <>
+struct TNode<node::Kind::DEFINITION>
+{
+    DefinitionStatus _status;
+
+    Definition _value;
+};
+
+template <>
 struct TNode<node::Kind::TYP_DEFINITION>
 {
     node::TIndex<node::Kind::LIT_IDENTIFIER > _name;
@@ -237,8 +248,6 @@ struct TNode<node::Kind::FUN_DEFINITION>
     node::TIndex<node::Kind::SCOPE          > _body;
 
     std::optional<node::TIndex<node::Kind::LIT_IDENTIFIER>> _returnType;
-
-    FunctionStatus _status;
 };
 
 template<>

@@ -9,7 +9,7 @@
 namespace dmit::ast
 {
 
-struct FunctionStatus : com::TEnum<uint8_t>, fmt::Formatable
+struct DefinitionStatus : com::TEnum<uint8_t>, fmt::Formatable
 {
     enum : uint8_t
     {
@@ -17,7 +17,7 @@ struct FunctionStatus : com::TEnum<uint8_t>, fmt::Formatable
         LOCAL
     };
 
-    DMIT_COM_ENUM_IMPLICIT_FROM_INT(FunctionStatus);
+    DMIT_COM_ENUM_IMPLICIT_FROM_INT(DefinitionStatus);
 };
 
 } // namespace dmit::ast

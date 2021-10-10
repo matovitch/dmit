@@ -104,6 +104,7 @@ struct TPool
     // though I have not figured out the template to do it :/
     std::tuple<pool::TSub<Kind::DCL_IMPORT     , LOG2_SIZE>,
                pool::TSub<Kind::DCL_VARIABLE   , LOG2_SIZE>,
+               pool::TSub<Kind::DEFINITION     , LOG2_SIZE>,
                pool::TSub<Kind::EXP_BINOP      , LOG2_SIZE>,
                pool::TSub<Kind::EXP_MONOP      , LOG2_SIZE>,
                pool::TSub<Kind::EXPRESSION     , LOG2_SIZE>,

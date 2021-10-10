@@ -27,6 +27,7 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
     {
         CLS_DEFINITION,
         CLS_MEMBERS,
+        DEFINITION,
         DCL_EXPORT,
         DCL_IMPORT,
         DCL_VARIABLE,

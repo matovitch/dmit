@@ -97,6 +97,9 @@ private:
     void makeFunctionCall(dmit::prs::Reader& reader,
                           TNode<node::Kind::FUN_CALL>& funCall);
 
+    void makeDefinition(const dmit::prs::Reader& supReader,
+                        TNode<node::Kind::DEFINITION>& definition);
+
     void makeModule(dmit::prs::Reader& reader,
                     TNode<node::Kind::MODULE>& module);
 
