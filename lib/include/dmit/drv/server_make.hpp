@@ -97,13 +97,18 @@ struct SemanticAnalysis
         _bundles{bundles}
     {}
 
+    static void init()
+    {
+        _interfaceAtomCount.store(0, std::memory_order_relaxed);
+    }
+
     int8_t run(const uint64_t index)
     {
         if (index)
         {
             while (_interfaceAtomCount.load(std::memory_order_acquire) < index);
 
-            sem::analyze(_bundles[index - 1]);
+            return sem::analyze(_interfaceMap, _bundles[index - 1]);
         }
 
         for (auto& bundle : _bundles)
@@ -123,11 +128,13 @@ struct SemanticAnalysis
         return _bundles.size() + 1;
     }
 
-    std::atomic<int> _interfaceAtomCount = 0;
+    static std::atomic<int> _interfaceAtomCount;
 
     sem::InterfaceMap        & _interfaceMap;
     std::vector<ast::Bundle> & _bundles;
 };
+
+std::atomic<int> SemanticAnalysis::_interfaceAtomCount;
 
 void make(nng::Socket& socket, db::Database& database)
 {
@@ -204,7 +211,9 @@ void make(nng::Socket& socket, db::Database& database)
         bundles.emplace_back(parallelBundleBuilder.result(i));
     }
 
-    // 6. End of semantic analysis
+    // 6. Semantic analysis
+
+    SemanticAnalysis::init();
 
     ast::State::NodePool astNodePool;
 

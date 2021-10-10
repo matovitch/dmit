@@ -2,7 +2,7 @@
 
 #include "dmit/sem/fact_map.hpp"
 
-#include "dmit/ast/deep_copy.hpp"
+#include "dmit/ast/copy_deep.hpp"
 #include "dmit/ast/bundle.hpp"
 #include "dmit/ast/state.hpp"
 
@@ -34,7 +34,7 @@ void makeView(const com::UniqueId  & viewId,
 
     do
     {
-        ast::deepCopy(as<ast::node::Kind::MODULE>(fit->second._index),
+        ast::copyDeep(as<ast::node::Kind::MODULE>(fit->second._index),
                       *(fit->second._nodePool),
                       view._modules[--count],
                       nodePool);

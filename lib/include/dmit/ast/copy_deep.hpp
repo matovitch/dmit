@@ -6,7 +6,7 @@
 namespace dmit::ast
 {
 
-void deepCopy(node::TIndex<node::Kind::MODULE>   srceModule,
+void copyDeep(node::TIndex<node::Kind::MODULE>   srceModule,
               State::NodePool                  & srceNodePool,
               node::TIndex<node::Kind::MODULE>   destModule,
               State::NodePool                  & destNodePool);

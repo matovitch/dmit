@@ -7,6 +7,8 @@
 
 #include "robin/map.hpp"
 
+#include "pool/pool.hpp"
+
 namespace dmit::sem
 {
 
@@ -23,7 +25,7 @@ struct InterfaceMap
     Map _asSimpleMap;
     ast::State::NodePool& _astNodePool;
 
-    ast::node::TRange<ast::node::Kind::VIEW> _views;
+    pool::TMake<ast::node::TRange<ast::node::Kind::VIEW>, 1> _viewsPool;
 };
 
 } // namespace dmit::sem

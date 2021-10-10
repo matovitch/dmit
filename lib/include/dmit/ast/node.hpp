@@ -46,8 +46,8 @@ struct Kind : com::TEnum<uint8_t>
         TYP_DEFINITION ,
         MODULE         ,
         VIEW           ,
-        SOURCE         ,
-        PARENT_PATH
+        PARENT_PATH    ,
+        SOURCE
     };
 
     using IntegerSequence = std::make_integer_sequence<uint8_t, SOURCE + 1>;
