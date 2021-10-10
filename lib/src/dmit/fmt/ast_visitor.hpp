@@ -130,7 +130,7 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
         base()(scope._variants);
     }
 
-    void operator()(ast::node::TIndex<ast::node::Kind::FUN_DEFINITION> functionIdx)
+    void operator()(ast::node::TIndex<ast::node::Kind::DEF_FUNCTION> functionIdx)
     {
         auto& function = get(functionIdx);
 
@@ -141,11 +141,11 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
         _oss << "\"body\":"       ; base()(function._body       ); _oss << '}';
     }
 
-    void operator()(ast::node::TIndex<ast::node::Kind::TYP_DEFINITION> typeIdx)
+    void operator()(ast::node::TIndex<ast::node::Kind::DEF_CLASS> typeIdx)
     {
         auto& type = get(typeIdx);
 
-        _oss << "{\"node\":\"Type\",";
+        _oss << "{\"node\":\"Class\",";
         _oss << "\"name\":"    ; base()(type._name    ); _oss << ',';
         _oss << "\"members\":" ; base()(type._members ); _oss << '}';
     }

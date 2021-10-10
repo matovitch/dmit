@@ -25,19 +25,19 @@ struct Kind : com::TEnum<uint8_t>, fmt::Formatable
 {
     enum : uint8_t
     {
-        CLS_DEFINITION,
         CLS_MEMBERS,
         DEFINITION,
         DCL_EXPORT,
         DCL_IMPORT,
         DCL_VARIABLE,
+        DEF_CLASS,
+        DEF_FUNCTION,
         EXP_ASSIGN,
         EXP_BINOP,
         EXP_OPERATOR,
         EXP_OPPOSE,
         FUN_ARGUMENTS,
         FUN_CALL,
-        FUN_DEFINITION,
         LIT_DECIMAL,
         LIT_IDENTIFIER,
         LIT_INTEGER,

@@ -55,8 +55,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
     template <com::TEnumIntegerType<node::Kind> NODE_KIND>
     void operator()(node::TIndex<NODE_KIND>)
     {
-        std::cout << (int)NODE_KIND << '\n';
-        DMIT_COM_ASSERT(!"Not implemented");
+        DMIT_COM_ASSERT(!"[AST] Cannot shallow copy node");
     }
 
     void operator()(node::TIndex<node::Kind::SOURCE> srceSourceIdx)
@@ -143,11 +142,11 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
         base()(srceImport._path);
     }
 
-    void operator()(node::TIndex<node::Kind::FUN_DEFINITION> srceFunctionIdx)
+    void operator()(node::TIndex<node::Kind::DEF_FUNCTION> srceFunctionIdx)
     {
         auto& srceFunction = get(srceFunctionIdx);
         auto& destFunction = _destNodePool.get(
-            as<node::Kind::FUN_DEFINITION>(_stackPtrIn->_index)
+            as<node::Kind::DEF_FUNCTION>(_stackPtrIn->_index)
         );
 
         _destNodePool.make(destFunction._name);
@@ -169,11 +168,11 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
         }
     }
 
-    void operator()(node::TIndex<node::Kind::TYP_DEFINITION> srceTypeIdx)
+    void operator()(node::TIndex<node::Kind::DEF_CLASS> srceTypeIdx)
     {
         auto& srceType = get(srceTypeIdx);
         auto& destType = _destNodePool.get(
-            as<node::Kind::TYP_DEFINITION>(_stackPtrIn->_index)
+            as<node::Kind::DEF_CLASS>(_stackPtrIn->_index)
         );
 
         _destNodePool.make(destType._name);

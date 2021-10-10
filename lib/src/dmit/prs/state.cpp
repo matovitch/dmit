@@ -157,8 +157,8 @@ Builder::Builder() :
     auto rawImport     = makeParserUnary      <tree::node::Kind::DCL_IMPORT          > (_pool, _state);
     auto clsMembers    = makeParserUnary      <tree::node::Kind::CLS_MEMBERS         > (_pool, _state);
     auto rawScope      = makeParserUnary      <tree::node::Kind::SCOPE               > (_pool, _state);
-    auto rawClass      = makeParserUnary      <tree::node::Kind::CLS_DEFINITION      > (_pool, _state);
-    auto rawFunction   = makeParserUnary      <tree::node::Kind::FUN_DEFINITION      > (_pool, _state);
+    auto rawClass      = makeParserUnary      <tree::node::Kind::DEF_CLASS           > (_pool, _state);
+    auto rawFunction   = makeParserUnary      <tree::node::Kind::DEF_FUNCTION        > (_pool, _state);
     auto rawDefinition = makeParserUnary      <tree::node::Kind::DEFINITION          > (_pool, _state);
     auto rawModule     = makeParserUnary      <tree::node::Kind::MODULE              > (_pool, _state);
     auto rootModule    = makeParserUnary      <tree::node::Kind::MODULE              > (_pool, _state);

@@ -55,17 +55,17 @@ private:
     void makeScope(const dmit::prs::Reader& supReader,
                    TNode<node::Kind::SCOPE>& scope);
 
-    void makeMembers(const dmit::prs::Reader& supReader,
-                     TNode<node::Kind::TYP_DEFINITION>& type);
-
     void makeArguments(const dmit::prs::Reader& supReader,
-                       TNode<node::Kind::FUN_DEFINITION>& function);
+                       TNode<node::Kind::DEF_FUNCTION>& function);
 
     void makeFunction(const dmit::prs::Reader& supReader,
-                      TNode<node::Kind::FUN_DEFINITION>& function);
+                      TNode<node::Kind::DEF_FUNCTION>& function);
 
-    void makeType(const dmit::prs::Reader& supReader,
-                  TNode<node::Kind::TYP_DEFINITION>& type);
+    void makeClass(const dmit::prs::Reader& supReader,
+                   TNode<node::Kind::DEF_CLASS>& type);
+
+    void makeMembers(const dmit::prs::Reader& supReader,
+                     TNode<node::Kind::DEF_CLASS>& type);
 
     void makeImport(const dmit::prs::Reader& supReader,
                     TNode<node::Kind::DCL_IMPORT>& import);

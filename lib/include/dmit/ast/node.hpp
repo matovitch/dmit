@@ -30,12 +30,13 @@ struct Kind : com::TEnum<uint8_t>
     {
         DCL_IMPORT     ,
         DCL_VARIABLE   ,
+        DEF_CLASS      ,
+        DEF_FUNCTION   ,
         DEFINITION     ,
         EXP_BINOP      ,
         EXP_MONOP      ,
         EXPRESSION     ,
         FUN_CALL       ,
-        FUN_DEFINITION ,
         LEXEME         ,
         LIT_DECIMAL    ,
         LIT_IDENTIFIER ,
@@ -44,7 +45,6 @@ struct Kind : com::TEnum<uint8_t>
         SCOPE_VARIANT  ,
         STM_RETURN     ,
         TYPE_CLAIM     ,
-        TYP_DEFINITION ,
         MODULE         ,
         VIEW           ,
         PARENT_PATH    ,
@@ -157,8 +157,8 @@ using Declaration = std::variant<node::TIndex<node::Kind::DCL_VARIABLE>>;
 
 using Statement = std::variant<node::TIndex<node::Kind::STM_RETURN>>;
 
-using Definition = std::variant<node::TIndex<node::Kind::TYP_DEFINITION>,
-                                node::TIndex<node::Kind::FUN_DEFINITION>>;
+using Definition = std::variant<node::TIndex<node::Kind::DEF_CLASS>,
+                                node::TIndex<node::Kind::DEF_FUNCTION>>;
 
 using Expression = std::variant<node::TIndex<node::Kind::LIT_IDENTIFIER >,
                                 node::TIndex<node::Kind::LIT_DECIMAL    >,
@@ -234,14 +234,14 @@ struct TNode<node::Kind::DEFINITION>
 };
 
 template <>
-struct TNode<node::Kind::TYP_DEFINITION>
+struct TNode<node::Kind::DEF_CLASS>
 {
     node::TIndex<node::Kind::LIT_IDENTIFIER > _name;
     node::TRange<node::Kind::TYPE_CLAIM     > _members;
 };
 
 template <>
-struct TNode<node::Kind::FUN_DEFINITION>
+struct TNode<node::Kind::DEF_FUNCTION>
 {
     node::TIndex<node::Kind::LIT_IDENTIFIER > _name;
     node::TRange<node::Kind::TYPE_CLAIM     > _arguments;

@@ -128,5 +128,5 @@ struct TVisitor
     template <dmit::com::TEnumIntegerType<dmit::ast::node::Kind> KIND>   \
     void operator()(dmit::ast::node::TIndex<KIND>)                       \
     {                                                                    \
-        DMIT_COM_ASSERT(!"Not implemented");                             \
+        DMIT_COM_ASSERT(!"[AST] Not implemented");                       \
     }                                                                    \

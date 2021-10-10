@@ -283,7 +283,7 @@ void Builder::makeScope(const dmit::prs::Reader& supReader,
 }
 
 void Builder::makeArguments(const dmit::prs::Reader& supReader,
-                            TNode<node::Kind::FUN_DEFINITION>& function)
+                            TNode<node::Kind::DEF_FUNCTION>& function)
 {
     DMIT_COM_ASSERT(supReader.look()._kind == ParseNodeKind::FUN_ARGUMENTS);
     auto reader = supReader.makeSubReader();
@@ -316,40 +316,40 @@ void Builder::makeIdentifier(const dmit::prs::Reader& reader,
 }
 
 void Builder::makeMembers(const dmit::prs::Reader& supReader,
-                          TNode<node::Kind::TYP_DEFINITION>& type)
+                          TNode<node::Kind::DEF_CLASS>& defClass)
 {
     DMIT_COM_ASSERT(supReader.look()._kind == ParseNodeKind::CLS_MEMBERS);
     auto reader = supReader.makeSubReader();
 
-    _nodePool.make(type._members, reader.size() >> 1);
+    _nodePool.make(defClass._members, reader.size() >> 1);
 
-    uint32_t i = type._members._size;
+    uint32_t i = defClass._members._size;
 
     while (reader.isValid())
     {
-        makeTypeClaim(reader, _nodePool.get(type._members[--i]));
+        makeTypeClaim(reader, _nodePool.get(defClass._members[--i]));
         reader.advance();
     }
 }
 
-void Builder::makeType(const dmit::prs::Reader& supReader,
-                       TNode<node::Kind::TYP_DEFINITION>& type)
+void Builder::makeClass(const dmit::prs::Reader& supReader,
+                        TNode<node::Kind::DEF_CLASS>& defClass)
 {
-    auto reader = makeSubReaderFor(ParseNodeKind::CLS_DEFINITION, supReader);
+    auto reader = makeSubReaderFor(ParseNodeKind::DEF_CLASS, supReader);
 
     // Members
-    makeMembers(reader, type);
+    makeMembers(reader, defClass);
     reader.advance();
 
     // Name
-    _nodePool.make(type._name);
-    makeIdentifier(reader, _nodePool.get(type._name));
+    _nodePool.make(defClass._name);
+    makeIdentifier(reader, _nodePool.get(defClass._name));
 }
 
 void Builder::makeFunction(const dmit::prs::Reader& supReader,
-                           TNode<node::Kind::FUN_DEFINITION>& function)
+                           TNode<node::Kind::DEF_FUNCTION>& function)
 {
-    auto reader = makeSubReaderFor(ParseNodeKind::FUN_DEFINITION, supReader);
+    auto reader = makeSubReaderFor(ParseNodeKind::DEF_FUNCTION, supReader);
 
     // Body
     _nodePool.make(function._body);
@@ -392,23 +392,23 @@ void Builder::makeDefinition(const dmit::prs::Reader& supReader,
 
     auto parseNodeKind = reader.look()._kind;
 
-    if (parseNodeKind == ParseNodeKind::CLS_DEFINITION)
+    if (parseNodeKind == ParseNodeKind::DEF_CLASS)
     {
-        node::TIndex<node::Kind::TYP_DEFINITION> type;
+        node::TIndex<node::Kind::DEF_CLASS> type;
         _nodePool.make(type);
-        makeType(reader, _nodePool.get(type));
+        makeClass(reader, _nodePool.get(type));
         com::blit(type, definition._value);
     }
-    else if (parseNodeKind == ParseNodeKind::FUN_DEFINITION)
+    else if (parseNodeKind == ParseNodeKind::DEF_FUNCTION)
     {
-        node::TIndex<node::Kind::FUN_DEFINITION> function;
+        node::TIndex<node::Kind::DEF_FUNCTION> function;
         _nodePool.make(function);
         makeFunction(reader, _nodePool.get(function));
         com::blit(function, definition._value);
     }
     else
     {
-        DMIT_COM_ASSERT(!"[AST] Unknown definition kind");
+        DMIT_COM_ASSERT(!"[AST] Unknown definition");
     }
 
     // Status
