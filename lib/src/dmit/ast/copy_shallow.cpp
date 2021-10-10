@@ -114,6 +114,18 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
         base()(srceBinop._rhs);
     }
 
+    void operator()(node::TIndex<node::Kind::TYPE> srceTypeIdx)
+    {
+        auto& srceType = get(srceTypeIdx);
+        auto& destType = _destNodePool.get(
+            as<node::Kind::TYPE>(_stackPtrIn->_index)
+        );
+
+        _destNodePool.make(destType._name);
+        _stackPtrIn->_index = destType._name;
+        base()(srceType._name);
+    }
+
     void operator()(node::TIndex<node::Kind::TYPE_CLAIM> srceTypeClaimIdx)
     {
         auto& srceTypeClaim = get(srceTypeClaimIdx);

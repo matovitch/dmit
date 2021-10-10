@@ -54,6 +54,15 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
         _oss << "}";
     }
 
+    void operator()(ast::node::TIndex<ast::node::Kind::TYPE> typeIdx)
+    {
+        auto& type = get(typeIdx);
+
+        _oss << "{\"node\":\"Type\",";
+        _oss << "\"name\":"; base()(type._name);
+        _oss << "}";
+    }
+
     void operator()(ast::node::TIndex<ast::node::Kind::TYPE_CLAIM> typeClaimIdx)
     {
         auto& typeClaim = get(typeClaimIdx);

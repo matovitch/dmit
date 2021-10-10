@@ -70,6 +70,9 @@ private:
     void makeImport(const dmit::prs::Reader& supReader,
                     TNode<node::Kind::DCL_IMPORT>& import);
 
+    void makeDefinition(const dmit::prs::Reader& supReader,
+                        TNode<node::Kind::DEFINITION>& definition);
+
     void makeDeclaration(const dmit::prs::Reader& reader,
                          Declaration& declaration);
 
@@ -78,6 +81,9 @@ private:
 
     void makeExpression(const dmit::prs::Reader& reader,
                         Expression& expression);
+
+    void makeType(const dmit::prs::Reader& reader,
+                       TNode<node::Kind::TYPE>& type);
 
     void makeAssignment(dmit::prs::Reader& reader,
                         TNode<node::Kind::EXP_BINOP>& assignment);
@@ -96,9 +102,6 @@ private:
 
     void makeFunctionCall(dmit::prs::Reader& reader,
                           TNode<node::Kind::FUN_CALL>& funCall);
-
-    void makeDefinition(const dmit::prs::Reader& supReader,
-                        TNode<node::Kind::DEFINITION>& definition);
 
     void makeModule(dmit::prs::Reader& reader,
                     TNode<node::Kind::MODULE>& module);

@@ -44,6 +44,7 @@ struct Kind : com::TEnum<uint8_t>
         SCOPE          ,
         SCOPE_VARIANT  ,
         STM_RETURN     ,
+        TYPE           ,
         TYPE_CLAIM     ,
         MODULE         ,
         VIEW           ,
@@ -253,8 +254,16 @@ struct TNode<node::Kind::DEF_FUNCTION>
 template<>
 struct TNode<node::Kind::TYPE_CLAIM>
 {
-    node::TIndex<node::Kind::LIT_IDENTIFIER> _variable;
-    node::TIndex<node::Kind::LIT_IDENTIFIER> _type;
+    node::TIndex<node::Kind::LIT_IDENTIFIER > _variable;
+    node::TIndex<node::Kind::TYPE           > _type;
+};
+
+template <>
+struct TNode<node::Kind::TYPE>
+{
+    node::TIndex<node::Kind::LIT_IDENTIFIER> _name;
+
+    com::UniqueId _id;
 };
 
 template <>

@@ -18,14 +18,20 @@ struct InterfaceMap
 
     void registerBundle(ast::Bundle& bundle);
 
-    using Map = robin::map::TMake<com::UniqueId,
-                                  ast::node::TIndex<ast::node::Kind::VIEW>,
-                                  com::unique_id::Hasher,
-                                  com::unique_id::Comparator, 4, 3>;
-    Map _asSimpleMap;
-    ast::State::NodePool& _astNodePool;
+    template <class Type>
+    using TMap = robin::map::TMake<com::UniqueId,
+                                   Type,
+                                   com::unique_id::Hasher,
+                                   com::unique_id::Comparator, 4, 3>;
+
+    TMap<ast::node::TIndex<ast::node::Kind::VIEW>> _asSimpleMap;
+    ast::State::NodePool&                          _astNodePool;
 
     pool::TMake<ast::node::TRange<ast::node::Kind::VIEW>, 1> _viewsPool;
+
+    TMap<ast::node::TIndex<ast::node::Kind::DEF_CLASS>> _symbolTable;
+
+    using SymbolTable = decltype(_symbolTable);
 };
 
 } // namespace dmit::sem

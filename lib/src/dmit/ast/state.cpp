@@ -75,13 +75,20 @@ void Builder::makeDclVariable(dmit::prs::Reader& reader,
     makeTypeClaim(reader, _nodePool.get(dclVariable._typeClaim));
 }
 
+void Builder::makeType(const dmit::prs::Reader& reader,
+                       TNode<node::Kind::TYPE>& type)
+{
+    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::LIT_IDENTIFIER);
+    _nodePool.make(type._name);
+    makeIdentifier(reader, _nodePool.get(type._name));
+}
+
 void Builder::makeTypeClaim(dmit::prs::Reader& reader,
                             TNode<node::Kind::TYPE_CLAIM>& typeClaim)
 {
     // Type
-    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::LIT_IDENTIFIER);
     _nodePool.make(typeClaim._type);
-    makeIdentifier(reader, _nodePool.get(typeClaim._type));
+    makeType(reader, _nodePool.get(typeClaim._type));
     reader.advance();
     DMIT_COM_ASSERT(reader.isValid());
 
@@ -408,7 +415,7 @@ void Builder::makeDefinition(const dmit::prs::Reader& supReader,
     }
     else
     {
-        DMIT_COM_ASSERT(!"[AST] Unknown definition");
+        DMIT_COM_ASSERT(!"[AST] Unknown definition kind");
     }
 
     // Status
