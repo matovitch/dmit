@@ -152,6 +152,29 @@ struct TRange
     uint32_t _size;
 };
 
+namespace index
+{
+
+struct Hasher
+{
+    std::size_t operator()(const Index index) const
+    {
+        return index._value;
+    }
+};
+
+struct Comparator
+{
+    bool operator()(const Index lhs,
+                    const Index rhs) const
+    {
+        return lhs._value ==
+               rhs._value;
+    }
+};
+
+} // namesapce index
+
 } // namespace node
 
 using Declaration = std::variant<node::TIndex<node::Kind::DCL_VARIABLE>>;

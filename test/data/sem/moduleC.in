@@ -7,7 +7,9 @@ module Z
 
 module C;
 
-class A
+export class i64 {}
+
+export class A
 {
     a : i64;
 }

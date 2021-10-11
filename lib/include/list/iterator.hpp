@@ -25,8 +25,6 @@ class TIterator
     template <class>
     friend class ::TList; // namespace prefix needed for clang
 
-    using Type = typename Cell::Type;
-
     friend bool operator==<Cell>(const TIterator&,
                                  const TIterator&);
 
@@ -44,11 +42,14 @@ public:
 
     TIterator& operator=(const TIterator& iterator) = default;
 
-          Type& operator*()       { return _cellPtr->value; }
-    const Type& operator*() const { return _cellPtr->value; }
+    // Using auto in place of Cell::Type as inner type can't be
+    // forward declared and it caused inclomplete type errors
 
-          Type* operator->()       { return &(_cellPtr->value); }
-    const Type* operator->() const { return &(_cellPtr->value); }
+          auto& operator*()       { return _cellPtr->value; }
+    const auto& operator*() const { return _cellPtr->value; }
+
+          auto* operator->()       { return &(_cellPtr->value); }
+    const auto* operator->() const { return &(_cellPtr->value); }
 
     TIterator& operator++()
     {

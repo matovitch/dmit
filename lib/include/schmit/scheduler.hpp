@@ -105,6 +105,16 @@ public:
         releaseThread(taskNode);
     }
 
+    bool isCyclic() const
+    {
+        return _taskGraph.isCyclic();
+    }
+
+    void detach(Dependency dependency)
+    {
+        _taskGraph.detach(dependency);
+    }
+
 private:
 
     bool _isRunning = false;
