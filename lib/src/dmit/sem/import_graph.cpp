@@ -85,6 +85,12 @@ void ImportGraph::makeDependency(const com::UniqueId& lhsModuleId,
 void ImportGraph::makeBundles(std::vector<com::UniqueId> & moduleOrder,
                               std::vector<uint32_t     > & moduleBundles)
 {
+    if (_moduleMap.empty())
+    {
+        moduleBundles.push_back(0);
+        return;
+    }
+
     moduleOrder   .reserve(_moduleMap.size());
     moduleBundles .reserve(_moduleMap.size());
 

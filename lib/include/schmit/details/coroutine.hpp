@@ -17,22 +17,22 @@ namespace coroutine
 
 struct Abstract
 {
-    virtual void recycle        () = 0;
-    virtual ~Abstract           () {}
+    virtual void recycle () = 0;
+    virtual ~Abstract    () {}
 };
 
 void mmxFpuSave(coroutine::Register&);
 
 } // namespace coroutine
 
-template <std::size_t STACK_SIZE>
+template <std::size_t STACK_SIZE, std::size_t POOL_SIZE>
 class TCoroutine : public coroutine::Abstract
 {
 
 public:
 
     using Register = coroutine::Register;
-    using Pool = pool::intrusive::TMake<TCoroutine<STACK_SIZE>, 0>;
+    using Pool = pool::intrusive::TMake<TCoroutine<STACK_SIZE, POOL_SIZE>, POOL_SIZE>;
 
     TCoroutine(Pool& pool, void* entryPoint) :
         _pool{pool}

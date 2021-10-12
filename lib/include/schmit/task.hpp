@@ -76,9 +76,9 @@ struct TAbstract
 
     using Dependency = typename topo::graph::TMake<TAbstract<SIZE>*, SIZE>::EdgeListIt;
 
-    template <std::size_t STACK_SIZE>
+    template <std::size_t STACK_SIZE, std::size_t POOL_SIZE>
     TAbstract(TScheduler<SIZE>& scheduler,
-              pool::TIntrusive<pool::intrusive::TTraits<schmit_details::TCoroutine<STACK_SIZE>, 0>>& coroutinePool) :
+              pool::TIntrusive<pool::intrusive::TTraits<schmit_details::TCoroutine<STACK_SIZE, POOL_SIZE>, POOL_SIZE>>& coroutinePool) :
         _scheduler{scheduler},
         _coroutine{coroutinePool.make(TEntryPoint<SIZE>::_value)}
     {}
@@ -134,10 +134,10 @@ public:
 
     using Pool = pool::intrusive::TMake<TTask<SIZE>, SIZE>;
 
-    template <std::size_t STACK_SIZE>
+    template <std::size_t STACK_SIZE, std::size_t POOL_SIZE>
     TTask(Pool& pool,
           schmit::TScheduler<SIZE> & scheduler,
-          pool::TIntrusive<pool::intrusive::TTraits<schmit_details::TCoroutine<STACK_SIZE>, 0>>& coroutinePool) :
+          pool::TIntrusive<pool::intrusive::TTraits<schmit_details::TCoroutine<STACK_SIZE, POOL_SIZE>, POOL_SIZE>>& coroutinePool) :
         task::TAbstract<SIZE>(scheduler, coroutinePool),
         _pool{pool}
     {}
