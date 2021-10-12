@@ -58,12 +58,12 @@ public:
 
     void pop()
     {
-        if (!chunk().isEmpty())
+        if (!chunk().empty())
         {
             chunk().pop();
         }
 
-        if (chunk().isEmpty())
+        if (chunk().empty())
         {
             _chunkIt = (_chunkIt != _chunks.begin () &&
                         _chunkIt != _chunks.end   ()) ? std::prev(_chunkIt)
@@ -96,7 +96,7 @@ public:
 
         _chunkIt = _chunks.end();
 
-        chunk().~Chunk();
+        chunk().clear();
     }
 
 private:

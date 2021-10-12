@@ -173,6 +173,10 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
 
     Scheduler&    _scheduler;
 
+    PoolCoroutine  _poolCoroutine;
+    PoolWork       _poolWork;
+    PoolTask       _poolTask;
+
     InterfaceMap::TMap<Dependency> _eventMap;
 
     robin::map::TMake<ast::node::Index,
@@ -183,10 +187,6 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
     robin::table::TMake<ast::node::Index,
                         ast::node::index::Hasher,
                         ast::node::index::Comparator, 4, 3> _unlockSet;
-
-    PoolWork      _poolWork;
-    PoolTask      _poolTask;
-    PoolCoroutine _poolCoroutine;
 };
 
 } // namespace

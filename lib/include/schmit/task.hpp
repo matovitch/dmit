@@ -78,7 +78,7 @@ struct TAbstract
 
     template <std::size_t STACK_SIZE>
     TAbstract(TScheduler<SIZE>& scheduler,
-              pool::TIntrusive<pool::intrusive::TTraits<schmit_details::TCoroutine<STACK_SIZE, SIZE>, SIZE>> & coroutinePool) :
+              pool::TIntrusive<pool::intrusive::TTraits<schmit_details::TCoroutine<STACK_SIZE>, 0>>& coroutinePool) :
         _scheduler{scheduler},
         _coroutine{coroutinePool.make(TEntryPoint<SIZE>::_value)}
     {}
@@ -137,7 +137,7 @@ public:
     template <std::size_t STACK_SIZE>
     TTask(Pool& pool,
           schmit::TScheduler<SIZE> & scheduler,
-          pool::TIntrusive<pool::intrusive::TTraits<schmit_details::TCoroutine<STACK_SIZE, SIZE>, SIZE>> & coroutinePool) :
+          pool::TIntrusive<pool::intrusive::TTraits<schmit_details::TCoroutine<STACK_SIZE>, 0>>& coroutinePool) :
         task::TAbstract<SIZE>(scheduler, coroutinePool),
         _pool{pool}
     {}

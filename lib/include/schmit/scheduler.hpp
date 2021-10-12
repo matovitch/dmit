@@ -22,7 +22,7 @@ public:
     using TaskNode         = task::TNode<SIZE>;
 
     template <std::size_t STACK_SIZE>
-    using TCoroutinePool = typename schmit_details::TCoroutine<STACK_SIZE, SIZE>::Pool;
+    using TCoroutinePool = typename schmit_details::TCoroutine<STACK_SIZE>::Pool;
 
     using PoolTask = typename TTask<SIZE>::Pool;
     using PoolWork = typename TWork<SIZE>::Pool;
@@ -122,10 +122,10 @@ private:
     schmit_details::coroutine::Abstract& _coroutine;
     TaskGraph _taskGraph;
 
-    static schmit_details::TCoroutine<0x1000, 1>::Pool _coroutinePool;
+    static thread_local schmit_details::TCoroutine<0x1000>::Pool _coroutinePool;
 };
 
 template <std::size_t SIZE>
-schmit_details::TCoroutine<0x1000, 1>::Pool TScheduler<SIZE>::_coroutinePool;
+thread_local schmit_details::TCoroutine<0x1000>::Pool TScheduler<SIZE>::_coroutinePool;
 
 } // namespace schmit

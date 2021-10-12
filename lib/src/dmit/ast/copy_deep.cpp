@@ -164,6 +164,8 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
         auto blitter = blitter::make(_destNodePool, destImport._path);
         _stackPtrIn->_index = blitter(srceImport._path);
         base()(srceImport._path);
+
+        com::blit(srceImport._id, destImport._id);
     }
 
     void operator()(node::TIndex<node::Kind::TYPE> srceTypeIdx)
@@ -353,6 +355,8 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
                   destModule._definitions);
 
         _destNodePool.make(destModule._modules, 0);
+
+        com::blit(srceModule._id, destModule._id);
 
         // Copy parent path
 

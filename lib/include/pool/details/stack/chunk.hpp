@@ -37,11 +37,6 @@ public:
         return _head == _tail;
     }
 
-    bool isEmpty() const
-    {
-        return _head == _data;
-    }
-
     template <class... Args>
     void push(Args&&... args)
     {
@@ -75,22 +70,24 @@ public:
         return _tail - _data;
     }
 
-    void destroy()
-    {
-        this->~TChunk();
-
-        delete[] reinterpret_cast<std::aligned_storage_t<sizeof(Type), alignof(Type)>*>(_data);
-
-        _data = nullptr;
-        _head = nullptr;
-    }
-
-    ~TChunk()
+    void clear()
     {
         for (auto ptr = _data; ptr < _head; ptr++)
         {
             ptr->~Type();
         }
+
+        _head = _data;
+    }
+
+    void destroy()
+    {
+        clear();
+
+        delete[] reinterpret_cast<std::aligned_storage_t<sizeof(Type), alignof(Type)>*>(_data);
+
+        _data = nullptr;
+        _head = nullptr;
     }
 
 private:

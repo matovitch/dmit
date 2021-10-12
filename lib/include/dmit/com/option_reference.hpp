@@ -34,7 +34,7 @@ struct OptionReference
 };
 
 template <class Type>
-#    ifdef USE_OPTION_REFERENCE
+#    ifdef DMIT_USE_OPTION_REFERENCE
         using OptionRef = std::optional<std::reference_wrapper<Type>>;
 #    else
         using OptionRef = OptionReference<Type>;
