@@ -8,6 +8,7 @@ CX = clang++-11
 
 CXFLAGS += -std=c++20
 CXFLAGS += -Wall
+CXFLAGS += -fno-rtti
 
 ifeq (@(IS_DEBUG),y)
     CXFLAGS += -g -fno-omit-frame-pointer
