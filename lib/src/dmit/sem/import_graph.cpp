@@ -92,7 +92,7 @@ void ImportGraph::makeBundles(std::vector<com::UniqueId> & moduleOrder,
     }
 
     moduleOrder   .reserve(_moduleMap.size());
-    moduleBundles .reserve(_moduleMap.size());
+    moduleBundles .reserve(_moduleMap.size() + 1);
 
     int hyperNodeStackSize = 0;
 

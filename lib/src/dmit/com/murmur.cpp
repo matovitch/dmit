@@ -34,7 +34,7 @@ uint64_t fmix(uint64_t k)
 namespace dmit::com::murmur
 {
 
-void hash(const uint8_t* const data,
+Hash& hash(const uint8_t* const data,
           const uint64_t size,
           Hash& hash)
 {
@@ -108,16 +108,18 @@ void hash(const uint8_t* const data,
 
     h1 += h2;
     h2 += h1;
+
+    return hash;
 }
 
-void combine(const Hash& lhs, Hash& rhs)
+Hash& combine(const Hash& lhs, Hash& rhs)
 {
     uint8_t data[sizeof(Hash) << 1];
 
     memcpy(data                , &lhs, sizeof(Hash));
     memcpy(data + sizeof(Hash) , &rhs, sizeof(Hash));
 
-    hash(data, sizeof(data), rhs);
+    return hash(data, sizeof(data), rhs);
 }
 
 } // namespace dmit::com::murmur

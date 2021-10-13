@@ -28,6 +28,100 @@ using PoolCoroutine             = typename Scheduler::TCoroutinePool<0x2000 /*st
 using Dependency                = typename Scheduler::Dependency;
 using TaskNode                  = typename Scheduler::TaskNode;
 
+struct Conductor
+{
+
+    Conductor(Scheduler& scheduler) : _scheduler{scheduler} {}
+
+    TaskNode getOrMakeLock(ast::node::Index astNodeIndex)
+    {
+        auto fitLock = _lockMap.find(astNodeIndex);
+
+        auto lock = (fitLock != _lockMap.end()) ? fitLock->second
+                                                : _scheduler.makeTask(_poolTask,
+                                                                      _poolCoroutine);
+        if (fitLock == _lockMap.end())
+        {
+            _scheduler.attach(lock, lock);
+            _lockMap.emplace(astNodeIndex, lock);
+        }
+
+        return lock;
+    }
+
+    template <class Function>
+    std::optional<Dependency> makeLockedTask(ast::node::Index astNodeIndex, Function&& function)
+    {
+        if (function())
+        {
+            return std::nullopt;
+        }
+
+        auto lock = getOrMakeLock(astNodeIndex);
+
+        auto& work = _poolWork.make
+        (
+            [this, astNodeIndex, function]
+            {
+                function();
+                _unlockSet.emplace(astNodeIndex);
+            }
+        );
+
+        auto task = _scheduler.makeTask(_poolTask, _poolCoroutine);
+        task().assignWork(work);
+
+        return _scheduler.attach(task, lock);
+    }
+
+    void notifyEvent(const com::UniqueId& id)
+    {
+        auto fit = _eventMap.find(id);
+
+        if (fit != _eventMap.end())
+        {
+            _scheduler.detach(fit->second);
+        }
+    }
+
+    void registerEvent(const com::UniqueId& id, std::optional<Dependency> dependencyOpt)
+    {
+        if (dependencyOpt)
+        {
+            _eventMap.emplace(id, dependencyOpt.value());
+        }
+    }
+
+    void cleanLocks()
+    {
+        for (auto key : _unlockSet)
+        {
+            auto fit = _lockMap.find(key);
+            _scheduler.detachAll(fit->second);
+        }
+
+        _scheduler.run();
+    }
+
+    Scheduler&    _scheduler;
+
+    PoolCoroutine  _poolCoroutine;
+    PoolWork       _poolWork;
+    PoolTask       _poolTask;
+
+    InterfaceMap::TMap<Dependency> _eventMap;
+
+    robin::map::TMake<ast::node::Index,
+                      TaskNode,
+                      ast::node::index::Hasher,
+                      ast::node::index::Comparator, 4, 3> _lockMap;
+
+    robin::table::TMake<ast::node::Index,
+                        ast::node::index::Hasher,
+                        ast::node::index::Comparator, 4, 3> _unlockSet;
+};
+
+
 struct Stack
 {
     com::UniqueId _prefix;
@@ -40,7 +134,7 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
                    Scheduler& scheduler) :
         TVisitor<InterfaceMaker, Stack>{astNodePool},
         _symbolTable{symbolTable},
-        _scheduler{scheduler}
+        _conductor{scheduler}
     {}
 
     DMIT_AST_VISITOR_SIMPLE();
@@ -53,50 +147,25 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
 
         const com::UniqueId sliceId{slice._head, slice.size()};
 
-        com::murmur::combine(
-            sliceId,
-            _stackPtrIn->_prefix
-        );
+        auto id = com::murmur::combine(sliceId,_stackPtrIn->_prefix);
 
-        auto id = _stackPtrIn->_prefix;
-
-        if (_symbolTable.find(id) != _symbolTable.end())
-        {
-            com::blit(id, get(typeIdx)._id);
-            return;
-        }
-
-        auto fitLock = _lockMap.find(typeIdx);
-
-        auto lock = (fitLock != _lockMap.end()) ? fitLock->second
-                                                : _scheduler.makeTask(_poolTask,
-                                                                      _poolCoroutine);
-        if (fitLock == _lockMap.end())
-        {
-            _scheduler.attach(lock, lock);
-            _lockMap.emplace(typeIdx, lock);
-        }
-
-        auto task = _scheduler.makeTask(_poolTask, _poolCoroutine);
-
-        // Assign the work
-        auto& work = _poolWork.make
+        auto dependencyOpt = _conductor.makeLockedTask
         (
+            typeIdx,
             [this, id, typeIdx]()
             {
-                if (_symbolTable.find(id) != _symbolTable.end())
+                auto status = (_symbolTable.find(id) != _symbolTable.end());
+
+                if (status)
                 {
                     com::blit(id, get(typeIdx)._id);
-                    _unlockSet.emplace(typeIdx);
                 }
+
+                return status;
             }
         );
 
-        task().assignWork(work);
-
-        auto dependency = _scheduler.attach(task, lock);
-
-        _eventMap.emplace(id, dependency);
+        _conductor.registerEvent(id, dependencyOpt);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DEF_CLASS> defClassIdx)
@@ -114,12 +183,7 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
 
         _symbolTable.emplace(_stackPtrIn->_prefix, defClassIdx);
 
-        auto fit = _eventMap.find(_stackPtrIn->_prefix);
-
-        if (fit != _eventMap.end())
-        {
-            _scheduler.detach(fit->second);
-        }
+        _conductor.notifyEvent(_stackPtrIn->_prefix);
     }
 
 
@@ -160,33 +224,12 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
 
     void cleanLocks()
     {
-        for (auto key : _unlockSet)
-        {
-            auto fit = _lockMap.find(key);
-            _scheduler.detachAll(fit->second);
-        }
-
-        _scheduler.run();
+        _conductor.cleanLocks();
     }
 
     InterfaceMap::SymbolTable& _symbolTable;
 
-    Scheduler&    _scheduler;
-
-    PoolCoroutine  _poolCoroutine;
-    PoolWork       _poolWork;
-    PoolTask       _poolTask;
-
-    InterfaceMap::TMap<Dependency> _eventMap;
-
-    robin::map::TMake<ast::node::Index,
-                      TaskNode,
-                      ast::node::index::Hasher,
-                      ast::node::index::Comparator, 4, 3> _lockMap;
-
-    robin::table::TMake<ast::node::Index,
-                        ast::node::index::Hasher,
-                        ast::node::index::Comparator, 4, 3> _unlockSet;
+    Conductor _conductor;
 };
 
 } // namespace

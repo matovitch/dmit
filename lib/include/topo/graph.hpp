@@ -79,6 +79,31 @@ public:
         _edges.erase(edgeIt);
     }
 
+    void detachAll(NodeListIt nodeIt)
+    {
+        for (auto&& depender : nodeIt->_dependers)
+        {
+            detach(*(depender->_dependerEdge));
+        }
+    }
+
+    void pop(NodeListIt nodeIt)
+    {
+        detachAll(nodeIt);
+
+        _pendings.erase(nodeIt);
+    }
+
+    NodeListIt top()
+    {
+        return _pendings.begin();
+    }
+
+    bool empty() const
+    {
+        return _pendings.empty();
+    }
+
     bool isCyclic() const
     {
         return _pendings.empty() && !_blockeds.empty();
@@ -185,41 +210,6 @@ public:
 
         attach(hyperNodeClose,
                hyperNodeOpen);
-    }
-
-    bool empty() const
-    {
-        return _pendings.empty();
-    }
-
-    NodeListIt top()
-    {
-        return _pendings.begin();
-    }
-
-    void detachAll(NodeListIt nodeIt)
-    {
-        for (auto&& depender : nodeIt->_dependers)
-        {
-            detach(*(depender->_dependerEdge));
-        }
-    }
-
-    void pop(NodeListIt nodeIt)
-    {
-        detachAll(nodeIt);
-
-        _pendings.erase(nodeIt);
-    }
-
-    std::optional<NodeListIt> nextPending(NodeListIt nodeListIt)
-    {
-        if (!(nodeListIt->isPending()) || ++nodeListIt == _pendings.end())
-        {
-            return std::nullopt;
-        }
-
-        return nodeListIt;
     }
 
 private:
