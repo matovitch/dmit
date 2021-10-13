@@ -271,7 +271,7 @@ struct TNode<node::Kind::DEF_FUNCTION>
     node::TRange<node::Kind::TYPE_CLAIM     > _arguments;
     node::TIndex<node::Kind::SCOPE          > _body;
 
-    std::optional<node::TIndex<node::Kind::LIT_IDENTIFIER>> _returnType;
+    std::optional<node::TIndex<node::Kind::TYPE>> _returnType;
 };
 
 template<>

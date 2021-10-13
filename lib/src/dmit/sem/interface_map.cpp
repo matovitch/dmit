@@ -38,10 +38,8 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
 
     DMIT_AST_VISITOR_SIMPLE();
 
-    void operator()(ast::node::TIndex<ast::node::Kind::TYPE_CLAIM> typeClaimIdx)
+    void operator()(ast::node::TIndex<ast::node::Kind::TYPE> typeIdx)
     {
-        auto typeIdx = get(typeClaimIdx)._type;
-
         auto&& slice = ast::lexeme::getSlice(get(get(typeIdx)._name)._lexeme, _nodePool);
 
         const com::UniqueId sliceId{slice._head, slice.size()};
@@ -68,6 +66,11 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
         _context.registerEvent(id, dependencyOpt);
     }
 
+    void operator()(ast::node::TIndex<ast::node::Kind::TYPE_CLAIM> typeClaimIdx)
+    {
+        base()(get(typeClaimIdx)._type);
+    }
+
     void operator()(ast::node::TIndex<ast::node::Kind::DEF_CLASS> defClassIdx)
     {
         auto& defClass = get(defClassIdx);
@@ -86,10 +89,16 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
         _context.notifyEvent(_stackPtrIn->_prefix);
     }
 
-
     void operator()(ast::node::TIndex<ast::node::Kind::DEF_FUNCTION> functionIdx)
     {
-        base()(get(functionIdx)._arguments);
+        auto& function = get(functionIdx);
+
+        base()(function._arguments);
+
+        if (function._returnType)
+        {
+            base()(function._returnType.value());
+        }
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DEFINITION> definitionIdx)

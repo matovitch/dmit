@@ -367,7 +367,7 @@ void Builder::makeFunction(const dmit::prs::Reader& supReader,
     if (reader.look()._kind == dmit::prs::state::tree::node::Kind::LIT_IDENTIFIER)
     {
         _nodePool.make(function._returnType);
-        makeIdentifier(reader, _nodePool.get(function._returnType));
+        makeType(reader, _nodePool.get(function._returnType));
         reader.advance();
     }
     else
