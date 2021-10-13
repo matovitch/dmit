@@ -87,6 +87,19 @@ public:
         }
     }
 
+    void forcePending(NodeListIt nodeIt)
+    {
+        for (auto&& dependee : nodeIt->_dependees)
+        {
+            auto edgeIt = *(dependee->_dependeeEdge);
+
+            edgeIt->detach();
+            _edges.erase(edgeIt);
+        }
+
+        list::steal(_pendings, _blockeds, nodeIt);
+    }
+
     void pop(NodeListIt nodeIt)
     {
         detachAll(nodeIt);

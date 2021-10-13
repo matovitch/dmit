@@ -28,24 +28,30 @@ SchmitTaskNode Context::getOrMakeLock(ast::node::Index astNodeIndex)
     return lock;
 }
 
+SchmitTaskNode Context::getOrMakeEvent(const com::UniqueId& uniqueId)
+{
+    auto fitEvent = _eventMap.find(uniqueId);
+
+    auto event = (fitEvent != _eventMap.end()) ? fitEvent->second
+                                               : _scheduler.makeTask(_poolTask,
+                                                                     _coroutinePoolSmall);
+    if (fitEvent == _eventMap.end())
+    {
+        _scheduler.attach(event, event);
+        _eventMap.emplace(uniqueId, event);
+    }
+
+    return event;
+}
+
 void Context::notifyEvent(const com::UniqueId& id)
 {
     auto fit = _eventMap.find(id);
 
     if (fit != _eventMap.end())
     {
-        _scheduler.detach(fit->second);
-    }
-
-    //_eventMap.erase(fit);
-}
-
-void Context::registerEvent(const com::UniqueId& id,
-                            std::optional<SchmitDependency> dependencyOpt)
-{
-    if (dependencyOpt)
-    {
-        _eventMap.emplace(id, dependencyOpt.value());
+        _scheduler.forcePending(fit->second);
+        _eventMap.erase(fit);
     }
 }
 
@@ -59,7 +65,7 @@ void Context::run()
         _scheduler.detachAll(fit->second);
     }
 
-    //_unlockSet.clear();
+    _unlockSet.clear();
     _scheduler.run();
 
     DMIT_COM_ASSERT(!_scheduler.isCyclic());

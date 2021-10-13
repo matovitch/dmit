@@ -28,17 +28,16 @@ struct Context
 {
     Context();
 
-    SchmitTaskNode getOrMakeLock(ast::node::Index);
+    SchmitTaskNode getOrMakeLock  (ast::node::Index     );
+    SchmitTaskNode getOrMakeEvent (const com::UniqueId& );
 
     void notifyEvent(const com::UniqueId&);
 
-    void registerEvent(const com::UniqueId&,
-                       std::optional<SchmitDependency>);
     void run();
 
     template <class Function, class CoroutinePool>
     SchmitTaskNode makeTaskFromWork(Function&& function,
-                          CoroutinePool& coroutinePool)
+                                    CoroutinePool& coroutinePool)
     {
         auto task = _scheduler.makeTask(_poolTask, coroutinePool);
 
@@ -48,13 +47,14 @@ struct Context
     }
 
     template <class Function, class CoroutinePool>
-    std::optional<SchmitDependency> makeLockedTask(ast::node::Index astNodeIndex,
-                                                   Function&& function,
-                                                   CoroutinePool& coroutinePool)
+    void makeTask(Function&& function,
+                  CoroutinePool& coroutinePool,
+                  ast::node::Index astNodeIndex,
+                  const com::UniqueId comUniqueId)
     {
         if (function())
         {
-            return std::nullopt;
+            return;
         }
 
         auto task = makeTaskFromWork
@@ -67,9 +67,11 @@ struct Context
             coroutinePool
         );
 
-        auto lock = getOrMakeLock(astNodeIndex);
+        auto lock  = getOrMakeLock  (astNodeIndex );
+        auto event = getOrMakeEvent (comUniqueId  );
 
-        return _scheduler.attach(task, lock);
+        _scheduler.attach(task, event);
+        _scheduler.attach(event, lock);
     }
 
     SchmitTaskGraphPoolSet _taskGraphPoolSet;
@@ -78,12 +80,12 @@ struct Context
     SchmitPoolTask _poolTask;
     SchmitPoolWork _poolWork;
 
-    SchmitCoroutinePool<0x1111 /*stack size*/> _coroutinePoolSmall;
-    SchmitCoroutinePool<0x4444 /*stack size*/> _coroutinePoolMedium;
+    SchmitCoroutinePool<0x2222 /*stack size*/> _coroutinePoolSmall;
+    SchmitCoroutinePool<0x5555 /*stack size*/> _coroutinePoolMedium;
     SchmitCoroutinePool<0xffff /*stack size*/> _coroutinePoolLarge;
 
     robin::map::TMake<com::UniqueId,
-                      SchmitDependency,
+                      SchmitTaskNode,
                       com::unique_id::Hasher,
                       com::unique_id::Comparator, 4, 3> _eventMap;
 

@@ -46,10 +46,9 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
 
         auto id = com::murmur::combine(sliceId,_stackPtrIn->_prefix);
 
-        auto dependencyOpt = _context.makeLockedTask
+        _context.makeTask
         (
-            typeIdx,
-            [this, id, typeIdx]()
+            [this, typeIdx, id]()
             {
                 auto status = (_symbolTable.find(id) != _symbolTable.end());
 
@@ -60,10 +59,10 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
 
                 return status;
             },
-            _context._coroutinePoolMedium
+            _context._coroutinePoolMedium,
+            typeIdx,
+            id
         );
-
-        _context.registerEvent(id, dependencyOpt);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::TYPE_CLAIM> typeClaimIdx)

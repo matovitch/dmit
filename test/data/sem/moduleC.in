@@ -14,7 +14,9 @@ export class A
     a : i64;
 }
 
-func increment(x : i64) -> i64
+export class u64 {}
+
+export func increment(x : i64) -> u64
 {
     let y : i64;
     y = x + 1;

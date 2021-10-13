@@ -67,6 +67,11 @@ public:
         _taskGraph.detachAll(taskNode._value);
     }
 
+    void forcePending(TaskNode taskNode)
+    {
+        _taskGraph.forcePending(taskNode._value);
+    }
+
     schmit_details::coroutine::Abstract& nextCoroutine()
     {
         if (_taskGraph.empty())

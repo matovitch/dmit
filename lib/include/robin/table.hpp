@@ -122,7 +122,7 @@ public:
 
         Bucket* prec = _buckets + (_hasher(t) & _mask);
 
-        // Skip buckets with lower dib or different value
+        // Skip buckets with higher dib or different value
         while (dib < prec->dib() || (dib == prec->dib() && !_comparator(t, prec->value())))
         {
             dib++;
@@ -245,6 +245,7 @@ private:
 
         // Empty the bucket and decrement the size
         prec->markEmpty();
+        _size--;
 
         if (prec == _beginPtr)
         {
@@ -273,7 +274,7 @@ private:
         Bucket* const     buckets    = table._buckets;
         Bucket* const     endPtr     = table._endPtr;
 
-        // Skip buckets with lower dib or different value
+        // Skip buckets with higher dib or different value
         while (dib < prec->dib() || (dib == prec->dib() && !comparator(t, prec->value())))
         {
             dib++;
