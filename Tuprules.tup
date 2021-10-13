@@ -39,6 +39,7 @@ ifeq (@(O_LEVEL),3)
 endif
 
 ifeq (@(IS_ASAN),y)
+    CXFLAGS += -DSCHMIT_USE_ASAN
     CXFLAGS += -fsanitize=address
 endif
 

@@ -5,7 +5,13 @@
 
 #include "pool/intrusive.hpp"
 
-#include "valgrind/valgrind.h"
+#if defined(SCHMIT_USE_VALGRIND)
+    #include "valgrind/valgrind.h"
+#endif
+
+#if defined(SCHMIT_USE_ASAN)
+    #include "sanitizer/common_interface_defs.h"
+#endif
 
 #include <cstdint>
 
@@ -17,8 +23,14 @@ namespace coroutine
 
 struct Abstract
 {
-    virtual void recycle () = 0;
-    virtual ~Abstract    () {}
+    virtual void recycle() = 0;
+
+#if defined(SCHMIT_USE_ASAN)
+    virtual void asanStart  () = 0;
+    virtual void asanFinish () = 0;
+#endif
+
+    virtual ~Abstract() {}
 };
 
 void mmxFpuSave(coroutine::Register&);
@@ -45,8 +57,8 @@ public:
         mmxFpuSave(_registers[RegisterMap::MMX_FPU_STATE]);
 
         #if defined(SCHMIT_USE_VALGRIND)
-            _valgrindStackId = VALGRIND_STACK_REGISTER(_stack.base(),
-                                                       _stack.base() + STACK_SIZE);
+            _valgrindStackId = VALGRIND_STACK_REGISTER(_stack.base() - STACK_SIZE,
+                                                       _stack.base());
         #endif
     }
 
@@ -62,17 +74,44 @@ public:
         #endif
     }
 
+#if defined(SCHMIT_USE_ASAN)
+
+    void asanStart() override
+    {
+        _asanStackBase = _stack.base() - STACK_SIZE;
+        _asanStackSize = STACK_SIZE;
+
+        __sanitizer_start_switch_fiber(&_asanFakeStack,
+                                        _asanStackBase,
+                                        _asanStackSize);
+    }
+
+    void asanFinish() override
+    {
+        __sanitizer_finish_switch_fiber(                 _asanFakeStack,
+                                        (const void **)(&_asanStackBase),
+                                                        &_asanStackSize);
+    }
+
+#endif
+
 private:
 
     Register _registers[coroutine::RegisterMap::SIZE];
 
     Pool& _pool;
 
-    coroutine::TStack<STACK_SIZE> _stack;
+#if defined(SCHMIT_USE_VALGRIND)
+    unsigned _valgrindStackId;
+#endif
 
-    #if defined(SCHMIT_USE_VALGRIND)
-        unsigned _valgrindStackId;
-    #endif
+#if defined(SCHMIT_USE_ASAN)
+    void*       _asanFakeStack = nullptr;
+    void*       _asanStackBase = nullptr;
+    std::size_t _asanStackSize;
+#endif
+
+    coroutine::TStack<STACK_SIZE> _stack;
 };
 
 } // namespace schmit_details

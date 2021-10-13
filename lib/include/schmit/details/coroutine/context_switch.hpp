@@ -14,8 +14,8 @@ namespace schmit_details
 namespace coroutine
 {
 
-void* contextSwitch(coroutine::Abstract& srce,
-                    coroutine::Abstract& dest);
+void contextSwitch(coroutine::Abstract& srce,
+                   coroutine::Abstract& dest);
 
 void mmxFpuSave(coroutine::Register&);
 

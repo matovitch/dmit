@@ -10,10 +10,18 @@ namespace schmit_details
 namespace coroutine
 {
 
-void* contextSwitch(schmit_details::coroutine::Abstract& srce,
+void contextSwitch(schmit_details::coroutine::Abstract& srce,
                     schmit_details::coroutine::Abstract& dest)
 {
-    return schmitDetailsCoroutineContextSwitch(&srce, &dest);
+    #if defined(SCHMIT_USE_ASAN)
+        dest.asanStart();
+    #endif
+
+    schmitDetailsCoroutineContextSwitch(&srce, &dest);
+
+    #if defined(SCHMIT_USE_ASAN)
+        srce.asanFinish();
+    #endif
 }
 
 void mmxFpuSave(schmit_details::coroutine::Register& mmxFpuState)

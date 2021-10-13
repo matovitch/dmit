@@ -24,13 +24,12 @@ using Scheduler                 = schmit::TScheduler<1>;
 using SchedulerTaskGraphPoolSet = typename Scheduler::TaskGraphPoolSet;
 using PoolTask                  = typename Scheduler::PoolTask;
 using PoolWork                  = typename Scheduler::PoolWork;
-using PoolCoroutine             = typename Scheduler::TCoroutinePool<0x2000 /*stack size*/>;
+using PoolCoroutine             = typename Scheduler::TCoroutinePool<0xffff /*stack size*/>;
 using Dependency                = typename Scheduler::Dependency;
 using TaskNode                  = typename Scheduler::TaskNode;
 
 struct Conductor
 {
-
     Conductor(Scheduler& scheduler) : _scheduler{scheduler} {}
 
     TaskNode getOrMakeLock(ast::node::Index astNodeIndex)
@@ -57,8 +56,6 @@ struct Conductor
             return std::nullopt;
         }
 
-        auto lock = getOrMakeLock(astNodeIndex);
-
         auto& work = _poolWork.make
         (
             [this, astNodeIndex, function]
@@ -70,6 +67,8 @@ struct Conductor
 
         auto task = _scheduler.makeTask(_poolTask, _poolCoroutine);
         task().assignWork(work);
+
+        auto lock = getOrMakeLock(astNodeIndex);
 
         return _scheduler.attach(task, lock);
     }

@@ -102,6 +102,10 @@ struct TAbstract
 
     void run()
     {
+        #if defined(SCHMIT_USE_ASAN)
+            _coroutine.asanFinish();
+        #endif
+
         _isRunning = true;
         runImpl();
         _isRunning = false;
