@@ -184,6 +184,19 @@ public:
         shiftBuckets(bucketPtr);
     }
 
+    void clear()
+    {
+        for (std::size_t index = 0;
+                         index < _capacity;
+                         index++)
+        {
+            _buckets[index].~Bucket();
+        }
+
+        _beginPtr = _endPtr;
+        _size     = 0;
+    }
+
 private:
 
     void rehash()

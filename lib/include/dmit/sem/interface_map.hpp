@@ -1,5 +1,7 @@
 #pragma once
 
+#include "dmit/sem/context.hpp"
+
 #include "dmit/ast/bundle.hpp"
 #include "dmit/ast/state.hpp"
 
@@ -30,6 +32,8 @@ struct InterfaceMap
     pool::TMake<ast::node::TRange<ast::node::Kind::VIEW>, 1> _viewsPool;
 
     TMap<ast::node::TIndex<ast::node::Kind::DEF_CLASS>> _symbolTable;
+
+    Context _context;
 
     using SymbolTable = decltype(_symbolTable);
 };

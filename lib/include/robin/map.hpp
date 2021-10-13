@@ -79,6 +79,11 @@ public:
         _table.erase(Pair{robin_details::pair::NoValue{}, key});
     }
 
+    void clear()
+    {
+        _table.clear();
+    }
+
     Value& operator[](const Key& key)
     {
         auto&& fit = find(key);

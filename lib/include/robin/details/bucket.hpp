@@ -44,6 +44,7 @@ public:
         if (!isEmpty())
         {
             _value.destroy();
+            _dib = EMPTY;
         }
     }
           Type&  value()       &  {              return _value.value(); }
