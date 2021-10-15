@@ -44,10 +44,6 @@ ifeq (@(IS_ASAN),y)
     CXFLAGS += -fsanitize=address
 endif
 
-ifeq (@(IS_MSAN),y)
-    CXFLAGS += -fsanitize=memory
-endif
-
 #CXFLAGS += -fexperimental-isel
 
 CXFLAGS += -I $(ROOT)/lib/include
@@ -64,10 +60,6 @@ CLFLAGS += -fuse-ld=lld-11
 
 ifeq (@(IS_ASAN),y)
     CLFLAGS += -fsanitize=address
-endif
-
-ifeq (@(IS_MSAN),y)
-    CLFLAGS += -fsanitize=memory
 endif
 
 ifeq (@(IS_STATIC),y)
