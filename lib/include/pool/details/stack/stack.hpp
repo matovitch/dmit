@@ -38,7 +38,7 @@ public:
         if (_chunkIt == _chunks.end() && !_chunks.empty())
         {
             _chunkIt = _chunks.begin();
-            return chunk().push(args...);
+            return chunk().push(std::forward<Args>(args)...);
         }
 
         if (           _chunkIt  != _chunks.end() &&
@@ -58,12 +58,12 @@ public:
 
     void pop()
     {
-        if (!chunk().empty())
+        if (!empty())
         {
             chunk().pop();
         }
 
-        if (chunk().empty())
+        if (empty())
         {
             _chunkIt = (_chunkIt != _chunks.begin () &&
                         _chunkIt != _chunks.end   ()) ? std::prev(_chunkIt)

@@ -68,6 +68,7 @@ public:
 
             if (ROBIN_UNLIKELY(!dib))
             {
+                _bufferManager.makeNext();
                 rehash();
                 goto REDO;
             }
@@ -78,6 +79,7 @@ public:
             // We check for rehashing here and not at the start to make insertion of existing element faster
             if (ROBIN_UNLIKELY(++_size << LOAD_FACTOR_LEVEL > (_capacity << LOAD_FACTOR_LEVEL) - _capacity))
             {
+                _bufferManager.makeNext();
                 rehash();
                 goto REDO;
             }
@@ -204,12 +206,15 @@ private:
         Bucket* const     oldBuckets  = _buckets;
         const std::size_t oldCapacity = _capacity;
 
-                                 _bufferManager.makeNext();
         const auto& bufferView = _bufferManager.makeView();
 
-        _buckets = reinterpret_cast<Bucket*>(bufferView.data);
+        _buckets  = reinterpret_cast<Bucket*>(bufferView.data);
+        _capacity =                           bufferView.size - 1;
 
-        _capacity <<= 1;
+        if (_buckets == oldBuckets)
+        {
+            return;
+        }
 
         init();
 
@@ -225,10 +230,6 @@ private:
                 oldBucket.~Bucket();
             }
         }
-
-        oldBuckets[oldCapacity].~Bucket();
-
-        _bufferManager.dropPrevious();
     }
 
     void shiftBuckets(Bucket* prec)
@@ -243,9 +244,9 @@ private:
             succ = (++succ == _endPtr) ? _buckets : succ;
         }
 
-        // Empty the bucket and decrement the size
+        // Empty the bucket, decrement the size and update the begin pointer
         prec->markEmpty();
-        _size--;
+        --_size;
 
         if (prec == _beginPtr)
         {
@@ -254,6 +255,13 @@ private:
                 _beginPtr = _endPtr;
                 return;
             }
+
+            while (ROBIN_UNLIKELY((_size << 1) < (_capacity >> 1)))
+            {
+                _bufferManager.makePrev();
+            }
+
+            rehash();
 
             do
             {

@@ -5,6 +5,10 @@
 #include "robin/details/buffer/heap.hpp"
 #include "robin/details/buffer/view.hpp"
 
+#include <cstdint>
+#include <memory>
+#include <vector>
+
 namespace robin_details::buffer
 {
 
@@ -19,30 +23,37 @@ class TManager
 
 public:
 
-    TManager() : _ptrBuffer{&_stack} {}
-
     View makeView()
     {
-        return  _ptrBuffer->makeView();
+        return  _index ? _ptrHeaps[_index - 1]->makeView() :
+                                         _stack.makeView() ;
     }
 
     void makeNext()
     {
-        _ptrHeapTmp = std::move(_ptrBuffer->makeNext());
-        _ptrBuffer = _ptrHeapTmp.get();
+        if (_ptrHeaps.empty())
+        {
+            _ptrHeaps.emplace_back(_stack.makeNext());
+        }
+
+        if (_index == _ptrHeaps.size())
+        {
+            _ptrHeaps.emplace_back(_ptrHeaps.back()->makeNext());
+        }
+
+        _index = _ptrHeaps.size();
     }
 
-    void dropPrevious()
+    void makePrev()
     {
-        _ptrHeap = std::move(_ptrHeapTmp);
+        _index ? _index-- : 0;
     }
 
 private:
 
-    Stack                 _stack;
-    Abstract*             _ptrBuffer;
-    std::unique_ptr<Heap> _ptrHeap;
-    std::unique_ptr<Heap> _ptrHeapTmp;
+    uint8_t                            _index = 0;
+    Stack                              _stack;
+    std::vector<std::unique_ptr<Heap>> _ptrHeaps;
 };
 
 namespace manager
