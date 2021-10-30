@@ -7,3 +7,4 @@ vgcore.*
 dmit_server.log
 compile_commands.json
 .clangd
+*.sublime-*
