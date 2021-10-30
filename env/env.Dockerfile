@@ -7,12 +7,13 @@ ENV TO_INSTALL "               \
     software-properties-common \
     git-core                   \
     curl                       \
-    fuse                       \
-    libfuse-dev                \
+    libfuse3-dev               \
+    fuse3                      \
     wget                       \
     jq                         \
     python2-minimal            \
     valgrind                   \
+    tmux                       \
     libpcre3-dev               \
     cmake                      \
 "
@@ -24,7 +25,7 @@ ENV TO_REMOVE "                \
     git-core                   \
     wget                       \
     libpcre3-dev               \
-    libfuse-dev                \
+    libfuse3-dev               \
     cmake                      \
 "
 
@@ -33,7 +34,7 @@ ENV GUEST_UID "1000"
 
 ENV DEBIAN_FRONTEND "noninteractive"
 
-ENV LLVM_VERSION "11"
+ENV LLVM_VERSION "13"
 
 ENV FLAGS_DOCTEST "-D DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN"
 ENV FLAGS_SQLITE3 "-D SQLITE_ENABLE_DESERIALIZE"
@@ -50,9 +51,13 @@ RUN set -ex                                                                     
     curl https://apt.llvm.org/llvm.sh > llvm.sh                                                                 &&\
     chmod +x llvm.sh                                                                                            &&\
     ./llvm.sh $LLVM_VERSION                                                                                     &&\
+    ln -s /usr/bin/clang++-$LLVM_VERSION /usr/bin/clang++                                                       &&\
+    ln -s /usr/bin/ld.lld-$LLVM_VERSION /usr/bin/ld.lld                                                         &&\
+    ln -s /usr/bin/lld-$LLVM_VERSION /usr/bin/lld                                                               &&\
     rm llvm.sh                                                                                                  &&\
-    git clone --progress --depth 1 --branch v0.7.9 git://github.com/gittup/tup.git                              &&\
+    git clone --progress --depth 1 git://github.com/gittup/tup.git                                              &&\
     cd tup                                                                                                      &&\
+    git checkout 0de196f                                                                                        &&\
     ./bootstrap-nofuse.sh                                                                                       &&\
     mv tup /usr/bin                                                                                             &&\
     cd ..                                                                                                       &&\
@@ -62,26 +67,26 @@ RUN set -ex                                                                     
     /usr/bin/python2 setup.py install                                                                           &&\
     cd ..                                                                                                       &&\
     rm -r ydiff                                                                                                 &&\
-    curl https://codeload.github.com/onqtam/doctest/tar.gz/2.4.0 > doctest-2.4.0.tar.gz                         &&\
-    tar xvf doctest-2.4.0.tar.gz                                                                                &&\
-    cd doctest-2.4.0                                                                                            &&\
+    curl https://codeload.github.com/onqtam/doctest/tar.gz/2.4.6 > doctest-2.4.6.tar.gz                         &&\
+    tar xvf doctest-2.4.6.tar.gz                                                                                &&\
+    cd doctest-2.4.6                                                                                            &&\
     clang++-${LLVM_VERSION} $FLAGS_DOCTEST -c doctest/parts/doctest.cpp -o libdoctest.a                         &&\
     mv libdoctest.a /usr/lib                                                                                    &&\
     cd ..                                                                                                       &&\
-    rm -r doctest-2.4.0.tar.gz doctest-2.4.0                                                                    &&\
-    curl https://www.sqlite.org/2020/sqlite-autoconf-3330000.tar.gz > sqlite-autoconf-3330000.tar.gz            &&\
-    tar xvf sqlite-autoconf-3330000.tar.gz                                                                      &&\
-    cd sqlite-autoconf-3330000                                                                                  &&\
+    rm -r doctest-2.4.6.tar.gz doctest-2.4.6                                                                    &&\
+    curl https://www.sqlite.org/2021/sqlite-autoconf-3360000.tar.gz > sqlite-autoconf-3360000.tar.gz            &&\
+    tar xvf sqlite-autoconf-3360000.tar.gz                                                                      &&\
+    cd sqlite-autoconf-3360000                                                                                  &&\
     clang-${LLVM_VERSION} $FLAGS_SQLITE3 -c sqlite3.c -o libsqlite3.a                                           &&\
     mv libsqlite3.a /usr/lib                                                                                    &&\
     cd ..                                                                                                       &&\
-    rm -r sqlite-autoconf-3330000 sqlite-autoconf-3330000.tar.gz                                                &&\
-    git clone --progress --depth 1 --branch v1.3.2 https://github.com/nanomsg/nng.git                           &&\
+    rm -r sqlite-autoconf-3360000 sqlite-autoconf-3360000.tar.gz                                                &&\
+    git clone --progress --depth 1 --branch v1.5.2 https://github.com/nanomsg/nng.git                           &&\
     cd nng                                                                                                      &&\
     cmake -G "Unix Makefiles"                                                                                   &&\
     make                                                                                                        &&\
     mv libnng.a /usr/lib                                                                                        &&\
-    mv tools/nngcat/nngcat /usr/bin                                                                             &&\
+    mv ./src/tools/nngcat/nngcat /usr/bin                                                                       &&\
     cd ..                                                                                                       &&\
     rm -rf nng                                                                                                  &&\
     git clone --progress --depth 1 --branch v19 https://github.com/camgunz/cmp.git                              &&\

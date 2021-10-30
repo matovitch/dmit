@@ -1,10 +1,11 @@
 ROOT = $(TUP_CWD)
+VARIANT = $(TUP_VARIANTDIR)
 
 ##############
 # CPP TO OBJ #
 ##############
 
-CX = clang++-11
+CX = clang++
 
 CXFLAGS += -std=c++20
 CXFLAGS += -Wall
@@ -48,7 +49,7 @@ endif
 
 CXFLAGS += -I $(ROOT)/lib/include
 
-!cx = |> $(CX) $(CXFLAGS) -c %f -o %o |>
+!cx = |> ^j^ $(CX) $(CXFLAGS) -c %f -o %o |>
 
 ##############
 # OBJ TO ELF #
@@ -56,7 +57,7 @@ CXFLAGS += -I $(ROOT)/lib/include
 
 CL = $(CX)
 
-CLFLAGS += -fuse-ld=lld-11
+CLFLAGS += -fuse-ld=lld
 
 ifeq (@(IS_ASAN),y)
     CLFLAGS += -fsanitize=address

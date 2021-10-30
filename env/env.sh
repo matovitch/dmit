@@ -35,6 +35,13 @@ function makeEnv()
     docker build -t ${PROJECT_NAME}:env -f ${ROOT_FOLDER}/env/env.Dockerfile ${ROOT_FOLDER}/env
 }
 
+function makeCompileDb()
+{
+    tup compiledb
+    sed "s~/mnt~${HOST_ROOT}~" -i /mnt/bin/compile_commands.json
+    mv /mnt/bin/compile_commands.json /mnt
+}
+
 function runEnv()
 {
     CONTAINER="${PROJECT_NAME}_env"
@@ -55,5 +62,7 @@ function runEnv()
                --name $CONTAINER                                       \
                --interactive                                           \
                --tty                                                   \
+               --env HOST_ROOT=$ROOT_FOLDER                            \
+               -p 5678:5678                                            \
                $IMAGE $@
 }

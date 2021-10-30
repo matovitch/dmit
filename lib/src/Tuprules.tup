@@ -2,8 +2,8 @@ LIB_SRC = $(ROOT)/lib/src
 
 CXFLAGS += -I $(LIB_SRC)
 
-LX = ld.lld-11
+LX = ld.lld
 
 LXFLAGS += -r
 
-!lx = |> $(LX) $(LXFLAGS) %%%f -o %o |>
+!lx = |> $(LX) $(LXFLAGS) %<obj> -o %o |>

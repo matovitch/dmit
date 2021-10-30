@@ -5,3 +5,5 @@ bin/*
 vgcore.*
 *.db
 dmit_server.log
+compile_commands.json
+.clangd
