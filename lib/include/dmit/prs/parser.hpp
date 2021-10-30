@@ -2,7 +2,6 @@
 
 #include "dmit/prs/pipeline.hpp"
 #include "dmit/prs/stack.hpp"
-#include "dmit/prs/state.hpp"
 
 #include "dmit/lex/reader.hpp"
 
@@ -15,6 +14,8 @@
 
 namespace dmit::prs
 {
+
+struct State;
 
 template <class Open, class Close>
 class TParser

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "dmit/com/concurrent_queue.hpp"
+#include "dmit/com/log2.hpp"
 
 #include <functional>
 #include <cstdint>
