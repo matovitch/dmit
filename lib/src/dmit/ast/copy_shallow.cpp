@@ -152,6 +152,8 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
         auto blitter = blitter::make(_destNodePool, destImport._path);
         _stackPtrIn->_index = blitter(srceImport._path);
         base()(srceImport._path);
+
+        com::blit(srceImport._id, destImport._id);
     }
 
     void operator()(node::TIndex<node::Kind::DEF_FUNCTION> srceFunctionIdx)
@@ -225,6 +227,9 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
             as<node::Kind::DEFINITION>(_stackPtrIn->_index)
         );
 
+        com::blit(srceDefinition._status,
+                  destDefinition._status);
+
         if (srceDefinition._status != DefinitionStatus::EXPORTED)
         {
             return;
@@ -252,6 +257,9 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
         {
             com::blitDefault(destModule._path);
         }
+
+        copyRange(srceModule._imports,
+                  destModule._imports);
 
         copyRange(srceModule._definitions,
                   destModule._definitions);

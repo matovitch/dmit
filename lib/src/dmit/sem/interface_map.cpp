@@ -13,6 +13,7 @@
 #include "dmit/com/murmur.hpp"
 
 #include <optional>
+#include <cstdint>
 #include <vector>
 
 namespace dmit::sem
@@ -104,7 +105,7 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
     {
         auto& definition = get(definitionIdx);
 
-        if (definition._status == ast::DefinitionStatus::EXPORTED)
+        if (definition._status != ast::DefinitionStatus::EXPORTED)
         {
             base()(definition._value);
         }
@@ -137,52 +138,44 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
 
 } // namespace
 
-InterfaceMap::InterfaceMap(const std::vector<ast::Bundle>& bundles, ast::State::NodePool& astNodePool) :
+InterfaceMap::InterfaceMap(ast::State::NodePool& astNodePool) :
     _astNodePool{astNodePool}
+{}
+
+void InterfaceMap::registerBundle(ast::Bundle &bundle)
 {
-    for (const auto& bundle : bundles)
+    if (!bundle._views._size)
     {
-        if (!bundle._views._size)
-        {
-            continue;
-        }
-
-        auto& views = _viewsPool.make();
-
-        _astNodePool.make(views, bundle._views._size);
-
-        for (uint32_t i = 0; i < bundle._views._size; i++)
-        {
-            _asSimpleMap.emplace(bundle._nodePool.get(bundle._views[i])._id, views[i]);
-        }
+        return;
     }
-}
 
-void InterfaceMap::registerBundle(ast::Bundle& bundle)
-{
-    // Create and assign the work
-    InterfaceMaker interfaceMaker{bundle._nodePool, _symbolTable, _context};
+    auto& views = _viewsPool.make();
 
-    _context.makeTaskFromWork
-    (
-        [&interfaceMaker, &bundle]()
-        {
-            interfaceMaker.base()(bundle._views);
-        },
-        _context._coroutinePoolLarge
-    );
+    _astNodePool.make(views, bundle._views._size);
 
-    _context.run();
-
-    // Copy the views
     for (uint32_t i = 0; i < bundle._views._size; i++)
     {
-        const auto viewId = bundle._nodePool.get(bundle._views[i])._id;
+        auto view = views[i];
 
         ast::copyShallow(bundle._views[i],
                          bundle._nodePool,
-                         _asSimpleMap.at(viewId),
+                         view,
                          _astNodePool);
+
+        InterfaceMaker interfaceMaker{_astNodePool, _symbolTable, _context};
+
+        _context.makeTaskFromWork
+        (
+            [&interfaceMaker, view]
+            {
+                interfaceMaker.base()(view);
+            },
+            _context._coroutinePoolLarge
+        );
+
+        _context.run();
+
+        _asSimpleMap.emplace(bundle._nodePool.get(bundle._views[i])._id, views[i]);
     }
 }
 

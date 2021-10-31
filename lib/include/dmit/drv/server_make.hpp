@@ -217,7 +217,7 @@ void make(nng::Socket& socket, db::Database& database)
 
     ast::State::NodePool astNodePool;
 
-    sem::InterfaceMap interfaceMap{bundles, astNodePool};
+    sem::InterfaceMap interfaceMap{astNodePool};
 
     com::TParallelFor<SemanticAnalysis> parallelSemanticAnalysis(interfaceMap,
                                                                  bundles);

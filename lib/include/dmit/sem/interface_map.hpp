@@ -16,7 +16,7 @@ namespace dmit::sem
 
 struct InterfaceMap
 {
-    InterfaceMap(const std::vector<ast::Bundle>& bundles, ast::State::NodePool& astNodePool);
+    InterfaceMap(ast::State::NodePool& astNodePool);
 
     void registerBundle(ast::Bundle& bundle);
 
