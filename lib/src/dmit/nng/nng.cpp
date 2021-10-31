@@ -31,6 +31,16 @@ Buffer::Buffer(Buffer&& toMove) :
     toMove.release();
 }
 
+Buffer& Buffer::operator=(Buffer&& toMove)
+{
+    _asBytes = toMove._asBytes;
+    _size     =toMove._size;
+
+    toMove.release();
+
+    return *this;
+}
+
 void Buffer::release()
 {
     _asBytes = nullptr;

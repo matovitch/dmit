@@ -151,8 +151,8 @@ public:
 private:
 
     parser::Pool _pool;
-    Parser       _parser;
     State        _state;
+    Parser       _parser;
 };
 
 } // namespace state

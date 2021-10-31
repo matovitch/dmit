@@ -22,10 +22,11 @@ class TStack : public Traits::Abstract
 
 public:
 
-    TStack() :
-        _head{head(&_memory)},
-        _tail{tail(&_memory)}
-    {}
+    TStack()
+    {
+        _head = head(&_memory);
+        _tail = tail(&_memory);
+    }
 
     Type* allocate() override
     {
@@ -57,8 +58,8 @@ public:
 
 private:
 
-          Type*       _head;
-    const Type* const _tail;
+          Type* _head = nullptr;
+    const Type* _tail = nullptr;
 
     Memory _memory;
 };

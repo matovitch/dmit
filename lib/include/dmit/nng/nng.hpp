@@ -22,6 +22,8 @@ struct Buffer
 
     Buffer(Buffer&&);
 
+    Buffer& operator=(Buffer&&);
+
     Buffer(size_t size);
 
     ~Buffer();
