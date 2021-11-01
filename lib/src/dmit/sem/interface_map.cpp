@@ -55,7 +55,7 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
 
                 if (status)
                 {
-                    com::blit(id, get(typeIdx)._id);
+                    com::blit(_symbolTable.find(id)->second, get(typeIdx)._asVIndex);
                 }
 
                 return status;
@@ -144,10 +144,14 @@ InterfaceMap::InterfaceMap(ast::State::NodePool& astNodePool) :
 
 void InterfaceMap::registerBundle(ast::Bundle &bundle)
 {
+    // 0. Skip empty bundle
+
     if (!bundle._views._size)
     {
         return;
     }
+
+    // 1. Perform shallow copy and register in the interface map
 
     auto& views = _viewsPool.make();
 
@@ -155,28 +159,28 @@ void InterfaceMap::registerBundle(ast::Bundle &bundle)
 
     for (uint32_t i = 0; i < bundle._views._size; i++)
     {
-        auto view = views[i];
-
         ast::copyShallow(bundle._views[i],
                          bundle._nodePool,
-                         view,
+                         views[i],
                          _astNodePool);
-
-        InterfaceMaker interfaceMaker{_astNodePool, _symbolTable, _context};
-
-        _context.makeTaskFromWork
-        (
-            [&interfaceMaker, view]
-            {
-                interfaceMaker.base()(view);
-            },
-            _context._coroutinePoolLarge
-        );
-
-        _context.run();
 
         _asSimpleMap.emplace(bundle._nodePool.get(bundle._views[i])._id, views[i]);
     }
+
+    // 2. Sematical analysis of the bundle's interface
+
+    InterfaceMaker interfaceMaker{_astNodePool, _symbolTable, _context};
+
+    _context.makeTaskFromWork
+    (
+        [&interfaceMaker, &views]
+        {
+            interfaceMaker.base()(views);
+        },
+        _context._coroutinePoolLarge
+    );
+
+    _context.run();
 }
 
 } // namespace dmit::sem

@@ -286,7 +286,7 @@ struct TNode<node::Kind::TYPE>
 {
     node::TIndex<node::Kind::LIT_IDENTIFIER> _name;
 
-    com::UniqueId _id;
+    node::VIndex _asVIndex;
 };
 
 template <>
