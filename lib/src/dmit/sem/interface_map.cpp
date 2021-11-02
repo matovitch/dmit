@@ -30,10 +30,8 @@ struct Stack
 struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
 {
     InterfaceMaker(ast::State::NodePool      & astNodePool,
-                   InterfaceMap::SymbolTable & symbolTable,
                    Context& context) :
         TVisitor<InterfaceMaker, Stack>{astNodePool},
-        _symbolTable{symbolTable},
         _context{context}
     {}
 
@@ -49,16 +47,9 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
 
         _context.makeTask
         (
-            [this, typeIdx, id]()
+            [this, typeIdx](const ast::node::VIndex& vIndex)
             {
-                auto status = (_symbolTable.find(id) != _symbolTable.end());
-
-                if (status)
-                {
-                    com::blit(_symbolTable.find(id)->second, get(typeIdx)._asVIndex);
-                }
-
-                return status;
+                com::blit(vIndex, get(typeIdx)._asVIndex);
             },
             _context._coroutinePoolMedium,
             typeIdx,
@@ -84,9 +75,7 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
             _stackPtrIn->_prefix
         );
 
-        _symbolTable.emplace(_stackPtrIn->_prefix, defClassIdx);
-
-        _context.notifyEvent(_stackPtrIn->_prefix);
+        _context.notifyEvent(_stackPtrIn->_prefix, defClassIdx);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DEF_FUNCTION> functionIdx)
@@ -131,16 +120,10 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
         base()(get(viewIdx)._modules);
     }
 
-    InterfaceMap::SymbolTable& _symbolTable;
-
     Context& _context;
 };
 
 } // namespace
-
-InterfaceMap::InterfaceMap(ast::State::NodePool& astNodePool) :
-    _astNodePool{astNodePool}
-{}
 
 void InterfaceMap::registerBundle(ast::Bundle &bundle)
 {
@@ -169,7 +152,7 @@ void InterfaceMap::registerBundle(ast::Bundle &bundle)
 
     // 2. Sematical analysis of the bundle's interface
 
-    InterfaceMaker interfaceMaker{_astNodePool, _symbolTable, _context};
+    InterfaceMaker interfaceMaker{_astNodePool, _context};
 
     _context.makeTaskFromWork
     (

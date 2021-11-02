@@ -12,9 +12,9 @@ namespace dmit::sem
 
 Context::Context() : _scheduler{_taskGraphPoolSet} {}
 
-SchmitTaskNode Context::getOrMakeLock(ast::node::Index astNodeIndex)
+SchmitTaskNode Context::getOrMakeLock(const ast::node::VIndex& astNodeVIndex)
 {
-    auto fitLock = _lockMap.find(astNodeIndex);
+    auto fitLock = _lockMap.find(astNodeVIndex);
 
     auto lock = (fitLock != _lockMap.end()) ? fitLock->second
                                             : _scheduler.makeTask(_poolTask,
@@ -22,7 +22,7 @@ SchmitTaskNode Context::getOrMakeLock(ast::node::Index astNodeIndex)
     if (fitLock == _lockMap.end())
     {
         _scheduler.attach(lock, lock);
-        _lockMap.emplace(astNodeIndex, lock);
+        _lockMap.emplace(astNodeVIndex, lock);
     }
 
     return lock;
@@ -44,7 +44,7 @@ SchmitTaskNode Context::getOrMakeEvent(const com::UniqueId& uniqueId)
     return event;
 }
 
-void Context::notifyEvent(const com::UniqueId& id)
+void Context::notifyEvent(const com::UniqueId& id, const ast::node::VIndex& vIndex)
 {
     auto fit = _eventMap.find(id);
 
@@ -53,6 +53,16 @@ void Context::notifyEvent(const com::UniqueId& id)
         _scheduler.forcePending(fit->second);
         _eventMap.erase(fit);
     }
+
+    _factMap.emplace(id, vIndex);
+}
+
+std::optional<ast::node::VIndex> Context::getFact(const com::UniqueId& id)
+{
+    auto fit = _factMap.find(id);
+
+    return fit != _factMap.end() ? std::optional<ast::node::VIndex>{fit->second}
+                                 : std::nullopt;
 }
 
 void Context::run()

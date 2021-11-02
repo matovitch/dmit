@@ -28,10 +28,10 @@ struct Context
 {
     Context();
 
-    SchmitTaskNode getOrMakeLock  (ast::node::Index     );
-    SchmitTaskNode getOrMakeEvent (const com::UniqueId& );
+    SchmitTaskNode getOrMakeLock  (const ast::node::VIndex & );
+    SchmitTaskNode getOrMakeEvent (const com::UniqueId     & );
 
-    void notifyEvent(const com::UniqueId&);
+    void notifyEvent(const com::UniqueId&, const ast::node::VIndex&);
 
     void run();
 
@@ -49,30 +49,35 @@ struct Context
     template <class Function, class CoroutinePool>
     void makeTask(Function&& function,
                   CoroutinePool& coroutinePool,
-                  ast::node::Index astNodeIndex,
-                  const com::UniqueId comUniqueId)
+                  const ast::node::VIndex& astNodeVIndex,
+                  const com::UniqueId& comUniqueId)
     {
-        if (function())
+        if (getFact(comUniqueId))
         {
             return;
         }
 
         auto task = makeTaskFromWork
         (
-            [this, astNodeIndex, function]
+            [this, astNodeVIndex, function, &comUniqueId]
             {
-                function();
-                _unlockSet.emplace(astNodeIndex);
+                if (auto factOpt = getFact(comUniqueId))
+                {
+                    function(factOpt.value());
+                    _unlockSet.emplace(astNodeVIndex);
+                }
             },
             coroutinePool
         );
 
-        auto lock  = getOrMakeLock  (astNodeIndex );
-        auto event = getOrMakeEvent (comUniqueId  );
+        auto lock  = getOrMakeLock  (astNodeVIndex );
+        auto event = getOrMakeEvent (comUniqueId   );
 
         _scheduler.attach(task, event);
         _scheduler.attach(event, lock);
     }
+
+    std::optional<ast::node::VIndex> getFact(const com::UniqueId&);
 
     SchmitTaskGraphPoolSet _taskGraphPoolSet;
     SchmitScheduler        _scheduler;
@@ -89,14 +94,19 @@ struct Context
                       com::unique_id::Hasher,
                       com::unique_id::Comparator, 4, 3> _eventMap;
 
-    robin::map::TMake<ast::node::Index,
+    robin::map::TMake<ast::node::VIndex,
                       SchmitTaskNode,
-                      ast::node::index::Hasher,
-                      ast::node::index::Comparator, 4, 3> _lockMap;
+                      ast::node::v_index::Hasher,
+                      ast::node::v_index::Comparator, 4, 3> _lockMap;
 
-    robin::table::TMake<ast::node::Index,
-                        ast::node::index::Hasher,
-                        ast::node::index::Comparator, 4, 3> _unlockSet;
+    robin::table::TMake<ast::node::VIndex,
+                        ast::node::v_index::Hasher,
+                        ast::node::v_index::Comparator, 4, 3> _unlockSet;
+
+    robin::map::TMake<com::UniqueId,
+                      ast::node::VIndex,
+                      com::unique_id::Hasher,
+                      com::unique_id::Comparator, 4, 3> _factMap;
 };
 
 } // namespace dmit::sem
