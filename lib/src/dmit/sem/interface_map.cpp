@@ -25,11 +25,12 @@ namespace
 struct Stack
 {
     com::UniqueId _prefix;
+    bool _isDeclaring = true;
 };
 
 struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
 {
-    InterfaceMaker(ast::State::NodePool      & astNodePool,
+    InterfaceMaker(ast::State::NodePool& astNodePool,
                    Context& context) :
         TVisitor<InterfaceMaker, Stack>{astNodePool},
         _context{context}
@@ -43,7 +44,7 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
 
         const com::UniqueId sliceId{slice._head, slice.size()};
 
-        auto id = com::murmur::combine(sliceId,_stackPtrIn->_prefix);
+        auto id = com::murmur::combine(sliceId, _stackPtrIn->_prefix);
 
         _context.makeTask
         (
@@ -67,6 +68,11 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
         auto& defClass = get(defClassIdx);
 
         base()(defClass._members);
+
+        if (!_stackPtrIn->_isDeclaring)
+        {
+            return;
+        }
 
         auto&& slice = ast::lexeme::getSlice(get(defClass._name)._lexeme, _nodePool);
 
@@ -94,7 +100,7 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
     {
         auto& definition = get(definitionIdx);
 
-        if (definition._status != ast::DefinitionStatus::EXPORTED)
+        if (definition._status == ast::DefinitionStatus::EXPORTED)
         {
             base()(definition._value);
         }
@@ -107,6 +113,8 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
         _stackPtrIn->_prefix = module._id;
 
         base()(module._definitions);
+
+        _stackPtrIn->_isDeclaring = false;
 
         for (uint32_t i = 0; i < module._imports._size; i++)
         {

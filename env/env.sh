@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ROOT_FOLDER="$(readlink -f $(dirname $0)/..)"
+ROOT_FOLDER="$(readlink -f $(dirname ${BASH_SOURCE[${#BASH_SOURCE[@]} - 1]})/..)"
 PROJECT_NAME=$(basename $ROOT_FOLDER | perl -pe 's/([^_])([A-Z])/\1_\2/g' | tr '[:upper:]' '[:lower:]')
 
 function make()

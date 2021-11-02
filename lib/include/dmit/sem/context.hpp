@@ -33,6 +33,8 @@ struct Context
 
     void notifyEvent(const com::UniqueId&, const ast::node::VIndex&);
 
+    std::optional<ast::node::VIndex> getFact(const com::UniqueId&);
+
     void run();
 
     template <class Function, class CoroutinePool>
@@ -59,7 +61,7 @@ struct Context
 
         auto task = makeTaskFromWork
         (
-            [this, astNodeVIndex, function, &comUniqueId]
+            [this, astNodeVIndex, function, comUniqueId]
             {
                 if (auto factOpt = getFact(comUniqueId))
                 {
@@ -76,8 +78,6 @@ struct Context
         _scheduler.attach(task, event);
         _scheduler.attach(event, lock);
     }
-
-    std::optional<ast::node::VIndex> getFact(const com::UniqueId&);
 
     SchmitTaskGraphPoolSet _taskGraphPoolSet;
     SchmitScheduler        _scheduler;

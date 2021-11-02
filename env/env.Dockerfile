@@ -55,7 +55,7 @@ RUN set -ex                                                                     
     ln -s /usr/bin/ld.lld-$LLVM_VERSION /usr/bin/ld.lld                                                         &&\
     ln -s /usr/bin/lld-$LLVM_VERSION /usr/bin/lld                                                               &&\
     rm llvm.sh                                                                                                  &&\
-    git clone --progress --depth 1 git://github.com/gittup/tup.git                                              &&\
+    git clone --progress --depth 1 https://github.com/gittup/tup                                                &&\
     cd tup                                                                                                      &&\
     git checkout 0de196f                                                                                        &&\
     ./bootstrap-nofuse.sh                                                                                       &&\

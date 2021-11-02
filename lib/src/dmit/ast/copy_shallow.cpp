@@ -276,6 +276,8 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
         }
 
         _destNodePool.make(destModule._modules, 0);
+
+        com::blit(srceModule._id, destModule._id);
     }
 
     void operator()(node::TIndex<node::Kind::VIEW> srceViewIdx)
