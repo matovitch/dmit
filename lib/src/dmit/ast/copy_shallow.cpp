@@ -52,6 +52,27 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
     template <class Type>
     void emptyOption() {}
 
+    template <com::TEnumIntegerType<node::Kind> KIND>
+    void make(node::TIndex<KIND>& index)
+    {
+        _destNodePool.make(index);
+        index._isInterface = true;
+    }
+
+    template <com::TEnumIntegerType<node::Kind> KIND>
+    void make(std::optional<node::TIndex<KIND>>& indexOpt)
+    {
+        _destNodePool.make(indexOpt);
+        indexOpt.value()._isInterface = true;
+    }
+
+    template <com::TEnumIntegerType<node::Kind> KIND>
+    void make(node::TRange<KIND>& range, const uint32_t size)
+    {
+        _destNodePool.make(range, size);
+        range._index._isInterface = true;
+    }
+
     template <com::TEnumIntegerType<node::Kind> NODE_KIND>
     void operator()(node::TIndex<NODE_KIND>)
     {
@@ -75,7 +96,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
             as<node::Kind::LEXEME>(_stackPtrIn->_index)
         );
 
-        _destNodePool.make(destLexeme._source);
+        make(destLexeme._source);
         _stackPtrIn->_index = destLexeme._source;
         base()(srceLexeme._source);
 
@@ -89,7 +110,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
             as<node::Kind::LIT_IDENTIFIER>(_stackPtrIn->_index)
         );
 
-        _destNodePool.make(destIdentifier._lexeme);
+        make(destIdentifier._lexeme);
         _stackPtrIn->_index = destIdentifier._lexeme;
         base()(srceIdentifier._lexeme);
     }
@@ -101,7 +122,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
             as<node::Kind::EXP_BINOP>(_stackPtrIn->_index)
         );
 
-        _destNodePool.make(destBinop._operator);
+        make(destBinop._operator);
         _stackPtrIn->_index = destBinop._operator;
         base()(srceBinop._operator);
 
@@ -121,7 +142,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
             as<node::Kind::TYPE>(_stackPtrIn->_index)
         );
 
-        _destNodePool.make(destType._name);
+        make(destType._name);
         _stackPtrIn->_index = destType._name;
         base()(srceType._name);
     }
@@ -133,11 +154,11 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
             as<node::Kind::TYPE_CLAIM>(_stackPtrIn->_index)
         );
 
-        _destNodePool.make(destTypeClaim._variable);
+        make(destTypeClaim._variable);
         _stackPtrIn->_index = destTypeClaim._variable;
         base()(srceTypeClaim._variable);
 
-        _destNodePool.make(destTypeClaim._type);
+        make(destTypeClaim._type);
         _stackPtrIn->_index = destTypeClaim._type;
         base()(srceTypeClaim._type);
     }
@@ -163,7 +184,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
             as<node::Kind::DEF_FUNCTION>(_stackPtrIn->_index)
         );
 
-        _destNodePool.make(destFunction._name);
+        make(destFunction._name);
         _stackPtrIn->_index = destFunction._name;
         base()(srceFunction._name);
 
@@ -189,7 +210,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
             as<node::Kind::DEF_CLASS>(_stackPtrIn->_index)
         );
 
-        _destNodePool.make(destType._name);
+        make(destType._name);
         _stackPtrIn->_index = destType._name;
         base()(srceType._name);
 
@@ -275,7 +296,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
             com::blitDefault(destModule._parentPath);
         }
 
-        _destNodePool.make(destModule._modules, 0);
+        make(destModule._modules, 0);
 
         com::blit(srceModule._id, destModule._id);
     }

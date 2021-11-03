@@ -71,24 +71,32 @@ struct TVariantHelper<std::integer_sequence<com::TEnumIntegerType<Kind>, Kinds..
 
 struct Index
 {
-    Index() : _value{std::numeric_limits<uint32_t>::max()} {}
+    Index() : _value{std::numeric_limits<uint32_t>::max() >> 1} {}
 
     template <com::TEnumIntegerType<Kind> KIND>
-    Index(const node::TIndex<KIND> index) : _value{index._value} {}
+    Index(const TIndex<KIND> index) :
+        _isInterface {index._isInterface },
+        _value       {index._value       }
+    {}
 
-    uint32_t _value;
+    bool _isInterface :  1 = false;
+    uint32_t _value   : 31;
 };
 
 template <com::TEnumIntegerType<Kind> KIND>
 struct TIndex
 {
-    TIndex() : _value{std::numeric_limits<uint32_t>::max()} {}
+    TIndex() : _value{std::numeric_limits<uint32_t>::max() >> 1} {}
 
     TIndex(const uint32_t value) : _value{value} {}
 
-    TIndex(const Index index) : _value{index._value} {}
+    TIndex(const Index index) :
+        _isInterface {index._isInterface },
+        _value       {index._value       }
+    {}
 
-    uint32_t _value;
+    bool _isInterface :  1 = false;
+    uint32_t _value   : 31;
 };
 
 struct VIndex
@@ -98,27 +106,27 @@ struct VIndex
     VIndex() : _variant{} {}
 
     template <com::TEnumIntegerType<Kind> KIND>
-    VIndex(const node::TIndex<KIND> index) : _variant{index} {}
+    VIndex(const TIndex<KIND> index) : _variant{index} {}
 
     Variant _variant;
 };
 
 template <com::TEnumIntegerType<Kind> KIND>
-node::TIndex<KIND> as(const Index index)
+TIndex<KIND> as(const Index index)
 {
-    return node::TIndex<KIND>{index._value};
+    return TIndex<KIND>{index._value};
 }
 
 template <com::TEnumIntegerType<Kind> KIND>
-node::TIndex<KIND> as(const TIndex<KIND> index)
+TIndex<KIND> as(const TIndex<KIND> index)
 {
     return index;
 }
 
 template <com::TEnumIntegerType<Kind> KIND>
-node::TIndex<KIND> as(const VIndex& index)
+TIndex<KIND> as(const VIndex& index)
 {
-    return std::get<node::TIndex<KIND>>(index);
+    return std::get<TIndex<KIND>>(index);
 }
 
 template <com::TEnumIntegerType<Kind> KIND>
@@ -138,17 +146,21 @@ bool operator!=(TIndex<KIND> lhs,
 template <com::TEnumIntegerType<Kind> KIND>
 struct TRange
 {
-    node::TIndex<KIND> operator[](uint32_t offset) const
+    TIndex<KIND> operator[](uint32_t offset) const
     {
-        return node::TIndex<KIND>{_index._value + offset};
+        TIndex<KIND> index{_index._value + offset};
+
+        index._isInterface = _index._isInterface;
+
+        return index;
     }
 
-    node::TIndex<KIND> back() const
+    TIndex<KIND> back() const
     {
-        return node::TIndex<KIND>{_index._value + _size - 1};
+        return TIndex<KIND>{_index._value + _size - 1};
     }
 
-    node::TIndex<KIND> _index;
+    TIndex<KIND> _index;
     uint32_t _size;
 };
 
