@@ -308,6 +308,8 @@ struct TNode<node::Kind::DEF_CLASS>
 {
     node::TIndex<node::Kind::LIT_IDENTIFIER > _name;
     node::TRange<node::Kind::TYPE_CLAIM     > _members;
+
+    com::UniqueId _id;
 };
 
 template <>
@@ -318,6 +320,8 @@ struct TNode<node::Kind::DEF_FUNCTION>
     node::TIndex<node::Kind::SCOPE          > _body;
 
     std::optional<node::TIndex<node::Kind::TYPE>> _returnType;
+
+    com::UniqueId _id;
 };
 
 template<>

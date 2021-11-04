@@ -36,7 +36,7 @@ struct PathId : ast::TVisitor<PathId, StackIn, StackOut>
 
     void operator()(ast::node::TIndex<ast::node::Kind::LIT_IDENTIFIER> idIdx)
     {
-        auto&& slice = ast::lexeme::getSlice(get(idIdx)._lexeme, _nodePool);
+        auto&& slice = getSlice(get(idIdx)._lexeme);
 
         _stackPtrOut->_id = _stackPtrIn->_id;
 

@@ -11,6 +11,7 @@
 
 #include "dmit/com/unique_id.hpp"
 #include "dmit/com/murmur.hpp"
+#include "dmit/com/blit.hpp"
 
 #include <optional>
 #include <cstdint>
@@ -40,7 +41,7 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
 
     void operator()(ast::node::TIndex<ast::node::Kind::TYPE> typeIdx)
     {
-        auto&& slice = ast::lexeme::getSlice(get(get(typeIdx)._name)._lexeme, _nodePool);
+        auto&& slice = getSlice(get(get(typeIdx)._name)._lexeme);
 
         const com::UniqueId sliceId{slice._head, slice.size()};
 
@@ -74,12 +75,14 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
             return;
         }
 
-        auto&& slice = ast::lexeme::getSlice(get(defClass._name)._lexeme, _nodePool);
+        auto&& slice = getSlice(get(defClass._name)._lexeme);
 
         com::murmur::combine(
             com::UniqueId{slice._head, slice.size()},
             _stackPtrIn->_prefix
         );
+
+        com::blit(_stackPtrIn->_prefix, defClass._id);
 
         _context.notifyEvent(_stackPtrIn->_prefix, defClassIdx);
     }
@@ -94,6 +97,14 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
         {
             base()(function._returnType.value());
         }
+
+        auto&& slice = getSlice(get(function._name)._lexeme);
+
+        com::murmur::combine(
+            com::UniqueId{slice._head, slice.size()},
+            _stackPtrIn->_prefix);
+
+        com::blit(_stackPtrIn->_prefix, function._id);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DEFINITION> definitionIdx)
@@ -173,5 +184,11 @@ void InterfaceMap::registerBundle(ast::Bundle &bundle)
 
     _context.run();
 }
+
+ast::node::TIndex<ast::node::Kind::VIEW> InterfaceMap::getView(const com::UniqueId& id) const
+{
+    return _asSimpleMap.at(id);
+}
+
 
 } // namespace dmit::sem

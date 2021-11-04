@@ -23,6 +23,6 @@ export func increment(x : i64) -> u64
     return y;
 }
 
-}
+} // module Z
 
-}
+} // module X.Y

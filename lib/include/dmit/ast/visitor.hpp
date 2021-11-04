@@ -1,8 +1,11 @@
 #pragma once
 
+#include "dmit/ast/lexeme.hpp"
 #include "dmit/ast/state.hpp"
 #include "dmit/ast/node.hpp"
 #include "dmit/ast/pool.hpp"
+
+#include "dmit/src/slice.hpp"
 
 #include "dmit/com/assert.hpp"
 #include "dmit/com/enum.hpp"
@@ -87,6 +90,11 @@ struct TVisitor
         }
 
         (*this)(opt.value());
+    }
+
+    src::Slice getSlice(const node::TIndex<node::Kind::LEXEME> lexemeIndex)
+    {
+        return lexeme::getSlice(lexemeIndex, _nodePool);
     }
 
     template <com::TEnumIntegerType<node::Kind> KIND>

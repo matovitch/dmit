@@ -18,6 +18,8 @@ struct InterfaceMap
 {
     void registerBundle(ast::Bundle& bundle);
 
+    ast::node::TIndex<ast::node::Kind::VIEW> getView(const com::UniqueId&) const;
+
     robin::map::TMake<com::UniqueId,
                       ast::node::TIndex<ast::node::Kind::VIEW>,
                       com::unique_id::Hasher,
