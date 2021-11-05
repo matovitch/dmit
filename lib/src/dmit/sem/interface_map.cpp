@@ -114,8 +114,6 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
     {
         auto& module = get(moduleIdx);
 
-        _stackPtrIn->_prefix = module._id;
-
         base()(module._definitions);
 
         _stackPtrIn->_isDeclaring = false;
@@ -129,6 +127,10 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
 
     void operator()(ast::node::TIndex<ast::node::Kind::VIEW> viewIdx)
     {
+        auto& view = get(viewIdx);
+
+        _stackPtrIn->_prefix = view._id;
+
         base()(get(viewIdx)._modules);
     }
 
@@ -182,6 +184,5 @@ ast::node::TIndex<ast::node::Kind::VIEW> InterfaceMap::getView(const com::Unique
 {
     return _asSimpleMap.at(id);
 }
-
 
 } // namespace dmit::sem

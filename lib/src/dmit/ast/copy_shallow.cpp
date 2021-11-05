@@ -3,6 +3,7 @@
 #include "dmit/ast/blitter.hpp"
 #include "dmit/ast/visitor.hpp"
 #include "dmit/ast/state.hpp"
+#include "dmit/com/blit.hpp"
 #include "dmit/ast/node.hpp"
 
 namespace dmit::ast
@@ -297,8 +298,6 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
         }
 
         make(destModule._modules, 0);
-
-        com::blit(srceModule._id, destModule._id);
     }
 
     void operator()(node::TIndex<node::Kind::VIEW> srceViewIdx)
@@ -310,6 +309,9 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
 
         copyRange(srceView._modules,
                   destView._modules);
+
+        com::blit(srceView._id,
+                  destView._id);
     }
 
     State::NodePool& _destNodePool;

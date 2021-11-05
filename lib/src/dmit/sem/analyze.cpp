@@ -1,11 +1,15 @@
 #include "dmit/sem/analyze.hpp"
 
-#include "dmit/ast/state.hpp"
 #include "dmit/sem/interface_map.hpp"
 #include "dmit/sem/context.hpp"
 
 #include "dmit/ast/visitor.hpp"
 #include "dmit/ast/bundle.hpp"
+#include "dmit/ast/state.hpp"
+
+#include "dmit/com/unique_id.hpp"
+#include "dmit/com/murmur.hpp"
+#include "dmit/com/blit.hpp"
 
 #include <cstdint>
 
@@ -55,45 +59,165 @@ struct ExportLister : ast::TVisitor<ExportLister>
     Context& _context;
 };
 
-struct Analyzer : ast::TVisitor<Analyzer>
+struct Stack
+{
+    com::UniqueId _prefix;
+};
+
+struct Analyzer : ast::TVisitor<Analyzer, Stack>
 {
     Analyzer(ast::State::NodePool& astNodePool,
-             InterfaceMap& interfaceMap) :
-        TVisitor<Analyzer>{astNodePool},
-        _interfaceMap{interfaceMap}
+             InterfaceMap& interfaceMap,
+             Context& context) :
+        TVisitor<Analyzer, Stack>{astNodePool},
+        _interfaceMap{interfaceMap},
+        _context{context},
+        _exportLister{interfaceMap._astNodePool, _context}
     {}
 
     DMIT_AST_VISITOR_SIMPLE();
+
+    void operator()(ast::node::TIndex<ast::node::Kind::TYPE> typeIdx)
+    {
+        auto&& slice = getSlice(get(typeIdx)._name);
+
+        auto id = com::murmur::combine(slice.makeUniqueId(), _stackPtrIn->_prefix);
+
+        _context.makeTask
+        (
+            [this, typeIdx](const ast::node::VIndex& vIndex)
+            {
+                com::blit(vIndex, get(typeIdx)._asVIndex);
+            },
+            _context._coroutinePoolMedium,
+            typeIdx,
+            id
+        );
+    }
+
+    void operator()(ast::node::TIndex<ast::node::Kind::STM_RETURN> stmReturnIdx)
+    {
+        // TODO
+    }
+
+    void operator()(ast::node::TIndex<ast::node::Kind::EXP_BINOP> expBinopIdx)
+    {
+        // TODO
+    }
+
+    void operator()(ast::node::TIndex<ast::node::Kind::SCOPE_VARIANT> scopeVariantIdx)
+    {
+        base()(get(scopeVariantIdx)._value);
+    }
+
+    void operator()(ast::node::TIndex<ast::node::Kind::SCOPE> scopeIdx)
+    {
+        base()(get(scopeIdx)._variants);
+    }
+
+    void operator()(ast::node::TIndex<ast::node::Kind::DCL_VARIABLE> dclVariableIdx)
+    {
+        auto& dclVariable = get(dclVariableIdx);
+
+        base()(dclVariable._typeClaim);
+
+        auto variableIdx = get(dclVariable._typeClaim)._variable;
+
+        auto&& slice = getSlice(variableIdx);
+
+        com::murmur::combine(slice.makeUniqueId(), _stackPtrIn->_prefix);
+
+        _context.notifyEvent(_stackPtrIn->_prefix, dclVariableIdx);
+    }
+
+    void operator()(ast::node::TIndex<ast::node::Kind::TYPE_CLAIM> typeClaimIdx)
+    {
+        base()(get(typeClaimIdx)._type);
+    }
+
+    void operator()(ast::node::TIndex<ast::node::Kind::DEF_CLASS> defClassIdx)
+    {
+        auto& defClass = get(defClassIdx);
+
+        base()(defClass._members);
+
+        auto&& slice = getSlice(defClass._name);
+
+        com::murmur::combine(slice.makeUniqueId(), _stackPtrIn->_prefix);
+
+        com::blit(_stackPtrIn->_prefix, defClass._id);
+
+        _context.notifyEvent(defClass._id, defClassIdx);
+    }
+
+    void operator()(ast::node::TIndex<ast::node::Kind::DEF_FUNCTION> functionIdx)
+    {
+        auto& function = get(functionIdx);
+
+        base()(function._arguments);
+        base()(function._returnType);
+
+        auto&& slice = getSlice(function._name);
+
+        com::murmur::combine(slice.makeUniqueId(), _stackPtrIn->_prefix);
+
+        com::blit(_stackPtrIn->_prefix, function._id);
+
+        _context.notifyEvent(function._id, functionIdx);
+
+        // base()(function._body);
+    }
+
+    void operator()(ast::node::TIndex<ast::node::Kind::DEFINITION> definitionIdx)
+    {
+        base()(get(definitionIdx)._value);
+    }
+
+    void operator()(ast::node::TIndex<ast::node::Kind::DCL_IMPORT> importIdx)
+    {
+        auto viewIdx = _interfaceMap.getView(get(importIdx)._id);
+
+        _exportLister.base()(viewIdx);
+    }
 
     void operator()(ast::node::TIndex<ast::node::Kind::MODULE> moduleIdx)
     {
         auto& module = get(moduleIdx);
 
-        ExportLister exportLister{_interfaceMap._astNodePool,
-                                  _context};
-
-        for (uint32_t i = 0; i < module._imports._size; i++)
-        {
-            auto viewIdx = _interfaceMap.getView(get(module._imports[i])._id);
-
-            exportLister.base()(viewIdx);
-        }
+        base()(module._imports);
+        base()(module._definitions);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::VIEW> viewIdx)
     {
-        base()(get(viewIdx)._modules);
+        auto& view = get(viewIdx);
+
+        _stackPtrIn->_prefix = view._id;
+
+        base()(view._modules);
     }
 
     InterfaceMap& _interfaceMap;
-    Context       _context;
+    Context&      _context;
+
+    ExportLister _exportLister;
 };
 
 int8_t analyze(InterfaceMap& interfaceMap, ast::Bundle& bundle)
 {
-    Analyzer analyzer{bundle._nodePool, interfaceMap};
+    Context context;
 
-    analyzer.base()(bundle._views);
+    Analyzer analyzer{bundle._nodePool, interfaceMap, context};
+
+    context.makeTaskFromWork(
+        [&analyzer, &bundle]()
+        {
+            analyzer.base()(bundle._views);
+        },
+        context._coroutinePoolLarge
+    );
+
+    context.run();
 
     return 0;
 }

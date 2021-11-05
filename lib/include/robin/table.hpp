@@ -256,7 +256,7 @@ private:
                 return;
             }
 
-            while (ROBIN_UNLIKELY((_size << 1) < (_capacity >> 1)))
+            if (ROBIN_UNLIKELY((_size << 1) < (_capacity >> 1)))
             {
                 _bufferManager.makePrev();
             }
