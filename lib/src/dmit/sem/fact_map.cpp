@@ -36,14 +36,11 @@ struct PathId : ast::TVisitor<PathId, StackIn, StackOut>
 
     void operator()(ast::node::TIndex<ast::node::Kind::LIT_IDENTIFIER> idIdx)
     {
-        auto&& slice = getSlice(get(idIdx)._lexeme);
+        auto&& slice = getSlice(idIdx);
 
         _stackPtrOut->_id = _stackPtrIn->_id;
 
-        com::murmur::combine(
-            com::UniqueId{slice._head, slice.size()},
-            _stackPtrOut->_id
-        );
+        com::murmur::combine(slice.makeUniqueId(), _stackPtrOut->_id);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::EXP_BINOP> binopIdx)

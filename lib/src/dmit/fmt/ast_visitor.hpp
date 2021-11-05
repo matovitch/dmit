@@ -24,7 +24,7 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
     void operator()(ast::node::TIndex<ast::node::Kind::LEXEME> lexemeIdx)
     {
         _oss << "{\"node\":\"Lexeme\",";
-        _oss << "\"slice\":" << ast::lexeme::getSlice(lexemeIdx, _nodePool) << "}";
+        _oss << "\"slice\":" << getSlice(lexemeIdx) << "}";
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::LIT_IDENTIFIER> identifierIdx)

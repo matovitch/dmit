@@ -92,9 +92,14 @@ struct TVisitor
         (*this)(opt.value());
     }
 
-    src::Slice getSlice(const node::TIndex<node::Kind::LEXEME> lexemeIndex)
+    src::Slice getSlice(const node::TIndex<node::Kind::LEXEME> lexemeIdx)
     {
-        return lexeme::getSlice(lexemeIndex, _nodePool);
+        return lexeme::getSlice(lexemeIdx, _nodePool);
+    }
+
+    src::Slice getSlice(const node::TIndex<node::Kind::LIT_IDENTIFIER> idenfifierIdx)
+    {
+        return getSlice(get(idenfifierIdx)._lexeme);
     }
 
     template <com::TEnumIntegerType<node::Kind> KIND>

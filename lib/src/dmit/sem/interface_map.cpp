@@ -41,11 +41,9 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
 
     void operator()(ast::node::TIndex<ast::node::Kind::TYPE> typeIdx)
     {
-        auto&& slice = getSlice(get(get(typeIdx)._name)._lexeme);
+        auto&& slice = getSlice(get(typeIdx)._name);
 
-        const com::UniqueId sliceId{slice._head, slice.size()};
-
-        auto id = com::murmur::combine(sliceId, _stackPtrIn->_prefix);
+        auto id = com::murmur::combine(slice.makeUniqueId(), _stackPtrIn->_prefix);
 
         _context.makeTask
         (
@@ -75,12 +73,9 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
             return;
         }
 
-        auto&& slice = getSlice(get(defClass._name)._lexeme);
+        auto&& slice = getSlice(defClass._name);
 
-        com::murmur::combine(
-            com::UniqueId{slice._head, slice.size()},
-            _stackPtrIn->_prefix
-        );
+        com::murmur::combine(slice.makeUniqueId(), _stackPtrIn->_prefix);
 
         com::blit(_stackPtrIn->_prefix, defClass._id);
 
@@ -98,11 +93,9 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
             base()(function._returnType.value());
         }
 
-        auto&& slice = getSlice(get(function._name)._lexeme);
+        auto&& slice = getSlice(function._name);
 
-        com::murmur::combine(
-            com::UniqueId{slice._head, slice.size()},
-            _stackPtrIn->_prefix);
+        com::murmur::combine(slice.makeUniqueId(), _stackPtrIn->_prefix);
 
         com::blit(_stackPtrIn->_prefix, function._id);
     }
