@@ -14,7 +14,7 @@ std::string asString(const ast::Bundle& bundle)
 {
     std::ostringstream oss;
 
-    AstVisitor astVisitor{bundle._nodePool, oss};
+    AstVisitor astVisitor{bundle, oss};
 
     auto bundleViews = bundle._views; // copy to avoid const
 

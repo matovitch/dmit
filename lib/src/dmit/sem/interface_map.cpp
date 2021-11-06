@@ -91,11 +91,7 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
         auto& function = get(functionIdx);
 
         base()(function._arguments);
-
-        if (function._returnType)
-        {
-            base()(function._returnType.value());
-        }
+        base()(function._returnType);
 
         auto&& slice = getSlice(function._name);
 
@@ -184,6 +180,10 @@ void InterfaceMap::registerBundle(ast::Bundle &bundle)
     );
 
     _context.run();
+
+    // 3. Bind the interface AST node pool to the bundle
+
+    bundle._interfacePoolOpt = _astNodePool;
 }
 
 ast::node::TIndex<ast::node::Kind::VIEW> InterfaceMap::getView(const com::UniqueId& id) const

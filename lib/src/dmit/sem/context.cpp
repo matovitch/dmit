@@ -37,7 +37,6 @@ SchmitTaskNode Context::getOrMakeEvent(const com::UniqueId& uniqueId)
                                                                      _coroutinePoolSmall);
     if (fitEvent == _eventMap.end())
     {
-        _scheduler.attach(event, event);
         _eventMap.emplace(uniqueId, event);
     }
 

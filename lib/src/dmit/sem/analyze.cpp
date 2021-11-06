@@ -152,6 +152,8 @@ struct Analyzer : ast::TVisitor<Analyzer, Stack>
         com::blit(_stackPtrIn->_prefix, defClass._id);
 
         _context.notifyEvent(defClass._id, defClassIdx);
+
+        defClass._status = ast::node::Status::IDENTIFIED;
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DEF_FUNCTION> functionIdx)
@@ -168,6 +170,8 @@ struct Analyzer : ast::TVisitor<Analyzer, Stack>
         com::blit(_stackPtrIn->_prefix, function._id);
 
         _context.notifyEvent(function._id, functionIdx);
+
+        function._status = ast::node::Status::IDENTIFIED;
 
         // base()(function._body);
     }
@@ -190,6 +194,12 @@ struct Analyzer : ast::TVisitor<Analyzer, Stack>
 
         base()(module._imports);
         base()(module._definitions);
+
+        for (uint32_t i = 0; i < module._imports._size; i++)
+        {
+            _stackPtrIn->_prefix = get(module._imports[i])._id;
+            base()(module._definitions);
+        }
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::VIEW> viewIdx)

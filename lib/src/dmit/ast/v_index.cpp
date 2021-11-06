@@ -5,6 +5,8 @@
 #include "dmit/com/unique_id.hpp"
 #include "dmit/com/assert.hpp"
 
+#include <cstdint>
+
 namespace dmit::ast::node::v_index
 {
 
@@ -45,6 +47,24 @@ struct IdVisitor
     State::NodePool& _pool;
 };
 
+struct IsInterfaceVisitor
+{
+    template <com::TEnumIntegerType<Kind> KIND>
+    bool operator()(TIndex<KIND> index)
+    {
+        return index._isInterface;
+    }
+};
+
+struct ValueVisitor
+{
+    template <com::TEnumIntegerType<Kind> KIND>
+    uint32_t operator()(TIndex<KIND> index)
+    {
+        return index._value;
+    }
+};
+
 } // namespace
 
 com::UniqueId makeId(State::NodePool& pool, const VIndex vIndex)
@@ -52,6 +72,20 @@ com::UniqueId makeId(State::NodePool& pool, const VIndex vIndex)
     IdVisitor idVisitor{pool};
 
     return std::visit(idVisitor, vIndex._variant);
+}
+
+bool isInterface(const VIndex vIndex)
+{
+    IsInterfaceVisitor isInterfaceVisitor;
+
+    return std::visit(isInterfaceVisitor, vIndex._variant);
+}
+
+uint32_t value(const VIndex vIndex)
+{
+    ValueVisitor valueVisitor;
+
+    return std::visit(valueVisitor, vIndex._variant);
 }
 
 } // namespace dmit::ast::node::v_index

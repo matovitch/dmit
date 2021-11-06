@@ -54,8 +54,10 @@ struct Context
                   const ast::node::VIndex& astNodeVIndex,
                   const com::UniqueId& comUniqueId)
     {
-        if (getFact(comUniqueId))
+        if (auto factOpt = getFact(comUniqueId))
         {
+            function(factOpt.value());
+            _unlockSet.emplace(astNodeVIndex);
             return;
         }
 

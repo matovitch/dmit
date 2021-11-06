@@ -291,8 +291,8 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
         copyRange(srceDefClass._members,
                   destDefClass._members);
 
-        srceDefClass._status =
-        destDefClass._status;
+        destDefClass._status =
+        srceDefClass._status;
     }
 
     void operator()(node::TIndex<node::Kind::DEF_FUNCTION> srceFunctionIdx)

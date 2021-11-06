@@ -4,9 +4,13 @@
 
 #include "dmit/ast/v_index.hpp"
 #include "dmit/ast/visitor.hpp"
+#include "dmit/ast/bundle.hpp"
 #include "dmit/ast/lexeme.hpp"
+#include "dmit/ast/state.hpp"
 #include "dmit/ast/node.hpp"
 #include "dmit/ast/pool.hpp"
+
+#include "dmit/com/option_reference.hpp"
 
 #include <sstream>
 
@@ -18,8 +22,15 @@ namespace
 
 struct AstVisitor : ast::TVisitor<AstVisitor>
 {
-    AstVisitor(ast::State::NodePool& nodePool, std::ostringstream& oss) :
-        ast::TVisitor<AstVisitor>{nodePool},
+    AstVisitor(const ast::State& ast, std::ostringstream& oss) :
+        ast::TVisitor<AstVisitor>{ast._nodePool},
+        _interfacePoolOpt{},
+        _oss{oss}
+    {}
+
+    AstVisitor(const ast::Bundle& astBundle, std::ostringstream& oss) :
+        ast::TVisitor<AstVisitor>{astBundle._nodePool},
+        _interfacePoolOpt{astBundle._interfacePoolOpt},
         _oss{oss}
     {}
 
@@ -61,13 +72,24 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
         auto& type = get(typeIdx);
 
         _oss << "{\"node\":\"Type\",";
-        _oss << "\"name\":"; base()(type._name);
 
         if (type._status == ast::node::Status::TYPE_BOUND)
         {
-            _oss << ",\"id\":\"" << ast::node::v_index::makeId(_nodePool, type._asVIndex) << '"';
+            _oss << "\"id\":\"";
+
+            if (ast::node::v_index::isInterface(type._asVIndex) && _interfacePoolOpt)
+            {
+                _oss << ast::node::v_index::makeId(_interfacePoolOpt.value(), type._asVIndex);
+            }
+            else
+            {
+                _oss << ast::node::v_index::makeId(_nodePool, type._asVIndex);
+            }
+
+            _oss << "\",";
         }
 
+        _oss << "\"name\":"; base()(type._name);
         _oss << "}";
     }
 
@@ -152,17 +174,16 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
         auto& function = get(functionIdx);
 
         _oss << "{\"node\":\"Function\",";
-        _oss << "\"name\":"       ; base()(function._name       ); _oss << ',';
-        _oss << "\"arguments\":"  ; base()(function._arguments  ); _oss << ',';
-        _oss << "\"returnType\":" ; base()(function._returnType ); _oss << ',';
-        _oss << "\"body\":"       ; base()(function._body       );
 
         if (function._status == ast::node::Status::IDENTIFIED)
         {
-            _oss << ",\"id\":\"" << function._id << '"';
+            _oss << "\"id\":\"" << function._id << "\",";
         }
 
-        _oss << '}';
+        _oss << "\"name\":"       ; base()(function._name       ); _oss << ',';
+        _oss << "\"arguments\":"  ; base()(function._arguments  ); _oss << ',';
+        _oss << "\"returnType\":" ; base()(function._returnType ); _oss << ',';
+        _oss << "\"body\":"       ; base()(function._body       ); _oss << '}';
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DEF_CLASS> defClassIdx)
@@ -170,15 +191,14 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
         auto& defClass = get(defClassIdx);
 
         _oss << "{\"node\":\"Class\",";
-        _oss << "\"name\":"    ; base()(defClass._name    ); _oss << ',';
-        _oss << "\"members\":" ; base()(defClass._members );
 
         if (defClass._status == ast::node::Status::IDENTIFIED)
         {
-            _oss << ",\"id\":\"" << defClass._id << '"';
+            _oss << "\"id\":\"" << defClass._id << "\",";
         }
 
-        _oss << '}';
+        _oss << "\"name\":"    ; base()(defClass._name    ); _oss << ',';
+        _oss << "\"members\":" ; base()(defClass._members ); _oss << '}';
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DCL_IMPORT> importIdx)
@@ -224,14 +244,13 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
         auto& view = get(viewIdx);
 
         _oss << "{\"node\":\"View\",";
-        _oss << "\"modules\":"   ; base()(view._modules);
 
         if (view._status == ast::node::Status::IDENTIFIED)
         {
-            _oss << ",\"id\":\"" << view._id << '"';
+            _oss << "\"id\":\"" << view._id << "\",";
         }
 
-        _oss << '}';
+        _oss << "\"modules\":"; base()(view._modules); _oss << '}';
     }
 
     template <class Type>
@@ -262,6 +281,8 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
 
     template <com::TEnumIntegerType<ast::node::Kind> KIND>
     void loopIterationPreamble(ast::node::TIndex<KIND>) {}
+
+    com::OptionRef<ast::State::NodePool> _interfacePoolOpt;
 
     std::ostringstream& _oss;
 };

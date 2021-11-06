@@ -37,4 +37,8 @@ struct Comparator
 
 com::UniqueId makeId(State::NodePool&, const VIndex);
 
+bool isInterface(const VIndex);
+
+uint32_t value(const VIndex);
+
 } // namespace dmit::ast::node::v_index

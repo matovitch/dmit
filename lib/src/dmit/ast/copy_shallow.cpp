@@ -12,6 +12,8 @@ namespace dmit::ast
 namespace
 {
 
+constexpr bool K_IS_INTERFACE = true;
+
 struct Stack
 {
     node::Index _index;
@@ -74,6 +76,12 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
         range._index._isInterface = true;
     }
 
+    template<class Type>
+    auto makeBlitter(Type& value)
+    {
+        return blitter::make<Type, K_IS_INTERFACE>(_destNodePool, value);
+    }
+
     template <com::TEnumIntegerType<node::Kind> NODE_KIND>
     void operator()(node::TIndex<NODE_KIND>)
     {
@@ -127,11 +135,11 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
         _stackPtrIn->_index = destBinop._operator;
         base()(srceBinop._operator);
 
-        auto blitterLhs = blitter::make(_destNodePool, destBinop._lhs);
+        auto blitterLhs = makeBlitter(destBinop._lhs);
         _stackPtrIn->_index = blitterLhs(srceBinop._lhs);
         base()(srceBinop._lhs);
 
-        auto blitterRhs = blitter::make(_destNodePool, destBinop._rhs);
+        auto blitterRhs = makeBlitter(destBinop._rhs);
         _stackPtrIn->_index = blitterRhs(srceBinop._rhs);
         base()(srceBinop._rhs);
     }
@@ -174,7 +182,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
             as<node::Kind::DCL_IMPORT>(_stackPtrIn->_index)
         );
 
-        auto blitter = blitter::make(_destNodePool, destImport._path);
+        auto blitter = makeBlitter(destImport._path);
         _stackPtrIn->_index = blitter(srceImport._path);
         base()(srceImport._path);
 
@@ -201,7 +209,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
 
         if (srceFunction._returnType)
         {
-            auto blitter = blitter::make(_destNodePool, destFunction._returnType);
+            auto blitter = makeBlitter(destFunction._returnType);
             _stackPtrIn->_index = blitter(srceFunction._returnType.value());
             base()(srceFunction._returnType);
         }
@@ -239,13 +247,13 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
             as<node::Kind::PARENT_PATH>(_stackPtrIn->_index)
         );
 
-        auto blitter = blitter::make(_destNodePool, destParentPath._expression);
+        auto blitter = makeBlitter(destParentPath._expression);
         _stackPtrIn->_index = blitter(srceParentPath._expression);
         base()(srceParentPath._expression);
 
         if (srceParentPath._next)
         {
-            auto blitter = blitter::make(_destNodePool, destParentPath._next);
+            auto blitter = makeBlitter(destParentPath._next);
             _stackPtrIn->_index = blitter(srceParentPath._next.value());
             base()(srceParentPath._next);
         }
@@ -270,7 +278,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
             return;
         }
 
-        auto blitter = blitter::make(_destNodePool, destDefinition._value);
+        auto blitter = makeBlitter(destDefinition._value);
         _stackPtrIn->_index = blitter(srceDefinition._value);
         base()(srceDefinition._value);
     }
@@ -284,7 +292,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
 
         if (srceModule._path)
         {
-            auto blitter = blitter::make(_destNodePool, destModule._path);
+            auto blitter = makeBlitter(destModule._path);
             _stackPtrIn->_index = blitter(srceModule._path.value());
             base()(srceModule._path);
         }
@@ -301,7 +309,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
 
         if (srceModule._parentPath)
         {
-            auto blitter = blitter::make(_destNodePool, destModule._parentPath);
+            auto blitter = makeBlitter(destModule._parentPath);
             _stackPtrIn->_index = blitter(srceModule._parentPath.value());
             base()(srceModule._parentPath);
         }

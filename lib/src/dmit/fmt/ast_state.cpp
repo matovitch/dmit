@@ -12,7 +12,7 @@ std::string asString(const ast::State& state)
 {
     std::ostringstream oss;
 
-    AstVisitor astVisitor{state._nodePool, oss};
+    AstVisitor astVisitor{state, oss};
 
     astVisitor(state._module);
 

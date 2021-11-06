@@ -7,14 +7,12 @@ module Z
 
 module C;
 
-export class i64 {}
+import B;
 
 export class A
 {
     a : i64;
 }
-
-export class u64 {}
 
 export func increment(x : i64) -> u64
 {

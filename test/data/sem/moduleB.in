@@ -1,4 +1,4 @@
-module B
-{
-    import A;
-}
+module B;
+
+export class u64 {}
+export class i64 {}
