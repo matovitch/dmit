@@ -49,6 +49,8 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
         (
             [this, typeIdx](const ast::node::VIndex& vIndex)
             {
+                get(typeIdx)._status = ast::node::Status::TYPE_BOUND;
+
                 com::blit(vIndex, get(typeIdx)._asVIndex);
             },
             _context._coroutinePoolMedium,
@@ -80,6 +82,8 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
         com::blit(_stackPtrIn->_prefix, defClass._id);
 
         _context.notifyEvent(_stackPtrIn->_prefix, defClassIdx);
+
+        defClass._status = ast::node::Status::IDENTIFIED;
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DEF_FUNCTION> functionIdx)
@@ -98,13 +102,15 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
         com::murmur::combine(slice.makeUniqueId(), _stackPtrIn->_prefix);
 
         com::blit(_stackPtrIn->_prefix, function._id);
+
+        function._status = ast::node::Status::IDENTIFIED;
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DEFINITION> definitionIdx)
     {
         auto& definition = get(definitionIdx);
 
-        if (definition._status == ast::DefinitionStatus::EXPORTED)
+        if (definition._role == ast::DefinitionRole::EXPORTED)
         {
             base()(definition._value);
         }

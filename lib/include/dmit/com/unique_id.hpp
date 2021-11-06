@@ -1,5 +1,7 @@
 #pragma once
 
+#include "dmit/fmt/formatable.hpp"
+
 #include <string_view>
 #include <cstdint>
 #include <vector>
@@ -7,7 +9,7 @@
 namespace dmit::com
 {
 
-struct UniqueId
+struct UniqueId : fmt::Formatable
 {
     UniqueId() = default;
     UniqueId(const std::string_view);

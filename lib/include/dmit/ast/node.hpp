@@ -1,6 +1,6 @@
 #pragma once
 
-#include "dmit/ast/definition_status.hpp"
+#include "dmit/ast/definition_role.hpp"
 
 #include "dmit/src/line_index.hpp"
 #include "dmit/src/slice.hpp"
@@ -23,6 +23,18 @@ namespace dmit::ast
 
 namespace node
 {
+
+struct Status : com::TEnum<uint8_t>
+{
+    enum : uint8_t
+    {
+        ASTED,
+        IDENTIFIED,
+        TYPE_BOUND
+    };
+
+    DMIT_COM_ENUM_IMPLICIT_FROM_INT(Status);
+};
 
 struct Kind : com::TEnum<uint8_t>
 {
@@ -187,40 +199,6 @@ struct Comparator
 
 } // namesapce index
 
-namespace v_index
-{
-
-struct HashVisitor
-{
-    template <com::TEnumIntegerType<Kind> KIND>
-    std::size_t operator()(const TIndex<KIND> tIndex)
-    {
-        return (tIndex._value << 0x8) | KIND;
-    }
-};
-
-struct Hasher
-{
-    std::size_t operator()(const VIndex vIndex) const
-    {
-        HashVisitor hashVisitor;
-
-        return std::visit(hashVisitor, vIndex._variant);
-    }
-};
-
-struct Comparator
-{
-    bool operator()(const VIndex lhs,
-                    const VIndex rhs) const
-    {
-        return lhs._variant ==
-               rhs._variant;
-    }
-};
-
-} // namespace v_index
-
 } // namespace node
 
 using Declaration = std::variant<node::TIndex<node::Kind::DCL_VARIABLE>>;
@@ -259,6 +237,8 @@ struct TNode<node::Kind::VIEW>
     node::TRange<node::Kind::MODULE> _modules;
 
     com::UniqueId _id;
+
+    node::Status _status;
 };
 
 template <>
@@ -274,6 +254,8 @@ struct TNode<node::Kind::MODULE>
     com::UniqueId                    _id;
 
     std::optional<node::TIndex<node::Kind::PARENT_PATH>> _parentPath;
+
+    node::Status _status;
 };
 
 template <>
@@ -293,12 +275,14 @@ struct TNode<node::Kind::DCL_IMPORT>
 
     node::TIndex<node::Kind::MODULE> _parent;
     com::UniqueId                    _id;
+
+    node::Status _status;
 };
 
 template <>
 struct TNode<node::Kind::DEFINITION>
 {
-    DefinitionStatus _status;
+    DefinitionRole _role;
 
     Definition _value;
 };
@@ -310,6 +294,8 @@ struct TNode<node::Kind::DEF_CLASS>
     node::TRange<node::Kind::TYPE_CLAIM     > _members;
 
     com::UniqueId _id;
+
+    node::Status _status;
 };
 
 template <>
@@ -322,6 +308,8 @@ struct TNode<node::Kind::DEF_FUNCTION>
     std::optional<node::TIndex<node::Kind::TYPE>> _returnType;
 
     com::UniqueId _id;
+
+    node::Status _status;
 };
 
 template<>
@@ -337,6 +325,8 @@ struct TNode<node::Kind::TYPE>
     node::TIndex<node::Kind::LIT_IDENTIFIER> _name;
 
     node::VIndex _asVIndex;
+
+    node::Status _status;
 };
 
 template <>

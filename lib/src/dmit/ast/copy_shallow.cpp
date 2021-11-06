@@ -146,6 +146,9 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
         make(destType._name);
         _stackPtrIn->_index = destType._name;
         base()(srceType._name);
+
+        destType._status =
+        srceType._status;
     }
 
     void operator()(node::TIndex<node::Kind::TYPE_CLAIM> srceTypeClaimIdx)
@@ -175,7 +178,11 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
         _stackPtrIn->_index = blitter(srceImport._path);
         base()(srceImport._path);
 
-        com::blit(srceImport._id, destImport._id);
+        com::blit(srceImport._id,
+                  destImport._id);
+
+        destImport._status =
+        srceImport._status;
     }
 
     void operator()(node::TIndex<node::Kind::DEF_FUNCTION> srceFunctionIdx)
@@ -202,21 +209,27 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
         {
             com::blitDefault(destFunction._returnType);
         }
+
+        destFunction._status =
+        srceFunction._status;
     }
 
-    void operator()(node::TIndex<node::Kind::DEF_CLASS> srceTypeIdx)
+    void operator()(node::TIndex<node::Kind::DEF_CLASS> srceDefClassIdx)
     {
-        auto& srceType = get(srceTypeIdx);
-        auto& destType = _destNodePool.get(
+        auto& srceDefClass = get(srceDefClassIdx);
+        auto& destDefClass = _destNodePool.get(
             as<node::Kind::DEF_CLASS>(_stackPtrIn->_index)
         );
 
-        make(destType._name);
-        _stackPtrIn->_index = destType._name;
-        base()(srceType._name);
+        make(destDefClass._name);
+        _stackPtrIn->_index = destDefClass._name;
+        base()(srceDefClass._name);
 
-        copyRange(srceType._members,
-                  destType._members);
+        copyRange(srceDefClass._members,
+                  destDefClass._members);
+
+        destDefClass._status =
+        srceDefClass._status;
     }
 
     void operator()(node::TIndex<node::Kind::PARENT_PATH> srceParentPathIdx)
@@ -249,10 +262,10 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
             as<node::Kind::DEFINITION>(_stackPtrIn->_index)
         );
 
-        com::blit(srceDefinition._status,
-                  destDefinition._status);
+        com::blit(srceDefinition._role,
+                  destDefinition._role);
 
-        if (srceDefinition._status != DefinitionStatus::EXPORTED)
+        if (srceDefinition._role != DefinitionRole::EXPORTED)
         {
             return;
         }
@@ -298,6 +311,9 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
         }
 
         make(destModule._modules, 0);
+
+        destModule._status =
+        srceModule._status;
     }
 
     void operator()(node::TIndex<node::Kind::VIEW> srceViewIdx)
@@ -312,6 +328,9 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
 
         com::blit(srceView._id,
                   destView._id);
+
+        destView._status =
+        srceView._status;
     }
 
     State::NodePool& _destNodePool;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "dmit/ast/node.hpp"
+#include "dmit/ast/v_index.hpp"
 
 #include "dmit/com/unique_id.hpp"
 

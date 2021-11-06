@@ -8,8 +8,8 @@ namespace dmit::com
 namespace
 {
 
-static constexpr std::size_t K_DECODED_BATCH_SIZE = 3;
-static constexpr std::size_t K_ENCODED_BATCH_SIZE = 4;
+using namespace dmit::com::base64;
+
 static constexpr std::size_t K_ENCODE_SHIFT       = 6;
 static constexpr std::size_t K_DECODE_SHIFT       = 2;
 static constexpr std::size_t K_ENCODE_MASK        = 0b111111;
@@ -133,12 +133,6 @@ void decodePadding(const uint8_t* const srce,
 
 namespace base64
 {
-
-std::size_t encodeBufferSize(const std::size_t size)
-{
-    return (size % K_DECODED_BATCH_SIZE) ? (size / K_DECODED_BATCH_SIZE + 1) * K_ENCODED_BATCH_SIZE
-                                         : (size / K_DECODED_BATCH_SIZE    ) * K_ENCODED_BATCH_SIZE;
-}
 
 std::size_t decodeBufferSize(const uint8_t* const srce,
                              const std::size_t    size)

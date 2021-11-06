@@ -1,6 +1,6 @@
-#include "dmit/fmt/ast/definition_status.hpp"
+#include "dmit/fmt/ast/definition_role.hpp"
 
-#include "dmit/ast/definition_status.hpp"
+#include "dmit/ast/definition_role.hpp"
 
 static const char* K_DEFINITION_STATUS_AS_CSTR[] =
 {
@@ -11,7 +11,7 @@ static const char* K_DEFINITION_STATUS_AS_CSTR[] =
 namespace dmit::fmt
 {
 
-std::string asString(const ast::DefinitionStatus definitionStatus)
+std::string asString(const ast::DefinitionRole definitionStatus)
 {
     std::ostringstream oss;
 

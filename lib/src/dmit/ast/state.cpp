@@ -1,6 +1,6 @@
 #include "dmit/ast/state.hpp"
 
-#include "dmit/ast/definition_status.hpp"
+#include "dmit/ast/definition_role.hpp"
 
 #include "dmit/prs/reader.hpp"
 #include "dmit/prs/tree.hpp"
@@ -81,6 +81,8 @@ void Builder::makeType(const dmit::prs::Reader& reader,
     DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::LIT_IDENTIFIER);
     _nodePool.make(type._name);
     makeIdentifier(reader, _nodePool.get(type._name));
+
+    type._status = node::Status::ASTED;
 }
 
 void Builder::makeTypeClaim(dmit::prs::Reader& reader,
@@ -351,6 +353,8 @@ void Builder::makeClass(const dmit::prs::Reader& supReader,
     // Name
     _nodePool.make(defClass._name);
     makeIdentifier(reader, _nodePool.get(defClass._name));
+
+    defClass._status = node::Status::ASTED;
 }
 
 void Builder::makeFunction(const dmit::prs::Reader& supReader,
@@ -382,6 +386,8 @@ void Builder::makeFunction(const dmit::prs::Reader& supReader,
     // Name
     _nodePool.make(function._name);
     makeIdentifier(reader, _nodePool.get(function._name));
+
+    function._status = node::Status::ASTED;
 }
 
 void Builder::makeImport(const dmit::prs::Reader& supReader,
@@ -390,6 +396,8 @@ void Builder::makeImport(const dmit::prs::Reader& supReader,
     auto reader = makeSubReaderFor(ParseNodeKind::DCL_IMPORT, supReader);
 
     makeExpression(reader, import._path);
+
+    import._status = node::Status::ASTED;
 }
 
 void Builder::makeDefinition(const dmit::prs::Reader& supReader,
@@ -419,8 +427,8 @@ void Builder::makeDefinition(const dmit::prs::Reader& supReader,
     }
 
     // Status
-    (reader.isValidNext()) ? com::blit(DefinitionStatus::EXPORTED , definition._status)
-                           : com::blit(DefinitionStatus::LOCAL    , definition._status);
+    (reader.isValidNext()) ? com::blit(DefinitionRole::EXPORTED , definition._role)
+                           : com::blit(DefinitionRole::LOCAL    , definition._role);
 
 }
 
@@ -484,6 +492,8 @@ void Builder::makeModule(dmit::prs::Reader& reader,
 
         readerCopy.advance();
     }
+
+    module._status = node::Status::ASTED;
 }
 
 State& Builder::operator()(const prs::state::Tree& parseTree)

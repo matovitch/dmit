@@ -1,6 +1,8 @@
-#include "dmit/fmt/ast/definition_status.hpp"
+#include "dmit/fmt/ast/definition_role.hpp"
+#include "dmit/fmt/com/unique_id.hpp"
 #include "dmit/fmt/src/slice.hpp"
 
+#include "dmit/ast/v_index.hpp"
 #include "dmit/ast/visitor.hpp"
 #include "dmit/ast/lexeme.hpp"
 #include "dmit/ast/node.hpp"
@@ -60,6 +62,12 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
 
         _oss << "{\"node\":\"Type\",";
         _oss << "\"name\":"; base()(type._name);
+
+        if (type._status == ast::node::Status::TYPE_BOUND)
+        {
+            _oss << ",\"id\":\"" << ast::node::v_index::makeId(_nodePool, type._asVIndex) << '"';
+        }
+
         _oss << "}";
     }
 
@@ -147,16 +155,30 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
         _oss << "\"name\":"       ; base()(function._name       ); _oss << ',';
         _oss << "\"arguments\":"  ; base()(function._arguments  ); _oss << ',';
         _oss << "\"returnType\":" ; base()(function._returnType ); _oss << ',';
-        _oss << "\"body\":"       ; base()(function._body       ); _oss << '}';
+        _oss << "\"body\":"       ; base()(function._body       );
+
+        if (function._status == ast::node::Status::IDENTIFIED)
+        {
+            _oss << ",\"id\":\"" << function._id << '"';
+        }
+
+        _oss << '}';
     }
 
-    void operator()(ast::node::TIndex<ast::node::Kind::DEF_CLASS> typeIdx)
+    void operator()(ast::node::TIndex<ast::node::Kind::DEF_CLASS> defClassIdx)
     {
-        auto& type = get(typeIdx);
+        auto& defClass = get(defClassIdx);
 
         _oss << "{\"node\":\"Class\",";
-        _oss << "\"name\":"    ; base()(type._name    ); _oss << ',';
-        _oss << "\"members\":" ; base()(type._members ); _oss << '}';
+        _oss << "\"name\":"    ; base()(defClass._name    ); _oss << ',';
+        _oss << "\"members\":" ; base()(defClass._members );
+
+        if (defClass._status == ast::node::Status::IDENTIFIED)
+        {
+            _oss << ",\"id\":\"" << defClass._id << '"';
+        }
+
+        _oss << '}';
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DCL_IMPORT> importIdx)
@@ -181,7 +203,7 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
         auto& definition = get(definitionIdx);
 
         _oss << "{\"node\":\"Definition\",";
-        _oss << "\"status\":" ; _oss << definition._status ; _oss << ',';
+        _oss << "\"role\":" ; _oss << definition._role ; _oss << ',';
         _oss << "\"value\":"  ; base()(definition._value)  ; _oss << '}';
     }
 
@@ -202,7 +224,14 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
         auto& view = get(viewIdx);
 
         _oss << "{\"node\":\"View\",";
-        _oss << "\"modules\":"   ; base()(view._modules); _oss << '}';
+        _oss << "\"modules\":"   ; base()(view._modules);
+
+        if (view._status == ast::node::Status::IDENTIFIED)
+        {
+            _oss << ",\"id\":\"" << view._id << '"';
+        }
+
+        _oss << '}';
     }
 
     template <class Type>

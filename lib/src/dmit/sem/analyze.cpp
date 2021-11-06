@@ -11,6 +11,8 @@
 #include "dmit/com/murmur.hpp"
 #include "dmit/com/blit.hpp"
 
+#include "dmit/fmt/com/unique_id.hpp"
+
 #include <cstdint>
 
 namespace dmit::sem
@@ -40,7 +42,7 @@ struct ExportLister : ast::TVisitor<ExportLister>
     {
         auto& definition = get(definitionIdx);
 
-        if (definition._status == ast::DefinitionStatus::EXPORTED)
+        if (definition._role == ast::DefinitionRole::EXPORTED)
         {
             base()(definition._value);
         }
@@ -87,6 +89,8 @@ struct Analyzer : ast::TVisitor<Analyzer, Stack>
         (
             [this, typeIdx](const ast::node::VIndex& vIndex)
             {
+                get(typeIdx)._status = ast::node::Status::TYPE_BOUND;
+
                 com::blit(vIndex, get(typeIdx)._asVIndex);
             },
             _context._coroutinePoolMedium,

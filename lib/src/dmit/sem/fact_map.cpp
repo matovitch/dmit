@@ -113,6 +113,8 @@ struct FindModulesAndBindImports : ast::TVisitor<FindModulesAndBindImports, Stac
         base()(module._modules);
 
         _factMap.emplace(module._id, _nodePool, moduleIdx);
+
+        module._status = ast::node::Status::IDENTIFIED;
     }
 
     FactMap& _factMap;
@@ -163,6 +165,8 @@ struct SolveImports : ast::TVisitor<SolveImports>
         DMIT_COM_ASSERT(idOpt && "error: failed to find import!");
 
         import._id = idOpt.value();
+
+        import._status = ast::node::Status::IDENTIFIED;
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::MODULE> moduleIdx)
