@@ -2,6 +2,7 @@
 #include "dmit/fmt/com/unique_id.hpp"
 #include "dmit/fmt/src/slice.hpp"
 
+#include "dmit/ast/definition_role.hpp"
 #include "dmit/ast/v_index.hpp"
 #include "dmit/ast/visitor.hpp"
 #include "dmit/ast/bundle.hpp"
@@ -9,6 +10,8 @@
 #include "dmit/ast/state.hpp"
 #include "dmit/ast/node.hpp"
 #include "dmit/ast/pool.hpp"
+
+#include "dmit/sem/interface_map.hpp"
 
 #include "dmit/com/option_reference.hpp"
 
@@ -28,9 +31,15 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
         _oss{oss}
     {}
 
-    AstVisitor(const ast::Bundle& astBundle, std::ostringstream& oss) :
-        ast::TVisitor<AstVisitor>{astBundle._nodePool},
-        _interfacePoolOpt{astBundle._interfacePoolOpt},
+    AstVisitor(const ast::Bundle& bundle, std::ostringstream& oss) :
+        ast::TVisitor<AstVisitor>{bundle._nodePool},
+        _interfacePoolOpt{bundle._interfacePoolOpt},
+        _oss{oss}
+    {}
+
+    AstVisitor(const sem::InterfaceMap& interfaceMap, std::ostringstream& oss) :
+        ast::TVisitor<AstVisitor>{interfaceMap._astNodePoolRef},
+        _interfacePoolOpt{},
         _oss{oss}
     {}
 
@@ -182,8 +191,14 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
 
         _oss << "\"name\":"       ; base()(function._name       ); _oss << ',';
         _oss << "\"arguments\":"  ; base()(function._arguments  ); _oss << ',';
-        _oss << "\"returnType\":" ; base()(function._returnType ); _oss << ',';
-        _oss << "\"body\":"       ; base()(function._body       ); _oss << '}';
+        _oss << "\"returnType\":" ; base()(function._returnType );
+
+        if (!functionIdx._isInterface)
+        {
+            _oss << ",\"body\":"; base()(function._body);
+        }
+
+        _oss << '}';
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DEF_CLASS> defClassIdx)
@@ -206,6 +221,12 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
         auto& import = get(importIdx);
 
         _oss << "{\"node\":\"Import\",";
+
+        if (import._status == ast::node::Status::IDENTIFIED)
+        {
+            _oss << "\"id\":\"" << import._id << "\",";
+        }
+
         _oss << "\"path\":"; base()(import._path); _oss << '}';
     }
 
@@ -221,6 +242,12 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
     void operator()(ast::node::TIndex<ast::node::Kind::DEFINITION> definitionIdx)
     {
         auto& definition = get(definitionIdx);
+
+        if (definitionIdx._isInterface && definition._role != ast::DefinitionRole::EXPORTED)
+        {
+            _oss << "{}";
+            return;
+        }
 
         _oss << "{\"node\":\"Definition\",";
         _oss << "\"role\":" ; _oss << definition._role ; _oss << ',';

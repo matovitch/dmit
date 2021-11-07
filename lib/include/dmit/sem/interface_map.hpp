@@ -5,6 +5,8 @@
 #include "dmit/ast/bundle.hpp"
 #include "dmit/ast/state.hpp"
 
+#include "dmit/fmt/formatable.hpp"
+
 #include "dmit/com/unique_id.hpp"
 
 #include "robin/map.hpp"
@@ -14,8 +16,10 @@
 namespace dmit::sem
 {
 
-struct InterfaceMap
+struct InterfaceMap : fmt::Formatable
 {
+    InterfaceMap();
+
     void registerBundle(ast::Bundle& bundle);
 
     ast::node::TIndex<ast::node::Kind::VIEW> getView(const com::UniqueId&) const;
@@ -25,7 +29,8 @@ struct InterfaceMap
                       com::unique_id::Hasher,
                       com::unique_id::Comparator, 4, 3> _asSimpleMap;
 
-    ast::State::NodePool _astNodePool;
+    ast::State::NodePool  _astNodePool;
+    ast::State::NodePool& _astNodePoolRef;
 
     pool::TMake<ast::node::TRange<ast::node::Kind::VIEW>, 1> _viewsPool;
 

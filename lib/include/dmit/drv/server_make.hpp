@@ -19,6 +19,7 @@
 
 #include "dmit/com/parallel_for.hpp"
 #include "dmit/com/unique_id.hpp"
+#include "dmit/com/logger.hpp"
 
 #include <cstdint>
 #include <vector>
@@ -106,7 +107,7 @@ struct SemanticAnalysis
     {
         if (index)
         {
-            while (_interfaceAtomCount.load(std::memory_order_acquire) < index);
+            while (_interfaceAtomCount.load(std::memory_order_acquire) < index - 1);
 
             return sem::analyze(_interfaceMap, _bundles[index - 1]);
         }
@@ -219,6 +220,8 @@ void make(nng::Socket& socket, db::Database& database)
 
     com::TParallelFor<SemanticAnalysis> parallelSemanticAnalysis(interfaceMap,
                                                                  bundles);
+    DMIT_COM_LOG_OUT << interfaceMap << '\n';
+
     for (auto& bundle : bundles)
     {
         DMIT_COM_LOG_OUT << bundle << '\n';

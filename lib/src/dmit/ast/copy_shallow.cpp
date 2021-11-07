@@ -32,7 +32,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
     void copyRange(node::TRange<KIND>& srceRange,
                    node::TRange<KIND>& destRange)
     {
-        _destNodePool.make(destRange, srceRange._size);
+        make(destRange, srceRange._size);
         _stackPtrIn->_index = destRange[0];
         base()(srceRange);
     }
