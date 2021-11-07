@@ -12,3 +12,5 @@ void getError(const dmit::src::file::Error& fileError,
               std::ostringstream& oss);
 
 std::string fileAsString(const std::string& filePath);
+
+std::vector<uint8_t> fileAsVector(const std::string& filePath);

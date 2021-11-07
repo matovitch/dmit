@@ -11,8 +11,8 @@
 namespace dmit::ast
 {
 
-State FromPathAndSource::make(const std::vector<uint8_t> & path,
-                              const std::vector<uint8_t> & toParse)
+State FromPathAndSource::make(const std::vector<uint8_t>& path,
+                              const std::vector<uint8_t>& toParse)
 {
     auto&& lex = _lexer(toParse.data(),
                         toParse.size());

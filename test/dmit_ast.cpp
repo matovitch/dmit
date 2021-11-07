@@ -1,60 +1,24 @@
 #include "test.hpp"
 
-#include "dmit/ast/source_register.hpp"
+#include "dmit/ast/from_path_and_source.hpp"
 #include "dmit/ast/state.hpp"
-#include "dmit/ast/pool.hpp"
-#include "dmit/ast/node.hpp"
-
-#include "dmit/prs/reader.hpp"
-#include "dmit/prs/state.hpp"
 
 #include "dmit/fmt/ast/state.hpp"
-
-#include "dmit/lex/state.hpp"
 
 #include <cstring>
 
 struct Aster
 {
-
-    const dmit::ast::State& operator()(const char* const filePath)
+    dmit::ast::State operator()(const char* const filePath)
     {
-        const auto& toParse = fileAsString(filePath);
+        const auto& toParse = fileAsVector(filePath);
 
-        _parser .clearState();
-        _lexer  .clearState();
+        std::vector<uint8_t> path;
 
-        auto& lex = _lexer(reinterpret_cast<const uint8_t*>(toParse.data()),
-                                                            toParse.size());
-        auto& prs = _parser(lex._tokens);
-
-        auto& ast = _aster(prs._tree);
-
-        // Build the source
-
-        auto& source = ast._nodePool.get(ast._source);
-
-        _sourceRegister.add(source);
-
-        source._srcPath = std::vector<uint8_t>{reinterpret_cast<const uint8_t*>(filePath),
-                                               reinterpret_cast<const uint8_t*>(filePath) + sizeof(filePath)};
-
-        source._srcContent.resize(toParse.size());
-
-        std::memcpy(source._srcContent.data(), toParse.data(), toParse.size());
-
-        source._srcOffsets = dmit::src::line_index::makeOffsets(source._srcContent);
-
-        source._lexOffsets .swap(lex._offsets );
-        source._lexTokens  .swap(lex._tokens  );
-
-        // return the ast
-        return ast;
+        return _astFromPathAndSource.make(path, toParse);
     }
 
-    dmit::ast::state::Builder _aster;
-    dmit::prs::state::Builder _parser;
-    dmit::lex::state::Builder _lexer;
+    dmit::ast::FromPathAndSource _astFromPathAndSource;
 
     dmit::ast::SourceRegister _sourceRegister;
 };

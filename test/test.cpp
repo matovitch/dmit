@@ -2,6 +2,8 @@
 
 #include "dmit/src/file.hpp"
 
+#include "dmit/com/assert.hpp"
+
 #include <sstream>
 #include <string>
 #include <vector>
@@ -46,4 +48,15 @@ std::string fileAsString(const std::string& filePath)
     const auto& content = fileErrOpt.value().content();
 
     return std::string{reinterpret_cast<const char*>(content.data()), content.size()};
+}
+
+std::vector<uint8_t> fileAsVector(const std::string& filePath)
+{
+    const auto& fileErrOpt = dmit::src::file::make(filePath);
+
+    std::ostringstream oss;
+
+    DMIT_COM_ASSERT(!fileErrOpt.hasError());
+
+    return fileErrOpt.value().content();
 }
