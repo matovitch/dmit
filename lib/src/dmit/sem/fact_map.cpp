@@ -9,6 +9,7 @@
 #include "dmit/com/murmur.hpp"
 
 #include <cstdint>
+#include <vector>
 
 namespace dmit::sem
 {
@@ -223,6 +224,19 @@ void FactMap::solveImports(ast::State& ast)
     SolveImports visitor{ast, *this};
 
     visitor.base()(ast._module);
+}
+
+void FactMap::solveImports(std::vector<ast::State>& asts)
+{
+    for (auto& ast : asts)
+    {
+        findModulesAndBindImports(ast);
+    }
+
+    for (auto& ast : asts)
+    {
+        solveImports(ast);
+    }
 }
 
 } // namespace dmit::sem

@@ -34,6 +34,8 @@ void makeView(const com::UniqueId  & viewId,
 
     nodePool.make(view._modules, count);
 
+    view._modules._index._isInterface = false;
+
     do
     {
         ast::copyDeep(as<ast::node::Kind::MODULE>(fit->second._index),

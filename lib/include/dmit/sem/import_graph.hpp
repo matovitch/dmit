@@ -40,6 +40,8 @@ struct ImportGraph
 
     void registerAst(ast::State& ast);
 
+    void registerAsts(std::vector<ast::State>& asts);
+
     TopoPoolSet _topoPoolSet;
     TopoGraph   _topoGraph;
 

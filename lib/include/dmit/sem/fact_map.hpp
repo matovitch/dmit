@@ -7,6 +7,8 @@
 
 #include "robin/map.hpp"
 
+#include <vector>
+
 namespace dmit::sem
 {
 
@@ -37,6 +39,8 @@ struct FactMap
     void findModulesAndBindImports(ast::State& ast);
 
     void solveImports(ast::State& ast);
+
+    void solveImports(std::vector<ast::State>& asts);
 
     TMap<Fact> _asRobinMap;
 };

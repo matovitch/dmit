@@ -18,22 +18,35 @@ class TParallelFor
 public:
 
     template <class... Args>
-    TParallelFor(Args&&... args) : _concurrentQueue{Body{std::forward<Args>(args)...}.size()}
+    TParallelFor(Args&&... args) :
+        _numThreads{std::thread::hardware_concurrency()},
+        _concurrentQueue{Body{std::forward<Args>(args)...}.size()}
     {
-        const auto numThreads       = std::thread::hardware_concurrency();
-        const auto numThreadsUpPow2 = 1 << log2(numThreads);
-
-        for (uint64_t i = 0; i < numThreadsUpPow2; i++)
+        for (uint64_t i = 0; i < numThreadsUpPow2(); i++)
         {
             _bodies.emplace_back(std::make_unique<Body>(std::forward<Args>(args)...));
         }
-
-        operator()(numThreads, numThreadsUpPow2 >> 1, 0);
     }
 
-    const Type& result(uint64_t index) const
+    void run()
     {
-        return _concurrentQueue[index];
+        operator()(_numThreads, numThreadsUpPow2() >> 1, 0);
+    }
+
+    std::vector<Type> makeVector()
+    {
+        run();
+
+        std::vector<Type> bundles;
+
+        bundles.reserve(size());
+
+        for (int i = 0; i < size(); ++i)
+        {
+            bundles.emplace_back(result(i));
+        }
+
+        return bundles;
     }
 
     ~TParallelFor()
@@ -42,6 +55,21 @@ public:
     }
 
 private:
+
+    const Type& result(uint64_t index) const
+    {
+        return _concurrentQueue[index];
+    }
+
+    std::size_t size() const
+    {
+        return _concurrentQueue.size();
+    }
+
+    uint32_t numThreadsUpPow2() const
+    {
+        return 1 << log2(_numThreads);
+    }
 
     void operator()(uint32_t numThreads, uint32_t weight, uint32_t id)
     {
@@ -69,6 +97,8 @@ private:
             index = _concurrentCounter.increment();
         }
     }
+
+    uint32_t _numThreads;
 
     ConcurrentCounter      _concurrentCounter;
     TConcurrentQueue<Type> _concurrentQueue;

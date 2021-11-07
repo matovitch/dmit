@@ -16,8 +16,8 @@ class FromPathAndSource
 
 public:
 
-    State make(const std::vector<uint8_t> & path,
-               const std::vector<uint8_t> & toParse);
+    State make(const std::vector<uint8_t>& path,
+               const std::vector<uint8_t>& source);
 private:
 
     lex::state::Builder _lexer;

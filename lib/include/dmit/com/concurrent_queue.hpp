@@ -40,6 +40,11 @@ public:
         }
     }
 
+    std::size_t size() const
+    {
+        return _storage._size;
+    }
+
 private:
 
     TStorage<Type> _storage;

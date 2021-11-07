@@ -138,4 +138,12 @@ void ImportGraph::registerAst(ast::State& ast)
     visitor.base()(ast._module);
 }
 
+void ImportGraph::registerAsts(std::vector<ast::State>& asts)
+{
+    for (auto& ast : asts)
+    {
+        registerAst(ast);
+    }
+}
+
 } // namespace dmit::sem

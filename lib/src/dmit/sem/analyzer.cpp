@@ -1,4 +1,4 @@
-#include "dmit/sem/analyze.hpp"
+#include "dmit/sem/analyzer.hpp"
 
 #include "dmit/sem/interface_map.hpp"
 #include "dmit/sem/context.hpp"
@@ -17,6 +17,14 @@
 
 namespace dmit::sem
 {
+
+std::atomic<int> Analyzer::_interfaceAtomCount;
+
+void analyze(com::TParallelFor<Analyzer>& parallelAnalyzer)
+{
+    Analyzer::init();
+    parallelAnalyzer.run();
+}
 
 struct ExportLister : ast::TVisitor<ExportLister>
 {
@@ -66,12 +74,12 @@ struct Stack
     com::UniqueId _prefix;
 };
 
-struct Analyzer : ast::TVisitor<Analyzer, Stack>
+struct AnalyzeVisitor : ast::TVisitor<AnalyzeVisitor, Stack>
 {
-    Analyzer(ast::State::NodePool& astNodePool,
+    AnalyzeVisitor(ast::State::NodePool& astNodePool,
              InterfaceMap& interfaceMap,
              Context& context) :
-        TVisitor<Analyzer, Stack>{astNodePool},
+        TVisitor<AnalyzeVisitor, Stack>{astNodePool},
         _interfaceMap{interfaceMap},
         _context{context},
         _exportLister{interfaceMap._astNodePool, _context}
@@ -221,12 +229,12 @@ int8_t analyze(InterfaceMap& interfaceMap, ast::Bundle& bundle)
 {
     Context context;
 
-    Analyzer analyzer{bundle._nodePool, interfaceMap, context};
+    AnalyzeVisitor analyzeVisitor{bundle._nodePool, interfaceMap, context};
 
     context.makeTaskFromWork(
-        [&analyzer, &bundle]()
+        [&analyzeVisitor, &bundle]()
         {
-            analyzer.base()(bundle._views);
+            analyzeVisitor.base()(bundle._views);
         },
         context._coroutinePoolLarge
     );

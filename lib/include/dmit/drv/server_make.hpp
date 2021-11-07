@@ -6,10 +6,10 @@
 #include "dmit/sem/interface_map.hpp"
 #include "dmit/sem/import_graph.hpp"
 #include "dmit/sem/fact_map.hpp"
-#include "dmit/sem/analyze.hpp"
+#include "dmit/sem/analyzer.hpp"
 #include "dmit/sem/bundle.hpp"
 
-#include "dmit/ast/from_path_and_source.hpp"
+#include "dmit/ast/builder.hpp"
 #include "dmit/ast/bundle.hpp"
 #include "dmit/ast/state.hpp"
 
@@ -26,116 +26,6 @@
 
 namespace dmit::drv::srv
 {
-
-struct AstBuilder
-{
-    using ReturnType = ast::State;
-
-    AstBuilder(const std::vector<std::vector<uint8_t>>& paths,
-               const std::vector<std::vector<uint8_t>>& sources) :
-        _paths{paths},
-        _sources{sources}
-    {}
-
-    ast::State run(const uint64_t index)
-    {
-        return _astFromPathAndSource.make(_paths   [index],
-                                          _sources [index]);
-    }
-
-    uint32_t size() const
-    {
-        return _paths.size();
-    }
-
-    const std::vector<std::vector<uint8_t>>& _paths   ;
-    const std::vector<std::vector<uint8_t>>& _sources ;
-
-    ast::FromPathAndSource _astFromPathAndSource;
-};
-
-struct BundleBuilder
-{
-    using ReturnType = ast::Bundle;
-
-    BundleBuilder(const std::vector<com::UniqueId > & moduleOrder,
-                  const std::vector<uint32_t      > & moduleBundles,
-                  const sem::FactMap                & factMap) :
-        _moduleOrder   {moduleOrder},
-        _moduleBundles {moduleBundles},
-        _factMap       {factMap}
-    {}
-
-    ast::Bundle run(const uint64_t index)
-    {
-        return sem::bundle::make(index,
-                                 _moduleOrder,
-                                 _moduleBundles,
-                                 _factMap,
-                                 _nodePool);
-    }
-
-    uint32_t size() const
-    {
-        return _moduleBundles.size() - 1;
-    }
-
-    const std::vector<com::UniqueId >& _moduleOrder;
-    const std::vector<uint32_t      >& _moduleBundles;
-
-    const sem::FactMap& _factMap;
-
-    ast::State::NodePool _nodePool;
-};
-
-struct SemanticAnalysis
-{
-    using ReturnType = int8_t;
-
-    SemanticAnalysis(sem::InterfaceMap        & interfaceMap,
-                     std::vector<ast::Bundle> & bundles) :
-        _interfaceMap{interfaceMap},
-        _bundles{bundles}
-    {}
-
-    static void init()
-    {
-        _interfaceAtomCount.store(0, std::memory_order_relaxed);
-    }
-
-    int8_t run(const uint64_t index)
-    {
-        if (index)
-        {
-            while (_interfaceAtomCount.load(std::memory_order_acquire) < index - 1);
-
-            return sem::analyze(_interfaceMap, _bundles[index - 1]);
-        }
-
-        for (auto& bundle : _bundles)
-        {
-            _interfaceMap.registerBundle(bundle);
-
-            int interfaceCount = _interfaceAtomCount.load(std::memory_order_relaxed);
-
-            _interfaceAtomCount.store(interfaceCount + 1, std::memory_order_release);
-        }
-
-        return 0;
-    }
-
-    uint32_t size() const
-    {
-        return _bundles.size() + 1;
-    }
-
-    static std::atomic<int> _interfaceAtomCount;
-
-    sem::InterfaceMap        & _interfaceMap;
-    std::vector<ast::Bundle> & _bundles;
-};
-
-std::atomic<int> SemanticAnalysis::_interfaceAtomCount;
 
 void make(nng::Socket& socket, db::Database& database)
 {
@@ -158,39 +48,21 @@ void make(nng::Socket& socket, db::Database& database)
 
     // 2. Make the ASTs
 
-    std::vector<ast::State> asts;
+    com::TParallelFor<ast::Builder> parallelAstBuilder{paths, sources};
 
-    asts.reserve(unitIds.size());
+    auto&& asts = parallelAstBuilder.makeVector();
 
-    com::TParallelFor<AstBuilder> parallelAstBuilder(paths, sources);
-
-    for (int i = 0; i < paths.size(); ++i)
-    {
-        asts.emplace_back(parallelAstBuilder.result(i));
-    }
-
-    // 3. Declare modules and resolve imports
+    // 3. Resolve imports
 
     sem::FactMap factMap;
 
-    for (auto& ast : asts)
-    {
-        factMap.findModulesAndBindImports(ast);
-    }
-
-    for (auto& ast : asts)
-    {
-        factMap.solveImports(ast);
-    }
+    factMap.solveImports(asts);
 
     // 4. Make the import graph
 
     sem::ImportGraph importGraph;
 
-    for (auto& ast : asts)
-    {
-        importGraph.registerAst(ast);
-    }
+    importGraph.registerAsts(asts);
 
     std::vector<com::UniqueId > moduleOrder;
     std::vector<uint32_t      > moduleBundles;
@@ -200,26 +72,19 @@ void make(nng::Socket& socket, db::Database& database)
 
     // 5. Make the bundles
 
-    std::vector<ast::Bundle> bundles;
-
-    bundles.reserve(moduleBundles.size() - 1);
-
-    com::TParallelFor<BundleBuilder> parallelBundleBuilder(moduleOrder,
-                                                           moduleBundles,
-                                                           factMap);
-    for (int i = 0; i < moduleBundles.size() - 1; ++i)
-    {
-        bundles.emplace_back(parallelBundleBuilder.result(i));
-    }
+    com::TParallelFor<sem::bundle::Builder> parallelBundleBuilder{moduleOrder,
+                                                                  moduleBundles,
+                                                                  factMap};
+    auto&& bundles = parallelBundleBuilder.makeVector();
 
     // 6. Semantic analysis
 
-    SemanticAnalysis::init();
-
     sem::InterfaceMap interfaceMap;
 
-    com::TParallelFor<SemanticAnalysis> parallelSemanticAnalysis(interfaceMap,
-                                                                 bundles);
+    com::TParallelFor<sem::Analyzer> parallelSemanticAnalyzer{interfaceMap,
+                                                              bundles};
+    sem::analyze(parallelSemanticAnalyzer);
+
     DMIT_COM_LOG_OUT << interfaceMap << '\n';
 
     for (auto& bundle : bundles)

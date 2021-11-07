@@ -29,7 +29,7 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
     void copyRange(node::TRange<KIND>& srceRange,
                    node::TRange<KIND>& destRange)
     {
-        _destNodePool.make(destRange, srceRange._size);
+        make(destRange, srceRange._size);
         _stackPtrIn->_index = destRange[0];
         base()(srceRange);
     }
@@ -51,6 +51,27 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
 
     template <class Type>
     void emptyOption() {}
+
+    template <com::TEnumIntegerType<node::Kind> KIND>
+    void make(node::TIndex<KIND>& index)
+    {
+        _destNodePool.make(index);
+        index._isInterface = false;
+    }
+
+    template <com::TEnumIntegerType<node::Kind> KIND>
+    void make(std::optional<node::TIndex<KIND>>& indexOpt)
+    {
+        _destNodePool.make(indexOpt);
+        indexOpt.value()._isInterface = false;
+    }
+
+    template <com::TEnumIntegerType<node::Kind> KIND>
+    void make(node::TRange<KIND>& range, const uint32_t size)
+    {
+        _destNodePool.make(range, size);
+        range._index._isInterface = false;
+    }
 
     template <com::TEnumIntegerType<node::Kind> NODE_KIND>
     void operator()(node::TIndex<NODE_KIND>)
@@ -75,7 +96,7 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
             as<node::Kind::LEXEME>(_stackPtrIn->_index)
         );
 
-        _destNodePool.make(destLexeme._source);
+        make(destLexeme._source);
         _stackPtrIn->_index = destLexeme._source;
         base()(srceLexeme._source);
 
@@ -89,7 +110,7 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
             as<node::Kind::LIT_INTEGER>(_stackPtrIn->_index)
         );
 
-        _destNodePool.make(destInteger._lexeme);
+        make(destInteger._lexeme);
         _stackPtrIn->_index = destInteger._lexeme;
         base()(srceInteger._lexeme);
     }
@@ -101,7 +122,7 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
             as<node::Kind::LIT_DECIMAL>(_stackPtrIn->_index)
         );
 
-        _destNodePool.make(destDecimal._lexeme);
+        make(destDecimal._lexeme);
         _stackPtrIn->_index = destDecimal._lexeme;
         base()(srceDecimal._lexeme);
     }
@@ -113,7 +134,7 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
             as<node::Kind::LIT_IDENTIFIER>(_stackPtrIn->_index)
         );
 
-        _destNodePool.make(destIdentifier._lexeme);
+        make(destIdentifier._lexeme);
         _stackPtrIn->_index = destIdentifier._lexeme;
         base()(srceIdentifier._lexeme);
     }
@@ -125,7 +146,7 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
             as<node::Kind::EXP_MONOP>(_stackPtrIn->_index)
         );
 
-        _destNodePool.make(destMonop._operator);
+        make(destMonop._operator);
         _stackPtrIn->_index = destMonop._operator;
         base()(srceMonop._operator);
 
@@ -141,7 +162,7 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
             as<node::Kind::EXP_BINOP>(_stackPtrIn->_index)
         );
 
-        _destNodePool.make(destBinop._operator);
+        make(destBinop._operator);
         _stackPtrIn->_index = destBinop._operator;
         base()(srceBinop._operator);
 
@@ -179,7 +200,7 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
             as<node::Kind::TYPE>(_stackPtrIn->_index)
         );
 
-        _destNodePool.make(destType._name);
+        make(destType._name);
         _stackPtrIn->_index = destType._name;
         base()(srceType._name);
 
@@ -194,11 +215,11 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
             as<node::Kind::TYPE_CLAIM>(_stackPtrIn->_index)
         );
 
-        _destNodePool.make(destTypeClaim._variable);
+        make(destTypeClaim._variable);
         _stackPtrIn->_index = destTypeClaim._variable;
         base()(srceTypeClaim._variable);
 
-        _destNodePool.make(destTypeClaim._type);
+        make(destTypeClaim._type);
         _stackPtrIn->_index = destTypeClaim._type;
         base()(srceTypeClaim._type);
     }
@@ -222,7 +243,7 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
             as<node::Kind::FUN_CALL>(_stackPtrIn->_index)
         );
 
-        _destNodePool.make(destFunCall._callee);
+        make(destFunCall._callee);
         _stackPtrIn->_index = destFunCall._callee;
         base()(srceFunCall._callee);
 
@@ -237,7 +258,7 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
             as<node::Kind::DCL_VARIABLE>(_stackPtrIn->_index)
         );
 
-        _destNodePool.make(destDclVariable._typeClaim);
+        make(destDclVariable._typeClaim);
         _stackPtrIn->_index = destDclVariable._typeClaim;
         base()(srceDclVariable._typeClaim);
     }
@@ -284,7 +305,7 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
             as<node::Kind::DEF_CLASS>(_stackPtrIn->_index)
         );
 
-        _destNodePool.make(destDefClass._name);
+        make(destDefClass._name);
         _stackPtrIn->_index = destDefClass._name;
         base()(srceDefClass._name);
 
@@ -302,14 +323,14 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
             as<node::Kind::DEF_FUNCTION>(_stackPtrIn->_index)
         );
 
-        _destNodePool.make(destFunction._name);
+        make(destFunction._name);
         _stackPtrIn->_index = destFunction._name;
         base()(srceFunction._name);
 
         copyRange(srceFunction._arguments,
                   destFunction._arguments);
 
-        _destNodePool.make(destFunction._body);
+        make(destFunction._body);
         _stackPtrIn->_index = destFunction._body;
         base()(srceFunction._body);
 
@@ -367,7 +388,7 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
         copyRange(srceModule._definitions,
                   destModule._definitions);
 
-        _destNodePool.make(destModule._modules, 0);
+        make(destModule._modules, 0);
 
         com::blit(srceModule._id, destModule._id);
 
@@ -382,7 +403,7 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
             auto& parentPath = get(parent)._path;
             auto  prefix     = destModule._parentPath;
 
-                                         _destNodePool.make (destModule._parentPath);
+                                                       make (destModule._parentPath);
             auto& destModuleParentPath = _destNodePool.get  (destModule._parentPath);
 
             auto blitter = blitter::make(_destNodePool, destModuleParentPath._expression);
