@@ -81,6 +81,30 @@ struct Context
         _scheduler.attach(event, lock);
     }
 
+    template <class Function>
+    void makeTaskSmall(Function&& function,
+                       const ast::node::VIndex& astNodeVIndex,
+                       const com::UniqueId& comUniqueId)
+    {
+        makeTask(function, _coroutinePoolSmall, astNodeVIndex, comUniqueId);
+    }
+
+    template <class Function>
+    void makeTaskMedium(Function&& function,
+                       const ast::node::VIndex& astNodeVIndex,
+                       const com::UniqueId& comUniqueId)
+    {
+        makeTask(function, _coroutinePoolMedium, astNodeVIndex, comUniqueId);
+    }
+
+    template <class Function>
+    void makeTaskLarge(Function&& function,
+                       const ast::node::VIndex& astNodeVIndex,
+                       const com::UniqueId& comUniqueId)
+    {
+        makeTask(function, _coroutinePoolLarge, astNodeVIndex, comUniqueId);
+    }
+
     SchmitTaskGraphPoolSet _taskGraphPoolSet;
     SchmitScheduler        _scheduler;
 

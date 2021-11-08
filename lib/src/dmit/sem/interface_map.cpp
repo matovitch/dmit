@@ -45,7 +45,7 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
 
         auto id = com::murmur::combine(slice.makeUniqueId(), _stackPtrIn->_prefix);
 
-        _context.makeTask
+        _context.makeTaskMedium
         (
             [this, typeIdx](const ast::node::VIndex& vIndex)
             {
@@ -53,7 +53,6 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
 
                 com::blit(vIndex, get(typeIdx)._asVIndex);
             },
-            _context._coroutinePoolMedium,
             typeIdx,
             id
         );
