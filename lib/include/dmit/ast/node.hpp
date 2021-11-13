@@ -69,17 +69,24 @@ struct Kind : com::TEnum<uint8_t>
     DMIT_COM_ENUM_IMPLICIT_FROM_INT(Kind);
 };
 
+template <template <class...> class TVector,
+          template <com::TEnumIntegerType<Kind>> class TElem>
+struct TTVector
+{
+    template <class>
+    struct TType;
+
+    template<com::TEnumIntegerType<Kind>... Kinds>
+    struct TType<std::integer_sequence<com::TEnumIntegerType<Kind>, Kinds...>>
+    {
+        using Type = TVector<TElem<Kinds>...>;
+    };
+
+    using Type = typename TType<Kind::IntegerSequence>::Type;
+};
+
 template <com::TEnumIntegerType<Kind>>
 struct TIndex;
-
-template <class>
-struct TVariantHelper;
-
-template<com::TEnumIntegerType<Kind>... Kinds>
-struct TVariantHelper<std::integer_sequence<com::TEnumIntegerType<Kind>, Kinds...>>
-{
-    using Type = std::variant<TIndex<Kinds>...>;
-};
 
 struct Index
 {
@@ -113,7 +120,7 @@ struct TIndex
 
 struct VIndex
 {
-    using Variant = typename TVariantHelper<Kind::IntegerSequence>::Type;
+    using Variant = TTVector<std::variant, TIndex>::Type;
 
     VIndex() : _variant{} {}
 
@@ -221,7 +228,7 @@ using ScopeVariant = std::variant<Statement,
                                   node::TIndex<node::Kind::SCOPE>>;
 
 template <com::TEnumIntegerType<node::Kind> KIND>
-struct TNode {};
+struct TNode;
 
 template <>
 struct TNode<node::Kind::PARENT_PATH>
