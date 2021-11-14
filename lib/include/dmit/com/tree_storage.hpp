@@ -8,7 +8,7 @@
 #include <vector>
 #include <array>
 
-namespace dmit::ast
+namespace dmit::com::tree
 {
 
 namespace storage
@@ -49,7 +49,7 @@ template <uint8_t TYPE_SIZE,
           uint8_t LOG2_SIZE>
 class TStorage
 {
-    static constexpr auto LOG2_SIZE_RATIO = LOG2_SIZE / com::log2(TYPE_SIZE);
+    static constexpr auto LOG2_SIZE_RATIO = LOG2_SIZE / log2(TYPE_SIZE);
 
     using Chunk = storage::TChunk<TYPE_SIZE,
                                   ALGN_SIZE,
@@ -116,4 +116,4 @@ using TMake = TStorage<sizeof(Type),
                        LOG2_SIZE>;
 };
 
-} // namespace dmit::ast
+} // namespace dmit::com::tree

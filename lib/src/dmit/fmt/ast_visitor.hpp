@@ -9,11 +9,11 @@
 #include "dmit/ast/lexeme.hpp"
 #include "dmit/ast/state.hpp"
 #include "dmit/ast/node.hpp"
-#include "dmit/ast/pool.hpp"
 
 #include "dmit/sem/interface_map.hpp"
 
 #include "dmit/com/option_reference.hpp"
+#include "dmit/com/tree_node.hpp"
 
 #include <sstream>
 
@@ -86,7 +86,7 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
         {
             _oss << "\"id\":\"";
 
-            if (ast::node::v_index::isInterface(type._asVIndex) && _interfacePoolOpt)
+            if (com::tree::v_index::isInterface<ast::node::Kind>(type._asVIndex) && _interfacePoolOpt)
             {
                 _oss << ast::node::v_index::makeId(_interfacePoolOpt.value(), type._asVIndex);
             }

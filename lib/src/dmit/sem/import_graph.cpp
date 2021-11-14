@@ -30,7 +30,7 @@ struct RegisterAst : ast::TVisitor<RegisterAst>
         auto& import = base().get(importIdx);
 
         auto& moduleParent = base().get(
-            as<ast::node::Kind::MODULE>(import._parent)
+            ast::node::as<ast::node::Kind::MODULE>(import._parent)
         );
 
         _importGraph.makeDependency(moduleParent._id, import._id);

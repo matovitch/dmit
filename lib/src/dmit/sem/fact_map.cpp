@@ -145,7 +145,7 @@ struct SolveImports : ast::TVisitor<SolveImports>
             return pathId.id();
         }
 
-        auto moduleParent = as<ast::node::Kind::MODULE>(module._parent);
+        auto moduleParent = ast::node::as<ast::node::Kind::MODULE>(module._parent);
 
         if (parent == moduleParent)
         {
@@ -159,7 +159,7 @@ struct SolveImports : ast::TVisitor<SolveImports>
     {
         auto& import = base().get(importIdx);
 
-        auto moduleParent = as<ast::node::Kind::MODULE>(import._parent);
+        auto moduleParent = ast::node::as<ast::node::Kind::MODULE>(import._parent);
 
         auto&& idOpt = getId(import._path, moduleParent);
 

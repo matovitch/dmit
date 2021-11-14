@@ -1,7 +1,6 @@
 #pragma once
 
 #include "dmit/ast/node.hpp"
-#include "dmit/ast/pool.hpp"
 
 #include "dmit/prs/reader.hpp"
 #include "dmit/prs/tree.hpp"

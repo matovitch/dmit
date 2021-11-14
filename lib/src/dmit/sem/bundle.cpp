@@ -5,6 +5,7 @@
 #include "dmit/ast/copy_deep.hpp"
 #include "dmit/ast/bundle.hpp"
 #include "dmit/ast/state.hpp"
+#include "dmit/ast/node.hpp"
 
 #include "dmit/com/unique_id.hpp"
 #include "dmit/com/murmur.hpp"
@@ -38,7 +39,7 @@ void makeView(const com::UniqueId  & viewId,
 
     do
     {
-        ast::copyDeep(as<ast::node::Kind::MODULE>(fit->second._index),
+        ast::copyDeep(ast::node::as<ast::node::Kind::MODULE>(fit->second._index),
                       *(fit->second._nodePool),
                       view._modules[--count],
                       nodePool);

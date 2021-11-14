@@ -1,5 +1,8 @@
 #pragma once
 
+#include "dmit/com/tree_node.hpp"
+#include "dmit/com/tree_pool.hpp"
+
 #include "dmit/ast/definition_role.hpp"
 
 #include "dmit/src/line_index.hpp"
@@ -10,13 +13,10 @@
 #include "dmit/com/unique_id.hpp"
 #include "dmit/com/enum.hpp"
 
-#include <functional>
 #include <optional>
 #include <cstdint>
-#include <utility>
 #include <variant>
 #include <vector>
-#include <limits>
 
 namespace dmit::ast
 {
@@ -64,147 +64,37 @@ struct Kind : com::TEnum<uint8_t>
         SOURCE
     };
 
-    using IntegerSequence = std::make_integer_sequence<uint8_t, SOURCE + 1>;
-
     DMIT_COM_ENUM_IMPLICIT_FROM_INT(Kind);
-};
 
-template <template <class...> class TVector,
-          template <com::TEnumIntegerType<Kind>> class TElem>
-struct TTVector
-{
-    template <class>
-    struct TType;
-
-    template<com::TEnumIntegerType<Kind>... Kinds>
-    struct TType<std::integer_sequence<com::TEnumIntegerType<Kind>, Kinds...>>
-    {
-        using Type = TVector<TElem<Kinds>...>;
-    };
-
-    using Type = typename TType<Kind::IntegerSequence>::Type;
-};
-
-template <com::TEnumIntegerType<Kind>>
-struct TIndex;
-
-struct Index
-{
-    Index() : _value{std::numeric_limits<uint32_t>::max() >> 1} {}
-
-    template <com::TEnumIntegerType<Kind> KIND>
-    Index(const TIndex<KIND> index) :
-        _isInterface {index._isInterface },
-        _value       {index._value       }
-    {}
-
-    bool _isInterface :  1 = false;
-    uint32_t _value   : 31;
+    using IntegerSequence = std::make_integer_sequence<uint8_t, SOURCE + 1>;
 };
 
 template <com::TEnumIntegerType<Kind> KIND>
-struct TIndex
+using TRange = typename com::tree::TMetaNode<Kind>::template TRange<KIND>;
+
+template <com::TEnumIntegerType<Kind> KIND>
+using TIndex = typename com::tree::TMetaNode<Kind>::template TIndex<KIND>;
+
+using VIndex = typename com::tree::TMetaNode<Kind>::VIndex;
+
+using Index = typename com::tree::TMetaNode<Kind>::Index;
+
+template <com::TEnumIntegerType<Kind> KIND>
+auto as = [](auto value) -> TIndex<KIND>
 {
-    TIndex() : _value{std::numeric_limits<uint32_t>::max() >> 1} {}
-
-    TIndex(const uint32_t value) : _value{value} {}
-
-    TIndex(const Index index) :
-        _isInterface {index._isInterface },
-        _value       {index._value       }
-    {}
-
-    bool _isInterface :  1 = false;
-    uint32_t _value   : 31;
+    return com::tree::as<Kind, KIND>(value);
 };
 
-struct VIndex
-{
-    using Variant = TTVector<std::variant, TIndex>::Type;
+} // namespace node
 
-    VIndex() : _variant{} {}
+template <com::TEnumIntegerType<node::Kind> KIND>
+struct TNode;
 
-    template <com::TEnumIntegerType<Kind> KIND>
-    VIndex(const TIndex<KIND> index) : _variant{index} {}
-
-    Variant _variant;
-};
-
-template <com::TEnumIntegerType<Kind> KIND>
-TIndex<KIND> as(const Index index)
-{
-    return TIndex<KIND>{index._value};
-}
-
-template <com::TEnumIntegerType<Kind> KIND>
-TIndex<KIND> as(const TIndex<KIND> index)
-{
-    return index;
-}
-
-template <com::TEnumIntegerType<Kind> KIND>
-TIndex<KIND> as(const VIndex& index)
-{
-    return std::get<TIndex<KIND>>(index);
-}
-
-template <com::TEnumIntegerType<Kind> KIND>
-bool operator==(TIndex<KIND> lhs,
-                TIndex<KIND> rhs)
-{
-    return lhs._value == rhs._value;
-}
-
-template <com::TEnumIntegerType<Kind> KIND>
-bool operator!=(TIndex<KIND> lhs,
-                TIndex<KIND> rhs)
-{
-    return lhs._value != rhs._value;
-}
-
-template <com::TEnumIntegerType<Kind> KIND>
-struct TRange
-{
-    TIndex<KIND> operator[](uint32_t offset) const
-    {
-        TIndex<KIND> index{_index._value + offset};
-
-        index._isInterface = _index._isInterface;
-
-        return index;
-    }
-
-    TIndex<KIND> back() const
-    {
-        return TIndex<KIND>{_index._value + _size - 1};
-    }
-
-    TIndex<KIND> _index;
-    uint32_t _size;
-};
-
-namespace index
+namespace node
 {
 
-struct Hasher
-{
-    std::size_t operator()(const Index index) const
-    {
-        return index._value;
-    }
-};
-
-struct Comparator
-{
-    bool operator()(const Index lhs,
-                    const Index rhs) const
-    {
-        return lhs._value ==
-               rhs._value;
-    }
-};
-
-} // namesapce index
+template <uint8_t LOG2_SIZE>
+using TPool = typename com::tree::TTMetaPool<Kind, TNode>::TPool<LOG2_SIZE>;
 
 } // namespace node
 
@@ -226,9 +116,6 @@ using ScopeVariant = std::variant<Statement,
                                   Declaration,
                                   Expression,
                                   node::TIndex<node::Kind::SCOPE>>;
-
-template <com::TEnumIntegerType<node::Kind> KIND>
-struct TNode;
 
 template <>
 struct TNode<node::Kind::PARENT_PATH>

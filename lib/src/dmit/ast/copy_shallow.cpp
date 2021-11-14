@@ -92,7 +92,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
     {
         auto& srceSource = get(srceSourceIdx);
         auto& destSource = _destNodePool.get(
-            as<node::Kind::SOURCE>(_stackPtrIn->_index)
+            node::as<node::Kind::SOURCE>(_stackPtrIn->_index)
         );
 
         std::memcpy(&destSource, &srceSource, sizeof(TNode<node::Kind::SOURCE>));
@@ -102,7 +102,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
     {
         auto& srceLexeme = get(srceLexemeIdx);
         auto& destLexeme = _destNodePool.get(
-            as<node::Kind::LEXEME>(_stackPtrIn->_index)
+            node::as<node::Kind::LEXEME>(_stackPtrIn->_index)
         );
 
         make(destLexeme._source);
@@ -116,7 +116,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
     {
         auto& srceIdentifier = get(srceIdentifierIdx);
         auto& destIdentifier = _destNodePool.get(
-            as<node::Kind::LIT_IDENTIFIER>(_stackPtrIn->_index)
+            node::as<node::Kind::LIT_IDENTIFIER>(_stackPtrIn->_index)
         );
 
         make(destIdentifier._lexeme);
@@ -128,7 +128,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
     {
         auto& srceBinop = get(srceBinopIdx);
         auto& destBinop = _destNodePool.get(
-            as<node::Kind::EXP_BINOP>(_stackPtrIn->_index)
+            node::as<node::Kind::EXP_BINOP>(_stackPtrIn->_index)
         );
 
         make(destBinop._operator);
@@ -148,7 +148,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
     {
         auto& srceType = get(srceTypeIdx);
         auto& destType = _destNodePool.get(
-            as<node::Kind::TYPE>(_stackPtrIn->_index)
+            node::as<node::Kind::TYPE>(_stackPtrIn->_index)
         );
 
         make(destType._name);
@@ -163,7 +163,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
     {
         auto& srceTypeClaim = get(srceTypeClaimIdx);
         auto& destTypeClaim = _destNodePool.get(
-            as<node::Kind::TYPE_CLAIM>(_stackPtrIn->_index)
+            node::as<node::Kind::TYPE_CLAIM>(_stackPtrIn->_index)
         );
 
         make(destTypeClaim._variable);
@@ -179,7 +179,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
     {
         auto& srceImport = get(srceImportIdx);
         auto& destImport = _destNodePool.get(
-            as<node::Kind::DCL_IMPORT>(_stackPtrIn->_index)
+            node::as<node::Kind::DCL_IMPORT>(_stackPtrIn->_index)
         );
 
         auto blitter = makeBlitter(destImport._path);
@@ -197,7 +197,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
     {
         auto& srceFunction = get(srceFunctionIdx);
         auto& destFunction = _destNodePool.get(
-            as<node::Kind::DEF_FUNCTION>(_stackPtrIn->_index)
+            node::as<node::Kind::DEF_FUNCTION>(_stackPtrIn->_index)
         );
 
         make(destFunction._name);
@@ -226,7 +226,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
     {
         auto& srceDefClass = get(srceDefClassIdx);
         auto& destDefClass = _destNodePool.get(
-            as<node::Kind::DEF_CLASS>(_stackPtrIn->_index)
+            node::as<node::Kind::DEF_CLASS>(_stackPtrIn->_index)
         );
 
         make(destDefClass._name);
@@ -244,7 +244,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
     {
         auto& srceParentPath = get(srceParentPathIdx)   ;
         auto& destParentPath = _destNodePool.get(
-            as<node::Kind::PARENT_PATH>(_stackPtrIn->_index)
+            node::as<node::Kind::PARENT_PATH>(_stackPtrIn->_index)
         );
 
         auto blitter = makeBlitter(destParentPath._expression);
@@ -267,7 +267,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
     {
         auto& srceDefinition = get(srceDefinitionIdx);
         auto& destDefinition = _destNodePool.get(
-            as<node::Kind::DEFINITION>(_stackPtrIn->_index)
+            node::as<node::Kind::DEFINITION>(_stackPtrIn->_index)
         );
 
         com::blit(srceDefinition._role,
@@ -287,7 +287,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
     {
         auto& srceModule = get(srceModuleIdx)   ;
         auto& destModule = _destNodePool.get(
-            as<node::Kind::MODULE>(_stackPtrIn->_index)
+            node::as<node::Kind::MODULE>(_stackPtrIn->_index)
         );
 
         if (srceModule._path)
@@ -328,7 +328,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
     {
         auto& srceView = get(srceViewIdx);
         auto& destView = _destNodePool.get(
-            as<node::Kind::VIEW>(_stackPtrIn->_index)
+            node::as<node::Kind::VIEW>(_stackPtrIn->_index)
         );
 
         copyRange(srceView._modules,
