@@ -11,11 +11,13 @@ struct OptionReference
 {
     OptionReference() = default;
 
+    OptionReference(Type& reference) : _ptr{&reference} {}
+
     OptionReference(const OptionReference&) = default;
 
-    OptionReference& operator=(Type& reference)
+    OptionReference& operator=(const OptionReference& optionReference)
     {
-        _ptr = &reference;
+        _ptr = optionReference._ptr;
         return *this;
     }
 

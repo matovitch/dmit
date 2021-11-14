@@ -88,7 +88,7 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
 
             if (com::tree::v_index::isInterface<ast::node::Kind>(type._asVIndex) && _interfacePoolOpt)
             {
-                _oss << ast::node::v_index::makeId(_interfacePoolOpt.value(), type._asVIndex);
+                _oss << ast::node::v_index::makeId(_interfacePoolOpt.value().get(), type._asVIndex);
             }
             else
             {
