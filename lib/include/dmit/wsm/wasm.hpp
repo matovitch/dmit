@@ -2,6 +2,7 @@
 
 #include "dmit/com/tree_node.hpp"
 #include "dmit/com/tree_pool.hpp"
+#include "dmit/com/ieee754.hpp"
 #include "dmit/com/enum.hpp"
 
 #include <optional>
@@ -207,10 +208,13 @@ struct TNode<node::Kind::TYPE_EXTERN>
     ExternType _asVariant;
 };
 
+using flt32_t = com::ieee754::Binary<32>;
+using flt64_t = com::ieee754::Binary<64>;
+
 template <> struct TNode<node::Kind::INST_CONST_I32> { int32_t _value ; };
 template <> struct TNode<node::Kind::INST_CONST_I64> { int64_t _value ; };
-template <> struct TNode<node::Kind::INST_CONST_F32> { float   _value ; };
-template <> struct TNode<node::Kind::INST_CONST_F64> { double  _value ; };
+template <> struct TNode<node::Kind::INST_CONST_F32> { flt32_t _value ; };
+template <> struct TNode<node::Kind::INST_CONST_F64> { flt64_t _value ; };
 
 struct NumericInstruction : com::TEnum<uint8_t>
 {
