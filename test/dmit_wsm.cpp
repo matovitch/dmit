@@ -5,6 +5,7 @@
 #include "dmit/wsm/wasm.hpp"
 
 #include "dmit/com/base64.hpp"
+#include "dmit/com/blit.hpp"
 
 std::string base64Encode(const std::vector<uint8_t>& toEncode)
 {
@@ -21,7 +22,7 @@ std::string base64Encode(const std::vector<uint8_t>& toEncode)
 
 TEST_CASE("PLOP")
 {
-    dmit::wsm::node::TPool<0x10> nodePool;
+    dmit::wsm::node::TPool<0xC> nodePool;
 
     dmit::wsm::node::TIndex<dmit::wsm::node::Kind::MODULE> moduleIdx;
 
@@ -29,7 +30,16 @@ TEST_CASE("PLOP")
 
     auto& module = nodePool.get(moduleIdx);
 
-    nodePool.make(module._types, 1);
+    nodePool.make(module._types        , 1);
+    nodePool.make(module._imports      , 0);
+    nodePool.make(module._funcs        , 0);
+    nodePool.make(module._tables       , 0);
+    nodePool.make(module._mems         , 0);
+    nodePool.make(module._globalConsts , 0);
+    nodePool.make(module._globalVars   , 0);
+    nodePool.make(module._exports      , 0);
+
+    dmit::com::blitDefault(module._startOpt);
 
     auto& typeFunc = nodePool.get(module._types[0]);
 
@@ -50,6 +60,9 @@ TEST_CASE("PLOP")
 
     nodePool.make(i32Idx1);
     nodePool.make(i32Idx2);
+
+    dmit::com::blitDefault(  domainType._asVariant);
+    dmit::com::blitDefault(codomainType._asVariant);
 
       domainType._asVariant = i32Idx1;
     codomainType._asVariant = i32Idx2;

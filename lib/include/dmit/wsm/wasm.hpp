@@ -569,7 +569,7 @@ struct TNode<node::Kind::INST_CALL_INDIRECT>
 template<>
 struct TNode<node::Kind::FUNCTION>
 {
-    node::TIndex<node::Kind::TYPE_FUNC   > _type;
+    uint32_t                               _typeIdx;
     node::TRange<node::Kind::TYPE_VAL    > _locals;
     node::TRange<node::Kind::INSTRUCTION > _body;
 };
@@ -602,7 +602,7 @@ struct TNode<node::Kind::MODULE>
     node::TRange<node::Kind::IMPORT       > _imports;
     node::TRange<node::Kind::EXPORT       > _exports;
 
-    std::optional<node::TIndex<node::Kind::START>> _start;
+    std::optional<node::TIndex<node::Kind::START>> _startOpt;
 };
 
 template<> struct TNode<node::Kind::ELEM_PASSIVE     > {};

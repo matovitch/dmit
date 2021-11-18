@@ -12,7 +12,7 @@ namespace dmit::ast
 
 struct Bundle : fmt::Formatable
 {
-    using NodePool = node::TPool<0x10>;
+    using NodePool = typename State::NodePool;
 
     Bundle(NodePool&);
 
