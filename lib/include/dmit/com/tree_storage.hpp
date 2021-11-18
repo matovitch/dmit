@@ -49,7 +49,7 @@ template <uint8_t TYPE_SIZE,
           uint8_t LOG2_SIZE>
 class TStorage
 {
-    static constexpr auto LOG2_SIZE_RATIO = LOG2_SIZE / log2(TYPE_SIZE);
+    static constexpr auto LOG2_SIZE_RATIO = LOG2_SIZE - log2(TYPE_SIZE);
 
     using Chunk = storage::TChunk<TYPE_SIZE,
                                   ALGN_SIZE,

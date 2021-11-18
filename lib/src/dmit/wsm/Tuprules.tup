@@ -1,0 +1,2 @@
+LIB_DMIT_WSM_CPP = $(LIB_SRC)/dmit/wsm/*.cpp
+LIB_DMIT_WSM_OUT = libdmit_wsm.a

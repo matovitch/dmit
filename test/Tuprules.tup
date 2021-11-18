@@ -17,6 +17,7 @@ CLFLAGS += -l dmit_ast
 CLFLAGS += -l dmit_sem
 CLFLAGS += -l dmit_vm
 CLFLAGS += -l dmit_rt
+CLFLAGS += -l dmit_wsm
 CLFLAGS += -l sqlite3
 CLFLAGS += -l nng
 CLFLAGS += -l cmp
@@ -38,5 +39,6 @@ CLFLAGS += -L $(VARIANT)/lib/src/dmit/ast
 CLFLAGS += -L $(VARIANT)/lib/src/dmit/sem
 CLFLAGS += -L $(VARIANT)/lib/src/dmit/vm
 CLFLAGS += -L $(VARIANT)/lib/src/dmit/rt
+CLFLAGS += -L $(VARIANT)/lib/src/dmit/wsm
 
 !cl = |> $(CL) %<obj> $(CLFLAGS) -o %o |>

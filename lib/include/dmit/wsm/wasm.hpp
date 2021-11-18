@@ -88,7 +88,6 @@ struct Kind : com::TEnum<uint8_t>
         LABEL              ,
         FUNCTION           ,
         ELEMENT            ,
-        ELEM_MODE          ,
         ELEM_ACTIVE        ,
         ELEM_PASSIVE       ,
         ELEM_DECLARATIVE   ,
@@ -132,16 +131,16 @@ template <> struct TNode<node::Kind::TYPE_F32> {};
 template <> struct TNode<node::Kind::TYPE_I64> {};
 template <> struct TNode<node::Kind::TYPE_F64> {};
 
-using NumType = std::variant<TNode<node::Kind::TYPE_I32>,
-                             TNode<node::Kind::TYPE_F32>,
-                             TNode<node::Kind::TYPE_I64>,
-                             TNode<node::Kind::TYPE_F64>>;
+using NumType = std::variant<node::TIndex<node::Kind::TYPE_I32>,
+                             node::TIndex<node::Kind::TYPE_F32>,
+                             node::TIndex<node::Kind::TYPE_I64>,
+                             node::TIndex<node::Kind::TYPE_F64>>;
 
 template <> struct TNode<node::Kind::TYPE_REF_EXTERN > {};
 template <> struct TNode<node::Kind::TYPE_REF_FUNC   > {};
 
-using RefType = std::variant<TNode<node::Kind::TYPE_REF_EXTERN>,
-                             TNode<node::Kind::TYPE_REF_FUNC>>;
+using RefType = std::variant<node::TIndex<node::Kind::TYPE_REF_EXTERN>,
+                             node::TIndex<node::Kind::TYPE_REF_FUNC>>;
 
 using ValType = std::variant<NumType,
                              RefType>;
@@ -197,11 +196,11 @@ struct TNode<node::Kind::TYPE_GLOBAL_CONST>
     node::TIndex<node::Kind::TYPE_VAL> _valType;
 };
 
-using ExternType = std::variant<TNode<node::Kind::TYPE_GLOBAL_CONST>,
-                                TNode<node::Kind::TYPE_GLOBAL_VAR>,
-                                TNode<node::Kind::TYPE_FUNC>,
-                                TNode<node::Kind::TYPE_MEM>,
-                                TNode<node::Kind::TYPE_TABLE>>;
+using ExternType = std::variant<node::TIndex<node::Kind::TYPE_GLOBAL_CONST>,
+                                node::TIndex<node::Kind::TYPE_GLOBAL_VAR>,
+                                node::TIndex<node::Kind::TYPE_FUNC>,
+                                node::TIndex<node::Kind::TYPE_MEM>,
+                                node::TIndex<node::Kind::TYPE_TABLE>>;
 template <>
 struct TNode<node::Kind::TYPE_EXTERN>
 {
@@ -649,7 +648,6 @@ struct TNode<node::Kind::BYTE_>
 {
     uint8_t _value;
 };
-
 
 template <>
 struct TNode<node::Kind::DATA>

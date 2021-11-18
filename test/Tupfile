@@ -16,4 +16,5 @@ include_rules
           $(ROOT)/<lib_dmit_sem> \
           $(ROOT)/<lib_dmit_vm>  \
           $(ROOT)/<lib_dmit_rt>  \
+          $(ROOT)/<lib_dmit_wsm> \
                                  |> !cl |> $(BIN_TEST_OUT) $(ROOT)/<bin_test>

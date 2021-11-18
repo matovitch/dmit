@@ -1,4 +1,5 @@
 #include "dmit/wsm/leb128.hpp"
+#include <cstdint>
 
 // Taken from https://llvm.org/doxygen/LEB128_8h_source.html
 
@@ -56,5 +57,7 @@ Leb128::Leb128(uint64_t asU64)
     }
     while (asU64 != 0);
 }
+
+Leb128::Leb128(uint32_t asU32) : Leb128{static_cast<uint64_t>(asU32)} {}
 
 } // namespace dmit::wsm

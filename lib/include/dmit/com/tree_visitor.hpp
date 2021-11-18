@@ -13,8 +13,10 @@ namespace dmit::com::tree
 template <class Kind, template <TEnumIntegerType<Kind>> class TNode, class Pool>
 struct TTMetaVisitor
 {
-    template <class Derived, class StackIn,
-                             class StackOut>
+    struct StackDummy{};
+
+    template <class Derived, class StackIn  = StackDummy,
+                             class StackOut = StackDummy>
     struct TVisitor
     {
         template <class... Args>
