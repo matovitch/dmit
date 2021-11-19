@@ -628,7 +628,7 @@ template <>
 struct TNode<node::Kind::ELEMENT>
 {
     RefType _type;
-    node::TRange<node::Kind::EXPRESSION> _expressions;
+    node::TRange<node::Kind::EXPRESSION> _init;
     ElementMode _mode;
 };
 

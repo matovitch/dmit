@@ -378,11 +378,55 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
         _writer.write(funcIdxAsLeb128);
     }
 
+    bool isFuncRef(node::TIndex<node::Kind::EXPRESSION> expressionIdx)
+    {
+        auto& expression = get(expressionIdx);
+
+        return std::holds_alternative<node::TIndex<node::Kind::INST_REF_FUNC>>(get(expression._instructions[0])._asVariant);
+    }
+
+    bool isOnlyFuncRefs(const node::TRange<node::Kind::EXPRESSION>& expressions)
+    {
+        for (uint32_t i = 0; i < expressions._size; i++)
+        {
+            if (!isFuncRef(expressions[i]))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     void operator()(node::TIndex<node::Kind::ELEMENT> elementIdx)
     {
         auto& element = get(elementIdx);
 
-        // TODO
+        uint32_t flags = 0;
+
+        flags |= 0b001 * std::holds_alternative<node::TIndex<node::Kind::ELEM_PASSIVE     >>(element._mode);
+        flags |= 0b011 * std::holds_alternative<node::TIndex<node::Kind::ELEM_DECLARATIVE >>(element._mode);
+        flags |= 0b010 * get(std::get<node::TIndex<node::Kind::ELEM_ACTIVE>>(element._mode))._tableIdx != 0;
+        flags |= 0b100 * isOnlyFuncRefs(element._init);
+
+        _writer.write(flags);
+
+        if (flags == 0x00)
+        {}
+        else if (flags == 0x01)
+        {}
+        else if (flags == 0x02)
+        {}
+        else if (flags == 0x03)
+        {}
+        else if (flags == 0x04)
+        {}
+        else if (flags == 0x05)
+        {}
+        else if (flags == 0x06)
+        {}
+        else if (flags == 0x07)
+        {}
     }
 
     void operator()(node::TIndex<node::Kind::MODULE> moduleIdx)
