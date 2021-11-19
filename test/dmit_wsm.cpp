@@ -38,6 +38,7 @@ TEST_CASE("PLOP")
     nodePool.make(module._globalConsts , 0);
     nodePool.make(module._globalVars   , 0);
     nodePool.make(module._exports      , 0);
+    nodePool.make(module._elems        , 0);
 
     dmit::com::blitDefault(module._startOpt);
 

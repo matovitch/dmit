@@ -7,6 +7,7 @@
 
 #include <optional>
 #include <cstdint>
+#include <variant>
 
 namespace dmit::wsm
 {
@@ -244,9 +245,11 @@ struct NumericInstruction : com::TEnum<uint8_t>
         SQRT,
         CEIL,
         FLOOR,
+        TRUNC,
         TRUNC_S,
         TRUNC_U,
         NEAREST,
+        MIN,
         MAX,
         COPYSIGN,
         EQZ,
@@ -285,29 +288,29 @@ struct NumericInstruction : com::TEnum<uint8_t>
 template <>
 struct TNode<node::Kind::INST_I32>
 {
-    NumericInstruction      _asEnum;
-    std::optional<NumType > _suffix;
+    NumericInstruction _asEnum;
+    NumType            _suffix;
 };
 
 template <>
 struct TNode<node::Kind::INST_F32>
 {
-    NumericInstruction      _asEnum;
-    std::optional<NumType > _suffix;
+    NumericInstruction _asEnum;
+    NumType            _suffix;
 };
 
 template <>
 struct TNode<node::Kind::INST_I64>
 {
-    NumericInstruction      _asEnum;
-    std::optional<NumType > _suffix;
+    NumericInstruction _asEnum;
+    NumType            _suffix;
 };
 
 template <>
 struct TNode<node::Kind::INST_F64>
 {
-    NumericInstruction      _asEnum;
-    std::optional<NumType > _suffix;
+    NumericInstruction _asEnum;
+    NumType            _suffix;
 };
 
 template <>
@@ -352,7 +355,7 @@ template <> struct TNode<node::Kind::INST_TABLE_SIZE > { uint32_t _tableIdx; };
 template <>
 struct TNode<node::Kind::INST_TABLE_COPY>
 {
-    uint32_t _screIdx;
+    uint32_t _srceIdx;
     uint32_t _destIdx;
 };
 

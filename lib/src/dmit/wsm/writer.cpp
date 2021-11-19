@@ -2,6 +2,8 @@
 
 #include "dmit/wsm/leb128.hpp"
 
+#include "dmit/com/endian.hpp"
+
 #include <cstdint>
 #include <cstring>
 
@@ -24,6 +26,10 @@ void Bematist::write(const Leb128& leb128)
 {
     _size += leb128._size;
 }
+
+void Bematist::writeF32(const flt32_t) { _size += sizeof(flt32_t); }
+void Bematist::writeF64(const flt64_t) { _size += sizeof(flt64_t); }
+
 
 uint32_t Bematist::diff(const Bematist) const
 {
@@ -67,6 +73,45 @@ uint32_t Scribe::diff(const Scribe scribe) const
     return _data - scribe._data;
 }
 
+void Scribe::writeF32(const flt32_t value)
+{
+    const uint8_t* const asBytes = reinterpret_cast<const uint8_t*>(&value);
+
+    if (com::Endianness{} == com::Endianness::LITTLE)
+    {
+        for (uint32_t i = 0; i < sizeof(flt32_t); i++)
+        {
+            write(asBytes[i]);
+        }
+    }
+    else if (com::Endianness{} == com::Endianness::BIG)
+    {
+        for (uint32_t i = sizeof(flt32_t); i > 0; i--)
+        {
+            write(asBytes[i - 1]);
+        }
+    }
+}
+
+void Scribe::writeF64(const flt64_t value)
+{
+    const uint8_t* const asBytes = reinterpret_cast<const uint8_t*>(&value);
+
+    if (com::Endianness{} == com::Endianness::LITTLE)
+    {
+        for (uint32_t i = 0; i < sizeof(flt64_t); i++)
+        {
+            write(asBytes[i]);
+        }
+    }
+    else if (com::Endianness{} == com::Endianness::BIG)
+    {
+        for (uint32_t i = sizeof(flt64_t); i > 0; i--)
+        {
+            write(asBytes[i - 1]);
+        }
+    }
+}
 
 Scribe Scribe::fork() const
 {

@@ -1,6 +1,9 @@
 #pragma once
 
 #include "dmit/wsm/leb128.hpp"
+#include "dmit/wsm/wasm.hpp"
+
+#include "dmit/com/ieee754.hpp"
 
 #include <cstdint>
 
@@ -16,6 +19,9 @@ struct Bematist
     void write(const uint8_t);
 
     void write(const Leb128&);
+
+    void writeF32(const flt32_t);
+    void writeF64(const flt64_t);
 
     uint32_t diff(const Bematist) const;
 
@@ -37,6 +43,9 @@ struct Scribe
     void write(const uint8_t);
 
     void write(const Leb128&);
+
+    void writeF32(const flt32_t);
+    void writeF64(const flt64_t);
 
     uint32_t diff(const Scribe) const;
 
