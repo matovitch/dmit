@@ -15,6 +15,7 @@ ENV TO_INSTALL "               \
     valgrind                   \
     tmux                       \
     libpcre3-dev               \
+    ninja-build                \
     cmake                      \
 "
 
@@ -27,6 +28,7 @@ ENV TO_REMOVE "                \
     libpcre3-dev               \
     libfuse3-dev               \
     cmake                      \
+    ninja-build                \
 "
 
 ENV GUEST_GID "1000"
@@ -57,7 +59,7 @@ RUN set -ex                                                                     
     rm llvm.sh                                                                                                  &&\
     git clone --progress --depth 1 https://github.com/gittup/tup                                                &&\
     cd tup                                                                                                      &&\
-    git checkout 0de196f                                                                                        &&\
+    git checkout f4b475146a6cb3ed7c0203e0bc11223b906cc2aa                                                       &&\
     ./bootstrap-nofuse.sh                                                                                       &&\
     mv tup /usr/bin                                                                                             &&\
     cd ..                                                                                                       &&\
@@ -83,8 +85,8 @@ RUN set -ex                                                                     
     rm -r sqlite-autoconf-3360000 sqlite-autoconf-3360000.tar.gz                                                &&\
     git clone --progress --depth 1 --branch v1.5.2 https://github.com/nanomsg/nng.git                           &&\
     cd nng                                                                                                      &&\
-    cmake -G "Unix Makefiles"                                                                                   &&\
-    make                                                                                                        &&\
+    cmake -G Ninja                                                                                              &&\
+    ninja                                                                                                       &&\
     mv libnng.a /usr/lib                                                                                        &&\
     mv ./src/tools/nngcat/nngcat /usr/bin                                                                       &&\
     cd ..                                                                                                       &&\
@@ -95,6 +97,13 @@ RUN set -ex                                                                     
     mv libcmp.a /usr/lib                                                                                        &&\
     cd ..                                                                                                       &&\
     rm -r cmp                                                                                                   &&\
+    git clone --recursive https://github.com/WebAssembly/wasp                                                   &&\
+    cd wasp                                                                                                     &&\
+    cmake -G Ninja -DBUILD_TESTING=OFF                                                                          &&\
+    ninja                                                                                                       &&\
+    mv src/tools/wasp /usr/bin                                                                                  &&\
+    cd ..                                                                                                       &&\
+    rm -r wasp                                                                                                  &&\
     apt-get remove -y $TO_REMOVE                                                                                &&\
     apt-get autoremove -y                                                                                       &&\
     apt-get clean                                                                                               &&\

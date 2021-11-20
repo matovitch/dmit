@@ -665,7 +665,7 @@ struct TNode<node::Kind::START>
     uint32_t _funcIdx;
 };
 
-using ImportDescriptor = std::variant<uint32_t,
+using ImportDescriptor = std::variant<uint32_t, // typeidx
                                       node::TIndex<node::Kind::TYPE_GLOBAL_CONST >,
                                       node::TIndex<node::Kind::TYPE_GLOBAL_VAR   >,
                                       node::TIndex<node::Kind::TYPE_TABLE        >,
@@ -684,7 +684,7 @@ struct TNode<node::Kind::IMPORT>
     ImportDescriptor               _descriptor;
 };
 
-using ExportDescriptor = std::variant<uint32_t,
+using ExportDescriptor = std::variant<uint32_t, // memidx
                                       node::TIndex<node::Kind::INST_REF_FUNC   >,
                                       node::TIndex<node::Kind::INST_TABLE_GET  >,
                                       node::TIndex<node::Kind::INST_GLOBAL_GET >>;

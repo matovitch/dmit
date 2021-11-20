@@ -6,18 +6,21 @@
 
 #include "dmit/com/base64.hpp"
 #include "dmit/com/blit.hpp"
+#include <cstdint>
 
-std::string base64Encode(const std::vector<uint8_t>& toEncode)
+std::string base64Encode(const uint8_t* const srce, const uint32_t srceSize)
 {
-    std::vector<uint8_t> destBuffer;
+    const uint32_t destSize = dmit::com::base64::encodeBufferSize(srceSize);
 
-    destBuffer.resize(dmit::com::base64::encodeBufferSize(toEncode.size()));
+    uint8_t* const dest = new uint8_t[destSize];
 
-    uint8_t* const dest = destBuffer.data();
+    dmit::com::base64::encode(srce, srceSize, dest);
 
-    dmit::com::base64::encode(toEncode.data(), toEncode.size(), dest);
+    std::string asString{reinterpret_cast<char*>(dest), destSize};
 
-    return {reinterpret_cast<char*>(dest), destBuffer.size()};
+    delete[] dest;
+
+    return asString;
 }
 
 TEST_CASE("PLOP")
@@ -39,7 +42,7 @@ TEST_CASE("PLOP")
     nodePool.make(module._elems        , 0);
     nodePool.make(module._datas        , 0);
     nodePool.make(module._imports      , 0);
-    nodePool.make(module._exports      , 0);
+    nodePool.make(module._exports      , 1);
 
     dmit::com::blitDefault(module._startOpt);
 
@@ -62,13 +65,9 @@ TEST_CASE("PLOP")
 
     nodePool.make(i32Idx);
 
-    dmit::com::blitDefault(  domainType_0 ._asVariant);
-    dmit::com::blitDefault(  domainType_1 ._asVariant);
-    dmit::com::blitDefault(codomainType   ._asVariant);
-
-      domainType_0 ._asVariant = i32Idx;
-      domainType_1 ._asVariant = i32Idx;
-    codomainType   ._asVariant = i32Idx;
+    dmit::com::blit(i32Idx,   domainType_0 ._asVariant);
+    dmit::com::blit(i32Idx,   domainType_1 ._asVariant);
+    dmit::com::blit(i32Idx, codomainType   ._asVariant);
 
     auto& function = nodePool.get(module._funcs[0]);
 
@@ -80,10 +79,6 @@ TEST_CASE("PLOP")
     auto& localsGet_0 = nodePool.get(function._body[0]);
     auto& localsGet_1 = nodePool.get(function._body[1]);
     auto& add         = nodePool.get(function._body[2]);
-
-    dmit::com::blitDefault(localsGet_0._asVariant);
-    dmit::com::blitDefault(localsGet_1._asVariant);
-    dmit::com::blitDefault(        add._asVariant);
 
     dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_LOCAL_GET > instLocalGet_0;
     dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_LOCAL_GET > instLocalGet_1;
@@ -97,21 +92,38 @@ TEST_CASE("PLOP")
     nodePool.get(instLocalGet_1)._localIdx = 1;
     nodePool.get(instAdd)._asEnum = dmit::wsm::NumericInstruction::ADD;
 
-    localsGet_0 ._asVariant = instLocalGet_0;
-    localsGet_1 ._asVariant = instLocalGet_1;
-    add         ._asVariant = instAdd;
+    dmit::com::blit(instLocalGet_0 , localsGet_0._asVariant);
+    dmit::com::blit(instLocalGet_1 , localsGet_1._asVariant);
+    dmit::com::blit(instAdd        ,         add._asVariant);
+
+    auto& export_ = nodePool.get(module._exports[0]);
+
+    dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_REF_FUNC> funcRefIdx;
+
+    nodePool.make(export_._name);
+    nodePool.make(funcRefIdx);
+
+    nodePool.get(funcRefIdx)._funcIdx = 1;
+
+    auto& name = nodePool.get(export_._name);
+
+    nodePool.make(name._bytes, 1);
+
+    nodePool.get(name._bytes[0])._value = 'a';
+
+    dmit::com::blit(funcRefIdx, export_._descriptor);
 
     dmit::wsm::writer::Bematist bematist;
 
     dmit::wsm::emit(moduleIdx, nodePool, bematist);
 
-    std::vector<uint8_t> writeBuffer;
+    auto writeBuffer = new uint8_t[bematist._size];
 
-    writeBuffer.resize(bematist._size);
-
-    dmit::wsm::writer::Scribe scribe{writeBuffer.data()};
+    dmit::wsm::writer::Scribe scribe{writeBuffer};
 
     dmit::wsm::emit(moduleIdx, nodePool, scribe);
 
-    std::cout << base64Encode(writeBuffer) << '\n';
+    std::cout << base64Encode(writeBuffer, bematist._size) << '\n';
+
+    delete[] writeBuffer;
 }
