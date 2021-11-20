@@ -134,10 +134,24 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
 
             _writer.write(typeIdxAsLeb128);
         }
-
-        if (_sectionId == SectionId::CODE)
+        else if (_sectionId == SectionId::CODE)
         {
+            Leb128 sizeLocalsAsLeb128{function._locals._size};
 
+            _writer.write(sizeLocalsAsLeb128);
+
+            for (uint32_t i = 0; i < function._locals._size; i++)
+            {
+                _writer.write(0x01);
+                base()(function._locals[i]);
+            }
+
+            for (uint32_t i = 0; i < function._body._size; i++)
+            {
+                base()(function._body[i]);
+            }
+
+            _writer.write(0x0B);
         }
     }
 
@@ -1292,7 +1306,10 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
     {
         auto& expression = get(expressionIdx);
 
-        base()(expression._instructions);
+        for (uint32_t i = 0; i < expression._instructions._size; i++)
+        {
+            base()(expression._instructions[i]);
+        }
 
         _writer.write(0x0B);
     }
@@ -1354,11 +1371,23 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
             }
         };
 
+        auto writeOffset = [this, &element]()
+        {
+            auto& offset = get(std::get<node::TIndex<node::Kind::ELEM_ACTIVE>>(element._mode))._offset;
+
+            for (uint32_t i = 0; i < offset._size; i++)
+            {
+                base()(offset[i]);
+            }
+
+            _writer.write(0x0B);
+        };
+
         // 3. Write the element segment according to its flags value
 
         if (flags == 0x00)
         {
-            base()(get(std::get<node::TIndex<node::Kind::ELEM_ACTIVE>>(element._mode))._offset);
+            writeOffset();
             writeFuncIds();
         }
         else if (flags == 0x01)
@@ -1374,7 +1403,7 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
 
             _writer.write(tableIdxAsLeb128);
 
-            base()(mode._offset);
+            writeOffset();
 
             _writer.write(0x00);
             writeFuncIds();
@@ -1386,7 +1415,7 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
         }
         else if (flags == 0x04)
         {
-            base()(get(std::get<node::TIndex<node::Kind::ELEM_ACTIVE>>(element._mode))._offset);
+            writeOffset();
             base()(element._init);
         }
         else if (flags == 0x05)
@@ -1402,7 +1431,7 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
 
             _writer.write(tableIdxAsLeb128);
 
-            base()(mode._offset);
+            writeOffset();
 
             base()(element._type);
             base()(element._init);
@@ -1412,6 +1441,88 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
             base()(element._type);
             base()(element._init);
         }
+    }
+
+    void operator()(node::TIndex<node::Kind::DATA> dataIdx)
+    {
+        auto& data = get(dataIdx);
+
+        // 1. Compute and write the flag
+
+        uint8_t flags = 0;
+
+        flags |= 0b001 * std::holds_alternative<node::TIndex<node::Kind::DATA_PASSIVE>>(data._mode);
+        flags |= 0b010 * (!flags && get(std::get<node::TIndex<node::Kind::DATA_ACTIVE>>(data._mode))._memIdx != 0);
+
+        _writer.write(flags);
+
+        // 2. Write the data according to its flags value
+
+        if (flags == 0x00)
+        {
+            base()(get(std::get<node::TIndex<node::Kind::DATA_ACTIVE>>(data._mode))._offset);
+            _writer.write(0x0B);
+            base()(data._init);
+        }
+        else if (flags == 0x01)
+        {
+            base()(data._init);
+        }
+        else if (flags == 0x02)
+        {
+            auto& mode = get(std::get<node::TIndex<node::Kind::DATA_ACTIVE>>(data._mode));
+
+            Leb128 memIdxAsLeb128{mode._memIdx};
+
+            _writer.write(memIdxAsLeb128);
+
+            for (uint32_t i = 0; i < mode._offset._size; i++)
+            {
+                base()(mode._offset[i]);
+            }
+
+            _writer.write(0x0B);
+
+            base()(data._init);
+        }
+    }
+
+    void fixupType()
+    {
+        _writer.write(0x60);
+        _writer.write(0x00);
+        _writer.write(0x00);
+    }
+
+    void fixupFunction()
+    {
+        if (_sectionId == SectionId::FUNCTION)
+        {
+            _writer.write(Leb128{0u});
+        }
+        else if (_sectionId == SectionId::CODE)
+        {
+            for (uint32_t i = 0; i < K_LEB128_MAX_SIZE; i++)
+            {
+                _writer.write(0x00);
+            }
+
+            _writer.write(0x00); // future code size
+            _writer.write(0x00); // empty locals
+            _writer.write(0x00); // future end byte
+        }
+    }
+
+    void fixupFunction(Writer fork)
+    {
+        Leb128 codeSize{_writer.diff(fork) - K_LEB128_MAX_SIZE - 1 - 1 - 1};
+
+        uint32_t fixupSize = K_LEB128_MAX_SIZE + 1 - codeSize._size;
+
+        fork.write(Leb128{fixupSize});
+        fork.skip(fixupSize);
+        fork.write(0x0B);
+        fork.write(codeSize);
     }
 
     void operator()(node::TIndex<node::Kind::MODULE> moduleIdx)
@@ -1425,7 +1536,17 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
         {
             TFixUpSection<Writer> fixupSection(SectionId::TYPE, _writer);
             _sectionId = SectionId::TYPE;
-            base()(module._types);
+
+            Leb128 rangeSizeAsLeb128{module._types._size + 1};
+
+            _writer.write(rangeSizeAsLeb128);
+
+            fixupType();
+
+            for (uint32_t i = 0; i < module._types._size; i++)
+            {
+                base()(module._types[i]);
+            }
         }
 
         if (module._imports._size)
@@ -1439,7 +1560,16 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
         {
             TFixUpSection<Writer> fixupSection(SectionId::FUNCTION, _writer);
             _sectionId = SectionId::FUNCTION;
-            base()(module._funcs);
+
+            Leb128 rangeSizeAsLeb128{module._funcs._size << 1};
+
+            _writer.write(rangeSizeAsLeb128);
+
+            for (uint32_t i = 0; i < module._funcs._size; i++)
+            {
+                fixupFunction();
+                base()(module._funcs[i]);
+            }
         }
 
         if (module._tables._size)
@@ -1486,11 +1616,40 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
             base()(module._elems);
         }
 
+        if (module._datas._size)
+        {
+            TFixUpSection<Writer> fixupSection(SectionId::DATA_COUNT, _writer);
+            _sectionId = SectionId::DATA_COUNT;
+
+            Leb128 datasSizeAsLeb128{module._datas._size};
+
+            _writer.write(datasSizeAsLeb128);
+        }
+
         if (module._funcs._size)
         {
             TFixUpSection<Writer> fixupSection(SectionId::CODE, _writer);
             _sectionId = SectionId::CODE;
-            base()(module._funcs);
+
+            Leb128 rangeSizeAsLeb128{module._funcs._size << 1};
+
+            _writer.write(rangeSizeAsLeb128);
+
+            for (uint32_t i = 0; i < module._funcs._size; i++)
+            {
+                auto fork = _writer.fork();
+
+                fixupFunction();
+                base()(module._funcs[i]);
+                fixupFunction(fork);
+            }
+        }
+
+        if (module._datas._size)
+        {
+            TFixUpSection<Writer> fixupSection(SectionId::DATA, _writer);
+            _sectionId = SectionId::DATA;
+            base()(module._datas);
         }
     }
 

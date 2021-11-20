@@ -641,7 +641,7 @@ template <>
 struct TNode<node::Kind::DATA_ACTIVE>
 {
     uint32_t _memIdx;
-    node::TRange<node::Kind::INSTRUCTION> _instructions;
+    node::TRange<node::Kind::INSTRUCTION> _offset;
 };
 
 using DataMode = std::variant<node::TIndex<node::Kind::DATA_PASSIVE>,
