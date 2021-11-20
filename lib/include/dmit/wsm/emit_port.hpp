@@ -10,9 +10,9 @@ namespace dmit::wsm
 {
 
 template <class NodePool, class Writer>
-struct TExportDescriptorEmmiter
+struct TExportDescriptorEmitter
 {
-    TExportDescriptorEmmiter(NodePool& nodePool,
+    TExportDescriptorEmitter(NodePool& nodePool,
                              Writer& writer) :
         _nodePool{nodePool},
         _writer{writer}
@@ -61,9 +61,9 @@ struct TExportDescriptorEmmiter
 };
 
 template <class NodePool, class Writer>
-struct TImportDescriptorEmmiter
+struct TImportDescriptorEmitter
 {
-    TImportDescriptorEmmiter(NodePool& nodePool,
+    TImportDescriptorEmitter(NodePool& nodePool,
                              Writer& writer) :
         _nodePool{nodePool},
         _writer{writer}

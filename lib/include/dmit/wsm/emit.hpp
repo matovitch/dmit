@@ -31,7 +31,10 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
     TEmitter(NodePool& nodePool, Writer& writer) :
         TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>{nodePool},
         _writer{writer},
-        _sectionId{SectionId::CUSTOM}
+        _sectionId{SectionId::CUSTOM},
+        _importDescriptorEmitter{nodePool, writer},
+        _exportDescriptorEmitter{nodePool, writer},
+        _blockTypeEmitter{nodePool, writer}
     {}
 
     template <class LimitsIdx>
@@ -74,7 +77,7 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
     {
         auto& typeResult = get(typeResultIdx);
 
-        base()(typeResult._valTypes);
+        emitRangeWithSize(typeResult._valTypes);
     }
 
     void operator()(node::TIndex<node::Kind::TYPE_FUNC> typeFuncIdx)
@@ -98,7 +101,7 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
     {
         auto& name = get(nameIdx);
 
-        base()(name._bytes);
+        emitRangeWithSize(name._bytes);
     }
 
     void operator()(node::TIndex<node::Kind::IMPORT> importIdx)
@@ -108,9 +111,7 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
         base()(import._module);
         base()(import._name);
 
-        TImportDescriptorEmmiter<NodePool, Writer> importDescriptorEmmiter{_nodePool, _writer};
-
-        std::visit(importDescriptorEmmiter, import._descriptor);
+        std::visit(_importDescriptorEmitter, import._descriptor);
     }
 
     void operator()(node::TIndex<node::Kind::EXPORT> exportIdx)
@@ -119,9 +120,7 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
 
         base()(export_._name);
 
-        TExportDescriptorEmmiter<NodePool, Writer> exportDescriptorEmmiter{_nodePool, _writer};
-
-        std::visit(exportDescriptorEmmiter, export_._descriptor);
+        std::visit(_exportDescriptorEmitter, export_._descriptor);
     }
 
     void operator()(node::TIndex<node::Kind::FUNCTION> functionIdx)
@@ -146,12 +145,7 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
                 base()(function._locals[i]);
             }
 
-            for (uint32_t i = 0; i < function._body._size; i++)
-            {
-                base()(function._body[i]);
-            }
-
-            _writer.write(0x0B);
+            emitRangeWithSentinel(function._body);
         }
     }
 
@@ -219,16 +213,9 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
 
         _writer.write(0x02);
 
-        TBlockTypeEmitter<NodePool, Writer> blockTypeEmitter{_nodePool, _writer};
+        std::visit(_blockTypeEmitter, instBlock._type);
 
-        std::visit(blockTypeEmitter, instBlock._type);
-
-        for (uint32_t i = 0; i < instBlock._instructions._size; i++)
-        {
-            base()(instBlock._instructions[i]);
-        }
-
-        _writer.write(0x0B);
+        emitRangeWithSentinel(instBlock._instructions);
     }
 
     void operator()(node::TIndex<node::Kind::INST_LOOP> instLoopIdx)
@@ -237,16 +224,9 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
 
         _writer.write(0x03);
 
-        TBlockTypeEmitter<NodePool, Writer> blockTypeEmitter{_nodePool, _writer};
+        std::visit(_blockTypeEmitter, instLoop._type);
 
-        std::visit(blockTypeEmitter, instLoop._type);
-
-        for (uint32_t i = 0; i < instLoop._instructions._size; i++)
-        {
-            base()(instLoop._instructions[i]);
-        }
-
-        _writer.write(0x0B);
+        emitRangeWithSentinel(instLoop._instructions);
     }
 
     void operator()(node::TIndex<node::Kind::INST_IF> instIfIdx)
@@ -301,7 +281,7 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
     {
         auto& instBrTable = get(instBrTableIdx);
 
-        base()(instBrTable._labels);
+        emitRangeWithSize(instBrTable._labels);
 
         Leb128 labelIdxAsLeb128{instBrTable._labelIdx};
 
@@ -360,7 +340,8 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
             return;
         }
 
-        base()(instSelect._valTypes);
+        _writer.write(0x1C);
+        emitRangeWithSize(instSelect._valTypes);
     }
 
     void operator()(node::TIndex<node::Kind::INST_LOCAL_GET> instLocalGetIdx)
@@ -1306,12 +1287,7 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
     {
         auto& expression = get(expressionIdx);
 
-        for (uint32_t i = 0; i < expression._instructions._size; i++)
-        {
-            base()(expression._instructions[i]);
-        }
-
-        _writer.write(0x0B);
+        emitRangeWithSentinel(expression._instructions);
     }
 
     bool isFuncRef(node::TIndex<node::Kind::EXPRESSION> expressionIdx)
@@ -1375,12 +1351,7 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
         {
             auto& offset = get(std::get<node::TIndex<node::Kind::ELEM_ACTIVE>>(element._mode))._offset;
 
-            for (uint32_t i = 0; i < offset._size; i++)
-            {
-                base()(offset[i]);
-            }
-
-            _writer.write(0x0B);
+            emitRangeWithSentinel(offset);
         };
 
         // 3. Write the element segment according to its flags value
@@ -1476,12 +1447,7 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
 
             _writer.write(memIdxAsLeb128);
 
-            for (uint32_t i = 0; i < mode._offset._size; i++)
-            {
-                base()(mode._offset[i]);
-            }
-
-            _writer.write(0x0B);
+            emitRangeWithSentinel(mode._offset);
 
             base()(data._init);
         }
@@ -1553,7 +1519,7 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
         {
             TFixUpSection<Writer> fixupSection(SectionId::IMPORT, _writer);
             _sectionId = SectionId::IMPORT;
-            base()(module._imports);
+            emitRangeWithSize(module._imports);
         }
 
         if (module._funcs._size)
@@ -1576,14 +1542,14 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
         {
             TFixUpSection<Writer> fixupSection(SectionId::TABLE, _writer);
             _sectionId = SectionId::TABLE;
-            base()(module._tables);
+            emitRangeWithSize(module._tables);
         }
 
         if (module._mems._size)
         {
             TFixUpSection<Writer> fixupSection(SectionId::MEMORY, _writer);
             _sectionId = SectionId::MEMORY;
-            base()(module._mems);
+            emitRangeWithSize(module._mems);
         }
 
         if(module._globalConsts ._size ||
@@ -1591,15 +1557,15 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
         {
             TFixUpSection<Writer> fixupSection(SectionId::GLOBAL, _writer);
             _sectionId = SectionId::GLOBAL;
-            base()(module._globalConsts);
-            base()(module._globalVars);
+            emitRangeWithSize(module._globalConsts);
+            emitRangeWithSize(module._globalVars);
         }
 
         if(module._exports._size)
         {
             TFixUpSection<Writer> fixupSection(SectionId::EXPORT, _writer);
             _sectionId = SectionId::EXPORT;
-            base()(module._exports);
+            emitRangeWithSize(module._exports);
         }
 
         if (module._startOpt)
@@ -1613,7 +1579,7 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
         {
             TFixUpSection<Writer> fixupSection(SectionId::ELEMENT, _writer);
             _sectionId = SectionId::ELEMENT;
-            base()(module._elems);
+            emitRangeWithSize(module._elems);
         }
 
         if (module._datas._size)
@@ -1649,38 +1615,36 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
         {
             TFixUpSection<Writer> fixupSection(SectionId::DATA, _writer);
             _sectionId = SectionId::DATA;
-            base()(module._datas);
+            emitRangeWithSize(module._datas);
         }
     }
 
-    template <class Type>
-    void emptyOption() {}
-
     template <com::TEnumIntegerType<node::Kind> KIND>
-    void loopConclusion(node::TRange<KIND>& range) {}
-
-    template <com::TEnumIntegerType<node::Kind> KIND>
-    void loopPreamble(node::TRange<KIND>& range)
+    void emitRangeWithSize(node::TRange<KIND>& range)
     {
         Leb128 rangeSizeAsLeb128{range._size};
 
         _writer.write(rangeSizeAsLeb128);
+
+        base()(range);
     }
 
     template <com::TEnumIntegerType<node::Kind> KIND>
-    void loopIterationConclusion(node::TIndex<KIND>) {}
-
-    template <com::TEnumIntegerType<node::Kind> KIND>
-    void loopIterationPreamble(node::TIndex<KIND>) {}
-
-    template <com::TEnumIntegerType<node::Kind> KIND>
-    void operator()(node::TIndex<KIND>)
+    void emitRangeWithSentinel(node::TRange<KIND>& range)
     {
-        DMIT_COM_ASSERT(!"Not implemented");
+        base()(range);
+
+        _writer.write(0x0B);
     }
+
+    DMIT_COM_TREE_VISITOR_SIMPLE(node, Kind);
 
     Writer& _writer;
     SectionId _sectionId;
+
+    TImportDescriptorEmitter <NodePool, Writer> _importDescriptorEmitter;
+    TExportDescriptorEmitter <NodePool, Writer> _exportDescriptorEmitter;
+    TBlockTypeEmitter        <NodePool, Writer> _blockTypeEmitter;
 
     static constexpr uint8_t K_MAGIC   [] = {0x00, 0x61, 0x73, 0x6D};
     static constexpr uint8_t K_VERSION [] = {0x01, 0x00, 0x00, 0x00};
