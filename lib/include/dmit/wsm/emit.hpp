@@ -1483,10 +1483,10 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
     {
         Leb128 codeSize{_writer.diff(fork) - K_LEB128_MAX_SIZE - 1 - 1 - 1};
 
-        uint32_t fixupSize = K_LEB128_MAX_SIZE + 1 - codeSize._size;
+        uint32_t fixupSize = K_LEB128_MAX_SIZE + 1 + 1 - codeSize._size;
 
         fork.write(Leb128{fixupSize});
-        fork.skip(fixupSize);
+        fork.skip(fixupSize - 1);
         fork.write(0x0B);
         fork.write(codeSize);
     }
