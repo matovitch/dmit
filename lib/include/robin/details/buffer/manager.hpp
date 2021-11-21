@@ -44,9 +44,16 @@ public:
         _index = _ptrHeaps.size();
     }
 
-    void makePrev()
+    bool makePrev()
     {
-        _index ? _index-- : 0;
+        if (_index == 0)
+        {
+            return false;
+        }
+
+        _index--;
+
+        return true;
     }
 
 private:

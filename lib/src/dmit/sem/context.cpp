@@ -78,6 +78,9 @@ void Context::run()
     _scheduler.run();
 
     DMIT_COM_ASSERT(!_scheduler.isCyclic());
+
+    _eventMap .clear();
+    _lockMap  .clear();
 }
 
 } // namespace dmit::sem

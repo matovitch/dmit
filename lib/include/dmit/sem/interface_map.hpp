@@ -20,7 +20,7 @@ struct InterfaceMap : fmt::Formatable
 {
     InterfaceMap();
 
-    void registerBundle(ast::Bundle& bundle);
+    void registerBundle(Context& context, ast::Bundle& bundle);
 
     ast::node::TIndex<ast::node::Kind::VIEW> getView(const com::UniqueId&) const;
 
@@ -33,8 +33,6 @@ struct InterfaceMap : fmt::Formatable
     ast::State::NodePool& _astNodePoolRef;
 
     pool::TMake<ast::node::TRange<ast::node::Kind::VIEW>, 1> _viewsPool;
-
-    Context _context;
 };
 
 } // namespace dmit::sem

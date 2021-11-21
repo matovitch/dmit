@@ -11,8 +11,6 @@
 #include "dmit/com/murmur.hpp"
 #include "dmit/com/blit.hpp"
 
-#include "dmit/fmt/com/unique_id.hpp"
-
 #include <cstdint>
 
 namespace dmit::sem
@@ -224,10 +222,8 @@ struct AnalyzeVisitor : ast::TVisitor<AnalyzeVisitor, Stack>
     ExportLister _exportLister;
 };
 
-int8_t analyze(InterfaceMap& interfaceMap, ast::Bundle& bundle)
+int8_t analyze(Context& context, InterfaceMap& interfaceMap, ast::Bundle& bundle)
 {
-    Context context;
-
     AnalyzeVisitor analyzeVisitor{bundle._nodePool, interfaceMap, context};
 
     context.makeTaskFromWork(

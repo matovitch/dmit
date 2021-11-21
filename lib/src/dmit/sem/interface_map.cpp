@@ -142,7 +142,7 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
 
 InterfaceMap::InterfaceMap() : _astNodePoolRef{_astNodePool} {}
 
-void InterfaceMap::registerBundle(ast::Bundle &bundle)
+void InterfaceMap::registerBundle(Context& context, ast::Bundle &bundle)
 {
     // 0. Skip empty bundle
 
@@ -169,18 +169,18 @@ void InterfaceMap::registerBundle(ast::Bundle &bundle)
 
     // 2. Sematical analysis of the bundle's interface
 
-    InterfaceMaker interfaceMaker{_astNodePool, _context};
+    InterfaceMaker interfaceMaker{_astNodePool, context};
 
-    _context.makeTaskFromWork
+    context.makeTaskFromWork
     (
         [&interfaceMaker, &views]
         {
             interfaceMaker.base()(views);
         },
-        _context._coroutinePoolLarge
+        context._coroutinePoolLarge
     );
 
-    _context.run();
+    context.run();
 
     // 3. Bind the interface AST node pool to the bundle
 

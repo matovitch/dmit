@@ -197,6 +197,21 @@ public:
 
         _beginPtr = _endPtr;
         _size     = 0;
+
+        if (_bufferManager.makePrev())
+        {
+            while (_bufferManager.makePrev());
+
+            const auto& bufferView = _bufferManager.makeView();
+
+            _buckets  = reinterpret_cast<Bucket*>(bufferView.data);
+            _capacity =                           bufferView.size - 1;
+
+            _mask = _capacity - 1;
+
+            _endPtr   = _buckets + _capacity;
+            _beginPtr = _endPtr;
+        }
     }
 
 private:
@@ -210,11 +225,6 @@ private:
 
         _buckets  = reinterpret_cast<Bucket*>(bufferView.data);
         _capacity =                           bufferView.size - 1;
-
-        if (_buckets == oldBuckets)
-        {
-            return;
-        }
 
         init();
 
@@ -230,6 +240,12 @@ private:
                 oldBucket.~Bucket();
             }
         }
+
+        do
+        {
+            _beginPtr = _buckets + (_xorShifter() & _mask);
+
+        } while (_beginPtr->isEmpty());
     }
 
     void shiftBuckets(Bucket* prec)
@@ -256,18 +272,10 @@ private:
                 return;
             }
 
-            if (ROBIN_UNLIKELY((_size << 1) < (_capacity >> 1)))
+            if (ROBIN_UNLIKELY((_size << 1) < (_capacity >> 1)) && _bufferManager.makePrev())
             {
-                _bufferManager.makePrev();
+                rehash();
             }
-
-            rehash();
-
-            do
-            {
-                _beginPtr = _buckets + (_xorShifter() & _mask);
-
-            } while (_beginPtr->isEmpty());
         }
     }
 

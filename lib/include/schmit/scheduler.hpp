@@ -127,10 +127,10 @@ private:
     schmit_details::coroutine::Abstract& _coroutine;
     TaskGraph _taskGraph;
 
-    static thread_local schmit_details::TCoroutine<0x1000, 1>::Pool _coroutinePool;
+    static thread_local schmit_details::TCoroutine<0, 1>::Pool _coroutinePool;
 };
 
 template <std::size_t SIZE>
-thread_local schmit_details::TCoroutine<0x1000, 1>::Pool TScheduler<SIZE>::_coroutinePool;
+thread_local schmit_details::TCoroutine<0, 1>::Pool TScheduler<SIZE>::_coroutinePool;
 
 } // namespace schmit

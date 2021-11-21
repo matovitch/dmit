@@ -58,16 +58,16 @@ struct TEntryPoint
         _next.value()().run();
     }
 
-    static void* const _value;
+    constexpr static void* address()
+    {
+        return reinterpret_cast<void*>(&TEntryPoint<SIZE>::run);
+    }
 
     static thread_local std::optional<TNode<SIZE>> _next;
 };
 
 template <std::size_t SIZE>
 thread_local std::optional<TNode<SIZE>> TEntryPoint<SIZE>::_next;
-
-template <std::size_t SIZE>
-void* const TEntryPoint<SIZE>::_value = reinterpret_cast<void*>(&TEntryPoint<SIZE>::run);
 
 template <std::size_t SIZE>
 struct TAbstract
@@ -80,7 +80,7 @@ struct TAbstract
     TAbstract(TScheduler<SIZE>& scheduler,
               pool::TIntrusive<pool::intrusive::TTraits<schmit_details::TCoroutine<STACK_SIZE, POOL_SIZE>, POOL_SIZE>>& coroutinePool) :
         _scheduler{scheduler},
-        _coroutine{coroutinePool.make(TEntryPoint<SIZE>::_value)}
+        _coroutine{coroutinePool.make(TEntryPoint<SIZE>::address())}
     {}
 
     void setNode(TNode<SIZE>& node)
@@ -112,7 +112,6 @@ struct TAbstract
 
         _scheduler.pop(_nodeOpt.value());
         _coroutine.recycle();
-
     }
 
     virtual void recycle()     = 0;
