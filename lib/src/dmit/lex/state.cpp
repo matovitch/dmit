@@ -102,6 +102,8 @@ State& Builder::operator()(const uint8_t* const data,
 
     _state.matchKeywords(data);
 
+    _state._count = 0;
+
     return _state;
 }
 

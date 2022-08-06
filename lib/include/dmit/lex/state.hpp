@@ -18,6 +18,8 @@ struct State : fmt::Formatable
 
     void clear();
 
+    uint32_t _count = 0;
+
     std::vector<Token>    _tokens;
     std::vector<uint32_t> _offsets;
 };

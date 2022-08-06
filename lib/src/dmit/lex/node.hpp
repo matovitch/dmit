@@ -10,7 +10,8 @@
 namespace dmit::lex
 {
 
-static constexpr int INITIAL_NODE = 0;
+static constexpr int INITIAL_NODE  = 0;
+static constexpr int COMMENT_BLOCK = 1;
 
 template <int INDEX>
 struct TNodeIndex;
@@ -37,6 +38,21 @@ struct TNode<MATCH>
         if constexpr (MATCH == Token::UNKNOWN)
         {
             reader.advance();
+        }
+
+        if constexpr (MATCH == Token::SLASH_STAR)
+        {
+            state._count++;
+        }
+
+        if constexpr (MATCH == Token::STAR_SLASH)
+        {
+            state._count = state._count ? state._count - 1 : 0;
+        }
+
+        if (state._count)
+        {
+            return tGoto<COMMENT_BLOCK>(reader, state);
         }
 
         state.push(MATCH, reader.offset());

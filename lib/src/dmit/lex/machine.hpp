@@ -51,6 +51,11 @@ using IsUnderscoreOrAlphaNum = TOr<IsUnderscoreOrAlpha,
 enum
 {
     NODE_INITIAL,
+    NODE_COMMENT_BLOCK,
+    NODE_COMMENT_SLASH,
+    NODE_COMMENT_LINE,
+    NODE_COMMENT_STAR,
+    NODE_COMMENT,
     NODE_WHITESPACE,
     NODE_IDENTIFIER,
     NODE_BRA_LEFT,
@@ -102,13 +107,8 @@ enum
     NODE_DECIMAL_1,
     NODE_DECIMAL_2,
     NODE_DECIMAL_3,
-    NODE_COMMENT,
-    NODE_COMMENT_LINE,
-    NODE_COMMENT_BLOCK_0,
-    NODE_COMMENT_BLOCK_1,
-    NODE_COMMENT_BLOCK_2,
-    NODE_COMMENT_BLOCK_3,
-    NODE_COMMENT_BLOCK_4,
+    NODE_SLASH_STAR,
+    NODE_STAR_SLASH
 };
 
 template <>
@@ -164,6 +164,8 @@ template <> struct TNodeIndex<NODE_PIPE_EQUAL          > { using Type = TNode<To
 template <> struct TNodeIndex<NODE_STAR_EQUAL          > { using Type = TNode<Token::STAR_EQUAL          >;};
 template <> struct TNodeIndex<NODE_PLUS_EQUAL          > { using Type = TNode<Token::PLUS_EQUAL          >;};
 template <> struct TNodeIndex<NODE_SEMI_COLON          > { using Type = TNode<Token::SEMI_COLON          >;};
+template <> struct TNodeIndex<NODE_SLASH_STAR          > { using Type = TNode<Token::SLASH_STAR          >;};
+template <> struct TNodeIndex<NODE_STAR_SLASH          > { using Type = TNode<Token::STAR_SLASH          >;};
 template <> struct TNodeIndex<NODE_BRA_RIGHT           > { using Type = TNode<Token::BRA_RIGHT           >;};
 template <> struct TNodeIndex<NODE_COLON_BIS           > { using Type = TNode<Token::COLON_BIS           >;};
 template <> struct TNodeIndex<NODE_EQUAL_BIS           > { using Type = TNode<Token::EQUAL_BIS           >;};
@@ -214,7 +216,8 @@ struct TNodeIndex<NODE_STAR>
     using Type = TNode
     <
         Token::STAR,
-        TGoto<IsEqual, NODE_STAR_EQUAL>
+        TGoto<IsEqual, NODE_STAR_EQUAL>,
+        TGoto<IsSlash, NODE_STAR_SLASH>
     >;
 };
 
@@ -224,9 +227,9 @@ struct TNodeIndex<NODE_SLASH>
     using Type = TNode
     <
         Token::SLASH,
-        TGoto<IsEqual , NODE_SLASH_EQUAL     >,
-        TGoto<IsSlash , NODE_COMMENT_LINE    >,
-        TGoto<IsStar  , NODE_COMMENT_BLOCK_0 >
+        TGoto<IsSlash , NODE_COMMENT_LINE >,
+        TGoto<IsEqual , NODE_SLASH_EQUAL  >,
+        TGoto<IsStar  , NODE_SLASH_STAR   >
     >;
 };
 
@@ -242,58 +245,36 @@ struct TNodeIndex<NODE_COMMENT_LINE>
 };
 
 template <>
-struct TNodeIndex<NODE_COMMENT_BLOCK_0>
+struct TNodeIndex<NODE_COMMENT_BLOCK>
 {
     using Type = TNode
     <
         Token::UNKNOWN,
-        TGoto<IsSlash    , NODE_COMMENT_BLOCK_2>,
-        TGoto<IsStar     , NODE_COMMENT_BLOCK_1>,
-        TGoto<IsAnything , NODE_COMMENT_BLOCK_0>
+        TGoto<IsSlash    , NODE_COMMENT_SLASH >,
+        TGoto<IsStar     , NODE_COMMENT_STAR  >,
+        TGoto<IsAnything , NODE_COMMENT_BLOCK >
     >;
 };
 
 template <>
-struct TNodeIndex<NODE_COMMENT_BLOCK_1>
+struct TNodeIndex<NODE_COMMENT_SLASH>
 {
     using Type = TNode
     <
         Token::UNKNOWN,
-        TGoto<IsSlash    , NODE_COMMENT>,
-        TGoto<IsAnything , NODE_COMMENT_BLOCK_0>
+        TGoto<IsStar     , NODE_SLASH_STAR   >,
+        TGoto<IsAnything , NODE_COMMENT_BLOCK >
     >;
 };
 
 template <>
-struct TNodeIndex<NODE_COMMENT_BLOCK_2>
+struct TNodeIndex<NODE_COMMENT_STAR>
 {
     using Type = TNode
     <
         Token::UNKNOWN,
-        TGoto<IsStar    , NODE_COMMENT_BLOCK_3>,
-        TGoto<IsAnything, NODE_COMMENT_BLOCK_0>
-    >;
-};
-
-template <>
-struct TNodeIndex<NODE_COMMENT_BLOCK_3>
-{
-    using Type = TNode
-    <
-        Token::UNKNOWN,
-        TGoto<IsStar     , NODE_COMMENT_BLOCK_4>,
-        TGoto<IsAnything , NODE_COMMENT_BLOCK_3>
-    >;
-};
-
-template <>
-struct TNodeIndex<NODE_COMMENT_BLOCK_4>
-{
-    using Type = TNode
-    <
-        Token::UNKNOWN,
-        TGoto<IsSlash    , NODE_COMMENT_BLOCK_0>,
-        TGoto<IsAnything , NODE_COMMENT_BLOCK_3>
+        TGoto<IsSlash    , NODE_STAR_SLASH    >,
+        TGoto<IsAnything , NODE_COMMENT_BLOCK >
     >;
 };
 

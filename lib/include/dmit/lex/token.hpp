@@ -68,10 +68,12 @@ struct Token : com::TEnum<uint8_t>, fmt::Formatable
         SEMI_COLON,
         SLASH,
         SLASH_EQUAL,
+        SLASH_STAR,
         SQR_LEFT,
         SQR_RIGHT,
         STAR,
         STAR_EQUAL,
+        STAR_SLASH,
         START_OF_INPUT,
         TILDE,
         UNKNOWN

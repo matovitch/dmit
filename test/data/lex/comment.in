@@ -1,5 +1,6 @@
 // this is a first comment
 // this is a second comment
+*/
 /*
 This
 is
@@ -13,3 +14,5 @@ comment
         nested comment
     */
 */
+
+/* toto /*
