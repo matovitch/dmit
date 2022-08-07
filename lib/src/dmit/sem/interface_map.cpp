@@ -26,7 +26,7 @@ namespace
 struct Stack
 {
     com::UniqueId _prefix;
-    bool _isDeclaring = true;
+    bool _isDeclaring;
 };
 
 struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
@@ -92,6 +92,11 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
         base()(function._arguments);
         base()(function._returnType);
 
+        if (!_stackPtrIn->_isDeclaring)
+        {
+            return;
+        }
+
         auto&& slice = getSlice(function._name);
 
         com::murmur::combine(slice.makeUniqueId(), _stackPtrIn->_prefix);
@@ -114,6 +119,8 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
     void operator()(ast::node::TIndex<ast::node::Kind::MODULE> moduleIdx)
     {
         auto& module = get(moduleIdx);
+
+        _stackPtrIn->_isDeclaring = true;
 
         base()(module._definitions);
 
