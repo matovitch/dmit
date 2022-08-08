@@ -170,15 +170,17 @@ struct AnalyzeVisitor : ast::TVisitor<AnalyzeVisitor, Stack>
 
         auto&& slice = getSlice(function._name);
 
-        com::murmur::combine(slice.makeUniqueId(), _stackPtrIn->_prefix);
+        auto prefixCopy = _stackPtrIn->_prefix;
 
-        com::blit(_stackPtrIn->_prefix, function._id);
+        com::murmur::combine(slice.makeUniqueId(), prefixCopy);
+
+        com::blit(prefixCopy, function._id);
 
         _context.notifyEvent(function._id, functionIdx);
 
         function._status = ast::node::Status::IDENTIFIED;
 
-        // base()(function._body);
+        base()(function._body);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DEFINITION> definitionIdx)
