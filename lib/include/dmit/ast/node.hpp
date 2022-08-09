@@ -196,7 +196,7 @@ template <>
 struct TNode<node::Kind::DEF_FUNCTION>
 {
     node::TIndex<node::Kind::LIT_IDENTIFIER > _name;
-    node::TRange<node::Kind::TYPE_CLAIM     > _arguments;
+    node::TRange<node::Kind::DCL_VARIABLE   > _arguments;
     node::TIndex<node::Kind::SCOPE          > _body;
 
     std::optional<node::TIndex<node::Kind::TYPE>> _returnType;

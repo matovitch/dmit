@@ -63,6 +63,11 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
         base()(get(typeClaimIdx)._type);
     }
 
+    void operator()(ast::node::TIndex<ast::node::Kind::DCL_VARIABLE> dclVariableIdx)
+    {
+        base()(get(dclVariableIdx)._typeClaim);
+    }
+
     void operator()(ast::node::TIndex<ast::node::Kind::DEF_CLASS> defClassIdx)
     {
         auto& defClass = get(defClassIdx);

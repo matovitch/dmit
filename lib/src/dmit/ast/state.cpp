@@ -303,7 +303,7 @@ void Builder::makeArguments(const dmit::prs::Reader& supReader,
 
     while (reader.isValid())
     {
-        makeTypeClaim(reader, _nodePool.get(function._arguments[--i]));
+        makeDclVariable(reader, _nodePool.get(function._arguments[--i]));
         reader.advance();
     }
 }
