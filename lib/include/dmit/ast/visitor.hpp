@@ -42,7 +42,7 @@ struct TVisitor : TBaseVisitor<Derived, StackIn, StackOut>
         return lexeme::getSlice(lexemeIdx, TBaseVisitor<Derived, StackIn, StackOut>::_nodePool);
     }
 
-    src::Slice getSlice(const node::TIndex<node::Kind::LIT_IDENTIFIER> idenfifierIdx)
+    src::Slice getSlice(const node::TIndex<node::Kind::IDENTIFIER> idenfifierIdx)
     {
         return getSlice(TBaseVisitor<Derived, StackIn, StackOut>::get(idenfifierIdx)._lexeme);
     }

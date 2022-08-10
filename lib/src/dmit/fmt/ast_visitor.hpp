@@ -49,11 +49,28 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
         _oss << "\"slice\":" << getSlice(lexemeIdx) << "}";
     }
 
-    void operator()(ast::node::TIndex<ast::node::Kind::LIT_IDENTIFIER> identifierIdx)
+    void operator()(ast::node::TIndex<ast::node::Kind::IDENTIFIER> identifierIdx)
     {
         auto& identifier = get(identifierIdx);
 
         _oss << "{\"node\":\"Identifier\",";
+
+        if (identifier._status == ast::node::Status::BOUND)
+        {
+            _oss << "\"id\":\"";
+
+            if (com::tree::v_index::isInterface<ast::node::Kind>(identifier._asVIndex) && _interfacePoolOpt)
+            {
+                _oss << ast::node::v_index::makeId(_interfacePoolOpt.value().get(), identifier._asVIndex);
+            }
+            else
+            {
+                _oss << ast::node::v_index::makeId(_nodePool, identifier._asVIndex);
+            }
+
+            _oss << "\",";
+        }
+
         _oss << "\"lexeme\":"; base()(identifier._lexeme);
         _oss << "}";
     }
@@ -81,23 +98,6 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
         auto& type = get(typeIdx);
 
         _oss << "{\"node\":\"Type\",";
-
-        if (type._status == ast::node::Status::TYPE_BOUND)
-        {
-            _oss << "\"id\":\"";
-
-            if (com::tree::v_index::isInterface<ast::node::Kind>(type._asVIndex) && _interfacePoolOpt)
-            {
-                _oss << ast::node::v_index::makeId(_interfacePoolOpt.value().get(), type._asVIndex);
-            }
-            else
-            {
-                _oss << ast::node::v_index::makeId(_nodePool, type._asVIndex);
-            }
-
-            _oss << "\",";
-        }
-
         _oss << "\"name\":"; base()(type._name);
         _oss << "}";
     }

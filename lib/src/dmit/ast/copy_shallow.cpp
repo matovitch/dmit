@@ -112,16 +112,19 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
         destLexeme._index = srceLexeme._index;
     }
 
-    void operator()(node::TIndex<node::Kind::LIT_IDENTIFIER> srceIdentifierIdx)
+    void operator()(node::TIndex<node::Kind::IDENTIFIER> srceIdentifierIdx)
     {
         auto& srceIdentifier = get(srceIdentifierIdx);
         auto& destIdentifier = _destNodePool.get(
-            node::as<node::Kind::LIT_IDENTIFIER>(_stackPtrIn->_index)
+            node::as<node::Kind::IDENTIFIER>(_stackPtrIn->_index)
         );
 
         make(destIdentifier._lexeme);
         _stackPtrIn->_index = destIdentifier._lexeme;
         base()(srceIdentifier._lexeme);
+
+        destIdentifier._status =
+        srceIdentifier._status;
     }
 
     void operator()(node::TIndex<node::Kind::EXP_BINOP> srceBinopIdx)
@@ -154,9 +157,6 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
         make(destType._name);
         _stackPtrIn->_index = destType._name;
         base()(srceType._name);
-
-        destType._status =
-        srceType._status;
     }
 
     void operator()(node::TIndex<node::Kind::TYPE_CLAIM> srceTypeClaimIdx)

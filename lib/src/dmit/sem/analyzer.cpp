@@ -85,23 +85,28 @@ struct AnalyzeVisitor : ast::TVisitor<AnalyzeVisitor, Stack>
 
     DMIT_AST_VISITOR_SIMPLE();
 
-    void operator()(ast::node::TIndex<ast::node::Kind::TYPE> typeIdx)
+    void operator()(ast::node::TIndex<ast::node::Kind::IDENTIFIER> identifierIdx)
     {
-        auto&& slice = getSlice(get(typeIdx)._name);
+        auto&& slice = getSlice(identifierIdx);
 
         auto id = com::murmur::combine(slice.makeUniqueId(), _stackPtrIn->_prefix);
 
         _context.makeTaskMedium
         (
-            [this, typeIdx](const ast::node::VIndex& vIndex)
+            [this, identifierIdx](const ast::node::VIndex& vIndex)
             {
-                get(typeIdx)._status = ast::node::Status::TYPE_BOUND;
+                get(identifierIdx)._status = ast::node::Status::BOUND;
 
-                com::blit(vIndex, get(typeIdx)._asVIndex);
+                com::blit(vIndex, get(identifierIdx)._asVIndex);
             },
-            typeIdx,
+            identifierIdx,
             id
         );
+    }
+
+    void operator()(ast::node::TIndex<ast::node::Kind::TYPE> typeIdx)
+    {
+        base()(get(typeIdx)._name);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::STM_RETURN> stmReturnIdx)

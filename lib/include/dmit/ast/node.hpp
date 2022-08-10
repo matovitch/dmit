@@ -30,7 +30,7 @@ struct Status : com::TEnum<uint8_t>
     {
         ASTED,
         IDENTIFIED,
-        TYPE_BOUND
+        BOUND
     };
 
     DMIT_COM_ENUM_IMPLICIT_FROM_INT(Status);
@@ -50,8 +50,8 @@ struct Kind : com::TEnum<uint8_t>
         EXPRESSION     ,
         FUN_CALL       ,
         LEXEME         ,
+        IDENTIFIER     ,
         LIT_DECIMAL    ,
-        LIT_IDENTIFIER ,
         LIT_INTEGER    ,
         SCOPE          ,
         SCOPE_VARIANT  ,
@@ -105,12 +105,12 @@ using Statement = std::variant<node::TIndex<node::Kind::STM_RETURN>>;
 using Definition = std::variant<node::TIndex<node::Kind::DEF_CLASS>,
                                 node::TIndex<node::Kind::DEF_FUNCTION>>;
 
-using Expression = std::variant<node::TIndex<node::Kind::LIT_IDENTIFIER >,
-                                node::TIndex<node::Kind::LIT_DECIMAL    >,
-                                node::TIndex<node::Kind::LIT_INTEGER    >,
-                                node::TIndex<node::Kind::EXP_BINOP      >,
-                                node::TIndex<node::Kind::EXP_MONOP      >,
-                                node::TIndex<node::Kind::FUN_CALL       >>;
+using Expression = std::variant<node::TIndex<node::Kind::IDENTIFIER  >,
+                                node::TIndex<node::Kind::LIT_DECIMAL >,
+                                node::TIndex<node::Kind::LIT_INTEGER >,
+                                node::TIndex<node::Kind::EXP_BINOP   >,
+                                node::TIndex<node::Kind::EXP_MONOP   >,
+                                node::TIndex<node::Kind::FUN_CALL    >>;
 
 using ScopeVariant = std::variant<Statement,
                                   Declaration,
@@ -184,8 +184,8 @@ struct TNode<node::Kind::DEFINITION>
 template <>
 struct TNode<node::Kind::DEF_CLASS>
 {
-    node::TIndex<node::Kind::LIT_IDENTIFIER > _name;
-    node::TRange<node::Kind::TYPE_CLAIM     > _members;
+    node::TIndex<node::Kind::IDENTIFIER > _name;
+    node::TRange<node::Kind::TYPE_CLAIM > _members;
 
     com::UniqueId _id;
 
@@ -195,9 +195,9 @@ struct TNode<node::Kind::DEF_CLASS>
 template <>
 struct TNode<node::Kind::DEF_FUNCTION>
 {
-    node::TIndex<node::Kind::LIT_IDENTIFIER > _name;
-    node::TRange<node::Kind::DCL_VARIABLE   > _arguments;
-    node::TIndex<node::Kind::SCOPE          > _body;
+    node::TIndex<node::Kind::IDENTIFIER   > _name;
+    node::TRange<node::Kind::DCL_VARIABLE > _arguments;
+    node::TIndex<node::Kind::SCOPE        > _body;
 
     std::optional<node::TIndex<node::Kind::TYPE>> _returnType;
 
@@ -209,24 +209,24 @@ struct TNode<node::Kind::DEF_FUNCTION>
 template<>
 struct TNode<node::Kind::TYPE_CLAIM>
 {
-    node::TIndex<node::Kind::LIT_IDENTIFIER > _variable;
-    node::TIndex<node::Kind::TYPE           > _type;
+    node::TIndex<node::Kind::IDENTIFIER > _variable;
+    node::TIndex<node::Kind::TYPE       > _type;
 };
 
 template <>
 struct TNode<node::Kind::TYPE>
 {
-    node::TIndex<node::Kind::LIT_IDENTIFIER> _name;
+    node::TIndex<node::Kind::IDENTIFIER> _name;
+};
+
+template <>
+struct TNode<node::Kind::IDENTIFIER>
+{
+    node::TIndex<node::Kind::LEXEME> _lexeme;
 
     node::VIndex _asVIndex;
 
     node::Status _status;
-};
-
-template <>
-struct TNode<node::Kind::LIT_IDENTIFIER>
-{
-    node::TIndex<node::Kind::LEXEME> _lexeme;
 };
 
 template <>
@@ -296,8 +296,7 @@ struct TNode<node::Kind::DCL_VARIABLE>
 template<>
 struct TNode<node::Kind::FUN_CALL>
 {
-    node::TIndex<node::Kind::LIT_IDENTIFIER > _callee;
-
+    node::TIndex<node::Kind::IDENTIFIER> _callee;
     node::TRange<node::Kind::EXPRESSION> _arguments;
 };
 

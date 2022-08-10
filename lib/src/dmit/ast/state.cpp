@@ -36,7 +36,7 @@ bool isExpression(const dmit::prs::state::tree::node::Kind parseNodeKind)
            parseNodeKind == dmit::prs::state::tree::node::Kind::EXP_BINOP   ||
            parseNodeKind == dmit::prs::state::tree::node::Kind::EXP_ASSIGN  ||
            parseNodeKind == dmit::prs::state::tree::node::Kind::LIT_INTEGER ||
-           parseNodeKind == dmit::prs::state::tree::node::Kind::LIT_IDENTIFIER;
+           parseNodeKind == dmit::prs::state::tree::node::Kind::IDENTIFIER;
 }
 
 dmit::prs::Reader makeSubReaderFor(const dmit::prs::state::tree::node::Kind parseNodeKind,
@@ -78,11 +78,9 @@ void Builder::makeDclVariable(dmit::prs::Reader& reader,
 void Builder::makeType(const dmit::prs::Reader& reader,
                        TNode<node::Kind::TYPE>& type)
 {
-    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::LIT_IDENTIFIER);
+    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::IDENTIFIER);
     _nodePool.make(type._name);
     makeIdentifier(reader, _nodePool.get(type._name));
-
-    type._status = node::Status::ASTED;
 }
 
 void Builder::makeTypeClaim(dmit::prs::Reader& reader,
@@ -95,7 +93,7 @@ void Builder::makeTypeClaim(dmit::prs::Reader& reader,
     DMIT_COM_ASSERT(reader.isValid());
 
     // Variable
-    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::LIT_IDENTIFIER);
+    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::IDENTIFIER);
     _nodePool.make(typeClaim._variable);
     makeIdentifier(reader, _nodePool.get(typeClaim._variable));
 }
@@ -198,9 +196,9 @@ void Builder::makeExpression(const dmit::prs::Reader& reader,
 {
     auto parseNodeKind = reader.look()._kind;
 
-    if (parseNodeKind == ParseNodeKind::LIT_IDENTIFIER)
+    if (parseNodeKind == ParseNodeKind::IDENTIFIER)
     {
-        node::TIndex<node::Kind::LIT_IDENTIFIER> identifier;
+        node::TIndex<node::Kind::IDENTIFIER> identifier;
         _nodePool.make(identifier);
         makeIdentifier(reader, _nodePool.get(identifier));
         com::blit(identifier, expression);
@@ -317,11 +315,13 @@ void Builder::makeInteger(const dmit::prs::Reader& reader,
 }
 
 void Builder::makeIdentifier(const dmit::prs::Reader& reader,
-                             TNode<node::Kind::LIT_IDENTIFIER>& identifier)
+                             TNode<node::Kind::IDENTIFIER>& identifier)
 {
-    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::LIT_IDENTIFIER);
+    DMIT_COM_ASSERT(reader.look()._kind == ParseNodeKind::IDENTIFIER);
     _nodePool.make(identifier._lexeme);
     makeLexeme(reader, _nodePool.get(identifier._lexeme));
+
+    identifier._status = node::Status::ASTED;
 }
 
 void Builder::makeMembers(const dmit::prs::Reader& supReader,
@@ -368,7 +368,7 @@ void Builder::makeFunction(const dmit::prs::Reader& supReader,
     reader.advance();
 
     // Return type
-    if (reader.look()._kind == dmit::prs::state::tree::node::Kind::LIT_IDENTIFIER)
+    if (reader.look()._kind == dmit::prs::state::tree::node::Kind::IDENTIFIER)
     {
         _nodePool.make(function._returnType);
         makeType(reader, _nodePool.get(function._returnType));
@@ -452,7 +452,7 @@ void Builder::makeModule(dmit::prs::Reader& reader,
     {
         const auto parseNodeKind = reader.look()._kind;
 
-        if (parseNodeKind == dmit::prs::state::tree::node::Kind::LIT_IDENTIFIER ||
+        if (parseNodeKind == dmit::prs::state::tree::node::Kind::IDENTIFIER ||
             parseNodeKind == dmit::prs::state::tree::node::Kind::EXP_BINOP)
         {
             module._path = node::TIndex<node::Kind::FUN_CALL>{0};

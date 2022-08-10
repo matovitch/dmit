@@ -418,7 +418,7 @@ struct TNodeIndex<NODE_NUMBER>
 {
     using Type = TNode
     <
-        Token::INTEGER,
+        Token::LIT_INTEGER,
         TGoto<IsDigit , NODE_NUMBER    >,
         TGoto<IsDot   , NODE_DECIMAL_0 >
     >;
@@ -429,7 +429,7 @@ struct TNodeIndex<NODE_DECIMAL_0>
 {
     using Type = TNode
     <
-        Token::DECIMAL,
+        Token::LIT_DECIMAL,
         TGoto<IsDigit    , NODE_DECIMAL_0>,
         TGoto<IsExponent , NODE_DECIMAL_1>
     >;
@@ -461,7 +461,7 @@ struct TNodeIndex<NODE_DECIMAL_3>
 {
     using Type = TNode
     <
-        Token::DECIMAL,
+        Token::LIT_DECIMAL,
         TGoto<IsDigit, NODE_DECIMAL_3>
     >;
 };

@@ -35,9 +35,9 @@ struct PathId : ast::TVisitor<PathId, StackIn, StackOut>
 
     DMIT_AST_VISITOR_SIMPLE();
 
-    void operator()(ast::node::TIndex<ast::node::Kind::LIT_IDENTIFIER> idIdx)
+    void operator()(ast::node::TIndex<ast::node::Kind::IDENTIFIER> identifierIdx)
     {
-        auto&& slice = getSlice(idIdx);
+        auto&& slice = getSlice(identifierIdx);
 
         _stackPtrOut->_id = _stackPtrIn->_id;
 
