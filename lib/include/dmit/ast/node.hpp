@@ -291,6 +291,10 @@ template<>
 struct TNode<node::Kind::DCL_VARIABLE>
 {
     node::TIndex<node::Kind::TYPE_CLAIM> _typeClaim;
+
+    com::UniqueId _id;
+
+    node::Status _status;
 };
 
 template<>

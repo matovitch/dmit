@@ -160,6 +160,12 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
         auto& dclVariable = get(dclVariableIdx);
 
         _oss << "{\"node\":\"Variable Declaration\",";
+
+        if (dclVariable._status == ast::node::Status::IDENTIFIED)
+        {
+            _oss << "\"id\":\"" << dclVariable._id << "\",";
+        }
+
         _oss << "\"typeClaim\":"; base()(dclVariable._typeClaim);
         _oss << '}';
     }

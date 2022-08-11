@@ -73,6 +73,8 @@ void Builder::makeDclVariable(dmit::prs::Reader& reader,
 {
     _nodePool.make(dclVariable._typeClaim);
     makeTypeClaim(reader, _nodePool.get(dclVariable._typeClaim));
+
+    dclVariable._status = node::Status::ASTED;
 }
 
 void Builder::makeType(const dmit::prs::Reader& reader,

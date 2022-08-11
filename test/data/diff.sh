@@ -10,8 +10,8 @@ pushd $ROOT > /dev/null
                               | paste - -              \
                               | while read line; do
                                     outputFile=$(echo $line | grep -oE 'test/data/[A-Za-z0-9_" /]*\.out' | tr -d ' "');
-                                    lhs=$(echo $line | grep -oE '\( [\{\[].* == [\[\{]' | cut -c 3- | rev | cut -c 5- | rev);
-                                    rhs=$(echo $line | grep -oE ' == [\[\{].*[\}\]] \)' | rev | cut -c 3- | rev | cut -c 5-);
+                                    lhs=$(echo $line | grep -oP '\( [\{\[].* == [\[\{]' | cut -c 3- | rev | cut -c 5- | rev);
+                                    rhs=$(echo $line | grep -oP ' == [\[\{].*[\}\]] \)' | rev | cut -c 3- | rev | cut -c 5-);
                                     clear;
                                     diff -u <(echo $rhs | jq .) <(echo $lhs | jq .) | ydiff -s;
                                     read -r -p "Do you want to update $outputFile? [Y/n] " input </dev/tty;

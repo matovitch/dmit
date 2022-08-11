@@ -70,6 +70,7 @@ struct ExportLister : ast::TVisitor<ExportLister>
 struct Stack
 {
     com::UniqueId _prefix;
+    bool _isDeclaring;
 };
 
 struct AnalyzeVisitor : ast::TVisitor<AnalyzeVisitor, Stack>
@@ -135,13 +136,22 @@ struct AnalyzeVisitor : ast::TVisitor<AnalyzeVisitor, Stack>
 
         base()(dclVariable._typeClaim);
 
+        if (!_stackPtrIn->_isDeclaring)
+        {
+            return;
+        }
+
         auto variableIdx = get(dclVariable._typeClaim)._variable;
 
         auto&& slice = getSlice(variableIdx);
 
         com::murmur::combine(slice.makeUniqueId(), _stackPtrIn->_prefix);
 
+        com::blit(_stackPtrIn->_prefix, dclVariable._id);
+
         _context.notifyEvent(_stackPtrIn->_prefix, dclVariableIdx);
+
+        dclVariable._status = ast::node::Status::IDENTIFIED;
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::TYPE_CLAIM> typeClaimIdx)
@@ -154,6 +164,11 @@ struct AnalyzeVisitor : ast::TVisitor<AnalyzeVisitor, Stack>
         auto& defClass = get(defClassIdx);
 
         base()(defClass._members);
+
+        if (!_stackPtrIn->_isDeclaring)
+        {
+            return;
+        }
 
         auto&& slice = getSlice(defClass._name);
 
@@ -172,20 +187,22 @@ struct AnalyzeVisitor : ast::TVisitor<AnalyzeVisitor, Stack>
 
         base()(function._arguments);
         base()(function._returnType);
+        base()(function._body);
+
+        if (!_stackPtrIn->_isDeclaring)
+        {
+            return;
+        }
 
         auto&& slice = getSlice(function._name);
 
-        auto prefixCopy = _stackPtrIn->_prefix;
+        com::murmur::combine(slice.makeUniqueId(), _stackPtrIn->_prefix);
 
-        com::murmur::combine(slice.makeUniqueId(), prefixCopy);
-
-        com::blit(prefixCopy, function._id);
+        com::blit(_stackPtrIn->_prefix, function._id);
 
         _context.notifyEvent(function._id, functionIdx);
 
         function._status = ast::node::Status::IDENTIFIED;
-
-        base()(function._body);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DEFINITION> definitionIdx)
@@ -204,8 +221,12 @@ struct AnalyzeVisitor : ast::TVisitor<AnalyzeVisitor, Stack>
     {
         auto& module = get(moduleIdx);
 
+        _stackPtrIn->_isDeclaring = true;
+
         base()(module._imports);
         base()(module._definitions);
+
+        _stackPtrIn->_isDeclaring = false;
 
         for (uint32_t i = 0; i < module._imports._size; i++)
         {
