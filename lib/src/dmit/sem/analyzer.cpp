@@ -110,14 +110,22 @@ struct AnalyzeVisitor : ast::TVisitor<AnalyzeVisitor, Stack>
         base()(get(typeIdx)._name);
     }
 
-    void operator()(ast::node::TIndex<ast::node::Kind::STM_RETURN> stmReturnIdx)
+    void operator()(ast::node::TIndex<ast::node::Kind::LIT_INTEGER> litIntegerIdx)
     {
         // TODO
     }
 
+    void operator()(ast::node::TIndex<ast::node::Kind::STM_RETURN> stmReturnIdx)
+    {
+        base()(get(stmReturnIdx)._expression);
+    }
+
     void operator()(ast::node::TIndex<ast::node::Kind::EXP_BINOP> expBinopIdx)
     {
-        // TODO
+        auto& expBinop = get(expBinopIdx);
+
+        base()(expBinop._lhs);
+        base()(expBinop._rhs);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::SCOPE_VARIANT> scopeVariantIdx)
@@ -134,24 +142,22 @@ struct AnalyzeVisitor : ast::TVisitor<AnalyzeVisitor, Stack>
     {
         auto& dclVariable = get(dclVariableIdx);
 
-        base()(dclVariable._typeClaim);
-
-        if (!_stackPtrIn->_isDeclaring)
+        if (_stackPtrIn->_isDeclaring)
         {
-            return;
+            auto variableIdx = get(dclVariable._typeClaim)._variable;
+
+            auto&& slice = getSlice(variableIdx);
+
+            com::murmur::combine(slice.makeUniqueId(), _stackPtrIn->_prefix);
+
+            com::blit(_stackPtrIn->_prefix, dclVariable._id);
+
+            _context.notifyEvent(dclVariable._id, dclVariableIdx);
+
+            dclVariable._status = ast::node::Status::IDENTIFIED;
         }
 
-        auto variableIdx = get(dclVariable._typeClaim)._variable;
-
-        auto&& slice = getSlice(variableIdx);
-
-        com::murmur::combine(slice.makeUniqueId(), _stackPtrIn->_prefix);
-
-        com::blit(_stackPtrIn->_prefix, dclVariable._id);
-
-        _context.notifyEvent(_stackPtrIn->_prefix, dclVariableIdx);
-
-        dclVariable._status = ast::node::Status::IDENTIFIED;
+        base()(dclVariable._typeClaim);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::TYPE_CLAIM> typeClaimIdx)
@@ -163,46 +169,42 @@ struct AnalyzeVisitor : ast::TVisitor<AnalyzeVisitor, Stack>
     {
         auto& defClass = get(defClassIdx);
 
-        base()(defClass._members);
-
-        if (!_stackPtrIn->_isDeclaring)
+        if (_stackPtrIn->_isDeclaring)
         {
-            return;
+            auto&& slice = getSlice(defClass._name);
+
+            com::murmur::combine(slice.makeUniqueId(), _stackPtrIn->_prefix);
+
+            com::blit(_stackPtrIn->_prefix, defClass._id);
+
+            _context.notifyEvent(defClass._id, defClassIdx);
+
+            defClass._status = ast::node::Status::IDENTIFIED;
         }
 
-        auto&& slice = getSlice(defClass._name);
-
-        com::murmur::combine(slice.makeUniqueId(), _stackPtrIn->_prefix);
-
-        com::blit(_stackPtrIn->_prefix, defClass._id);
-
-        _context.notifyEvent(defClass._id, defClassIdx);
-
-        defClass._status = ast::node::Status::IDENTIFIED;
+        base()(defClass._members);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DEF_FUNCTION> functionIdx)
     {
         auto& function = get(functionIdx);
 
+        if (_stackPtrIn->_isDeclaring)
+        {
+            auto&& slice = getSlice(function._name);
+
+            com::murmur::combine(slice.makeUniqueId(), _stackPtrIn->_prefix);
+
+            com::blit(_stackPtrIn->_prefix, function._id);
+
+            _context.notifyEvent(function._id, functionIdx);
+
+            function._status = ast::node::Status::IDENTIFIED;
+        }
+
         base()(function._arguments);
         base()(function._returnType);
         base()(function._body);
-
-        if (!_stackPtrIn->_isDeclaring)
-        {
-            return;
-        }
-
-        auto&& slice = getSlice(function._name);
-
-        com::murmur::combine(slice.makeUniqueId(), _stackPtrIn->_prefix);
-
-        com::blit(_stackPtrIn->_prefix, function._id);
-
-        _context.notifyEvent(function._id, functionIdx);
-
-        function._status = ast::node::Status::IDENTIFIED;
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DEFINITION> definitionIdx)
@@ -221,12 +223,15 @@ struct AnalyzeVisitor : ast::TVisitor<AnalyzeVisitor, Stack>
     {
         auto& module = get(moduleIdx);
 
+        base()(module._imports);
+
         _stackPtrIn->_isDeclaring = true;
 
-        base()(module._imports);
         base()(module._definitions);
 
         _stackPtrIn->_isDeclaring = false;
+
+        base()(module._definitions);
 
         for (uint32_t i = 0; i < module._imports._size; i++)
         {

@@ -24,6 +24,11 @@ struct IdVisitor
         return com::UniqueId{};
     }
 
+    com::UniqueId operator()(TIndex<Kind::DCL_VARIABLE> dclVariableIdx)
+    {
+        return _pool.get(dclVariableIdx)._id;
+    }
+
     com::UniqueId operator()(TIndex<Kind::DEF_CLASS> defClassIdx)
     {
         return _pool.get(defClassIdx)._id;
