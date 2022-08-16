@@ -216,17 +216,19 @@ struct AnalyzeVisitor : ast::TVisitor<AnalyzeVisitor, Stack>
     {
         auto viewIdx = _interfaceMap.getView(get(importIdx)._id);
 
-        _exportLister.base()(viewIdx);
+        if (_stackPtrIn->_isDeclaring)
+        {
+            _exportLister.base()(viewIdx);
+        }
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::MODULE> moduleIdx)
     {
         auto& module = get(moduleIdx);
 
-        base()(module._imports);
-
         _stackPtrIn->_isDeclaring = true;
 
+        base()(module._imports);
         base()(module._definitions);
 
         _stackPtrIn->_isDeclaring = false;

@@ -185,6 +185,9 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
         make(destDclVariable._typeClaim);
         _stackPtrIn->_index = destDclVariable._typeClaim;
         base()(srceDclVariable._typeClaim);
+
+        destDclVariable._status =
+        srceDclVariable._status;
     }
 
     void operator()(node::TIndex<node::Kind::DCL_IMPORT> srceImportIdx)
