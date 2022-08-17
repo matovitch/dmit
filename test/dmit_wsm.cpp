@@ -122,12 +122,12 @@ TEST_CASE("PLOP")
 
     if (dmit::com::Endianness{} == dmit::com::Endianness::LITTLE)
     {
-        dmit::wsm::writer::ScribeLittle scribe{writeBuffer};
+        dmit::wsm::writer::TScribe<dmit::com::Endianness::LITTLE> scribe{writeBuffer};
         dmit::wsm::emit(moduleIdx, nodePool, scribe);
     }
     else if (dmit::com::Endianness{} == dmit::com::Endianness::BIG)
     {
-        dmit::wsm::writer::ScribeBig scribe{writeBuffer};
+        dmit::wsm::writer::TScribe<dmit::com::Endianness::BIG> scribe{writeBuffer};
         dmit::wsm::emit(moduleIdx, nodePool, scribe);
     }
 
