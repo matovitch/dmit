@@ -5,6 +5,7 @@
 #include "dmit/wsm/wasm.hpp"
 
 #include "dmit/com/base64.hpp"
+#include "dmit/com/endian.hpp"
 #include "dmit/com/blit.hpp"
 #include <cstdint>
 
@@ -119,9 +120,16 @@ TEST_CASE("PLOP")
 
     auto writeBuffer = new uint8_t[bematist._size];
 
-    dmit::wsm::writer::Scribe scribe{writeBuffer};
-
-    dmit::wsm::emit(moduleIdx, nodePool, scribe);
+    if (dmit::com::Endianness{} == dmit::com::Endianness::LITTLE)
+    {
+        dmit::wsm::writer::ScribeLittle scribe{writeBuffer};
+        dmit::wsm::emit(moduleIdx, nodePool, scribe);
+    }
+    else if (dmit::com::Endianness{} == dmit::com::Endianness::BIG)
+    {
+        dmit::wsm::writer::ScribeBig scribe{writeBuffer};
+        dmit::wsm::emit(moduleIdx, nodePool, scribe);
+    }
 
     std::cout << base64Encode(writeBuffer, bematist._size) << '\n';
 

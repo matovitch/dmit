@@ -2,8 +2,6 @@
 
 #include "dmit/wsm/leb128.hpp"
 
-#include "dmit/com/endian.hpp"
-
 #include <cstdint>
 #include <cstring>
 
@@ -41,16 +39,16 @@ Bematist Bematist::fork() const
     return *this;
 }
 
-Scribe::Scribe() : _data{nullptr} {}
+ScribeLittle::ScribeLittle() : _data{nullptr} {}
 
-Scribe::Scribe(uint8_t* const data) : _data(data) {}
+ScribeLittle::ScribeLittle(uint8_t* const data) : _data(data) {}
 
-void Scribe::skip(const uint32_t toSkip)
+void ScribeLittle::skip(const uint32_t toSkip)
 {
     _data += toSkip;
 }
 
-void Scribe::write(const uint8_t *const data, uint32_t size)
+void ScribeLittle::write(const uint8_t *const data, uint32_t size)
 {
     std::memcpy(static_cast<      void*>(_data),
                 static_cast<const void*>( data), size);
@@ -58,62 +56,99 @@ void Scribe::write(const uint8_t *const data, uint32_t size)
     _data += size;
 }
 
-void Scribe::write(const uint8_t byte)
+void ScribeLittle::write(const uint8_t byte)
 {
     *_data++ = byte;
 }
 
-void Scribe::write(const Leb128& leb128)
+void ScribeLittle::write(const Leb128& leb128)
 {
     write(leb128._asBytes, leb128._size);
 }
 
-uint32_t Scribe::diff(const Scribe scribe) const
+uint32_t ScribeLittle::diff(const ScribeLittle scribe) const
 {
     return _data - scribe._data;
 }
 
-void Scribe::writeF32(const flt32_t value)
+void ScribeLittle::writeF32(const flt32_t value)
 {
     const uint8_t* const asBytes = reinterpret_cast<const uint8_t*>(&value);
 
-    if (com::Endianness{} == com::Endianness::LITTLE)
+    for (uint32_t i = 0; i < sizeof(flt32_t); i++)
     {
-        for (uint32_t i = 0; i < sizeof(flt32_t); i++)
-        {
-            write(asBytes[i]);
-        }
-    }
-    else if (com::Endianness{} == com::Endianness::BIG)
-    {
-        for (uint32_t i = sizeof(flt32_t); i > 0; i--)
-        {
-            write(asBytes[i - 1]);
-        }
+        write(asBytes[i]);
     }
 }
 
-void Scribe::writeF64(const flt64_t value)
+void ScribeLittle::writeF64(const flt64_t value)
 {
     const uint8_t* const asBytes = reinterpret_cast<const uint8_t*>(&value);
 
-    if (com::Endianness{} == com::Endianness::LITTLE)
+    for (uint32_t i = 0; i < sizeof(flt64_t); i++)
     {
-        for (uint32_t i = 0; i < sizeof(flt64_t); i++)
-        {
-            write(asBytes[i]);
-        }
-    }
-    else if (com::Endianness{} == com::Endianness::BIG)
-    {
-        for (uint32_t i = sizeof(flt64_t); i > 0; i--)
-        {
-            write(asBytes[i - 1]);
-        }
+        write(asBytes[i]);
     }
 }
 
-Scribe Scribe::fork() const
+ScribeLittle ScribeLittle::fork() const
+{
+    return *this;
+}
+
+ScribeBig::ScribeBig() : _data{nullptr} {}
+
+ScribeBig::ScribeBig(uint8_t* const data) : _data(data) {}
+
+void ScribeBig::skip(const uint32_t toSkip)
+{
+    _data += toSkip;
+}
+
+void ScribeBig::write(const uint8_t *const data, uint32_t size)
+{
+    std::memcpy(static_cast<      void*>(_data),
+                static_cast<const void*>( data), size);
+
+    _data += size;
+}
+
+void ScribeBig::write(const uint8_t byte)
+{
+    *_data++ = byte;
+}
+
+void ScribeBig::write(const Leb128& leb128)
+{
+    write(leb128._asBytes, leb128._size);
+}
+
+uint32_t ScribeBig::diff(const ScribeBig scribe) const
+{
+    return _data - scribe._data;
+}
+
+void ScribeBig::writeF32(const flt32_t value)
+{
+    const uint8_t* const asBytes = reinterpret_cast<const uint8_t*>(&value);
+
+    for (uint32_t i = sizeof(flt32_t); i > 0; i--)
+    {
+        write(asBytes[i - 1]);
+    }
+}
+
+void ScribeBig::writeF64(const flt64_t value)
+{
+    const uint8_t* const asBytes = reinterpret_cast<const uint8_t*>(&value);
+
+    for (uint32_t i = sizeof(flt64_t); i > 0; i--)
+    {
+        write(asBytes[i - 1]);
+    }
+}
+
+ScribeBig ScribeBig::fork() const
 {
     return *this;
 }
