@@ -53,7 +53,7 @@ struct TFixUpSection
 
         Leb128 diffAsLeb128{diff};
 
-        const uint8_t customSectionSize = K_LEB128_MAX_SIZE -1 - diffAsLeb128._size;
+        const uint8_t customSectionSize = K_LEB128_MAX_SIZE - 1 - diffAsLeb128._size;
 
         _fork.write (customSectionSize);
         _fork.skip  (customSectionSize);
