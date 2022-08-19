@@ -13,7 +13,7 @@
 namespace dmit::sem
 {
 
-int8_t analyze(Context& context, InterfaceMap&, ast::Bundle&);
+int8_t analyze(ast::Bundle&, Context&, InterfaceMap&);
 
 struct Analyzer
 {
@@ -36,12 +36,12 @@ struct Analyzer
         {
             while (_interfaceAtomCount.load(std::memory_order_acquire) < index - 1);
 
-            return sem::analyze(_context, _interfaceMap, _bundles[index - 1]);
+            return sem::analyze(_bundles[index - 1], _context, _interfaceMap);
         }
 
         for (auto& bundle : _bundles)
         {
-            _interfaceMap.registerBundle(_context, bundle);
+            _interfaceMap.registerBundle(bundle, _context);
 
             int interfaceCount = _interfaceAtomCount.load(std::memory_order_relaxed);
 
