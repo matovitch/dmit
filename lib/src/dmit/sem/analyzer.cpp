@@ -3,6 +3,7 @@
 #include "dmit/sem/interface_map.hpp"
 #include "dmit/sem/context.hpp"
 #include "dmit/sem/notify.hpp"
+#include "dmit/sem/check.hpp"
 #include "dmit/sem/bind.hpp"
 
 #include "dmit/ast/visitor.hpp"
@@ -34,6 +35,7 @@ int8_t analyze(ast::Bundle& bundle, Context& context, InterfaceMap& interfaceMap
         {
             notify (bundle, context, interfaceMap);
             bind   (bundle, context);
+            check  (bundle, context);
         },
         context._coroutinePoolLarge
     );

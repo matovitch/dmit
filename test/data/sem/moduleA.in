@@ -1,4 +1,6 @@
-module A;
+module builtin;
 
 export class u64 {}
 export class i64 {}
+
+export func add_i64(x : i64, y: i64) -> i64 {}
