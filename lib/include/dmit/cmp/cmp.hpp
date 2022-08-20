@@ -2,7 +2,10 @@
 
 #include "dmit/com/type_flag.hpp"
 
-#include "cmp/cmp.h"
+extern "C"
+{
+    #include "cmp/cmp.h"
+}
 
 #include "dmit/nng/nng.hpp"
 

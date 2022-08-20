@@ -9,22 +9,12 @@
 #include "dmit/com/blit.hpp"
 #include <cstdint>
 
-std::string base64Encode(const uint8_t* const srce, const uint32_t srceSize)
+extern "C"
 {
-    const uint32_t destSize = dmit::com::base64::encodeBufferSize(srceSize);
-
-    uint8_t* const dest = new uint8_t[destSize];
-
-    dmit::com::base64::encode(srce, srceSize, dest);
-
-    std::string asString{reinterpret_cast<char*>(dest), destSize};
-
-    delete[] dest;
-
-    return asString;
+    #include "wasm3/wasm3.h"
 }
 
-TEST_CASE("PLOP")
+TEST_CASE("wsm")
 {
     dmit::wsm::node::TPool<0xC> nodePool;
 
@@ -108,9 +98,11 @@ TEST_CASE("PLOP")
 
     auto& name = nodePool.get(export_._name);
 
-    nodePool.make(name._bytes, 1);
+    nodePool.make(name._bytes, 3);
 
     nodePool.get(name._bytes[0])._value = 'a';
+    nodePool.get(name._bytes[1])._value = 'd';
+    nodePool.get(name._bytes[2])._value = 'd';
 
     dmit::com::blit(funcRefIdx, export_._descriptor);
 
@@ -131,7 +123,33 @@ TEST_CASE("PLOP")
         dmit::wsm::emit(moduleIdx, nodePool, scribe);
     }
 
-    std::cout << base64Encode(writeBuffer, bematist._size) << '\n';
+    M3Result result = m3Err_none;
+
+    IM3Environment env = m3_NewEnvironment ();
+    CHECK(env);
+
+    IM3Runtime runtime = m3_NewRuntime (env, 1024, NULL);
+    CHECK(runtime);
+
+    IM3Module m3module;
+    result = m3_ParseModule (env, &m3module, writeBuffer, bematist._size);
+    CHECK(!result);
+
+    result = m3_LoadModule (runtime, m3module);
+    CHECK(!result);
+
+    IM3Function m3add;
+    result = m3_FindFunction (&m3add, runtime, "add");
+    CHECK(!result);
+
+    result = m3_CallV (m3add, 2, 3);
+    CHECK(!result);
+
+    uint32_t value = 0;
+    result = m3_GetResultsV (m3add, &value);
+    CHECK(!result);
+
+    CHECK(value == 5);
 
     delete[] writeBuffer;
 }

@@ -45,6 +45,10 @@ ifeq (@(IS_ASAN),y)
     CXFLAGS += -fsanitize=address
 endif
 
+ifeq (@(IS_TSAN),y)
+    CXFLAGS += -fsanitize=thread
+endif
+
 #CXFLAGS += -fexperimental-isel
 
 CXFLAGS += -I $(ROOT)/lib/include
@@ -61,6 +65,10 @@ CLFLAGS += -fuse-ld=lld
 
 ifeq (@(IS_ASAN),y)
     CLFLAGS += -fsanitize=address
+endif
+
+ifeq (@(IS_TSAN),y)
+    CLFLAGS += -fsanitize=thread
 endif
 
 ifeq (@(IS_STATIC),y)

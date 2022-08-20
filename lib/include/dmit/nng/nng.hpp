@@ -1,6 +1,9 @@
 #pragma once
 
-#include "nng/nng.h"
+extern "C"
+{
+    #include "nng/nng.h"
+}
 
 #include <cstdint>
 

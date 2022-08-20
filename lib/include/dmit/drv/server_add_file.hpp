@@ -12,7 +12,10 @@
 
 #include "dmit/com/unique_id.hpp"
 
-#include "cmp/cmp.h"
+extern "C"
+{
+    #include "cmp/cmp.h"
+}
 
 #include <cstdint>
 #include <cstdlib>

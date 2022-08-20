@@ -2,7 +2,10 @@
 
 #include "dmit/src/file.hpp"
 
-#include "cmp/cmp.h"
+extern "C"
+{
+    #include "cmp/cmp.h"
+}
 
 namespace dmit::cmp
 {

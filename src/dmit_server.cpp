@@ -16,10 +16,13 @@
 
 #include "dmit/nng/nng.hpp"
 
-#include "nng/nng.h"
-#include "nng/protocol/reqrep0/rep.h"
+extern "C"
+{
+    #include "nng/nng.h"
+    #include "nng/protocol/reqrep0/rep.h"
 
-#include "ketopt/ketopt.h"
+    #include "ketopt/ketopt.h"
+}
 
 #include <cstdlib>
 

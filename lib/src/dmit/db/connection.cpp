@@ -2,7 +2,10 @@
 
 #include "dmit/com/assert.hpp"
 
-#include "sqlite3/sqlite3.h"
+extern "C"
+{
+    #include "sqlite3/sqlite3.h"
+}
 
 #include <optional>
 #include <cstring>

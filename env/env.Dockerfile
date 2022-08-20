@@ -59,7 +59,7 @@ RUN set -ex                                                                     
     rm llvm.sh                                                                                                  &&\
     git clone --progress --depth 1 https://github.com/gittup/tup                                                &&\
     cd tup                                                                                                      &&\
-    git checkout f4b475146a6cb3ed7c0203e0bc11223b906cc2aa                                                       &&\
+    git checkout 7149db11be1728580f1ddcf760208d2ca85e7558                                                       &&\
     ./bootstrap-nofuse.sh                                                                                       &&\
     mv tup /usr/bin                                                                                             &&\
     cd ..                                                                                                       &&\
@@ -97,13 +97,21 @@ RUN set -ex                                                                     
     mv libcmp.a /usr/lib                                                                                        &&\
     cd ..                                                                                                       &&\
     rm -r cmp                                                                                                   &&\
-    git clone --recursive https://github.com/WebAssembly/wasp                                                   &&\
+    git clone --recursive --progress --depth 1 https://github.com/WebAssembly/wasp.git                          &&\
     cd wasp                                                                                                     &&\
     cmake -G Ninja -DBUILD_TESTING=OFF                                                                          &&\
     ninja                                                                                                       &&\
     mv src/tools/wasp /usr/bin                                                                                  &&\
     cd ..                                                                                                       &&\
     rm -r wasp                                                                                                  &&\
+    git clone --progress --depth 1 https://github.com/wasm3/wasm3.git                                           &&\
+    cd wasm3                                                                                                    &&\
+    git checkout 9dcfce271c2fac86823725fc9ec0f75309d820e4                                                       &&\
+    cmake -G Ninja                                                                                              &&\
+    ninja                                                                                                       &&\
+    mv source/libm3.a /usr/lib                                                                                  &&\
+    cd ..                                                                                                       &&\
+    rm -r wasm3                                                                                                 &&\
     apt-get remove -y $TO_REMOVE                                                                                &&\
     apt-get autoremove -y                                                                                       &&\
     apt-get clean                                                                                               &&\

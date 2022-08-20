@@ -7,7 +7,10 @@
 
 #include "dmit/com/unique_id.hpp"
 
-#include "sqlite3/sqlite3.h"
+extern "C"
+{
+    #include "sqlite3/sqlite3.h"
+}
 
 #include <optional>
 #include <cstdint>

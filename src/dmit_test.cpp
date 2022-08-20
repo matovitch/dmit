@@ -4,7 +4,10 @@
 
 #include "dmit/fmt/logger.hpp"
 
-#include "ketopt/ketopt.h"
+extern "C"
+{
+    #include "ketopt/ketopt.h"
+}
 
 #include <cstring>
 

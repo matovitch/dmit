@@ -11,7 +11,10 @@
 
 #include "dmit/com/logger.hpp"
 
-#include "cmp/cmp.h"
+extern "C"
+{
+    #include "cmp/cmp.h"
+}
 
 #include <cstdlib>
 

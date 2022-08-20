@@ -2,7 +2,10 @@
 
 #include "dmit/drv/reply.hpp"
 
-#include "cmp/cmp.h"
+extern "C"
+{
+    #include "cmp/cmp.h"
+}
 
 namespace dmit::cmp
 {

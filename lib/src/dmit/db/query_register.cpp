@@ -2,7 +2,10 @@
 
 #include "dmit/db/connection.hpp"
 
-#include "sqlite3/sqlite3.h"
+extern "C"
+{
+    #include "sqlite3/sqlite3.h"
+}
 
 #include <cstdint>
 

@@ -2,8 +2,11 @@
 
 #include "dmit/com/logger.hpp"
 
-#include "sqlite3/sqlite3.h"
-#include "nng/nng.h"
+extern "C"
+{
+    #include "sqlite3/sqlite3.h"
+    #include "nng/nng.h"
+}
 
 namespace dmit::drv
 {

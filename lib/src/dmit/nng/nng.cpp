@@ -1,6 +1,9 @@
 #include "dmit/nng/nng.hpp"
 
-#include "nng/nng.h"
+extern "C"
+{
+    #include "nng/nng.h"
+}
 
 #include <cstdint>
 #include <cstdlib>

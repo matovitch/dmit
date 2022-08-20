@@ -2,7 +2,10 @@
 
 #include "dmit/nng/nng.hpp"
 
-#include "cmp/cmp.h"
+extern "C"
+{
+    #include "cmp/cmp.h"
+}
 
 #include <cstring>
 #include <cstdint>

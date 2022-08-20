@@ -24,6 +24,7 @@ CLFLAGS += -l cmp
 CLFLAGS += -l doctest
 CLFLAGS += -l stdc++fs
 CLFLAGS += -l pthread
+CLFLAGS += -l m3
 CLFLAGS += -l dl
 
 CLFLAGS += -L $(VARIANT)/lib/src/schmit
