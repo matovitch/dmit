@@ -6,6 +6,7 @@
 #include "dmit/com/assert.hpp"
 
 #include <cstdint>
+#include <limits>
 
 namespace dmit::vm
 {

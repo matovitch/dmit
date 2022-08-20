@@ -5,6 +5,10 @@
 #include <chrono>
 #include <thread>
 
+#if defined(SCHMIT_USE_TSAN)
+    #include "sanitizer/tsan_interface.h"
+#endif
+
 namespace dmit::com
 {
 
@@ -48,11 +52,19 @@ CriticalSection::CriticalSection(std::atomic<bool>& flag) : _flag{flag}
     FENCE:
     {
         std::atomic_thread_fence(std::memory_order_acquire);
+
+        #if defined(SCHMIT_USE_TSAN)
+            __tsan_acquire(&_flag);
+        #endif
     }
 }
 
 CriticalSection::~CriticalSection()
 {
+    #if defined(SCHMIT_USE_TSAN)
+        __tsan_release(&_flag);
+    #endif
+
     std::atomic_thread_fence(std::memory_order_release);
     _flag.store(false, std::memory_order_relaxed);
 }

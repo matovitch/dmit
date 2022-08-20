@@ -123,8 +123,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
         _stackPtrIn->_index = destIdentifier._lexeme;
         base()(srceIdentifier._lexeme);
 
-        destIdentifier._status =
-        srceIdentifier._status;
+        destIdentifier._status = ast::node::Status::ASTED;
     }
 
     void operator()(node::TIndex<node::Kind::EXP_BINOP> srceBinopIdx)
@@ -186,8 +185,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
         _stackPtrIn->_index = destDclVariable._typeClaim;
         base()(srceDclVariable._typeClaim);
 
-        destDclVariable._status =
-        srceDclVariable._status;
+        destDclVariable._status = ast::node::Status::ASTED;
     }
 
     void operator()(node::TIndex<node::Kind::DCL_IMPORT> srceImportIdx)
@@ -233,8 +231,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
             com::blitDefault(destFunction._returnType);
         }
 
-        destFunction._status =
-        srceFunction._status;
+        destFunction._status = ast::node::Status::ASTED;
     }
 
     void operator()(node::TIndex<node::Kind::DEF_CLASS> srceDefClassIdx)
@@ -251,8 +248,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
         copyRange(srceDefClass._members,
                   destDefClass._members);
 
-        destDefClass._status =
-        srceDefClass._status;
+        destDefClass._status = ast::node::Status::ASTED;
     }
 
     void operator()(node::TIndex<node::Kind::PARENT_PATH> srceParentPathIdx)

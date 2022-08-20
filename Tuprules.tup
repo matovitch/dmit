@@ -12,7 +12,7 @@ CXFLAGS += -Wall
 CXFLAGS += -fno-rtti
 
 ifeq (@(IS_DEBUG),y)
-    CXFLAGS += -g -fno-omit-frame-pointer
+    CXFLAGS += -g -fno-omit-frame-pointer -fdebug-default-version=4
 endif
 
 ifeq (@(IS_USING_ASSERT),y)
@@ -46,6 +46,7 @@ ifeq (@(IS_ASAN),y)
 endif
 
 ifeq (@(IS_TSAN),y)
+    CXFLAGS += -DSCHMIT_USE_TSAN
     CXFLAGS += -fsanitize=thread
 endif
 

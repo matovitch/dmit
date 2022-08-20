@@ -13,7 +13,6 @@ void Leb128::push(const uint8_t byte)
 
 Leb128::Leb128(int64_t asI64)
 {
-    unsigned count = 0;
     bool more;
 
     do
@@ -24,7 +23,6 @@ Leb128::Leb128(int64_t asI64)
 
         more = !(((asI64 ==  0) && ((byte & 0x40) == 0)) ||
                  ((asI64 == -1) && ((byte & 0x40) != 0)));
-        count++;
 
         if (more)
         {
@@ -38,15 +36,11 @@ Leb128::Leb128(int64_t asI64)
 
 Leb128::Leb128(uint64_t asU64)
 {
-    unsigned count = 0;
-
     do
     {
         uint8_t byte = asU64 & 0x7f;
 
         asU64 >>= 7;
-
-        count++;
 
         if (asU64 != 0)
         {

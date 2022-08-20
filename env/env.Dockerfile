@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 ENV TO_INSTALL "               \
     libtinfo6                  \
@@ -36,7 +36,7 @@ ENV GUEST_UID "1000"
 
 ENV DEBIAN_FRONTEND "noninteractive"
 
-ENV LLVM_VERSION "13"
+ENV LLVM_VERSION "16"
 
 ENV FLAGS_DOCTEST "-D DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN"
 ENV FLAGS_SQLITE3 "-D SQLITE_ENABLE_DESERIALIZE"
@@ -97,8 +97,9 @@ RUN set -ex                                                                     
     mv libcmp.a /usr/lib                                                                                        &&\
     cd ..                                                                                                       &&\
     rm -r cmp                                                                                                   &&\
-    git clone --recursive --progress --depth 1 https://github.com/WebAssembly/wasp.git                          &&\
+    git clone --recursive --progress --depth 1 https://github.com/matovitch/wasp.git                            &&\
     cd wasp                                                                                                     &&\
+    git checkout 18ca152d274f1056fccf5ea0fe93794f0058c17e                                                       &&\
     cmake -G Ninja -DBUILD_TESTING=OFF                                                                          &&\
     ninja                                                                                                       &&\
     mv src/tools/wasp /usr/bin                                                                                  &&\

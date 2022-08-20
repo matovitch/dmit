@@ -1,5 +1,7 @@
 #include "dmit/prs/error.hpp"
 
+#include <limits>
+
 namespace dmit::prs::state
 {
 
