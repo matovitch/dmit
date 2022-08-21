@@ -32,8 +32,7 @@ CriticalSection::CriticalSection(std::atomic<bool>& flag) : _flag{flag}
         {
             timePointOpt = now + K_DELAY;
         }
-
-        if (now > timePointOpt.value())
+        else if (now > timePointOpt.value())
         {
             goto SLEEP_LOOP;
         }
