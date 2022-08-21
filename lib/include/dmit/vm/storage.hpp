@@ -4,7 +4,7 @@
 #include <cstdint>
 
 
-namespace dmit::com
+namespace dmit::vm
 {
 
 template <class Type>
@@ -15,8 +15,11 @@ class TStorage
 public:
 
     TStorage(std::size_t size) :
+        _size{size},
         _buckets{new Bucket[size]}
     {}
+
+    const std::size_t _size;
 
     Type* data() const
     {
@@ -34,4 +37,4 @@ private:
     Bucket* _buckets = nullptr;
 };
 
-} // namespace dmit::com
+} // namespace dmit::vm

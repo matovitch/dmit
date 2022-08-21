@@ -15,11 +15,11 @@ class TConcurrentQueue
 
 public:
 
-    TConcurrentQueue(uint64_t size) : _storage(size) {}
+    TConcurrentQueue(uint64_t size) : _size{size}, _storage(size) {}
 
     bool isValid(const ConcurentU64 concurrentU64)
     {
-        return concurrentU64._value < _storage._size;
+        return concurrentU64._value < _size;
     }
 
     Type& operator[](const ConcurentU64 concurrentU64)
@@ -34,7 +34,7 @@ public:
 
     void clean()
     {
-        for (uint64_t i = 0; i < _storage._size; i++)
+        for (uint64_t i = 0; i < _size; i++)
         {
             (_storage.data())[i].~Type();
         }
@@ -42,11 +42,12 @@ public:
 
     std::size_t size() const
     {
-        return _storage._size;
+        return _size;
     }
 
 private:
 
+    std::size_t    _size;
     TStorage<Type> _storage;
 };
 

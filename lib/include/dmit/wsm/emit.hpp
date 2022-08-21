@@ -4,10 +4,12 @@
 #include "dmit/wsm/emit_section.hpp"
 #include "dmit/wsm/emit_port.hpp"
 #include "dmit/wsm/leb128.hpp"
+#include "dmit/wsm/writer.hpp"
 #include "dmit/wsm/wasm.hpp"
 
 #include "dmit/com/tree_visitor.hpp"
 #include "dmit/com/assert.hpp"
+#include "dmit/com/endian.hpp"
 #include "dmit/com/enum.hpp"
 
 #include <optional>
@@ -1657,6 +1659,31 @@ void emit(node::TIndex<node::Kind::MODULE> module, NodePool& nodePool, Writer& w
     TEmitter<NodePool, Writer> emitter{nodePool, writer};
 
     emitter.base()(module);
+}
+
+template <class NodePool>
+void emit(node::TIndex<node::Kind::MODULE> module, NodePool& nodePool, uint8_t* const buffer)
+{
+    if (dmit::com::Endianness{} == dmit::com::Endianness::LITTLE)
+    {
+        dmit::wsm::writer::TScribe<dmit::com::Endianness::LITTLE> scribe{buffer};
+        dmit::wsm::emit(module, nodePool, scribe);
+    }
+    else if (dmit::com::Endianness{} == dmit::com::Endianness::BIG)
+    {
+        dmit::wsm::writer::TScribe<dmit::com::Endianness::BIG> scribe{buffer};
+        dmit::wsm::emit(module, nodePool, scribe);
+    }
+}
+
+template <class NodePool>
+uint32_t emitSize(node::TIndex<node::Kind::MODULE> module, NodePool& nodePool)
+{
+    dmit::wsm::writer::Bematist bematist;
+
+    dmit::wsm::emit(module, nodePool, bematist);
+
+    return bematist._size;
 }
 
 } // namespace dmit::wsm

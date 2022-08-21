@@ -1,6 +1,6 @@
 #pragma once
 
-#include "dmit/com/storage.hpp"
+#include "dmit/vm/storage.hpp"
 
 #include <cstdint>
 #include <cstring>
@@ -14,7 +14,7 @@ class StackOp
 
 public:
 
-    using Storage = com::TStorage<uint64_t>;
+    using Storage = TStorage<uint64_t>;
 
     StackOp() = delete;
 

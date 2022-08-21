@@ -1,21 +1,20 @@
 #include "test.hpp"
 
-#include "dmit/wsm/writer.hpp"
 #include "dmit/wsm/emit.hpp"
 #include "dmit/wsm/wasm.hpp"
 
-#include "dmit/com/base64.hpp"
+#include "dmit/com/storage.hpp"
 #include "dmit/com/endian.hpp"
 #include "dmit/com/blit.hpp"
-#include <cstdint>
 
-extern "C"
-{
-    #include "wasm3/wasm3.h"
-}
+#include "wasm3/wasm3.hpp"
+
+#include <cstdint>
 
 TEST_CASE("wsm")
 {
+    // 1. Build the WASM module
+
     dmit::wsm::node::TPool<0xC> nodePool;
 
     dmit::wsm::node::TIndex<dmit::wsm::node::Kind::MODULE> moduleIdx;
@@ -106,54 +105,39 @@ TEST_CASE("wsm")
 
     dmit::com::blit(funcRefIdx, export_._descriptor);
 
-    dmit::wsm::writer::Bematist bematist;
+    // 2. Write it
 
-    dmit::wsm::emit(moduleIdx, nodePool, bematist);
+    auto emitSize = dmit::wsm::emitSize(moduleIdx, nodePool);
 
-    auto writeBuffer = new uint8_t[bematist._size];
+    dmit::com::TStorage<uint8_t> storage{emitSize};
 
-    if (dmit::com::Endianness{} == dmit::com::Endianness::LITTLE)
-    {
-        dmit::wsm::writer::TScribe<dmit::com::Endianness::LITTLE> scribe{writeBuffer};
-        dmit::wsm::emit(moduleIdx, nodePool, scribe);
-    }
-    else if (dmit::com::Endianness{} == dmit::com::Endianness::BIG)
-    {
-        dmit::wsm::writer::TScribe<dmit::com::Endianness::BIG> scribe{writeBuffer};
-        dmit::wsm::emit(moduleIdx, nodePool, scribe);
-    }
+    dmit::wsm::emit(moduleIdx, nodePool, storage.data());
 
-    M3Result result = m3Err_none;
+    // 3. Run it
 
-    IM3Environment env = m3_NewEnvironment();
-    CHECK(env);
+    wasm3::Environment env;
 
-    IM3Runtime runtime = m3_NewRuntime(env, 1024, NULL);
-    CHECK(runtime);
+    wasm3::Runtime runtime = env.makeRuntime(0x100 /*stackSize*/);
 
-    IM3Module m3module;
-    result = m3_ParseModule(env, &m3module, writeBuffer, bematist._size);
+    wasm3::Result result = m3Err_none;
+
+    wasm3::Module m3module;
+    result = wasm3::parseModule(env, m3module, storage.data(), emitSize);
     CHECK(!result);
 
-    result = m3_LoadModule(runtime, m3module);
+    result = wasm3::loadModule(runtime, m3module);
     CHECK(!result);
 
-    IM3Function m3add;
-    result = m3_FindFunction(&m3add, runtime, "add");
+    wasm3::Function m3add;
+    result = wasm3::findFunction(m3add, runtime, "add");
     CHECK(!result);
 
-    result = m3_CallV(m3add, 2, 3);
+    result = wasm3::call(m3add, 2, 3);
     CHECK(!result);
 
-    uint32_t value = 0;
-    result = m3_GetResultsV(m3add, &value);
+    int32_t value = 0;
+    result = wasm3::getResults(m3add, &value);
     CHECK(!result);
 
     CHECK(value == 5);
-
-    delete[] writeBuffer;
-
-    m3_FreeRuntime(runtime);
-    m3_FreeEnvironment(env);
-
 }

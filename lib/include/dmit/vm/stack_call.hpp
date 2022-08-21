@@ -1,8 +1,7 @@
 #pragma once
 
 #include "dmit/vm/program.hpp"
-
-#include "dmit/com/storage.hpp"
+#include "dmit/vm/storage.hpp"
 
 #include <cstdint>
 #include <vector>
@@ -15,7 +14,7 @@ class StackCall
 
 public:
 
-    using Storage = com::TStorage<program::Counter>;
+    using Storage = TStorage<program::Counter>;
 
     StackCall() = delete;
 
