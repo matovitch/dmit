@@ -14,7 +14,7 @@ namespace dmit::ast
 
 struct State : fmt::Formatable
 {
-    using NodePool = node::TPool<0xD>;
+    using NodePool = node::TPool<0xC>;
 
     State(NodePool&);
 

@@ -68,7 +68,7 @@ private:
 
     uint32_t numThreadsUpPow2() const
     {
-        return 1 << log2(_numThreads);
+        return 1 << (log2(_numThreads) + ((_numThreads & (_numThreads - 1)) != 0));
     }
 
     void operator()(uint32_t numThreads, uint32_t weight, uint32_t id)
