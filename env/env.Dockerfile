@@ -69,30 +69,32 @@ RUN set -ex                                                                     
     /usr/bin/python2 setup.py install                                                                           &&\
     cd ..                                                                                                       &&\
     rm -r ydiff                                                                                                 &&\
-    curl https://codeload.github.com/onqtam/doctest/tar.gz/2.4.6 > doctest-2.4.6.tar.gz                         &&\
-    tar xvf doctest-2.4.6.tar.gz                                                                                &&\
-    cd doctest-2.4.6                                                                                            &&\
+    curl https://codeload.github.com/doctest/doctest/tar.gz/refs/tags/v2.4.9 > doctest-2.4.9.tar.gz             &&\
+    tar xvf doctest-2.4.9.tar.gz                                                                                &&\
+    cd doctest-2.4.9                                                                                            &&\
     clang++-${LLVM_VERSION} $FLAGS_DOCTEST -c doctest/parts/doctest.cpp -o libdoctest.a                         &&\
     mv libdoctest.a /usr/lib                                                                                    &&\
     cd ..                                                                                                       &&\
-    rm -r doctest-2.4.6.tar.gz doctest-2.4.6                                                                    &&\
-    curl https://www.sqlite.org/2021/sqlite-autoconf-3360000.tar.gz > sqlite-autoconf-3360000.tar.gz            &&\
-    tar xvf sqlite-autoconf-3360000.tar.gz                                                                      &&\
-    cd sqlite-autoconf-3360000                                                                                  &&\
+    rm -r doctest-2.4.9.tar.gz doctest-2.4.9                                                                    &&\
+    curl https://www.sqlite.org/2022/sqlite-autoconf-3390200.tar.gz > sqlite-autoconf-3390200.tar.gz            &&\
+    tar xvf sqlite-autoconf-3390200.tar.gz                                                                      &&\
+    cd sqlite-autoconf-3390200                                                                                  &&\
     clang-${LLVM_VERSION} $FLAGS_SQLITE3 -c sqlite3.c -o libsqlite3.a                                           &&\
     mv libsqlite3.a /usr/lib                                                                                    &&\
     cd ..                                                                                                       &&\
-    rm -r sqlite-autoconf-3360000 sqlite-autoconf-3360000.tar.gz                                                &&\
-    git clone --progress --depth 1 --branch v1.5.2 https://github.com/nanomsg/nng.git                           &&\
+    rm -r sqlite-autoconf-3390200 sqlite-autoconf-3390200.tar.gz                                                &&\
+    git clone --progress --depth 1 https://github.com/nanomsg/nng.git                                           &&\
     cd nng                                                                                                      &&\
+    git checkout d065bab35a614d394d21b87aba44879f3ecb977d                                                       &&\
     cmake -G Ninja                                                                                              &&\
     ninja                                                                                                       &&\
     mv libnng.a /usr/lib                                                                                        &&\
     mv ./src/tools/nngcat/nngcat /usr/bin                                                                       &&\
     cd ..                                                                                                       &&\
     rm -rf nng                                                                                                  &&\
-    git clone --progress --depth 1 --branch v19 https://github.com/camgunz/cmp.git                              &&\
+    git clone --progress --depth 1 https://github.com/camgunz/cmp.git                                           &&\
     cd cmp                                                                                                      &&\
+    git checkout e836703291392aba9db92b46fb47929521fac71f                                                       &&\
     clang-${LLVM_VERSION} $FLAGS_CMP -c cmp.c -o libcmp.a                                                       &&\
     mv libcmp.a /usr/lib                                                                                        &&\
     cd ..                                                                                                       &&\
@@ -105,9 +107,9 @@ RUN set -ex                                                                     
     mv src/tools/wasp /usr/bin                                                                                  &&\
     cd ..                                                                                                       &&\
     rm -r wasp                                                                                                  &&\
-    git clone --progress --depth 1 https://github.com/wasm3/wasm3.git                                           &&\
+    git clone --progress --depth 1 https://github.com/matovitch/wasm3.git                                       &&\
     cd wasm3                                                                                                    &&\
-    git checkout 9dcfce271c2fac86823725fc9ec0f75309d820e4                                                       &&\
+    git checkout f3e179a26c82707df3dfba5a4b652c7b641ea6e3                                                       &&\
     cmake -G Ninja                                                                                              &&\
     ninja                                                                                                       &&\
     mv source/libm3.a /usr/lib                                                                                  &&\
