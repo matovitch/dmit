@@ -161,7 +161,7 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
 
         _oss << "{\"node\":\"Variable Declaration\",";
 
-        if (!dclVariableIdx._isInterface && dclVariable._status == ast::node::Status::IDENTIFIED)
+        if (dclVariable._status == ast::node::Status::IDENTIFIED)
         {
             _oss << "\"id\":\"" << dclVariable._id << "\",";
         }
