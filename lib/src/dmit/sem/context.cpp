@@ -71,7 +71,11 @@ void Context::run()
     for (auto key : _unlockSet)
     {
         auto fit = _lockMap.find(key);
-        _scheduler.detachAll(fit->second);
+
+        if (fit != _lockMap.end())
+        {
+            _scheduler.detachAll(fit->second);
+        }
     }
 
     _unlockSet.clear();

@@ -58,7 +58,7 @@ com::UniqueId makeId(State::NodePool& pool, const VIndex vIndex)
 {
     IdVisitor idVisitor{pool};
 
-    return std::visit(idVisitor, vIndex._variant);
+    return std::visit(idVisitor, vIndex);
 }
 
 } // namespace dmit::ast::node::v_index

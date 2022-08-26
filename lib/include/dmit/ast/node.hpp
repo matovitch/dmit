@@ -187,6 +187,8 @@ struct TNode<node::Kind::DEF_CLASS>
     node::TIndex<node::Kind::IDENTIFIER > _name;
     node::TRange<node::Kind::TYPE_CLAIM > _members;
 
+    node::VIndex _parent;
+
     com::UniqueId _id;
 
     node::Status _status;
@@ -200,6 +202,8 @@ struct TNode<node::Kind::DEF_FUNCTION>
     node::TIndex<node::Kind::SCOPE        > _body;
 
     std::optional<node::TIndex<node::Kind::TYPE>> _returnType;
+
+    node::VIndex _parent;
 
     com::UniqueId _id;
 
@@ -256,6 +260,10 @@ template <>
 struct TNode<node::Kind::SCOPE>
 {
     node::TRange<node::Kind::SCOPE_VARIANT> _variants;
+
+    node::VIndex _parent;
+
+    com::UniqueId _id;
 };
 
 template <>

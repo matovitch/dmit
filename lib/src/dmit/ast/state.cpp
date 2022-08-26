@@ -60,6 +60,7 @@ void Builder::makeLexeme(const dmit::prs::Reader& reader,
 {
     lexeme._index  = reader.look()._start;
     lexeme._source = _state._source;
+    com::blitDefault(lexeme._token);
 }
 
 void Builder::makeReturn(dmit::prs::Reader& reader,

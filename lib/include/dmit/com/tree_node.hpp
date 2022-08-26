@@ -72,18 +72,6 @@ struct TMetaNode
         uint32_t _value   : 31;
     };
 
-    struct VIndex
-    {
-        using Variant = typename TTVector<TIndex, std::variant>::Type;
-
-        VIndex() : _variant{} {}
-
-        template <TEnumIntegerType<Kind> KIND>
-        VIndex(const TIndex<KIND> index) : _variant{index} {}
-
-        Variant _variant;
-    };
-
     template <TEnumIntegerType<Kind> KIND>
     struct TRange
     {
@@ -99,24 +87,14 @@ struct TMetaNode
         TIndex<KIND> _index;
         uint32_t _size;
     };
+
+    using VIndex = typename TTVector<TIndex, std::variant>::Type;
 };
 
 template <class Kind, TEnumIntegerType<Kind> KIND>
 typename TMetaNode<Kind>::template TIndex<KIND> as(const typename TMetaNode<Kind>::Index index)
 {
     return index;
-}
-
-template <class Kind, TEnumIntegerType<Kind> KIND>
-typename TMetaNode<Kind>::template TIndex<KIND> as(const typename TMetaNode<Kind>::template TIndex<KIND> index)
-{
-    return index;
-}
-
-template <class Kind, TEnumIntegerType<Kind> KIND>
-typename TMetaNode<Kind>::template TIndex<KIND> as(const typename TMetaNode<Kind>::VIndex& index)
-{
-    return std::get<TMetaNode<Kind>::TIndex<KIND>>(index);
 }
 
 namespace v_index
@@ -139,7 +117,7 @@ struct THasher
     {
         THashVisitor<Kind> hashVisitor;
 
-        return std::visit(hashVisitor, vIndex._variant);
+        return std::visit(hashVisitor, vIndex);
     }
 };
 
@@ -149,8 +127,7 @@ struct TComparator
     bool operator()(const typename TMetaNode<Kind>::VIndex lhs,
                     const typename TMetaNode<Kind>::VIndex rhs) const
     {
-        return lhs._variant ==
-               rhs._variant;
+        return lhs == rhs;
     }
 };
 
@@ -184,7 +161,7 @@ bool isInterface(const typename TMetaNode<Kind>::VIndex vIndex)
 {
     TIsInterfaceVisitor<Kind> isInterfaceVisitor;
 
-    return std::visit(isInterfaceVisitor, vIndex._variant);
+    return std::visit(isInterfaceVisitor, vIndex);
 }
 
 template <class Kind>
@@ -192,7 +169,7 @@ uint32_t value(const typename TMetaNode<Kind>::VIndex vIndex)
 {
     TValueVisitor<Kind> valueVisitor;
 
-    return std::visit(valueVisitor, vIndex._variant);
+    return std::visit(valueVisitor, vIndex);
 }
 
 } // namespace v_index
