@@ -101,6 +101,7 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
         base()(srceLexeme._source);
 
         destLexeme._index = srceLexeme._index;
+        com::blitDefault(destLexeme._token);
     }
 
     void operator()(node::TIndex<node::Kind::LIT_INTEGER> srceIntegerIdx)
@@ -176,6 +177,9 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
         auto blitterRhs = blitter::make(_destNodePool, destBinop._rhs);
         _stackPtrIn->_index = blitterRhs(srceBinop._rhs);
         base()(srceBinop._rhs);
+
+        destBinop._status =
+        srceBinop._status;
     }
 
     void operator()(node::TIndex<node::Kind::DCL_IMPORT> srceImportIdx)

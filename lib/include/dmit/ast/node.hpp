@@ -285,6 +285,10 @@ struct TNode<node::Kind::EXP_BINOP>
 
     Expression _lhs;
     Expression _rhs;
+
+    node::VIndex _asVIndex;
+
+    node::Status _status;
 };
 
 template <>

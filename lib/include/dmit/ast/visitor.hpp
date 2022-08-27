@@ -4,6 +4,8 @@
 #include "dmit/ast/state.hpp"
 #include "dmit/ast/node.hpp"
 
+#include "dmit/lex/token.hpp"
+
 #include "dmit/src/slice.hpp"
 
 #include "dmit/com/tree_visitor.hpp"
@@ -36,6 +38,11 @@ struct TVisitor : TBaseVisitor<Derived, StackIn, StackOut>
     TVisitor(State::NodePool& nodePool) :
         TBaseVisitor<Derived, StackIn, StackOut>{nodePool}
     {}
+
+    lex::Token getToken(const node::TIndex<node::Kind::LEXEME> lexemeIdx)
+    {
+        return lexeme::getToken(lexemeIdx, TBaseVisitor<Derived, StackIn, StackOut>::_nodePool);
+    }
 
     src::Slice getSlice(const node::TIndex<node::Kind::LEXEME> lexemeIdx)
     {

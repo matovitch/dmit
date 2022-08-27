@@ -33,7 +33,7 @@ int8_t analyze(ast::Bundle& bundle, Context& context, InterfaceMap& interfaceMap
         [&]()
         {
             bind  (bundle, context, interfaceMap);
-            check (bundle, context);
+            check (bundle, context, interfaceMap);
         },
         context._coroutinePoolLarge
     );

@@ -43,4 +43,17 @@ UniqueId::UniqueId(const uint8_t* const data, const uint64_t size)
     dmit::com::murmur::hash(data, size, *this);
 }
 
+UniqueId::UniqueId(const uint64_t halfL,
+                   const uint64_t halfH) :
+    _halfL{halfL},
+    _halfH{halfH}
+{}
+
+bool operator==(const com::UniqueId& lhs,
+                const com::UniqueId& rhs)
+{
+    return lhs._halfL == rhs._halfL &&
+           lhs._halfH == rhs._halfH;
+}
+
 } // namespace dmit::com

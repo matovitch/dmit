@@ -136,6 +136,8 @@ void Builder::makeStatement(const dmit::prs::Reader& reader,
 void Builder::makeBinop(dmit::prs::Reader& reader,
                         TNode<node::Kind::EXP_BINOP>& binop)
 {
+    binop._status = node::Status::ASTED;
+
     // RHS
     makeExpression(reader, binop._rhs);
     reader.advance();

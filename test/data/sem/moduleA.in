@@ -2,6 +2,6 @@ module builtin;
 
 export class u64 {}
 export class i64 {}
-export class lit_int {}
+export class int {}
 
-export func add_i64(x : i64, y: lit_int) -> i64 {}
+export func add_i64_int(x : i64, y: int) -> i64 {}

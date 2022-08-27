@@ -134,6 +134,23 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
         auto& expBinop = get(expBinopIdx);
 
         _oss << "{\"node\":\"Binary Operation\",";
+
+        if (expBinop._status == ast::node::Status::BOUND)
+        {
+            _oss << "\"id\":\"";
+
+            if (com::tree::v_index::isInterface<ast::node::Kind>(expBinop._asVIndex) && _interfacePoolOpt)
+            {
+                _oss << ast::node::v_index::makeId(_interfacePoolOpt.value().get(), expBinop._asVIndex);
+            }
+            else
+            {
+                _oss << ast::node::v_index::makeId(_nodePool, expBinop._asVIndex);
+            }
+
+            _oss << "\",";
+        }
+
         _oss << "\"operator\":" ; base()(expBinop._operator ); _oss << ",";
         _oss << "\"lhs\":"      ; base()(expBinop._lhs      ); _oss << ",";
         _oss << "\"rhs\":"      ; base()(expBinop._rhs      ); _oss << "}";
