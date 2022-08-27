@@ -309,12 +309,15 @@ Builder::Builder() :
 
     rawFunction = seq(keyFunc, identifier, funArguments, opt(seq(minusKetRight, identifier)), scope);
 
-    skpFunction = seq(opt(tok<lex::Token::FUNC>()), skp(alt(tok<lex::Token::FUNC>(),
-                                                            tok<lex::Token::CLASS>(),
-                                                            tok<lex::Token::MODULE>(),
-                                                            tok<lex::Token::EXPORT>(),
-                                                            tok<lex::Token::IMPORT>(),
-                                                            tok<lex::Token::BRA_RIGHT>())));
+    skpFunction = seq(opt(tok<lex::Token::FUNC>()),
+                      skp(alt(tok<lex::Token::FUNC>(),
+                              tok<lex::Token::CLASS>(),
+                              tok<lex::Token::MODULE>(),
+                              tok<lex::Token::EXPORT>(),
+                              tok<lex::Token::IMPORT>(),
+                              tok<lex::Token::BRA_RIGHT>())),
+                      opt(tok<lex::Token::BRA_RIGHT>()));
+
     rcvFunction = alt(rawFunction,
                       skpFunction);
 
@@ -324,25 +327,33 @@ Builder::Builder() :
 
     rawClass = seq(keyClass, identifier, clsMembers);
 
-    skpClass = seq(opt(tok<lex::Token::CLASS>()), skp(alt(tok<lex::Token::FUNC>(),
-                                                          tok<lex::Token::CLASS>(),
-                                                          tok<lex::Token::MODULE>(),
-                                                          tok<lex::Token::EXPORT>(),
-                                                          tok<lex::Token::IMPORT>(),
-                                                          tok<lex::Token::BRA_RIGHT>())));
+    skpClass = seq(opt(tok<lex::Token::CLASS>()),
+                   skp(alt(tok<lex::Token::FUNC>(),
+                           tok<lex::Token::CLASS>(),
+                           tok<lex::Token::MODULE>(),
+                           tok<lex::Token::EXPORT>(),
+                           tok<lex::Token::IMPORT>(),
+                           tok<lex::Token::BRA_RIGHT>())),
+                   opt(tok<lex::Token::BRA_RIGHT>()));
+
     rcvClass = alt(rawClass,
                    skpClass);
+
+    // Definition
 
     rawExport = keyExport;
 
     rawDefinition = seq(opt(rawExport), alt(rcvFunction, rcvClass));
 
-    skpDefinition = seq(opt(tok<lex::Token::EXPORT>()), skp(alt(tok<lex::Token::FUNC>(),
-                                                                tok<lex::Token::CLASS>(),
-                                                                tok<lex::Token::MODULE>(),
-                                                                tok<lex::Token::EXPORT>(),
-                                                                tok<lex::Token::IMPORT>(),
-                                                                tok<lex::Token::BRA_RIGHT>())));
+    skpDefinition = seq(opt(tok<lex::Token::EXPORT>()),
+                        skp(alt(tok<lex::Token::FUNC>(),
+                                tok<lex::Token::CLASS>(),
+                                tok<lex::Token::MODULE>(),
+                                tok<lex::Token::EXPORT>(),
+                                tok<lex::Token::IMPORT>(),
+                                tok<lex::Token::BRA_RIGHT>())),
+                        opt(tok<lex::Token::BRA_RIGHT>()));
+
     rcvDefinition = alt(rawDefinition, skpDefinition);
 
     // Import
