@@ -123,7 +123,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
         _stackPtrIn->_index = destIdentifier._lexeme;
         base()(srceIdentifier._lexeme);
 
-        destIdentifier._status = ast::node::Status::ASTED;
+        destIdentifier._status = node::Status::ASTED;
     }
 
     void operator()(node::TIndex<node::Kind::EXP_BINOP> srceBinopIdx)
@@ -144,6 +144,8 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
         auto blitterRhs = makeBlitter(destBinop._rhs);
         _stackPtrIn->_index = blitterRhs(srceBinop._rhs);
         base()(srceBinop._rhs);
+
+        destBinop._status = node::Status::ASTED;
     }
 
     void operator()(node::TIndex<node::Kind::TYPE> srceTypeIdx)
@@ -185,7 +187,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
         _stackPtrIn->_index = destDclVariable._typeClaim;
         base()(srceDclVariable._typeClaim);
 
-        destDclVariable._status = ast::node::Status::ASTED;
+        destDclVariable._status = node::Status::ASTED;
     }
 
     void operator()(node::TIndex<node::Kind::DCL_IMPORT> srceImportIdx)
@@ -231,7 +233,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
             com::blitDefault(destFunction._returnType);
         }
 
-        destFunction._status = ast::node::Status::ASTED;
+        destFunction._status = node::Status::ASTED;
     }
 
     void operator()(node::TIndex<node::Kind::DEF_CLASS> srceDefClassIdx)
@@ -248,7 +250,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
         copyRange(srceDefClass._members,
                   destDefClass._members);
 
-        destDefClass._status = ast::node::Status::ASTED;
+        destDefClass._status = node::Status::ASTED;
     }
 
     void operator()(node::TIndex<node::Kind::PARENT_PATH> srceParentPathIdx)

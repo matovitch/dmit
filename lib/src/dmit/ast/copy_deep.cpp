@@ -397,7 +397,8 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
 
         make(destModule._modules, 0);
 
-        com::blit(srceModule._id, destModule._id);
+        com::blit(srceModule._id,
+                  destModule._id);
 
         // Copy parent path
 
