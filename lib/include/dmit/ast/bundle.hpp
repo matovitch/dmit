@@ -7,6 +7,8 @@
 
 #include "dmit/com/option_reference.hpp"
 
+#include <cstdint>
+
 namespace dmit::ast
 {
 
@@ -15,6 +17,8 @@ struct Bundle : fmt::Formatable
     using NodePool = typename State::NodePool;
 
     Bundle(NodePool&);
+
+    uint32_t nbDefinition() const;
 
     NodePool& _nodePool;
 
