@@ -404,7 +404,7 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
 
         com::blitDefault(destModule._parentPath);
 
-        auto parent = node::as<node::Kind::MODULE>(srceModule._parent);
+        auto parent = srceModule._parent;
 
         while (get(parent)._path)
         {
@@ -419,7 +419,7 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
             base()(parentPath);
 
             destModuleParentPath._next = prefix;
-            parent = node::as<node::Kind::MODULE>(get(parent)._parent);
+            parent = get(parent)._parent;
         }
 
         destModule._status =

@@ -97,6 +97,18 @@ typename TMetaNode<Kind>::template TIndex<KIND> as(const typename TMetaNode<Kind
     return index;
 }
 
+template <class Kind, TEnumIntegerType<Kind> KIND>
+typename TMetaNode<Kind>::template TIndex<KIND> as(const typename TMetaNode<Kind>::template TIndex<KIND> index)
+{
+    return index;
+}
+
+template <class Kind, TEnumIntegerType<Kind> KIND>
+typename TMetaNode<Kind>::template TIndex<KIND> as(const typename TMetaNode<Kind>::VIndex& index)
+{
+    return std::get<typename TMetaNode<Kind>::template TIndex<KIND>>(index);
+}
+
 namespace v_index
 {
 

@@ -114,6 +114,16 @@ using TRange = typename com::tree::TMetaNode<Kind>::template TRange<KIND>;
 template <com::TEnumIntegerType<Kind> KIND>
 using TIndex = typename com::tree::TMetaNode<Kind>::template TIndex<KIND>;
 
+using VIndex = typename com::tree::TMetaNode<Kind>::VIndex;
+
+using Index = typename com::tree::TMetaNode<Kind>::Index;
+
+template <com::TEnumIntegerType<Kind> KIND>
+auto as = [](auto value) -> TIndex<KIND>
+{
+    return com::tree::as<Kind, KIND>(value);
+};
+
 } // namespace node
 
 template <com::TEnumIntegerType<node::Kind> KIND>
