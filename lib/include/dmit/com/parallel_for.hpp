@@ -5,6 +5,7 @@
 
 #include <functional>
 #include <cstdint>
+#include <utility>
 #include <thread>
 
 namespace dmit::com
@@ -43,7 +44,7 @@ public:
 
         for (int i = 0; i < size(); ++i)
         {
-            bundles.emplace_back(result(i));
+            bundles.emplace_back(std::move(result(i)));
         }
 
         return bundles;
@@ -56,7 +57,7 @@ public:
 
 private:
 
-    const Type& result(uint64_t index) const
+    Type& result(uint64_t index)
     {
         return _concurrentQueue[index];
     }

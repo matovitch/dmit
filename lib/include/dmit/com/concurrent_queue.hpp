@@ -27,7 +27,7 @@ public:
         return (_storage.data())[concurrentU64._value];
     }
 
-    const Type& operator[](const uint64_t index) const
+    Type& operator[](const uint64_t index)
     {
         return (_storage.data())[index];
     }

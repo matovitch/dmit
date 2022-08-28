@@ -4,6 +4,7 @@ ifeq (@(IS_BUILDING_BINARIES),y)
 endif
 
 # Note: The linker need the libs in topological order
+CLFLAGS += -l wasm3
 CLFLAGS += -l schmit
 CLFLAGS += -l dmit_db
 CLFLAGS += -l dmit_nng
@@ -15,6 +16,8 @@ CLFLAGS += -l dmit_src
 CLFLAGS += -l dmit_prs
 CLFLAGS += -l dmit_ast
 CLFLAGS += -l dmit_sem
+CLFLAGS += -l dmit_gen
+CLFLAGS += -l dmit_wsm
 CLFLAGS += -l dmit_vm
 CLFLAGS += -l dmit_rt
 CLFLAGS += -l sqlite3
@@ -22,8 +25,10 @@ CLFLAGS += -l nng
 CLFLAGS += -l cmp
 CLFLAGS += -l stdc++fs
 CLFLAGS += -l pthread
+CLFLAGS += -l m3
 CLFLAGS += -l dl
 
+CLFLAGS += -L $(VARIANT)/lib/src/wasm3
 CLFLAGS += -L $(VARIANT)/lib/src/schmit
 CLFLAGS += -L $(VARIANT)/lib/src/dmit/db
 CLFLAGS += -L $(VARIANT)/lib/src/dmit/nng
@@ -35,6 +40,8 @@ CLFLAGS += -L $(VARIANT)/lib/src/dmit/src
 CLFLAGS += -L $(VARIANT)/lib/src/dmit/prs
 CLFLAGS += -L $(VARIANT)/lib/src/dmit/ast
 CLFLAGS += -L $(VARIANT)/lib/src/dmit/sem
+CLFLAGS += -L $(VARIANT)/lib/src/dmit/gen
+CLFLAGS += -L $(VARIANT)/lib/src/dmit/wsm
 CLFLAGS += -L $(VARIANT)/lib/src/dmit/vm
 CLFLAGS += -L $(VARIANT)/lib/src/dmit/rt
 

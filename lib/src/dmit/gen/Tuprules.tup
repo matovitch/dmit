@@ -1,0 +1,2 @@
+LIB_DMIT_GEN_CPP = $(LIB_SRC)/dmit/gen/*.cpp
+LIB_DMIT_GEN_OUT = libdmit_gen.a

@@ -4,7 +4,6 @@
 #include "dmit/wsm/wasm.hpp"
 
 #include "dmit/com/storage.hpp"
-#include "dmit/com/endian.hpp"
 #include "dmit/com/blit.hpp"
 
 #include "wasm3/wasm3.hpp"

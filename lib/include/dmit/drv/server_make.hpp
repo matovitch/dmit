@@ -3,6 +3,8 @@
 #include "dmit/drv/server_reply.hpp"
 #include "dmit/drv/reply.hpp"
 
+#include "dmit/gen/emitter.hpp"
+
 #include "dmit/sem/interface_map.hpp"
 #include "dmit/sem/import_graph.hpp"
 #include "dmit/sem/fact_map.hpp"
@@ -92,7 +94,13 @@ void make(nng::Socket& socket, db::Database& database)
         DMIT_COM_LOG_OUT << bundle << '\n';
     }
 
-    // 7. Write reply
+    // 7. Code generation
+
+    com::TParallelFor<gen::Emitter> parallelGenerationEmitter{interfaceMap,
+                                                              bundles};
+    auto&& bins = parallelGenerationEmitter.makeVector();
+
+    // 8. Write reply
 
     replyWith(socket, Reply::OK);
 }

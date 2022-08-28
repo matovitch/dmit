@@ -2,6 +2,7 @@ include_rules
 
 : foreach $(BIN_CPP) |> !cx |> %B.o <obj>
 : foreach $(BIN_OBJ) | <obj>                        \
+                             $(ROOT)/<lib_wasm3>    \
                              $(ROOT)/<lib_schmit>   \
                              $(ROOT)/<lib_dmit_db>  \
                              $(ROOT)/<lib_dmit_nng> \
@@ -13,6 +14,8 @@ include_rules
                              $(ROOT)/<lib_dmit_prs> \
                              $(ROOT)/<lib_dmit_ast> \
                              $(ROOT)/<lib_dmit_sem> \
+                             $(ROOT)/<lib_dmit_gen> \
+                             $(ROOT)/<lib_dmit_wsm> \
                              $(ROOT)/<lib_dmit_vm>  \
                              $(ROOT)/<lib_dmit_rt>  \
                                                     |> !cl |> %B.bin $(ROOT)/<bin>

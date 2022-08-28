@@ -3,7 +3,6 @@
 #include <type_traits>
 #include <cstdint>
 
-
 namespace dmit::com
 {
 
@@ -14,9 +13,19 @@ class TStorage
                                           alignof(Type)>;
 public:
 
-    TStorage(std::size_t size) :
+    TStorage(uint64_t size) :
+        _size{size},
         _buckets{new Bucket[size]}
     {}
+
+    TStorage(const TStorage<Type>&) = delete;
+
+    TStorage(TStorage<Type>&& storage) :
+        _size    {storage._size},
+        _buckets {storage._buckets}
+    {
+        storage._buckets = nullptr;
+    }
 
     Type* data() const
     {
@@ -25,9 +34,16 @@ public:
 
     ~TStorage()
     {
+        if (!_buckets)
+        {
+            return;
+        }
+
         delete[] _buckets;
         _buckets = nullptr;
     }
+
+    const uint64_t _size;
 
 private:
 

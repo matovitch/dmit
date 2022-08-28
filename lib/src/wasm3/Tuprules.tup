@@ -1,0 +1,2 @@
+LIB_WASM3_CPP = $(LIB_SRC)/wasm3/*.cpp
+LIB_WASM3_OUT = libwasm3.a

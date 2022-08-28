@@ -1,0 +1,5 @@
+include_rules
+
+: foreach $(LIB_WASM3_CPP) |> !cx |> %B.o <obj>
+
+: <obj> |> !lx |> $(LIB_WASM3_OUT) $(ROOT)/<lib_wasm3>
