@@ -17,10 +17,10 @@ namespace dmit::sem
 namespace
 {
 
-static const com::UniqueId K_TYPE_I64{0x7d516e355461f852, 0xeb2349989392e0bb};
-static const com::UniqueId K_TYPE_INT{0x705a28814eebca10, 0xb928e2c4dc06b2ae};
+const com::UniqueId K_TYPE_I64{0x7d516e355461f852, 0xeb2349989392e0bb};
+const com::UniqueId K_TYPE_INT{0x705a28814eebca10, 0xb928e2c4dc06b2ae};
 
-static const com::UniqueId K_FUNC_ADD_I64_LIT_INT{0xce6a2caefab56273, 0xbedcc1c288a680af};
+const com::UniqueId K_FUNC_ADD_I64_LIT_INT{0xce6a2caefab56273, 0xbedcc1c288a680af};
 
 struct StackDummy {};
 
