@@ -43,8 +43,7 @@ struct Wasmer : ast::TVisitor<Wasmer, StackIn>
         _stackPtrIn->_cursor = moduleIdx;
     }
 
-    void operator()(ast::node::TIndex<ast::node::Kind::DEF_CLASS    >){}
-
+    void operator()(ast::node::TIndex<ast::node::Kind::DEF_CLASS>){}
 
     void operator()(ast::node::TIndex<ast::node::Kind::DEF_FUNCTION> functionIdx)
     {
