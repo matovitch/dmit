@@ -18,9 +18,7 @@ TEST_CASE("wsm_add")
 
     dmit::wsm::node::TIndex<dmit::wsm::node::Kind::MODULE> moduleIdx;
 
-    nodePool.make(moduleIdx);
-
-    auto& module = nodePool.get(moduleIdx);
+    auto& module = nodePool.makeGet(moduleIdx);
 
     nodePool.make(module._types        , 1);
     nodePool.make(module._funcs        , 1);
@@ -37,11 +35,8 @@ TEST_CASE("wsm_add")
 
     auto& typeFunc = nodePool.get(module._types[0]);
 
-    nodePool.make(typeFunc.   _domain);
-    nodePool.make(typeFunc. _codomain);
-
-    auto&   domain = nodePool.get(typeFunc.   _domain);
-    auto& codomain = nodePool.get(typeFunc. _codomain);
+    auto&   domain = nodePool.makeGet(typeFunc.   _domain);
+    auto& codomain = nodePool.makeGet(typeFunc. _codomain);
 
     nodePool.make(  domain._valTypes, 2);
     nodePool.make(codomain._valTypes, 1);
@@ -73,13 +68,9 @@ TEST_CASE("wsm_add")
     dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_LOCAL_GET > instLocalGet_1;
     dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_I32       > instAdd;
 
-    nodePool.make(instLocalGet_0);
-    nodePool.make(instLocalGet_1);
-    nodePool.make(instAdd);
-
-    nodePool.get(instLocalGet_0)._localIdx = 0;
-    nodePool.get(instLocalGet_1)._localIdx = 1;
-    nodePool.get(instAdd)._asEnum = dmit::wsm::NumericInstruction::ADD;
+    nodePool.makeGet(instLocalGet_0)._localIdx = 0;
+    nodePool.makeGet(instLocalGet_1)._localIdx = 1;
+    nodePool.makeGet(instAdd)._asEnum = dmit::wsm::NumericInstruction::ADD;
 
     dmit::com::blit(instLocalGet_0 , localsGet_0._asVariant);
     dmit::com::blit(instLocalGet_1 , localsGet_1._asVariant);
@@ -89,12 +80,9 @@ TEST_CASE("wsm_add")
 
     dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_REF_FUNC> funcRefIdx;
 
-    nodePool.make(export_._name);
-    nodePool.make(funcRefIdx);
+    nodePool.makeGet(funcRefIdx)._funcIdx = 1;
 
-    nodePool.get(funcRefIdx)._funcIdx = 1;
-
-    auto& name = nodePool.get(export_._name);
+    auto& name = nodePool.makeGet(export_._name);
 
     nodePool.make(name._bytes, 3);
 
@@ -149,9 +137,7 @@ TEST_CASE("wsm_increment")
 
     dmit::wsm::node::TIndex<dmit::wsm::node::Kind::MODULE> moduleIdx;
 
-    nodePool.make(moduleIdx);
-
-    auto& module = nodePool.get(moduleIdx);
+    auto& module = nodePool.makeGet(moduleIdx);
 
     nodePool.make(module._types        , 1);
     nodePool.make(module._funcs        , 1);
@@ -168,11 +154,8 @@ TEST_CASE("wsm_increment")
 
     auto& typeFunc = nodePool.get(module._types[0]);
 
-    nodePool.make(typeFunc.   _domain);
-    nodePool.make(typeFunc. _codomain);
-
-    auto&   domain = nodePool.get(typeFunc.   _domain);
-    auto& codomain = nodePool.get(typeFunc. _codomain);
+    auto&   domain = nodePool.makeGet(typeFunc.   _domain);
+    auto& codomain = nodePool.makeGet(typeFunc. _codomain);
 
     nodePool.make(  domain._valTypes, 1);
     nodePool.make(codomain._valTypes, 1);
@@ -209,17 +192,11 @@ TEST_CASE("wsm_increment")
     dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_LOCAL_SET > instLocalSet_1;
     dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_LOCAL_GET > instLocalGet_1;
 
-    nodePool.make(instLocalGet_0);
-    nodePool.make(instConst);
-    nodePool.make(instAdd);
-    nodePool.make(instLocalSet_1);
-    nodePool.make(instLocalGet_1);
-
-    nodePool.get(instLocalGet_0)._localIdx = 0;
-    nodePool.get(instConst)._value = 1;
-    nodePool.get(instAdd)._asEnum = dmit::wsm::NumericInstruction::ADD;
-    nodePool.get(instLocalSet_1)._localIdx = 1;
-    nodePool.get(instLocalGet_1)._localIdx = 1;
+    nodePool.makeGet(instLocalGet_0)._localIdx = 0;
+    nodePool.makeGet(instConst)._value = 1;
+    nodePool.makeGet(instAdd)._asEnum = dmit::wsm::NumericInstruction::ADD;
+    nodePool.makeGet(instLocalSet_1)._localIdx = 1;
+    nodePool.makeGet(instLocalGet_1)._localIdx = 1;
 
     dmit::com::blit(instLocalGet_0 , localGet_0._asVariant);
     dmit::com::blit(instLocalGet_1 , localGet_1._asVariant);
@@ -231,12 +208,9 @@ TEST_CASE("wsm_increment")
 
     dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_REF_FUNC> funcRefIdx;
 
-    nodePool.make(export_._name);
-    nodePool.make(funcRefIdx);
+    nodePool.makeGet(funcRefIdx)._funcIdx = 1;
 
-    nodePool.get(funcRefIdx)._funcIdx = 1;
-
-    auto& name = nodePool.get(export_._name);
+    auto& name = nodePool.makeGet(export_._name);
 
     nodePool.make(name._bytes, 9);
 

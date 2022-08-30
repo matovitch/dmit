@@ -58,11 +58,8 @@ struct Wasmer : ast::TVisitor<Wasmer, StackIn>
 
         auto& typeFunc = _poolWasm.get(module._types[_indexType]);
 
-        _poolWasm.make(typeFunc.   _domain);
-        _poolWasm.make(typeFunc. _codomain);
-
-        auto&   domain = _poolWasm.get(typeFunc.   _domain);
-        auto& codomain = _poolWasm.get(typeFunc. _codomain);
+        auto&   domain = _poolWasm.makeGet(typeFunc.   _domain);
+        auto& codomain = _poolWasm.makeGet(typeFunc. _codomain);
 
         // Build the domain
 
@@ -72,9 +69,8 @@ struct Wasmer : ast::TVisitor<Wasmer, StackIn>
         {
             auto vIndex = get(get(get(get(function._arguments[i])._typeClaim)._type)._name)._asVIndex;
 
-            auto id = (com::tree::v_index::isInterface<ast::node::Kind>(vIndex)) ?
-                ast::node::v_index::makeId(_interfaceMap._astNodePool, vIndex)   :
-                ast::node::v_index::makeId(_nodePool, vIndex);
+            auto id = isInterface(vIndex) ? ast::node::v_index::makeId(_interfaceMap._astNodePool, vIndex)
+                                          : ast::node::v_index::makeId(_nodePool, vIndex);
 
             if (id == K_TYPE_I64)
             {
@@ -94,9 +90,8 @@ struct Wasmer : ast::TVisitor<Wasmer, StackIn>
 
         auto vIndex = get(get(function._returnType.value())._name)._asVIndex;
 
-        auto id = (com::tree::v_index::isInterface<ast::node::Kind>(vIndex)) ?
-                ast::node::v_index::makeId(_interfaceMap._astNodePool, vIndex)   :
-                ast::node::v_index::makeId(_nodePool, vIndex);
+        auto id = isInterface(vIndex) ? ast::node::v_index::makeId(_interfaceMap._astNodePool, vIndex)
+                                      : ast::node::v_index::makeId(_nodePool, vIndex);
 
         if (id == K_TYPE_I64)
         {
@@ -170,13 +165,11 @@ com::TStorage<uint8_t> make(sem::InterfaceMap& interfaceMap,
 
     wsm::node::TIndex<wsm::node::Kind::MODULE> moduleIdx;
 
-    poolWasm.make(moduleIdx);
+    auto& module = poolWasm.makeGet(moduleIdx);
 
-    auto& module = poolWasm.get(moduleIdx);
-
-    poolWasm.make(module._types        , nbDefinition);
-    poolWasm.make(module._funcs        , nbDefinition);
-    poolWasm.make(module._exports      , nbDefinition);
+    poolWasm.make(module._types   , nbDefinition);
+    poolWasm.make(module._funcs   , nbDefinition);
+    poolWasm.make(module._exports , nbDefinition);
 
     {
         Wasmer wasmer{bundle._nodePool, poolWasm, interfaceMap, moduleIdx};

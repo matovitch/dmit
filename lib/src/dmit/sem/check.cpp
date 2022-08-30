@@ -57,14 +57,8 @@ struct Typer : ast::TVisitor<Typer, StackDummy, Stack>
     {
         auto vIndex = get(get(get(get(dclVariableIdx)._typeClaim)._type)._name)._asVIndex;
 
-        if (com::tree::v_index::isInterface<ast::node::Kind>(vIndex))
-        {
-            _stackPtrOut->_id = ast::node::v_index::makeId(_interfaceMap._astNodePool, vIndex);
-        }
-        else
-        {
-            _stackPtrOut->_id = ast::node::v_index::makeId(_nodePool, vIndex);
-        }
+        _stackPtrOut->_id = isInterface(vIndex) ? ast::node::v_index::makeId(_interfaceMap._astNodePool, vIndex)
+                                                : ast::node::v_index::makeId(_nodePool, vIndex);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::LIT_INTEGER>)

@@ -90,6 +90,23 @@ struct TTMetaPool
         }
 
         template <TEnumIntegerType<Kind> KIND>
+        TNode<KIND>& makeGet(TIndex<KIND>& index)
+        {
+            index = std::get<KIND>(_subs).make();
+
+            return get<KIND>(index);
+        }
+
+        template <TEnumIntegerType<Kind> KIND>
+        TNode<KIND>& makeGet(std::optional<TIndex<KIND>>& indexOpt)
+        {
+            blitDefault(indexOpt);
+            indexOpt = std::get<KIND>(_subs).make();
+
+            return get<KIND>(indexOpt.value());
+        }
+
+        template <TEnumIntegerType<Kind> KIND>
         void make(TIndex<KIND>& index)
         {
             index = std::get<KIND>(_subs).make();

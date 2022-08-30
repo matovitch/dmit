@@ -9,6 +9,7 @@
 #include "dmit/src/slice.hpp"
 
 #include "dmit/com/tree_visitor.hpp"
+#include "dmit/com/tree_node.hpp"
 #include "dmit/com/assert.hpp"
 #include "dmit/com/enum.hpp"
 
@@ -52,6 +53,11 @@ struct TVisitor : TBaseVisitor<Derived, StackIn, StackOut>
     src::Slice getSlice(const node::TIndex<node::Kind::IDENTIFIER> idenfifierIdx)
     {
         return getSlice(TBaseVisitor<Derived, StackIn, StackOut>::get(idenfifierIdx)._lexeme);
+    }
+
+    bool isInterface(const node::VIndex vIndex)
+    {
+        return com::tree::v_index::isInterface<node::Kind>(vIndex);
     }
 };
 
