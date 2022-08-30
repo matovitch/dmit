@@ -447,10 +447,12 @@ void Builder::makeModule(dmit::prs::Reader& reader,
     com::blitDefault(module._path);
     com::blitDefault(module._parentPath);
 
-    _nodePool.init(module._definitions );
-    _nodePool.init(module._imports     );
+    _nodePool.make(module._definitions , reader.size());
+    _nodePool.make(module._imports     , reader.size());
 
-    uint32_t indexModule = 0;
+    uint32_t indexDefinitions = 0;
+    uint32_t indexImport      = 0;
+    uint32_t indexModule      = 0;
 
     while (reader.isValid())
     {
@@ -464,13 +466,11 @@ void Builder::makeModule(dmit::prs::Reader& reader,
         }
         else if (parseNodeKind == ParseNodeKind::DEFINITION)
         {
-            _nodePool.grow(module._definitions);
-            makeDefinition(reader, _nodePool.get(module._definitions.back()));
+            makeDefinition(reader, _nodePool.get(module._definitions[indexDefinitions++]));
         }
         else if (parseNodeKind == ParseNodeKind::DCL_IMPORT)
         {
-            _nodePool.grow(module._imports);
-            makeImport(reader, _nodePool.get(module._imports.back()));
+            makeImport(reader, _nodePool.get(module._imports[indexImport++]));
         }
         else if (parseNodeKind == ParseNodeKind::MODULE)
         {
@@ -484,7 +484,9 @@ void Builder::makeModule(dmit::prs::Reader& reader,
         reader.advance();
     }
 
-    _nodePool.make(module._modules, indexModule);
+    _nodePool.trim(module._definitions , indexDefinitions );
+    _nodePool.trim(module._imports     , indexImport      );
+    _nodePool.make(module._modules     , indexModule      );
 
     while (readerCopy.isValid())
     {

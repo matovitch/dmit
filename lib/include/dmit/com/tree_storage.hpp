@@ -56,11 +56,6 @@ class TStorage
                                   LOG2_SIZE_RATIO>;
 public:
 
-    uint32_t next() const
-    {
-        return _counter;
-    }
-
     uint32_t make()
     {
         if ((_counter & ((1 << LOG2_SIZE_RATIO) - 1)) == 0 && (_counter >> LOG2_SIZE_RATIO) + 1 > _chunks.size())
