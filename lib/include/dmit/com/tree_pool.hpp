@@ -3,6 +3,7 @@
 #include "dmit/com/tree_storage.hpp"
 #include "dmit/com/tree_node.hpp"
 
+#include "dmit/com/assert.hpp"
 #include "dmit/com/enum.hpp"
 #include "dmit/com/blit.hpp"
 
@@ -38,6 +39,12 @@ struct TTMetaPool
         Index make()
         {
             return Index{_storage.make()};
+        }
+
+        void init(Range& range)
+        {
+            range._index = Index{_storage.next()};
+            range._size = 0;
         }
 
         void make(Range& range, const uint32_t size)
@@ -106,6 +113,22 @@ struct TTMetaPool
         void make(TRange<KIND>& range, const uint32_t size)
         {
             std::get<KIND>(_subs).make(range, size);
+        }
+
+        template <TEnumIntegerType<Kind> KIND>
+        void init(TRange<KIND>& range)
+        {
+            std::get<KIND>(_subs).init(range);
+        }
+
+        template <TEnumIntegerType<Kind> KIND>
+        void grow(TRange<KIND>& range)
+        {
+            auto index = std::get<KIND>(_subs).make();
+
+            DMIT_COM_ASSERT(index._value - range._index._value == range._size);
+
+            range._size++;
         }
 
         template <TEnumIntegerType<Kind> KIND>

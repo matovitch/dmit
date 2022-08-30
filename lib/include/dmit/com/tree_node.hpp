@@ -84,6 +84,15 @@ struct TMetaNode
             return index;
         }
 
+        TIndex<KIND> back() const
+        {
+            TIndex<KIND> index{_index._value + _size - 1};
+
+            index._isInterface = _index._isInterface;
+
+            return index;
+        }
+
         TIndex<KIND> _index;
         uint32_t _size;
     };
