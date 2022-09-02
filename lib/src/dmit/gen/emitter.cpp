@@ -12,6 +12,7 @@
 #include "dmit/com/assert.hpp"
 
 #include <cstdint>
+#include <vector>
 
 namespace dmit::gen
 {
@@ -19,7 +20,7 @@ namespace dmit::gen
 namespace
 {
 
-const com::UniqueId K_TYPE_I64{0x7d516e355461f852, 0xeb2349989392e0bb};
+/*const com::UniqueId K_TYPE_I64{0x7d516e355461f852, 0xeb2349989392e0bb};
 
 const com::UniqueId K_FUNC_ADD_I64_LIT_INT{0xce6a2caefab56273, 0xbedcc1c288a680af};
 
@@ -71,7 +72,6 @@ struct Wasmer : ast::TVisitor<Wasmer, StackIn>
 
             auto id = isInterface(vIndex) ? ast::node::v_index::makeId(_interfaceMap._astNodePool, vIndex)
                                           : ast::node::v_index::makeId(_nodePool, vIndex);
-
             if (id == K_TYPE_I64)
             {
                 wsm::node::TIndex<wsm::node::Kind::TYPE_I64> i64Idx;
@@ -92,7 +92,6 @@ struct Wasmer : ast::TVisitor<Wasmer, StackIn>
 
         auto id = isInterface(vIndex) ? ast::node::v_index::makeId(_interfaceMap._astNodePool, vIndex)
                                       : ast::node::v_index::makeId(_nodePool, vIndex);
-
         if (id == K_TYPE_I64)
         {
             wsm::node::TIndex<wsm::node::Kind::TYPE_I64> i64Idx;
@@ -153,7 +152,53 @@ struct Wasmer : ast::TVisitor<Wasmer, StackIn>
     uint32_t _indexType   = 0;
     uint32_t _indexFunc   = 0;
     uint32_t _indexExport = 0;
+};*/
+
+struct Bematist : ast::TVisitor<Bematist>
+{
+    DMIT_AST_VISITOR_SIMPLE();
+
+    Bematist(ast::State::NodePool & poolAst,
+             sem::InterfaceMap    & interfaceMap) :
+        TVisitor<Bematist>{poolAst},
+        _interfaceMap{interfaceMap}
+    {}
+
+    void operator()(ast::node::TIndex<ast::node::Kind::VIEW> viewIdx)
+    {
+        // TODO
+    }
+
+    sem::InterfaceMap&    _interfaceMap;
+    std::vector<uint32_t> _measures;
 };
+
+
+struct Scribe : ast::TVisitor<Scribe>
+{
+    DMIT_AST_VISITOR_SIMPLE();
+
+    Scribe(ast::State::NodePool  & poolAst,
+           sem::InterfaceMap     & interfaceMap,
+           PoolWasm              & poolWasm,
+           std::vector<uint32_t> & measures) :
+        TVisitor<Scribe>{poolAst},
+        _interfaceMap{interfaceMap},
+        _poolWasm{poolWasm},
+        _measures{measures}
+    {}
+
+    void operator()(ast::node::TIndex<ast::node::Kind::VIEW> viewIdx)
+    {
+        // TODO
+    }
+
+    sem::InterfaceMap & _interfaceMap;
+    PoolWasm          & _poolWasm;
+
+    std::vector<uint32_t> _measures;
+};
+
 
 } // namespace
 
@@ -161,26 +206,15 @@ com::TStorage<uint8_t> make(sem::InterfaceMap& interfaceMap,
                             ast::Bundle& bundle,
                             PoolWasm& poolWasm)
 {
-    auto nbDefinition = bundle.nbDefinition();
+    Bematist bematist{bundle._nodePool, interfaceMap};
 
-    wsm::node::TIndex<wsm::node::Kind::MODULE> moduleIdx;
+    bematist.base()(bundle._views);
 
-    auto& module = poolWasm.makeGet(moduleIdx);
+    Scribe scribe{bundle._nodePool, interfaceMap, poolWasm, bematist._measures};
 
-    poolWasm.make(module._types   , nbDefinition);
-    poolWasm.make(module._funcs   , nbDefinition);
-    poolWasm.make(module._exports , nbDefinition);
+    scribe.base()(bundle._views);
 
-    {
-        Wasmer wasmer{bundle._nodePool, poolWasm, interfaceMap, moduleIdx};
-        wasmer.base()(bundle._views);
-    }
-
-    auto emitSize = dmit::wsm::emitSize(moduleIdx, poolWasm);
-
-    dmit::com::TStorage<uint8_t> storage{emitSize};
-
-    dmit::wsm::emit(moduleIdx, poolWasm, storage.data());
+    dmit::com::TStorage<uint8_t> storage{0};
 
     return storage;
 }

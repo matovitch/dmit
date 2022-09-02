@@ -88,7 +88,7 @@ TEST_CASE("gen")
 
     wasm3::Runtime runtime = env.makeRuntime(0x100 /*stackSize*/);
 
-    wasm3::Result result = m3Err_none;
+    /*wasm3::Result result = m3Err_none;
 
     for (auto& bin : bins)
     {
@@ -99,7 +99,7 @@ TEST_CASE("gen")
         CHECK(!result);
     }
 
-    /*wasm3::Function increment;
+    wasm3::Function increment;
     result = wasm3::findFunction(increment, runtime, "increment");
     CHECK(!result);
 

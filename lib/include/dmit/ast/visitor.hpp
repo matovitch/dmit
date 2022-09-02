@@ -40,22 +40,22 @@ struct TVisitor : TBaseVisitor<Derived, StackIn, StackOut>
         TBaseVisitor<Derived, StackIn, StackOut>{nodePool}
     {}
 
-    lex::Token getToken(const node::TIndex<node::Kind::LEXEME> lexemeIdx)
+    lex::Token getToken(node::TIndex<node::Kind::LEXEME> lexemeIdx)
     {
         return lexeme::getToken(lexemeIdx, TBaseVisitor<Derived, StackIn, StackOut>::_nodePool);
     }
 
-    src::Slice getSlice(const node::TIndex<node::Kind::LEXEME> lexemeIdx)
+    src::Slice getSlice(node::TIndex<node::Kind::LEXEME> lexemeIdx)
     {
         return lexeme::getSlice(lexemeIdx, TBaseVisitor<Derived, StackIn, StackOut>::_nodePool);
     }
 
-    src::Slice getSlice(const node::TIndex<node::Kind::IDENTIFIER> idenfifierIdx)
+    src::Slice getSlice(node::TIndex<node::Kind::IDENTIFIER> idenfifierIdx)
     {
         return getSlice(TBaseVisitor<Derived, StackIn, StackOut>::get(idenfifierIdx)._lexeme);
     }
 
-    bool isInterface(const node::VIndex vIndex)
+    bool isInterface(node::VIndex vIndex)
     {
         return com::tree::v_index::isInterface<node::Kind>(vIndex);
     }
