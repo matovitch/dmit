@@ -34,11 +34,6 @@ public:
 
     ~TStorage()
     {
-        if (!_buckets)
-        {
-            return;
-        }
-
         delete[] _buckets;
         _buckets = nullptr;
     }
