@@ -20,28 +20,46 @@ namespace dmit::gen
 namespace
 {
 
-/*const com::UniqueId K_TYPE_I64{0x7d516e355461f852, 0xeb2349989392e0bb};
-
+const com::UniqueId K_TYPE_I64{0x7d516e355461f852, 0xeb2349989392e0bb};
 const com::UniqueId K_FUNC_ADD_I64_LIT_INT{0xce6a2caefab56273, 0xbedcc1c288a680af};
 
-struct StackIn
+namespace scribe
 {
-    wsm::node::Index _cursor;
+
+struct Stack
+{
+    bool _isExport = false;
 };
 
-struct Wasmer : ast::TVisitor<Wasmer, StackIn>
+} // namespace scribe
+
+struct Scribe : ast::TVisitor<Scribe, scribe::Stack>
 {
     DMIT_AST_VISITOR_SIMPLE();
 
-    Wasmer(ast::State::NodePool & poolAst,
-           PoolWasm             & poolWasm,
-           sem::InterfaceMap    & interfaceMap,
-           wsm::node::TIndex<wsm::node::Kind::MODULE> moduleIdx) :
-        TVisitor<Wasmer, StackIn>{poolAst},
-        _poolWasm{poolWasm},
-        _interfaceMap{interfaceMap}
+    Scribe(ast::State::NodePool  & poolAst,
+           sem::InterfaceMap     & interfaceMap,
+           PoolWasm              & poolWasm,
+           std::vector<uint32_t> & measures) :
+        TVisitor<Scribe, scribe::Stack>{poolAst},
+        _interfaceMap{interfaceMap},
+        _wsmPool{poolWasm},
+        _measures{measures}
     {
-        _stackPtrIn->_cursor = moduleIdx;
+        auto& wsmModule = _wsmPool.makeGet(_wsmModuleIdx);
+
+        _wsmPool.make(wsmModule._types        , 0);
+        _wsmPool.make(wsmModule._funcs        , 0);
+        _wsmPool.make(wsmModule._tables       , 0);
+        _wsmPool.make(wsmModule._mems         , 0);
+        _wsmPool.make(wsmModule._globalConsts , 0);
+        _wsmPool.make(wsmModule._globalVars   , 0);
+        _wsmPool.make(wsmModule._elems        , 0);
+        _wsmPool.make(wsmModule._datas        , 0);
+        _wsmPool.make(wsmModule._imports      , 0);
+        _wsmPool.make(wsmModule._exports      , 0);
+
+        dmit::com::blitDefault(wsmModule._startOpt);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DEF_CLASS>){}
@@ -52,19 +70,31 @@ struct Wasmer : ast::TVisitor<Wasmer, StackIn>
 
         if (function._id == K_FUNC_ADD_I64_LIT_INT)
         {
-            return;
+            return; // TODO make the add function
         }
 
-        auto& module = _poolWasm.get(wsm::node::as<wsm::node::Kind::MODULE>(_stackPtrIn->_cursor));
+        auto& wsmModule = _wsmPool.get(_wsmModuleIdx);
 
-        auto& typeFunc = _poolWasm.get(module._types[_indexType]);
+        if (!_idxFunc)
+        {
+            _wsmPool.make(wsmModule._types, _measures[_measuresIdx]);
+            _wsmPool.make(wsmModule._funcs, _measures[_measuresIdx]);
+            _measuresIdx++;
+        }
 
-        auto&   domain = _poolWasm.makeGet(typeFunc.   _domain);
-        auto& codomain = _poolWasm.makeGet(typeFunc. _codomain);
+        if (!_idxExport)
+        {
+            _wsmPool.make(wsmModule._exports, _measures[_measuresIdx++]);
+        }
+
+        auto& wsmTypeFunc = _wsmPool.get(wsmModule._types[_idxFunc]);
+
+        auto& wsmDomain   = _wsmPool.makeGet(wsmTypeFunc.   _domain);
+        auto& wsmCodomain = _wsmPool.makeGet(wsmTypeFunc. _codomain);
 
         // Build the domain
 
-        _poolWasm.make(domain._valTypes, function._arguments._size);
+        _wsmPool.make(wsmDomain._valTypes, function._arguments._size);
 
         for (int i = 0; i < function._arguments._size; i++)
         {
@@ -74,9 +104,9 @@ struct Wasmer : ast::TVisitor<Wasmer, StackIn>
                                           : ast::node::v_index::makeId(_nodePool, vIndex);
             if (id == K_TYPE_I64)
             {
-                wsm::node::TIndex<wsm::node::Kind::TYPE_I64> i64Idx;
-                _poolWasm.make(i64Idx);
-                com::blit(i64Idx, _poolWasm.get(domain._valTypes[i])._asVariant);
+                wsm::node::TIndex<wsm::node::Kind::TYPE_I64> wsmI64Idx;
+                _wsmPool.make(wsmI64Idx);
+                com::blit(wsmI64Idx, _wsmPool.get(wsmDomain._valTypes[i])._asVariant);
             }
             else
             {
@@ -86,7 +116,7 @@ struct Wasmer : ast::TVisitor<Wasmer, StackIn>
 
         // And the codomain
 
-        _poolWasm.make(codomain._valTypes, 1);
+        _wsmPool.make(wsmCodomain._valTypes, 1);
 
         auto vIndex = get(get(function._returnType.value())._name)._asVIndex;
 
@@ -94,27 +124,55 @@ struct Wasmer : ast::TVisitor<Wasmer, StackIn>
                                       : ast::node::v_index::makeId(_nodePool, vIndex);
         if (id == K_TYPE_I64)
         {
-            wsm::node::TIndex<wsm::node::Kind::TYPE_I64> i64Idx;
-            _poolWasm.make(i64Idx);
-            com::blit(i64Idx, _poolWasm.get(codomain._valTypes[0])._asVariant);
+            wsm::node::TIndex<wsm::node::Kind::TYPE_I64> wsmI64Idx;
+            _wsmPool.make(wsmI64Idx);
+            com::blit(wsmI64Idx, _wsmPool.get(wsmCodomain._valTypes[0])._asVariant);
         }
         else
         {
             DMIT_COM_ASSERT(!"Unknown type!");
         }
 
-        _indexType++;
-
         // Now build the function
 
-        auto& wasmFunc = _poolWasm.get(module._funcs[_indexFunc]);
+        auto& wsmFunction = _wsmPool.get(wsmModule._funcs[_idxFunc]);
 
-        wasmFunc._typeIdx = _indexType;
+        wsmFunction._typeIdx = _idxFunc + 1;
+
+        _wsmPool.make(wsmFunction._locals , 0);
+        _wsmPool.make(wsmFunction._body   , 0);
+
+        // TODO make the wasm function
+
+        if (_stackPtrIn->_isExport)
+        {
+            // TODO make the wasm export
+
+            auto& export_ = _wsmPool.get(wsmModule._exports[_idxExport]);
+
+            dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_REF_FUNC> funcRefIdx;
+
+            _wsmPool.makeGet(funcRefIdx)._funcIdx = _idxExport + 1;
+
+            auto& name = _wsmPool.makeGet(export_._name);
+
+            _wsmPool.make(name._bytes, _idxExport);
+
+            dmit::com::blit(funcRefIdx, export_._descriptor);
+
+            _idxExport++;
+        }
+
+        _idxFunc++;
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DEFINITION> definitionIdx)
     {
-        base()(get(definitionIdx)._value);
+        auto& definition = get(definitionIdx);
+
+        _stackPtrIn->_isExport = (definition._role == ast::DefinitionRole::EXPORTED);
+
+        base()(definition._value);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::MODULE> moduleIdx)
@@ -127,75 +185,102 @@ struct Wasmer : ast::TVisitor<Wasmer, StackIn>
         base()(get(viewIdx)._modules);
     }
 
-    ~Wasmer()
-    {
-        auto& module = _poolWasm.get(wsm::node::as<wsm::node::Kind::MODULE>(_stackPtrIn->_cursor));
+    sem::InterfaceMap & _interfaceMap;
+    PoolWasm          & _wsmPool;
 
-        _poolWasm.trim(module._types   , _indexType   );
-        _poolWasm.trim(module._funcs   , _indexFunc   );
-        _poolWasm.trim(module._exports , _indexExport );
+    wsm::node::TIndex<wsm::node::Kind::MODULE> _wsmModuleIdx;
 
-        _poolWasm.make(module._tables       , 0);
-        _poolWasm.make(module._mems         , 0);
-        _poolWasm.make(module._globalConsts , 0);
-        _poolWasm.make(module._globalVars   , 0);
-        _poolWasm.make(module._elems        , 0);
-        _poolWasm.make(module._datas        , 0);
-        _poolWasm.make(module._imports      , 0);
+    uint32_t _idxFunc   = 0;
+    uint32_t _idxExport = 0;
 
-        dmit::com::blitDefault(module._startOpt);
-    }
-
-    PoolWasm& _poolWasm;
-    sem::InterfaceMap& _interfaceMap;
-
-    uint32_t _indexType   = 0;
-    uint32_t _indexFunc   = 0;
-    uint32_t _indexExport = 0;
-};*/
-
-struct Bematist : ast::TVisitor<Bematist>
-{
-    DMIT_AST_VISITOR_SIMPLE();
-
-    Bematist(ast::State::NodePool & poolAst,
-             sem::InterfaceMap    & interfaceMap) :
-        TVisitor<Bematist>{poolAst},
-        _interfaceMap{interfaceMap}
-    {}
-
-    void operator()(ast::node::TIndex<ast::node::Kind::VIEW> viewIdx)
-    {
-        // TODO
-    }
-
-    sem::InterfaceMap&    _interfaceMap;
+    uint32_t              _measuresIdx = 0;
     std::vector<uint32_t> _measures;
 };
 
-
-struct Scribe : ast::TVisitor<Scribe>
+namespace bematist
 {
-    DMIT_AST_VISITOR_SIMPLE();
 
-    Scribe(ast::State::NodePool  & poolAst,
-           sem::InterfaceMap     & interfaceMap,
-           PoolWasm              & poolWasm,
-           std::vector<uint32_t> & measures) :
-        TVisitor<Scribe>{poolAst},
-        _interfaceMap{interfaceMap},
-        _poolWasm{poolWasm},
-        _measures{measures}
+struct Stack
+{
+    bool     _isExport   = false;
+    uint32_t _nbFunction = 0;
+    uint32_t _nbExport   = 0;
+};
+
+} // namespace bematist
+
+struct Bematist : ast::TVisitor<Bematist, bematist::Stack,
+                                          bematist::Stack>
+{
+    Bematist(ast::State::NodePool & poolAst,
+             sem::InterfaceMap    & interfaceMap) :
+        TVisitor<Bematist, bematist::Stack,
+                           bematist::Stack>{poolAst},
+        _interfaceMap{interfaceMap}
     {}
+
+    void operator()(ast::node::TIndex<ast::node::Kind::DEF_CLASS>)
+    {
+        *_stackPtrOut = *_stackPtrIn;
+    }
+
+    void operator()(ast::node::TIndex<ast::node::Kind::DEF_FUNCTION> functionIdx)
+    {
+        *_stackPtrOut = *_stackPtrIn;
+
+        _stackPtrOut->_nbFunction += 1;
+        _stackPtrOut->_nbExport   += _stackPtrOut->_isExport;
+    }
+
+    void operator()(ast::node::TIndex<ast::node::Kind::DEFINITION> definitionIdx)
+    {
+        auto& definition = get(definitionIdx);
+
+        _stackPtrIn->_isExport = (definition._role == ast::DefinitionRole::EXPORTED);
+
+        base()(definition._value);
+    }
+
+    void operator()(ast::node::TIndex<ast::node::Kind::MODULE> moduleIdx)
+    {
+        auto indexFunction = _measures.size();
+                             _measures.push_back(0);
+        auto indexExport   = _measures.size();
+                             _measures.push_back(0);
+
+        _stackPtrIn->_nbFunction = 0;
+        _stackPtrIn->_nbExport   = 0;
+
+        base()(get(moduleIdx)._definitions);
+
+        _measures[indexFunction ] = _stackPtrOut->_nbFunction;
+        _measures[indexExport   ] = _stackPtrOut->_nbExport;
+    }
 
     void operator()(ast::node::TIndex<ast::node::Kind::VIEW> viewIdx)
     {
-        // TODO
+        base()(get(viewIdx)._modules);
     }
 
-    sem::InterfaceMap & _interfaceMap;
-    PoolWasm          & _poolWasm;
+    template <com::TEnumIntegerType<ast::node::Kind> KIND>
+    void loopIterationConclusion(ast::node::TIndex<KIND>)
+    {
+        *_stackPtrIn = *_stackPtrOut;
+    }
 
+    template <com::TEnumIntegerType<ast::node::Kind> KIND>
+    void loopIterationPreamble(ast::node::TIndex<KIND>) {}
+
+    template <com::TEnumIntegerType<ast::node::Kind> KIND>
+    void loopConclusion(ast::node::TRange<KIND>& range) {}
+
+    template <com::TEnumIntegerType<ast::node::Kind> KIND>
+    void loopPreamble(ast::node::TRange<KIND>&) {}
+
+    template <class Type>
+    void emptyOption() {}
+
+    sem::InterfaceMap&    _interfaceMap;
     std::vector<uint32_t> _measures;
 };
 
@@ -214,7 +299,11 @@ com::TStorage<uint8_t> make(sem::InterfaceMap& interfaceMap,
 
     scribe.base()(bundle._views);
 
-    dmit::com::TStorage<uint8_t> storage{0};
+    auto emitSize = dmit::wsm::emitSize(scribe._wsmModuleIdx, poolWasm);
+
+    dmit::com::TStorage<uint8_t> storage{emitSize};
+
+    dmit::wsm::emit(scribe._wsmModuleIdx, poolWasm, storage.data());
 
     return storage;
 }
