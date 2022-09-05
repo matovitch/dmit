@@ -4,7 +4,7 @@
 #include "pool/details/buffer/stack.hpp"
 #include "pool/details/buffer/heap.hpp"
 
-#include "pool/details/stack/stack.hpp"
+#include "stack/stack.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -37,7 +37,7 @@ public:
     {
         if (!_recycleds.empty())
         {
-            Type* const ptr = _recycleds.top();
+            Type* const ptr = *(_recycleds.top());
             _recycleds.pop();
             ptr->~Type();
             return ptr;
@@ -49,7 +49,7 @@ public:
         }
 
         _heapBuffers.push(_size ? _size <<= 1 : 1);
-        _bufferPtr = &(_heapBuffers.top());
+        _bufferPtr = _heapBuffers.top();
 
         return _bufferPtr->allocate();
     }
@@ -84,7 +84,7 @@ struct TTraits
     using AbstractBuffer = buffer::TAbstract     <Type>;
 
     template <class Type>
-    using TStack = stack::TMake<Type, SIZE>;
+    using TStack = stack::TMake<Type, 0x8, 0x8>;
 };
 
 template <class Type, std::size_t SIZE>

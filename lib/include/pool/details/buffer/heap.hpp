@@ -26,6 +26,16 @@ public:
         _tail = reinterpret_cast<Type*>(_memory) + size;
     }
 
+    THeap(THeap<Traits>&& toMove) :
+        _head{toMove._head},
+        _tail{toMove._tail},
+        _memory{toMove._memory}
+    {
+        toMove._head   = nullptr;
+        toMove._tail   = nullptr;
+        toMove._memory = nullptr;
+    }
+
     Type* allocate() override
     {
         if (_head == _tail)
