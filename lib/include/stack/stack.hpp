@@ -56,7 +56,7 @@ struct TStack
     template <class... Args>
     uint32_t push(Args&&... args)
     {
-        if (_chunks.empty())
+        if (SIZE_STACK && _chunks.empty())
         {
             if (_index < SIZE_STACK)
             {
@@ -92,7 +92,7 @@ struct TStack
 
         _index += size;
 
-        if (_chunks.empty())
+        if (SIZE_STACK && _chunks.empty())
         {
             if (_index < SIZE_STACK)
             {
@@ -127,26 +127,26 @@ struct TStack
     {
         _index--;
 
-        _chunks.empty() ? reinterpret_cast<Type&>(_stack[_index])                      .~Type()
-                          : _chunks[_index >> SIZE].data()[_index & ((1 << SIZE) - 1)] .~Type();
+        SIZE_STACK &&_chunks.empty() ? reinterpret_cast<Type&>(_stack[_index])                    .~Type()
+                                     : _chunks[_index >> SIZE].data()[_index & ((1 << SIZE) - 1)] .~Type();
     }
 
     Type& top()
     {
-        return _chunks.empty() ? reinterpret_cast<Type&>(_stack.data()[_index - 1])
-                               : _chunks[(_index - 1) >> SIZE].data()[(_index - 1) & ((1 << SIZE) - 1)];
+        return SIZE_STACK && _chunks.empty() ? reinterpret_cast<Type&>(_stack.data()[_index - 1])
+                                             : _chunks[(_index - 1) >> SIZE].data()[(_index - 1) & ((1 << SIZE) - 1)];
     }
 
     Type& get(uint32_t index)
     {
-        return _chunks.empty() ? reinterpret_cast<Type&>(_stack.data()[index])
-                               : _chunks[index >> SIZE].data()[index & ((1 << SIZE) - 1)];
+        return SIZE_STACK &&_chunks.empty() ? reinterpret_cast<Type&>(_stack.data()[index])
+                                            : _chunks[index >> SIZE].data()[index & ((1 << SIZE) - 1)];
     }
 
     const Type& get(uint32_t index) const
     {
-        return _chunks.empty() ? reinterpret_cast<const Type&>(_stack.data()[index])
-                               : _chunks[index >> SIZE].data()[index & ((1 << SIZE) - 1)];
+        return SIZE_STACK && _chunks.empty() ? reinterpret_cast<const Type&>(_stack.data()[index])
+                                             : _chunks[index >> SIZE].data()[index & ((1 << SIZE) - 1)];
     }
 
     uint32_t size() const
@@ -161,7 +161,7 @@ struct TStack
 
     void trim(uint32_t size)
     {
-        if (_chunks.empty())
+        if (SIZE_STACK && _chunks.empty())
         {
             for (uint32_t i = 0; i < size; i++)
             {
@@ -181,7 +181,7 @@ struct TStack
 
     void clear()
     {
-        if (_chunks.empty())
+        if (SIZE_STACK && _chunks.empty())
         {
             while (_index--)
             {
@@ -219,7 +219,7 @@ struct TTraits
     static constexpr uint32_t SIZE_STACK = TRAITS_SIZE_STACK;
 };
 
-template <class Type, std::size_t SIZE, uint32_t SIZE_STACK>
+template <class Type, std::size_t SIZE, uint32_t SIZE_STACK = 0>
 using TMake = TStack<TTraits<Type, SIZE, SIZE_STACK>>;
 
 } // namespace stack

@@ -61,7 +61,7 @@ struct TTMetaPool
 
         static constexpr auto LOG2_SIZE_RATIO = LOG2_SIZE - log2(sizeof(TNode<KIND>));
 
-        stack::TMake<Bucket, LOG2_SIZE_RATIO, 8> _storage;
+        stack::TMake<Bucket, LOG2_SIZE_RATIO> _storage;
     };
 
     template <uint8_t LOG2_SIZE>
