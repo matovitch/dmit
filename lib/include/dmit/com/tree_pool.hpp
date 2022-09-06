@@ -1,10 +1,12 @@
 #pragma once
 
-#include "dmit/com/tree_storage.hpp"
 #include "dmit/com/tree_node.hpp"
 
-#include "dmit/com/enum.hpp"
 #include "dmit/com/blit.hpp"
+#include "dmit/com/enum.hpp"
+#include "dmit/com/log2.hpp"
+
+#include "stack/stack.hpp"
 
 #include <cstdint>
 #include <optional>
@@ -37,13 +39,13 @@ struct TTMetaPool
 
         Index make()
         {
-            return Index{_storage.make()};
+            return Index{_storage.push()};
         }
 
         void make(Range& range, const uint32_t size)
         {
             range._size = size;
-            range._index = Index{_storage.make(size)};
+            range._index = Index{_storage.push(size)};
         }
 
         void trim(Range& range, const uint32_t size)
@@ -54,7 +56,12 @@ struct TTMetaPool
 
     private:
 
-        storage::TMake<TNode<KIND>, LOG2_SIZE> _storage;
+        using Bucket = std::aligned_storage_t< sizeof(TNode<KIND>),
+                                              alignof(TNode<KIND>)>;
+
+        static constexpr auto LOG2_SIZE_RATIO = LOG2_SIZE - log2(sizeof(TNode<KIND>));
+
+        stack::TMake<Bucket, LOG2_SIZE_RATIO, 8> _storage;
     };
 
     template <uint8_t LOG2_SIZE>

@@ -9,35 +9,38 @@
 namespace stack
 {
 
-template <class Type>
-struct TStorage
+template <class Type, uint32_t SIZE>
+struct TChunk
 {
     using Bucket = std::aligned_storage_t< sizeof(Type),
                                           alignof(Type)>;
-    TStorage(uint32_t size) :
-        _buckets{new Bucket[size]}
+
+    using Storage = std::array<Bucket, 1 << SIZE>;
+
+    TChunk() :
+        _storage{new Storage}
     {}
 
-    TStorage(const TStorage<Type>&) = delete;
+    TChunk(const TChunk<Type, SIZE>&) = delete;
 
-    TStorage(TStorage<Type>&& storage) :
-        _buckets {storage._buckets}
+    TChunk(TChunk<Type, SIZE>&& chunk) :
+        _storage{chunk._storage}
     {
-        storage._buckets = nullptr;
+        chunk._storage = nullptr;
     }
 
     Type* data() const
     {
-        return reinterpret_cast<Type*>(_buckets);
+        return reinterpret_cast<Type*>(_storage);
     }
 
-    ~TStorage()
+    ~TChunk()
     {
-        delete[] _buckets;
-        _buckets = nullptr;
+        delete _storage;
+        _storage = nullptr;
     }
 
-    Bucket* _buckets = nullptr;
+    Storage* _storage = nullptr;
 };
 
 } // namespace stack
@@ -51,60 +54,104 @@ struct TStack
     static constexpr uint32_t SIZE_STACK = Traits::SIZE_STACK;
 
     template <class... Args>
-    void push(Args&&... args)
+    uint32_t push(Args&&... args)
     {
-        if (_storages.empty())
+        if (_chunks.empty())
         {
             if (_index < SIZE_STACK)
             {
                 new (_stack.data() + _index) Type{std::forward<Args>(args)...};
-                _index++;
-                return;
+                return _index++;
             }
             else
             {
-                _storages.emplace_back(1 << SIZE);
+                _chunks.emplace_back();
 
                 for (uint32_t i = 0; i < SIZE_STACK; i++)
                 {
-                    new (_storages[0].data() + i) Type{std::move(reinterpret_cast<Type&>(_stack[i]))};
+                    new (_chunks[0].data() + i) Type{std::move(reinterpret_cast<Type&>(_stack[i]))};
                     reinterpret_cast<Type&>(_stack[i]).~Type();
                 }
             }
         }
 
-        if ((_index & ((1 << SIZE) - 1)) == 0 && _index >= _maxIndex)
+        if ((_index & ((1 << SIZE) - 1)) == 0 && (_index >> SIZE) + 1 > _chunks.size())
         {
-            _storages.emplace_back(1 << SIZE);
-            _maxIndex = _index;
+            _chunks.emplace_back();
         }
 
-        new (_storages[_index >> SIZE].data() + (_index & ((1 << SIZE) - 1))) Type{std::forward<Args>(args)...};
-        _index++;
+        new (_chunks[_index >> SIZE].data() + (_index & ((1 << SIZE) - 1))) Type{std::forward<Args>(args)...};
+
+        return _index++;
+    }
+
+    template <class... Args>
+    uint32_t push(uint32_t size, Args&&... args)
+    {
+        const uint32_t index = _index;
+
+        _index += size;
+
+        if (_chunks.empty())
+        {
+            if (_index < SIZE_STACK)
+            {
+                return index;
+            }
+            else
+            {
+                _chunks.emplace_back();
+
+                for (uint32_t i = 0; i < SIZE_STACK; i++)
+                {
+                    new (_chunks[0].data() + i) Type{std::move(reinterpret_cast<Type&>(_stack[i]))};
+                    reinterpret_cast<Type&>(_stack[i]).~Type();
+                }
+            }
+        }
+
+        if ((_index >> SIZE) + 1 > _chunks.size())
+        {
+            _chunks.resize((_index >> SIZE) + 1);
+        }
+
+        for (uint32_t i = index; i < _index; i++)
+        {
+            new (_chunks[i >> SIZE].data() + (i & ((1 << SIZE) - 1))) Type{std::forward<Args>(args)...};
+        }
+
+        return index;
     }
 
     void pop()
     {
-        if (!_index)
-        {
-            return;
-        }
-
         _index--;
 
-        _storages.empty() ? reinterpret_cast<Type&>(_stack[_index])                      .~Type()
-                          : _storages[_index >> SIZE].data()[_index & ((1 << SIZE) - 1)] .~Type();
+        _chunks.empty() ? reinterpret_cast<Type&>(_stack[_index])                      .~Type()
+                          : _chunks[_index >> SIZE].data()[_index & ((1 << SIZE) - 1)] .~Type();
     }
 
-    Type* top()
+    Type& top()
     {
-        if (!_index)
-        {
-            return nullptr;
-        }
+        return _chunks.empty() ? reinterpret_cast<Type&>(_stack.data()[_index - 1])
+                               : _chunks[(_index - 1) >> SIZE].data()[(_index - 1) & ((1 << SIZE) - 1)];
+    }
 
-        return _storages.empty() ? reinterpret_cast<Type*>(_stack.data() + _index - 1)
-                                 : _storages[(_index - 1) >> SIZE].data() + ((_index - 1) & ((1 << SIZE) - 1));
+    Type& get(uint32_t index)
+    {
+        return _chunks.empty() ? reinterpret_cast<Type&>(_stack.data()[index])
+                               : _chunks[index >> SIZE].data()[index & ((1 << SIZE) - 1)];
+    }
+
+    const Type& get(uint32_t index) const
+    {
+        return _chunks.empty() ? reinterpret_cast<const Type&>(_stack.data()[index])
+                               : _chunks[index >> SIZE].data()[index & ((1 << SIZE) - 1)];
+    }
+
+    uint32_t size() const
+    {
+        return _index;
     }
 
     bool empty() const
@@ -112,9 +159,29 @@ struct TStack
         return !_index;
     }
 
-    ~TStack()
+    void trim(uint32_t size)
     {
-        if (_storages.empty())
+        if (_chunks.empty())
+        {
+            for (uint32_t i = 0; i < size; i++)
+            {
+                reinterpret_cast<Type&>(_stack[_index - i - 1]).~Type();
+            }
+        }
+        else
+        {
+            for (uint32_t i = 0; i < size; i++)
+            {
+                _chunks[(_index - i - 1) >> SIZE].data()[(_index - i - 1) & ((1 << SIZE) - 1)].~Type();
+            }
+        }
+
+        _index -= size;
+    }
+
+    void clear()
+    {
+        if (_chunks.empty())
         {
             while (_index--)
             {
@@ -125,16 +192,20 @@ struct TStack
         {
             while (_index--)
             {
-                _storages[_index >> SIZE].data()[_index & ((1 << SIZE) - 1)].~Type();
+                _chunks[_index >> SIZE].data()[_index & ((1 << SIZE) - 1)].~Type();
             }
         }
     }
 
-    uint32_t _index    = 0;
-    uint32_t _maxIndex = 0;
+    ~TStack()
+    {
+        clear();
+    }
 
-    std::array  <typename stack::TStorage<Type>::Bucket, SIZE_STACK> _stack;
-    std::vector <         stack::TStorage<Type>> _storages;
+    uint32_t _index = 0;
+
+    std::array  <typename stack::TChunk<Type, SIZE>::Bucket, SIZE_STACK > _stack;
+    std::vector <         stack::TChunk<Type, SIZE>                     > _chunks;
 };
 
 namespace stack

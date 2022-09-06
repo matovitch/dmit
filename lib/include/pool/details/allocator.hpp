@@ -37,7 +37,7 @@ public:
     {
         if (!_recycleds.empty())
         {
-            Type* const ptr = *(_recycleds.top());
+            Type* const ptr = _recycleds.top();
             _recycleds.pop();
             ptr->~Type();
             return ptr;
@@ -49,7 +49,7 @@ public:
         }
 
         _heapBuffers.push(_size ? _size <<= 1 : 1);
-        _bufferPtr = _heapBuffers.top();
+        _bufferPtr = &(_heapBuffers.top());
 
         return _bufferPtr->allocate();
     }
@@ -84,7 +84,7 @@ struct TTraits
     using AbstractBuffer = buffer::TAbstract     <Type>;
 
     template <class Type>
-    using TStack = stack::TMake<Type, 0x8, 0x8>;
+    using TStack = stack::TMake<Type, 8, 8>;
 };
 
 template <class Type, std::size_t SIZE>
