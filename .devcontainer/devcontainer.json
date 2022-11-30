@@ -2,7 +2,7 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/ubuntu
 {
 	"name": "dmit",
-	"image": "https://index.docker.io/v1/matovitch/dmit:latest"
+	"image": "docker.io/matovitch/dmit:latest"
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
