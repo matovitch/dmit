@@ -2,7 +2,8 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/ubuntu
 {
 	"name": "dmit",
-	"image": "docker.io/matovitch/dmit:latest"
+	"image": "docker.io/matovitch/dmit:latest",
+	"runArgs": ["--cap-add", "SYS_ADMIN", "--device", "/dev/fuse", "--security-opt", "apparmor:unconfined"]
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
