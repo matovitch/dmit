@@ -75,16 +75,18 @@ struct Scribe : ast::TVisitor<Scribe, scribe::Stack>
 
         auto& wsmModule = _wsmPool.get(_wsmModuleIdx);
 
+
         if (!_idxFunc)
         {
-            _wsmPool.make(wsmModule._types, _measures[_measuresIdx]);
-            _wsmPool.make(wsmModule._funcs, _measures[_measuresIdx]);
-            _measuresIdx++;
+            auto nbFunction = _measures[_measuresIdx++];
+            _wsmPool.make(wsmModule._types, nbFunction);
+            _wsmPool.make(wsmModule._funcs, nbFunction);
         }
 
         if (!_idxExport)
         {
-            _wsmPool.make(wsmModule._exports, _measures[_measuresIdx++]);
+            auto nbExport = _measures[_measuresIdx++];
+            _wsmPool.make(wsmModule._exports, nbExport);
         }
 
         auto& wsmTypeFunc = _wsmPool.get(wsmModule._types[_idxFunc]);

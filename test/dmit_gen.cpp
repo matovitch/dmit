@@ -67,6 +67,8 @@ std::vector<dmit::com::TStorage<uint8_t>> emit(const std::vector<const char*>& f
                                                                           bundles};
     dmit::sem::analyze(parallelSemanticAnalyzer);
 
+    // 3. Generate wasm
+
     dmit::com::TParallelFor<dmit::gen::Emitter> parallelGenerationEmitter{interfaceMap,
                                                                           bundles};
     return parallelGenerationEmitter.makeVector();
