@@ -153,7 +153,7 @@ struct Scribe : ast::TVisitor<Scribe, scribe::Stack>
 
             wsm::node::TIndex<wsm::node::Kind::INST_REF_FUNC> funcRefIdx;
 
-            _wsmPool.makeGet(funcRefIdx)._funcIdx = _idxFunc;
+            _wsmPool.makeGet(funcRefIdx)._funcIdx = (_idxFunc << 1) - 1;
 
             com::blit(funcRefIdx, export_._descriptor);
 
