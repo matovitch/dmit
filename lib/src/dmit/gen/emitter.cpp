@@ -8,6 +8,8 @@
 #include "dmit/ast/visitor.hpp"
 #include "dmit/ast/bundle.hpp"
 
+#include "dmit/fmt/com/unique_id.hpp"
+
 #include "dmit/com/storage.hpp"
 #include "dmit/com/assert.hpp"
 
@@ -20,8 +22,8 @@ namespace dmit::gen
 namespace
 {
 
-const com::UniqueId K_TYPE_I64{0x7d516e355461f852, 0xeb2349989392e0bb};
-const com::UniqueId K_FUNC_ADD_I64_LIT_INT{0xce6a2caefab56273, 0xbedcc1c288a680af};
+const com::UniqueId K_TYPE_I64             {0x7d516e355461f852, 0xeb2349989392e0bb};
+const com::UniqueId K_FUNC_ADD_I64_LIT_INT {0xce6a2caefab56273, 0xbedcc1c288a680af};
 
 namespace scribe
 {
@@ -74,7 +76,6 @@ struct Scribe : ast::TVisitor<Scribe, scribe::Stack>
         }
 
         auto& wsmModule = _wsmPool.get(_wsmModuleIdx);
-
 
         if (!_idxFunc)
         {
@@ -137,9 +138,9 @@ struct Scribe : ast::TVisitor<Scribe, scribe::Stack>
 
         // Now build the function
 
-        auto& wsmFunction = _wsmPool.get(wsmModule._funcs[_idxFunc]);
+        auto& wsmFunction = _wsmPool.get(wsmModule._funcs[_idxFunc++]);
 
-        wsmFunction._typeIdx = _idxFunc + 1;
+        wsmFunction._typeIdx = _idxFunc;
 
         _wsmPool.make(wsmFunction._locals , 0);
         _wsmPool.make(wsmFunction._body   , 0);
@@ -148,24 +149,25 @@ struct Scribe : ast::TVisitor<Scribe, scribe::Stack>
 
         if (_stackPtrIn->_isExport)
         {
-            // TODO make the wasm export
+            auto& export_ = _wsmPool.get(wsmModule._exports[_idxExport++]);
 
-            auto& export_ = _wsmPool.get(wsmModule._exports[_idxExport]);
+            wsm::node::TIndex<wsm::node::Kind::INST_REF_FUNC> funcRefIdx;
 
-            dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_REF_FUNC> funcRefIdx;
+            _wsmPool.makeGet(funcRefIdx)._funcIdx = _idxFunc;
 
-            _wsmPool.makeGet(funcRefIdx)._funcIdx = _idxExport + 1;
+            com::blit(funcRefIdx, export_._descriptor);
+
+            auto functionIdAsString = fmt::asString(function._id);
 
             auto& name = _wsmPool.makeGet(export_._name);
 
-            _wsmPool.make(name._bytes, _idxExport);
+            _wsmPool.make(name._bytes, functionIdAsString.size());
 
-            dmit::com::blit(funcRefIdx, export_._descriptor);
-
-            _idxExport++;
+            for (auto i = 0; i < functionIdAsString.size(); i++)
+            {
+                _wsmPool.get(name._bytes[i])._value = functionIdAsString[i];
+            }
         }
-
-        _idxFunc++;
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DEFINITION> definitionIdx)

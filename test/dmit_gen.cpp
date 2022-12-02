@@ -16,6 +16,7 @@
 
 #include "dmit/com/parallel_for.hpp"
 #include "dmit/com/storage.hpp"
+#include "dmit/com/base64.hpp"
 
 #include <cstdint>
 #include <cstring>
@@ -85,6 +86,14 @@ TEST_CASE("gen")
     };
 
     auto&& bins = emit(groupAB);
+
+    uint8_t buffer[4096];
+
+    for (auto& bin : bins)
+    {
+        dmit::com::base64::encode(bin.data(), bin._size, buffer);
+        DMIT_COM_LOG_OUT << std::string{buffer, buffer + dmit::com::base64::encodeBufferSize(bin._size)} << '\n';
+    }
 
     wasm3::Environment env;
 
