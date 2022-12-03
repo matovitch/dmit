@@ -348,7 +348,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
         {
             Leb128 funcIdxAsLeb128{instRefFunc._funcIdx};
             _writer.write(funcIdxAsLeb128);
-        }        
+        }
     }
 
     void operator()(node::TIndex<node::Kind::INST_SELECT> instSelectIdx)
@@ -564,7 +564,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
             Leb128 tableIdxAsLeb128{instTableFill._tableIdx};
             _writer.write(tableIdxAsLeb128);
         }
-        
+
     }
 
     void operator()(node::TIndex<node::Kind::INST_MEM_SIZE>)
