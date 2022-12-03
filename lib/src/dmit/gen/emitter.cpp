@@ -303,11 +303,11 @@ com::TStorage<uint8_t> make(sem::InterfaceMap& interfaceMap,
 
     scribe.base()(bundle._views);
 
-    auto emitSize = dmit::wsm::emitSize(scribe._wsmModuleIdx, poolWasm);
+    auto emitSize = wsm::emitSize(scribe._wsmModuleIdx, poolWasm, true /*isObject*/);
 
-    dmit::com::TStorage<uint8_t> storage{emitSize};
+    com::TStorage<uint8_t> storage{emitSize};
 
-    dmit::wsm::emit(scribe._wsmModuleIdx, poolWasm, storage.data());
+    wsm::emit(scribe._wsmModuleIdx, poolWasm, storage.data(), true /*isObject*/);
 
     return storage;
 }
