@@ -55,6 +55,11 @@ Leb128::Leb128(uint64_t asU64)
 
 Leb128::Leb128(uint32_t asU32) : Leb128{static_cast<uint64_t>(asU32)} {}
 
+Leb128Obj::Leb128Obj(uint64_t asU64)
+{
+    new (reinterpret_cast<Leb128*>(this)) Leb128{asU64};
+}
+
 Leb128Obj::Leb128Obj(int64_t asI64)
 {
     new (reinterpret_cast<Leb128*>(this)) Leb128{asI64};
