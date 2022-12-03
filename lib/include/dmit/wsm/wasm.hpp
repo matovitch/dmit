@@ -28,7 +28,6 @@ struct Kind : com::TEnum<uint8_t>
         INST_CALL_INDIRECT ,
         INST_LOOP          ,
         INST_RETURN        ,
-        INST_CONST_I32_OBJ ,
         INST_CONST_I32     ,
         INST_CONST_I64     ,
         INST_CONST_F32     ,
@@ -219,14 +218,36 @@ struct TNode<node::Kind::TYPE_EXTERN>
     ExternType _asVariant;
 };
 
+struct RelocationType : com::TEnum<int8_t>
+{
+    enum : int8_t
+    {
+        NONE = -1,
+        FUNCTION_INDEX_LEB,
+        TABLE_INDEX_SLEB,
+        TABLE_INDEX_I32,
+        MEMORY_ADDR_LEB,
+        MEMORY_ADDR_SLEB,
+        MEMORY_ADDR_I32,
+        TYPE_INDEX_LEB,
+        GLOBAL_INDEX_LEB,
+        FUNCTION_OFFSET_I32,
+        SECTION_OFFSET_I32,
+        EVENT_INDEX_LEB,
+        GLOBAL_INDEX_I32
+    };
+
+    DMIT_COM_ENUM_IMPLICIT_FROM_INT(RelocationType);
+};
+
 using flt32_t = com::ieee754::Binary<32>;
 using flt64_t = com::ieee754::Binary<64>;
 
-template <> struct TNode<node::Kind::INST_CONST_I32_OBJ > { int32_t _value ; };
-template <> struct TNode<node::Kind::INST_CONST_I32     > { int32_t _value ; };
-template <> struct TNode<node::Kind::INST_CONST_I64     > { int64_t _value ; };
-template <> struct TNode<node::Kind::INST_CONST_F32     > { flt32_t _value ; };
-template <> struct TNode<node::Kind::INST_CONST_F64     > { flt64_t _value ; };
+template <> struct TNode<node::Kind::INST_CONST_I32> { RelocationType _relocationType;
+                                                       int32_t _value; };
+template <> struct TNode<node::Kind::INST_CONST_I64> { int64_t _value; };
+template <> struct TNode<node::Kind::INST_CONST_F32> { flt32_t _value; };
+template <> struct TNode<node::Kind::INST_CONST_F64> { flt64_t _value; };
 
 struct NumericInstruction : com::TEnum<uint8_t>
 {
@@ -473,7 +494,6 @@ using Instruction = std::variant<
     node::TIndex<node::Kind::INST_CALL_INDIRECT > ,
     node::TIndex<node::Kind::INST_LOOP          > ,
     node::TIndex<node::Kind::INST_RETURN        > ,
-    node::TIndex<node::Kind::INST_CONST_I32_OBJ > ,
     node::TIndex<node::Kind::INST_CONST_I32     > ,
     node::TIndex<node::Kind::INST_CONST_I64     > ,
     node::TIndex<node::Kind::INST_CONST_F32     > ,

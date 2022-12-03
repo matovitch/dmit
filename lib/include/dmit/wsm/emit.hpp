@@ -753,24 +753,22 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
         base()(instMemF64._memarg);
     }
 
-    void operator()(node::TIndex<node::Kind::INST_CONST_I32_OBJ> instConstI32ObjIdx)
-    {
-        auto& instConstI32Obj = get(instConstI32ObjIdx);
-
-        Leb128Obj valueAsLeb128Obj{static_cast<std::int64_t>(instConstI32Obj._value)};
-
-        _writer.write(0x41);
-        _writer.write(valueAsLeb128Obj);
-    }
-
     void operator()(node::TIndex<node::Kind::INST_CONST_I32> instConstI32Idx)
     {
         auto& instConstI32 = get(instConstI32Idx);
 
-        Leb128 valueAsLeb128{static_cast<std::int64_t>(instConstI32._value)};
-
         _writer.write(0x41);
-        _writer.write(valueAsLeb128);
+
+        if (IS_OBJECT && instConstI32._relocationType != RelocationType::NONE)
+        {
+            Leb128Obj valueAsLeb128Obj{instConstI32._value};
+            _writer.write(valueAsLeb128Obj);
+        }
+        else
+        {
+            Leb128 valueAsLeb128{instConstI32._value};
+            _writer.write(valueAsLeb128);
+        }
     }
 
     void operator()(node::TIndex<node::Kind::INST_CONST_I64> instConstI64Idx)
