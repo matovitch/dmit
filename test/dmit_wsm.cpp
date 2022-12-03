@@ -94,11 +94,11 @@ TEST_CASE("wsm_add")
 
     // 2. Write it
 
-    auto emitSize = dmit::wsm::emitSize(moduleIdx, nodePool, false /*isObject*/);
+    auto emitSize = dmit::wsm::emitSizeNoObject(moduleIdx, nodePool);
 
     dmit::com::TStorage<uint8_t> storage{emitSize};
 
-    dmit::wsm::emit(moduleIdx, nodePool, storage.data(), false /*isObject*/);
+    dmit::wsm::emitNoObject(moduleIdx, nodePool, storage.data());
 
     // 3. Run it
 
@@ -228,11 +228,11 @@ TEST_CASE("wsm_increment")
 
     // 2. Write it
 
-    auto emitSize = dmit::wsm::emitSize(moduleIdx, nodePool, false /*isObject*/);
+    auto emitSize = dmit::wsm::emitSizeNoObject(moduleIdx, nodePool);
 
     dmit::com::TStorage<uint8_t> storage{emitSize};
 
-    dmit::wsm::emit(moduleIdx, nodePool, storage.data(), false /*isObject*/);
+    dmit::wsm::emitNoObject(moduleIdx, nodePool, storage.data());
 
     // 3. Run it
 

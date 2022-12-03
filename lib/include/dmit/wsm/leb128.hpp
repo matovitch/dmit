@@ -22,7 +22,7 @@ struct Leb128
 
 struct Leb128Obj
 {
-    Leb128Obj(uint32_t);
+    Leb128Obj(int64_t);
 
     uint8_t _asBytes[K_LEB128_OBJ_SIZE] = {0x80, 0x80, 0x80, 0x80, 0x00};
     uint8_t _size = 0;

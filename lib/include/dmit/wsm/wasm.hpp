@@ -473,6 +473,7 @@ using Instruction = std::variant<
     node::TIndex<node::Kind::INST_CALL_INDIRECT > ,
     node::TIndex<node::Kind::INST_LOOP          > ,
     node::TIndex<node::Kind::INST_RETURN        > ,
+    node::TIndex<node::Kind::INST_CONST_I32_OBJ > ,
     node::TIndex<node::Kind::INST_CONST_I32     > ,
     node::TIndex<node::Kind::INST_CONST_I64     > ,
     node::TIndex<node::Kind::INST_CONST_F32     > ,

@@ -23,17 +23,17 @@ template <class Derived, class NodePool>
 using TBaseVisitor = typename com::tree::TTMetaVisitor<node::Kind,
                                                        TNode,
                                                        NodePool>::template TVisitor<Derived>;
-template <class NodePool, class Writer>
-struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
-{
-    using TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>::_nodePool;
-    using TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>::base;
-    using TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>::get;
 
-    TEmitter(NodePool& nodePool, Writer& writer, bool isObject) :
-        TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>{nodePool},
+template <bool IS_OBJECT, class NodePool, class Writer>
+struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
+{
+    using TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>::_nodePool;
+    using TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>::base;
+    using TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>::get;
+
+    TEmitter(NodePool& nodePool, Writer& writer) :
+        TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>{nodePool},
         _writer{writer},
-        _isObject{isObject},
         _importDescriptorEmitter{nodePool, writer},
         _exportDescriptorEmitter{nodePool, writer},
         _blockTypeEmitter{nodePool, writer}
@@ -175,9 +175,16 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
     {
         auto& start = get(startIdx);
 
-        Leb128 funcIdxAsLeb128{start._funcIdx};
-
-        _writer.write(funcIdxAsLeb128);
+        if constexpr (IS_OBJECT)
+        {
+            Leb128Obj funcIdxAsLeb128Obj{start._funcIdx};
+            _writer.write(funcIdxAsLeb128Obj);
+        }
+        else
+        {
+            Leb128 funcIdxAsLeb128{start._funcIdx};
+            _writer.write(funcIdxAsLeb128);
+        }
     }
 
     void operator()(node::TIndex<node::Kind::LABEL> labelIdx)
@@ -283,7 +290,7 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
 
         _writer.write(0x10);
 
-        if (_isObject)
+        if constexpr (IS_OBJECT)
         {
             Leb128Obj funcIdxAsLeb128Obj{instCall._funcIdx};
             _writer.write(funcIdxAsLeb128Obj);
@@ -299,12 +306,22 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
     {
         auto& instCallIndirect = get(instCallIndirectIdx);
 
-        Leb128  typeIdxAsLeb128{instCallIndirect._typeIdx  };
-        Leb128 tableIdxAsLeb128{instCallIndirect._tableIdx };
-
         _writer.write(0x11);
-        _writer.write( typeIdxAsLeb128);
-        _writer.write(tableIdxAsLeb128);
+
+        if constexpr (IS_OBJECT)
+        {
+            Leb128Obj  typeIdxAsLeb128Obj{instCallIndirect._typeIdx  };
+            Leb128Obj tableIdxAsLeb128Obj{instCallIndirect._tableIdx };
+            _writer.write( typeIdxAsLeb128Obj);
+            _writer.write(tableIdxAsLeb128Obj);
+        }
+        else
+        {
+            Leb128  typeIdxAsLeb128{instCallIndirect._typeIdx  };
+            Leb128 tableIdxAsLeb128{instCallIndirect._tableIdx };
+            _writer.write( typeIdxAsLeb128);
+            _writer.write(tableIdxAsLeb128);
+        }
     }
 
     void operator()(node::TIndex<node::Kind::INST_REF_NULL> instRefNullIdx)
@@ -320,10 +337,18 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
     {
         auto& instRefFunc = get(instRefFuncIdx);
 
-        Leb128 funcIdxAsLeb128{instRefFunc._funcIdx};
-
         _writer.write(0xD2);
-        _writer.write(funcIdxAsLeb128);
+
+        if constexpr (IS_OBJECT)
+        {
+            Leb128Obj funcIdxAsLeb128Obj{instRefFunc._funcIdx};
+            _writer.write(funcIdxAsLeb128Obj);
+        }
+        else
+        {
+            Leb128 funcIdxAsLeb128{instRefFunc._funcIdx};
+            _writer.write(funcIdxAsLeb128);
+        }        
     }
 
     void operator()(node::TIndex<node::Kind::INST_SELECT> instSelectIdx)
@@ -374,44 +399,78 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
     {
         auto& instGlobalGet = get(instGlobalGetIdx);
 
-        Leb128 localIdxAsLeb128{instGlobalGet._globalIdx};
-
         _writer.write(0x23);
-        _writer.write(localIdxAsLeb128);
+
+        if constexpr (IS_OBJECT)
+        {
+            Leb128Obj localIdxAsLeb128Obj{instGlobalGet._globalIdx};
+            _writer.write(localIdxAsLeb128Obj);
+        }
+        else
+        {
+            Leb128 localIdxAsLeb128{instGlobalGet._globalIdx};
+            _writer.write(localIdxAsLeb128);
+        }
     }
 
     void operator()(node::TIndex<node::Kind::INST_GLOBAL_SET> instGlobalSetIdx)
     {
         auto& instGlobalSet = get(instGlobalSetIdx);
 
-        Leb128 localIdxAsLeb128{instGlobalSet._globalIdx};
-
         _writer.write(0x24);
-        _writer.write(localIdxAsLeb128);
+
+        if constexpr (IS_OBJECT)
+        {
+            Leb128Obj localIdxAsLeb128Obj{instGlobalSet._globalIdx};
+            _writer.write(localIdxAsLeb128Obj);
+        }
+        else
+        {
+            Leb128 localIdxAsLeb128{instGlobalSet._globalIdx};
+            _writer.write(localIdxAsLeb128);
+        }
     }
 
     void operator()(node::TIndex<node::Kind::INST_TABLE_GET> instTableGetIdx)
     {
         auto& instTableGet = get(instTableGetIdx);
 
-        Leb128 tableIdxAsLeb128{instTableGet._tableIdx};
-
         _writer.write(0x25);
-        _writer.write(tableIdxAsLeb128);
+
+        if constexpr (IS_OBJECT)
+        {
+            Leb128Obj tableIdxAsLeb128Obj{instTableGet._tableIdx};
+            _writer.write(tableIdxAsLeb128Obj);
+        }
+        else
+        {
+            Leb128 tableIdxAsLeb128{instTableGet._tableIdx};
+            _writer.write(tableIdxAsLeb128);
+        }
     }
 
     void operator()(node::TIndex<node::Kind::INST_TABLE_SET> instTableSetIdx)
     {
         auto& instTableSet = get(instTableSetIdx);
 
-        Leb128 tableIdxAsLeb128{instTableSet._tableIdx};
-
         _writer.write(0x26);
-        _writer.write(tableIdxAsLeb128);
+
+        if constexpr (IS_OBJECT)
+        {
+            Leb128Obj tableIdxAsLeb128Obj{instTableSet._tableIdx};
+            _writer.write(tableIdxAsLeb128Obj);
+        }
+        else
+        {
+            Leb128 tableIdxAsLeb128{instTableSet._tableIdx};
+            _writer.write(tableIdxAsLeb128);
+        }
     }
 
     void operator()(node::TIndex<node::Kind::INST_TABLE_INIT> instTableInitIdx)
     {
+        DMIT_COM_ASSERT(!IS_OBJECT && "INST_TABLE_INIT not supported in object mode");
+
         auto& instTableInit = get(instTableInitIdx);
 
         Leb128 tableIdxAsLeb128{instTableInit._tableIdx };
@@ -425,9 +484,11 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
 
     void operator()(node::TIndex<node::Kind::INST_ELEM_DROP> instElemDropIdx)
     {
+        DMIT_COM_ASSERT(!IS_OBJECT && "INST_ELEM_DROP not supported in object mode");
+
         auto& instElemDrop = get(instElemDropIdx);
 
-        Leb128  elemIdxAsLeb128{instElemDrop._elemIdx};
+        Leb128 elemIdxAsLeb128{instElemDrop._elemIdx};
 
         _writer.write(0xFC);
         _writer.write(Leb128{13u});
@@ -451,33 +512,59 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
     {
         auto& instTableGrow = get(instTableGrowIdx);
 
-        Leb128 tableIdxAsLeb128{instTableGrow._tableIdx};
 
         _writer.write(0xFC);
         _writer.write(Leb128{15u});
-        _writer.write(tableIdxAsLeb128);
+
+        if constexpr (IS_OBJECT)
+        {
+            Leb128Obj tableIdxAsLeb128Obj{instTableGrow._tableIdx};
+            _writer.write(tableIdxAsLeb128Obj);
+        }
+        else
+        {
+            Leb128 tableIdxAsLeb128{instTableGrow._tableIdx};
+            _writer.write(tableIdxAsLeb128);
+        }
     }
 
     void operator()(node::TIndex<node::Kind::INST_TABLE_SIZE> instTableSizeIdx)
     {
         auto& instTableSize = get(instTableSizeIdx);
 
-        Leb128 tableIdxAsLeb128{instTableSize._tableIdx};
-
         _writer.write(0xFC);
         _writer.write(Leb128{16u});
-        _writer.write(tableIdxAsLeb128);
+
+        if constexpr (IS_OBJECT)
+        {
+            Leb128Obj tableIdxAsLeb128Obj{instTableSize._tableIdx};
+            _writer.write(tableIdxAsLeb128Obj);
+        }
+        else
+        {
+            Leb128 tableIdxAsLeb128{instTableSize._tableIdx};
+            _writer.write(tableIdxAsLeb128);
+        }
     }
 
     void operator()(node::TIndex<node::Kind::INST_TABLE_FILL> instTableFillIdx)
     {
         auto& instTableFill = get(instTableFillIdx);
 
-        Leb128 tableIdxAsLeb128{instTableFill._tableIdx};
-
         _writer.write(0xFC);
         _writer.write(Leb128{17u});
-        _writer.write(tableIdxAsLeb128);
+
+        if constexpr (IS_OBJECT)
+        {
+            Leb128Obj tableIdxAsLeb128Obj{instTableFill._tableIdx};
+            _writer.write(tableIdxAsLeb128Obj);
+        }
+        else
+        {
+            Leb128 tableIdxAsLeb128{instTableFill._tableIdx};
+            _writer.write(tableIdxAsLeb128);
+        }
+        
     }
 
     void operator()(node::TIndex<node::Kind::INST_MEM_SIZE>)
@@ -494,6 +581,8 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
 
     void operator()(node::TIndex<node::Kind::INST_MEM_INIT> instMemInitIdx)
     {
+        DMIT_COM_ASSERT(!IS_OBJECT && "INST_MEM_INIT not supported in object mode");
+
         auto& instMemInit = get(instMemInitIdx);
 
         Leb128 dataIdxAsLeb128{instMemInit._dataIdx};
@@ -506,6 +595,8 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
 
     void operator()(node::TIndex<node::Kind::INST_DATA_DROP> instDataDropIdx)
     {
+        DMIT_COM_ASSERT(!IS_OBJECT && "INST_DATA_DROP not supported in object mode");
+
         auto& instDataDrop = get(instDataDropIdx);
 
         Leb128 dataIdxAsLeb128{instDataDrop._dataIdx};
@@ -1318,6 +1409,8 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
 
     void operator()(node::TIndex<node::Kind::ELEMENT> elementIdx)
     {
+        DMIT_COM_ASSERT(!IS_OBJECT && "Elements are not supported in object mode");
+
         auto& element = get(elementIdx);
 
         // 1. Compute and write the flag
@@ -1476,7 +1569,7 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
         _writer.write(0x00); // future code size
         _writer.write(0x00); // empty locals
         _writer.write(0x00); // future end byte
-    }        
+    }
 
     void fixupFunction(Writer fork)
     {
@@ -1526,9 +1619,18 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
 
             for (uint32_t i = 0; i < module._funcs._size; i++)
             {
-                _writer.write(Leb128{0u}); // fixup function signature (0th type)
-                Leb128 typeIdxAsLeb128{get(module._funcs[i])._typeIdx};
-                _writer.write(typeIdxAsLeb128);
+                if constexpr (IS_OBJECT)
+                {
+                    _writer.write(Leb128Obj{0u}); // fixup function signature (0th type)
+                    Leb128Obj typeIdxAsLeb128Obj{get(module._funcs[i])._typeIdx};
+                    _writer.write(typeIdxAsLeb128Obj);
+                }
+                else
+                {
+                    _writer.write(Leb128{0u}); // fixup function signature (0th type)
+                    Leb128 typeIdxAsLeb128{get(module._funcs[i])._typeIdx};
+                    _writer.write(typeIdxAsLeb128);
+                }
             }
         }
 
@@ -1625,7 +1727,6 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
     DMIT_COM_TREE_VISITOR_SIMPLE(node, Kind);
 
     Writer& _writer;
-    bool _isObject;
 
     TImportDescriptorEmitter <NodePool, Writer> _importDescriptorEmitter;
     TExportDescriptorEmitter <NodePool, Writer> _exportDescriptorEmitter;
@@ -1635,37 +1736,61 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
     static constexpr uint8_t K_VERSION [] = {0x01, 0x00, 0x00, 0x00};
 };
 
-template <class NodePool, class Writer>
-void emit(node::TIndex<node::Kind::MODULE> module, NodePool& nodePool, Writer& writer, bool isObject)
+template <bool IS_OBJECT, class NodePool, class Writer>
+void emit(node::TIndex<node::Kind::MODULE> module, NodePool& nodePool, Writer& writer)
 {
-    TEmitter<NodePool, Writer> emitter{nodePool, writer, isObject};
+    TEmitter<IS_OBJECT, NodePool, Writer> emitter{nodePool, writer};
 
     emitter.base()(module);
 }
 
-template <class NodePool>
-void emit(node::TIndex<node::Kind::MODULE> module, NodePool& nodePool, uint8_t* const buffer, bool isObject)
+template <bool IS_OBJECT, class NodePool>
+void emit(node::TIndex<node::Kind::MODULE> module, NodePool& nodePool, uint8_t* const buffer)
 {
     if (dmit::com::Endianness{} == dmit::com::Endianness::LITTLE)
     {
         dmit::wsm::writer::TScribe<dmit::com::Endianness::LITTLE> scribe{buffer};
-        dmit::wsm::emit(module, nodePool, scribe, isObject);
+        dmit::wsm::emit<IS_OBJECT, NodePool, decltype(scribe)>(module, nodePool, scribe);
     }
     else if (dmit::com::Endianness{} == dmit::com::Endianness::BIG)
     {
         dmit::wsm::writer::TScribe<dmit::com::Endianness::BIG> scribe{buffer};
-        dmit::wsm::emit(module, nodePool, scribe, isObject);
+        dmit::wsm::emit<IS_OBJECT, NodePool, decltype(scribe)>(module, nodePool, scribe);
     }
 }
 
-template <class NodePool>
-uint32_t emitSize(node::TIndex<node::Kind::MODULE> module, NodePool& nodePool, bool isObject)
+template <bool IS_OBJECT, class NodePool>
+uint32_t emitSize(node::TIndex<node::Kind::MODULE> module, NodePool& nodePool)
 {
     dmit::wsm::writer::Bematist bematist;
 
-    dmit::wsm::emit(module, nodePool, bematist, isObject);
+    dmit::wsm::emit<IS_OBJECT, NodePool>(module, nodePool, bematist);
 
     return bematist._size;
+}
+
+template <class NodePool>
+uint32_t emitSizeNoObject(node::TIndex<node::Kind::MODULE> module, NodePool& nodePool)
+{
+    return emitSize<false /*IS_OBJECT*/, NodePool>(module, nodePool);
+}
+
+template <class NodePool>
+uint32_t emitSizeObject(node::TIndex<node::Kind::MODULE> module, NodePool& nodePool)
+{
+    return emitSize<true /*IS_OBJECT*/, NodePool>(module, nodePool);
+}
+
+template <class NodePool>
+void emitNoObject(node::TIndex<node::Kind::MODULE> module, NodePool& nodePool, uint8_t* const buffer)
+{
+    emit<false /*IS_OBJECT*/, NodePool>(module, nodePool, buffer);
+}
+
+template <class NodePool>
+void emitObject(node::TIndex<node::Kind::MODULE> module, NodePool& nodePool, uint8_t* const buffer)
+{
+    emit<true /*IS_OBJECT*/, NodePool>(module, nodePool, buffer);
 }
 
 } // namespace dmit::wsm
