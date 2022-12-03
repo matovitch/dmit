@@ -282,7 +282,17 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
         Leb128 funcIdxAsLeb128{instCall._funcIdx};
 
         _writer.write(0x10);
-        _writer.write(funcIdxAsLeb128);
+
+        if (_isObject)
+        {
+            Leb128Obj funcIdxAsLeb128Obj{instCall._funcIdx};
+            _writer.write(funcIdxAsLeb128Obj);
+        }
+        else
+        {
+            Leb128 funcIdxAsLeb128{instCall._funcIdx};
+            _writer.write(funcIdxAsLeb128);
+        }
     }
 
     void operator()(node::TIndex<node::Kind::INST_CALL_INDIRECT> instCallIndirectIdx)
@@ -650,6 +660,16 @@ struct TEmitter : TBaseVisitor<TEmitter<NodePool, Writer>, NodePool>
         }
 
         base()(instMemF64._memarg);
+    }
+
+    void operator()(node::TIndex<node::Kind::INST_CONST_I32_OBJ> instConstI32ObjIdx)
+    {
+        auto& instConstI32Obj = get(instConstI32ObjIdx);
+
+        Leb128Obj valueAsLeb128Obj{static_cast<std::int64_t>(instConstI32Obj._value)};
+
+        _writer.write(0x41);
+        _writer.write(valueAsLeb128Obj);
     }
 
     void operator()(node::TIndex<node::Kind::INST_CONST_I32> instConstI32Idx)

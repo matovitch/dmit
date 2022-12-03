@@ -25,6 +25,11 @@ void Bematist::write(const Leb128& leb128)
     _size += leb128._size;
 }
 
+void Bematist::write(const Leb128Obj&)
+{
+    _size += K_LEB128_OBJ_SIZE;
+}
+
 void Bematist::writeF32(const flt32_t) { _size += sizeof(flt32_t); }
 void Bematist::writeF64(const flt64_t) { _size += sizeof(flt64_t); }
 

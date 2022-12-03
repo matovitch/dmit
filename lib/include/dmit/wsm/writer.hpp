@@ -21,6 +21,8 @@ struct Bematist
 
     void write(const Leb128&);
 
+    void write(const Leb128Obj&);
+
     void writeF32(const flt32_t);
     void writeF64(const flt64_t);
 
@@ -59,6 +61,11 @@ struct TScribe
     void write(const Leb128& leb128)
     {
         write(leb128._asBytes, leb128._size);
+    }
+
+    void write(const Leb128Obj& leb128Obj)
+    {
+        write(leb128Obj._asBytes, K_LEB128_OBJ_SIZE);
     }
 
     uint32_t diff(const TScribe<ENDIANNESS> scribe) const

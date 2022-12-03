@@ -28,6 +28,7 @@ struct Kind : com::TEnum<uint8_t>
         INST_CALL_INDIRECT ,
         INST_LOOP          ,
         INST_RETURN        ,
+        INST_CONST_I32_OBJ ,
         INST_CONST_I32     ,
         INST_CONST_I64     ,
         INST_CONST_F32     ,
@@ -221,10 +222,11 @@ struct TNode<node::Kind::TYPE_EXTERN>
 using flt32_t = com::ieee754::Binary<32>;
 using flt64_t = com::ieee754::Binary<64>;
 
-template <> struct TNode<node::Kind::INST_CONST_I32> { int32_t _value ; };
-template <> struct TNode<node::Kind::INST_CONST_I64> { int64_t _value ; };
-template <> struct TNode<node::Kind::INST_CONST_F32> { flt32_t _value ; };
-template <> struct TNode<node::Kind::INST_CONST_F64> { flt64_t _value ; };
+template <> struct TNode<node::Kind::INST_CONST_I32_OBJ > { int32_t _value ; };
+template <> struct TNode<node::Kind::INST_CONST_I32     > { int32_t _value ; };
+template <> struct TNode<node::Kind::INST_CONST_I64     > { int64_t _value ; };
+template <> struct TNode<node::Kind::INST_CONST_F32     > { flt32_t _value ; };
+template <> struct TNode<node::Kind::INST_CONST_F64     > { flt64_t _value ; };
 
 struct NumericInstruction : com::TEnum<uint8_t>
 {
