@@ -101,6 +101,9 @@ struct Kind : com::TEnum<uint8_t>
         EXPORT             ,
         NAME               ,
         RELOCATION         ,
+        SYMBOL             ,
+        SYMBOL_DATA        ,
+        SYMBOL_IMPORT      ,
         MODULE
     };
 
@@ -636,6 +639,59 @@ struct TNode<node::Kind::GLOBAL_VAR>
     node::TRange<node::Kind::INSTRUCTION     > _init;
 };
 
+struct SymbolKind : com::TEnum<uint8_t>
+{
+    enum : uint8_t
+    {
+        DATA,
+        FUNCTION,
+        GLOBAL,
+        EVENT,
+        TABLE,
+        SECTION
+    };
+
+    DMIT_COM_ENUM_IMPLICIT_FROM_INT(SymbolKind);
+};
+
+struct SymbolFlag
+{
+    enum : uint32_t
+    {
+        BINDING_WEAK        = 0b00000001,
+        BINDING_LOCAL       = 0b00000010,
+        VISIBILITY_HIDDEN   = 0b00000100,
+        UNDEFINED           = 0b00010000, // No 0x8 for some reason
+        EXPORTED            = 0b00100000,
+        EXPLICIT_NAME       = 0b01000000,
+        NO_STRIP            = 0b10000000
+    };
+};
+
+template<>
+struct TNode<node::Kind::SYMBOL_IMPORT>
+{
+    uint32_t _importIdx;
+};
+
+template<>
+struct TNode<node::Kind::SYMBOL_DATA>
+{
+    node::TIndex<node::Kind::NAME> _name;
+    uint32_t _index;
+    uint32_t _offset;
+    uint32_t _size;
+};
+
+template<>
+struct TNode<node::Kind::SYMBOL>
+{
+    SymbolKind _kind;
+    uint32_t   _flags;
+    std::variant<node::TIndex<node::Kind::SYMBOL_IMPORT>,
+                 node::TIndex<node::Kind::SYMBOL_DATA>> _asVariant;
+};
+
 template<>
 struct TNode<node::Kind::MODULE>
 {
@@ -656,6 +712,8 @@ struct TNode<node::Kind::MODULE>
 
     uint32_t _relocSizeCode;
     uint32_t _relocSizeData;
+
+    node::TRange<node::Kind::SYMBOL> _symbols;
 };
 
 template<> struct TNode<node::Kind::ELEM_PASSIVE     > {};

@@ -60,6 +60,7 @@ struct Scribe : ast::TVisitor<Scribe, scribe::Stack>
         _wsmPool.make(wsmModule._datas        , 0);
         _wsmPool.make(wsmModule._imports      , 0);
         _wsmPool.make(wsmModule._exports      , 0);
+        _wsmPool.make(wsmModule._symbols      , 0);
 
         dmit::com::blitDefault(wsmModule._startOpt);
         dmit::com::blitDefault(wsmModule._relocCode);

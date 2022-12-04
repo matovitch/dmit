@@ -285,7 +285,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
     void operator()(node::TIndex<node::Kind::INST_CALL> instCallIdx)
     {
         auto& instCall   = get(instCallIdx);
-        auto& relocation = get(instCall._relocation); 
+        auto& relocation = get(instCall._relocation);
 
         Leb128 funcIdxAsLeb128{instCall._funcIdx};
 
@@ -1556,6 +1556,41 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
         }
     }
 
+    void operator()(node::TIndex<node::Kind::SYMBOL_IMPORT> symbolImportIdx)
+    {
+        Leb128 importIndexAsLeb128{get(symbolImportIdx)._importIdx};
+        _writer.write(importIndexAsLeb128);
+    }
+
+    void operator()(node::TIndex<node::Kind::SYMBOL_DATA> symbolDataIdx)
+    {
+        auto& symbolData = get(symbolDataIdx);
+        base()(symbolData._name);
+
+        if (_isCurrentSymbolDefined)
+        {
+            Leb128 indexAsLeb128{symbolData._index};
+            _writer.write(indexAsLeb128);
+            Leb128 offsetAsLeb128{symbolData._offset};
+            _writer.write(offsetAsLeb128);
+            Leb128 sizeAsLeb128{symbolData._size};
+            _writer.write(sizeAsLeb128);
+        }
+    }
+
+    void operator()(node::TIndex<node::Kind::SYMBOL> symbolIdx)
+    {
+        auto& symbol = get(symbolIdx);
+
+        _writer.write(symbol._kind._asInt);
+
+        Leb128 flagsAsLeb128{symbol._flags};
+        _writer.write(flagsAsLeb128);
+
+        _isCurrentSymbolDefined = symbol._flags ^ SymbolFlag::UNDEFINED;
+        base()(symbol._asVariant);
+    }
+
     void fixupType()
     {
         _writer.write(0x60);
@@ -1594,6 +1629,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
 
         auto& module = get(moduleIdx);
 
+        if (module._types._size)
         {
             TFixUpSection<Writer> fixupSection(SectionId::TYPE, _writer);
 
@@ -1701,6 +1737,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
 
         auto relocPtr = &(get(get(module._relocCode)._next));
 
+        if (module._relocSizeCode)
         {
             TFixUpSection<Writer> fixupSection(SectionId::CUSTOM, _writer);
 
@@ -1729,6 +1766,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
 
         relocPtr = &(get(get(module._relocData)._next));
 
+        if (module._relocSizeData)
         {
             TFixUpSection<Writer> fixupSection(SectionId::CUSTOM, _writer);
 
@@ -1746,6 +1784,20 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
                 emitRelocation(*relocPtr);
                 relocPtr = &(get(relocPtr->_next));
             }
+        }
+
+        if (module._symbols._size)
+        {
+            TFixUpSection<Writer> fixupSection(SectionId::CUSTOM, _writer);
+
+            _writer.write(Leb128{sizeof("linking") - 1});
+            _writer.write(reinterpret_cast<const uint8_t*>("linking"), sizeof("linking") - 1);
+
+            Leb128 versionAsLeb128{K_LINK_VERSION};
+            _writer.write(versionAsLeb128);
+            _writer.write(K_SYMBOL_TABLE);
+
+            emitRangeWithSize(module._symbols);
         }
     }
 
@@ -1796,8 +1848,12 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
     TExportDescriptorEmitter <NodePool, Writer> _exportDescriptorEmitter;
     TBlockTypeEmitter        <NodePool, Writer> _blockTypeEmitter;
 
-    static constexpr uint8_t K_MAGIC   [] = {0x00, 0x61, 0x73, 0x6D};
-    static constexpr uint8_t K_VERSION [] = {0x01, 0x00, 0x00, 0x00};
+    bool _isCurrentSymbolDefined;
+
+    static constexpr uint8_t  K_MAGIC   []   = {0x00, 0x61, 0x73, 0x6D};
+    static constexpr uint8_t  K_VERSION []   = {0x01, 0x00, 0x00, 0x00};
+    static constexpr uint8_t  K_SYMBOL_TABLE = 8;
+    static constexpr uint32_t K_LINK_VERSION = 2;
 };
 
 template <bool IS_OBJECT, class NodePool, class Writer>
