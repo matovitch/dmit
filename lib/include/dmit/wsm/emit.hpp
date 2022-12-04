@@ -759,7 +759,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
 
         _writer.write(0x41);
 
-        if (IS_OBJECT && instConstI32._relocationType != RelocationType::NONE)
+        if (IS_OBJECT && get(instConstI32._relocation)._type != RelocationType::NONE)
         {
             Leb128Obj valueAsLeb128Obj{instConstI32._value};
             _writer.write(valueAsLeb128Obj);
@@ -1588,7 +1588,6 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
 
         auto& module = get(moduleIdx);
 
-        if (module._types._size)
         {
             TFixUpSection<Writer> fixupSection(SectionId::TYPE, _writer);
 
@@ -1617,15 +1616,15 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
 
             for (uint32_t i = 0; i < module._funcs._size; i++)
             {
+                _writer.write(Leb128{0u}); // fixup function signature (0th type)
+
                 if constexpr (IS_OBJECT)
                 {
-                    _writer.write(Leb128Obj{0u}); // fixup function signature (0th type)
                     Leb128Obj typeIdxAsLeb128Obj{get(module._funcs[i])._typeIdx};
                     _writer.write(typeIdxAsLeb128Obj);
                 }
                 else
                 {
-                    _writer.write(Leb128{0u}); // fixup function signature (0th type)
                     Leb128 typeIdxAsLeb128{get(module._funcs[i])._typeIdx};
                     _writer.write(typeIdxAsLeb128);
                 }
@@ -1697,10 +1696,52 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
             }
         }
 
+        auto relocPtr = &(get(get(module._relocCode)._next));
+
+        {
+            TFixUpSection<Writer> fixupSection(SectionId::CUSTOM, _writer);
+
+            _writer.write(Leb128{sizeof("reloc.CODE") - 1});
+            _writer.write(reinterpret_cast<const uint8_t*>("reloc.CODE"), sizeof("reloc.CODE") - 1);
+
+            Leb128 sectionAsLeb128{_writer._sectionCount - 1};
+            _writer.write(sectionAsLeb128);
+
+            Leb128 relocSizeCode128{module._relocSizeCode};
+            _writer.write(relocSizeCode128);
+
+            while (relocPtr->_type != wsm::RelocationType::NONE)
+            {
+                emitRelocation(*relocPtr);
+                relocPtr = &(get(relocPtr->_next));
+            }
+        }
+
         if (module._datas._size)
         {
             TFixUpSection<Writer> fixupSection(SectionId::DATA, _writer);
             emitRangeWithSize(module._datas);
+        }
+
+        relocPtr = &(get(get(module._relocData)._next));
+
+        {
+            TFixUpSection<Writer> fixupSection(SectionId::CUSTOM, _writer);
+
+            _writer.write(Leb128{sizeof("reloc.DATA") - 1});
+            _writer.write(reinterpret_cast<const uint8_t*>("reloc.DATA"), sizeof("reloc.DATA") - 1);
+
+            Leb128 sectionAsLeb128{_writer._sectionCount - 1};
+            _writer.write(sectionAsLeb128);
+
+            Leb128 relocSizeData128{module._relocSizeData};
+            _writer.write(relocSizeData128);
+
+            while (relocPtr->_type != wsm::RelocationType::NONE)
+            {
+                emitRelocation(*relocPtr);
+                relocPtr = &(get(relocPtr->_next));
+            }
         }
     }
 
@@ -1720,6 +1761,27 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
         base()(range);
 
         _writer.write(0x0B);
+    }
+
+    void emitRelocation(wsm::TNode<node::Kind::RELOCATION>& relocation)
+    {
+        _writer.write(relocation._type._asInt);
+
+        Leb128 offsetAsLeb128{relocation._offset};
+        Leb128  indexAsLeb128{relocation._index};
+
+        _writer.write(offsetAsLeb128);
+        _writer.write( indexAsLeb128);
+
+        if (relocation._type == wsm::RelocationType::FUNCTION_OFFSET_I32 ||
+            relocation._type == wsm::RelocationType::SECTION_OFFSET_I32  ||
+            relocation._type == wsm::RelocationType::MEMORY_ADDR_SLEB    ||
+            relocation._type == wsm::RelocationType::MEMORY_ADDR_LEB     ||
+            relocation._type == wsm::RelocationType::MEMORY_ADDR_I32)
+        {
+            Leb128 addendAsLeb128{relocation._addend};
+            _writer.write(addendAsLeb128);
+        }
     }
 
     DMIT_COM_TREE_VISITOR_SIMPLE(node, Kind);

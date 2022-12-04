@@ -60,10 +60,12 @@ struct TFixUpSection
         _fork.write (_sectionId._asInt);
 
         _fork.write(diffAsLeb128);
+
+        _writer._sectionCount += 2;
     }
 
     const SectionId _sectionId;
-    const Writer&   _writer;
+          Writer&   _writer;
           Writer    _fork;
 };
 

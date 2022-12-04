@@ -31,6 +31,7 @@ struct Bematist
     Bematist fork() const;
 
     uint32_t _size = 0;
+    uint32_t _sectionCount = 0;
 };
 
 template <uint8_t ENDIANNESS>
@@ -119,6 +120,7 @@ struct TScribe
     }
 
     uint8_t* _data;
+    uint8_t _sectionCount = 0;
 };
 
 } // namespace dmit::wsm::writer

@@ -16,6 +16,7 @@
 
 #include "dmit/com/parallel_for.hpp"
 #include "dmit/com/storage.hpp"
+#include "dmit/com/assert.hpp"
 #include "dmit/com/base64.hpp"
 
 #include <cstdint>
@@ -87,28 +88,28 @@ TEST_CASE("gen")
 
     auto&& bins = emit(groupAB);
 
-    uint8_t buffer[4096];
+    uint8_t buffer[1024] = {0};
 
     for (auto& bin : bins)
     {
         dmit::com::base64::encode(bin.data(), bin._size, buffer);
-        DMIT_COM_LOG_OUT << std::string{buffer, buffer + dmit::com::base64::encodeBufferSize(bin._size)} << '\n';
+        std::cout << std::string{buffer, buffer + dmit::com::base64::encodeBufferSize(bin._size)} << '\n';
     }
 
     wasm3::Environment env;
 
     wasm3::Runtime runtime = env.makeRuntime(0x100 /*stackSize*/);
 
-    wasm3::Result result = m3Err_none;
+    /*wasm3::Result result = m3Err_none;
 
     for (auto& bin : bins)
     {
         wasm3::Module module;
         result = wasm3::parseModule(env, module, bin.data(), bin._size);
-        CHECK(!result);
+        DMIT_COM_ASSERT(!result && "Could not parse wasm module");
         result = wasm3::loadModule(runtime, module);
-        CHECK(!result);
-    }
+        DMIT_COM_ASSERT(!result && "Could not load wasm module");
+    }*/
 
     /*wasm3::Function increment;
     result = wasm3::findFunction(increment, runtime, "increment");

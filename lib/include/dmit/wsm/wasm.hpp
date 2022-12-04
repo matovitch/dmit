@@ -100,6 +100,7 @@ struct Kind : com::TEnum<uint8_t>
         IMPORT             ,
         EXPORT             ,
         NAME               ,
+        RELOCATION         ,
         MODULE
     };
 
@@ -240,10 +241,20 @@ struct RelocationType : com::TEnum<int8_t>
     DMIT_COM_ENUM_IMPLICIT_FROM_INT(RelocationType);
 };
 
+template <>
+struct TNode<node::Kind::RELOCATION>
+{
+    node::TIndex<node::Kind::RELOCATION> _next;
+    uint32_t _addend;
+    uint32_t _offset;
+    uint32_t _index;
+    RelocationType _type;
+};
+
 using flt32_t = com::ieee754::Binary<32>;
 using flt64_t = com::ieee754::Binary<64>;
 
-template <> struct TNode<node::Kind::INST_CONST_I32> { RelocationType _relocationType;
+template <> struct TNode<node::Kind::INST_CONST_I32> { node::TIndex<node::Kind::RELOCATION> _relocation;
                                                        int32_t _value; };
 template <> struct TNode<node::Kind::INST_CONST_I64> { int64_t _value; };
 template <> struct TNode<node::Kind::INST_CONST_F32> { flt32_t _value; };
@@ -639,6 +650,11 @@ struct TNode<node::Kind::MODULE>
     node::TRange<node::Kind::EXPORT       > _exports;
 
     std::optional<node::TIndex<node::Kind::START>> _startOpt;
+    node::TIndex<node::Kind::RELOCATION> _relocCode;
+    node::TIndex<node::Kind::RELOCATION> _relocData;
+
+    uint32_t _relocSizeCode;
+    uint32_t _relocSizeData;
 };
 
 template<> struct TNode<node::Kind::ELEM_PASSIVE     > {};

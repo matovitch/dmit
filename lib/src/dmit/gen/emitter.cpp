@@ -62,6 +62,15 @@ struct Scribe : ast::TVisitor<Scribe, scribe::Stack>
         _wsmPool.make(wsmModule._exports      , 0);
 
         dmit::com::blitDefault(wsmModule._startOpt);
+        dmit::com::blitDefault(wsmModule._relocCode);
+        dmit::com::blitDefault(wsmModule._relocData);
+
+        auto& relocCode = _wsmPool.makeGet(wsmModule._relocCode);
+        auto& relocData = _wsmPool.makeGet(wsmModule._relocData);
+        relocCode._type = dmit::wsm::RelocationType::NONE;
+        relocData._type = dmit::wsm::RelocationType::NONE;
+        relocCode._next = wsmModule._relocCode;
+        relocData._next = wsmModule._relocData;
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DEF_CLASS>){}

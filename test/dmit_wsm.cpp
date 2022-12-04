@@ -4,6 +4,7 @@
 #include "dmit/wsm/wasm.hpp"
 
 #include "dmit/com/storage.hpp"
+#include "dmit/com/assert.hpp"
 #include "dmit/com/blit.hpp"
 
 #include "wasm3/wasm3.hpp"
@@ -32,6 +33,15 @@ TEST_CASE("wsm_add")
     nodePool.make(module._exports      , 1);
 
     dmit::com::blitDefault(module._startOpt);
+    dmit::com::blitDefault(module._relocSizeCode);
+    dmit::com::blitDefault(module._relocSizeData);
+
+    auto& relocCode = nodePool.makeGet(module._relocCode);
+    auto& relocData = nodePool.makeGet(module._relocData);
+    relocCode._type = dmit::wsm::RelocationType::NONE;
+    relocData._type = dmit::wsm::RelocationType::NONE;
+    relocCode._next = module._relocCode;
+    relocData._next = module._relocData;
 
     auto& typeFunc = nodePool.get(module._types[0]);
 
@@ -110,21 +120,21 @@ TEST_CASE("wsm_add")
 
     wasm3::Module m3module;
     result = wasm3::parseModule(env, m3module, storage.data(), emitSize);
-    CHECK(!result);
+    DMIT_COM_ASSERT(!result && "Could not parse wasm module");
 
     result = wasm3::loadModule(runtime, m3module);
-    CHECK(!result);
+    DMIT_COM_ASSERT(!result && "Could not load wasm module");
 
     wasm3::Function m3add;
     result = wasm3::findFunction(m3add, runtime, "add");
-    CHECK(!result);
+    DMIT_COM_ASSERT(!result && "Could not find add function");
 
     result = wasm3::call(m3add, 2, 3);
-    CHECK(!result);
+    DMIT_COM_ASSERT(!result && "Call to add failed");
 
     int32_t value = 0;
     result = wasm3::getResults(m3add, &value);
-    CHECK(!result);
+    DMIT_COM_ASSERT(!result && "Could not get result from addition");
 
     CHECK(value == 5);
 }
@@ -151,6 +161,15 @@ TEST_CASE("wsm_increment")
     nodePool.make(module._exports      , 1);
 
     dmit::com::blitDefault(module._startOpt);
+    dmit::com::blitDefault(module._relocSizeCode);
+    dmit::com::blitDefault(module._relocSizeData);
+
+    auto& relocCode = nodePool.makeGet(module._relocCode);
+    auto& relocData = nodePool.makeGet(module._relocData);
+    relocCode._type = dmit::wsm::RelocationType::NONE;
+    relocData._type = dmit::wsm::RelocationType::NONE;
+    relocCode._next = module._relocCode;
+    relocData._next = module._relocData;
 
     auto& typeFunc = nodePool.get(module._types[0]);
 

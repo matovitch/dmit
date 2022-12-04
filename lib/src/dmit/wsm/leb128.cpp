@@ -7,12 +7,7 @@
 namespace dmit::wsm
 {
 
-void Leb128::push(const uint8_t byte)
-{
-    _asBytes[_size++] = byte;
-}
-
-Leb128::Leb128(int64_t asI64)
+void Leb128::init(int64_t asI64)
 {
     bool more;
 
@@ -30,12 +25,12 @@ Leb128::Leb128(int64_t asI64)
             byte |= 0x80; // Mark this byte to show that more bytes will follow.
         }
 
-        push(byte);
+        _asBytes[_size++] |= byte;
     }
     while (more);
 }
 
-Leb128::Leb128(uint64_t asU64)
+void Leb128::init(uint64_t asU64)
 {
     do
     {
@@ -48,32 +43,35 @@ Leb128::Leb128(uint64_t asU64)
             byte |= 0x80; // Mark this byte to show that more bytes will follow.
         }
 
-        push(byte);
+        _asBytes[_size++] |= byte;
     }
     while (asU64 != 0);
 }
+
+Leb128::Leb128(uint64_t asU64) { init(asU64); }
+Leb128::Leb128( int64_t asI64) { init(asI64); }
 
 Leb128::Leb128(uint32_t asU32) : Leb128{static_cast<uint64_t>(asU32)} {}
 Leb128::Leb128( int32_t asI32) : Leb128{static_cast< int64_t>(asI32)} {}
 
 Leb128Obj::Leb128Obj(uint32_t asU32)
 {
-    new (reinterpret_cast<Leb128*>(this)) Leb128{asU32};
-}
-
-Leb128Obj::Leb128Obj(uint64_t asU64)
-{
-    new (reinterpret_cast<Leb128*>(this)) Leb128{asU64};
+    (reinterpret_cast<Leb128*>(this))->init(static_cast<uint64_t>(asU32));
 }
 
 Leb128Obj::Leb128Obj(int32_t asI32)
 {
-    new (reinterpret_cast<Leb128*>(this)) Leb128{asI32};
+    (reinterpret_cast<Leb128*>(this))->init(static_cast<int64_t>(asI32));
+}
+
+Leb128Obj::Leb128Obj(uint64_t asU64)
+{
+    (reinterpret_cast<Leb128*>(this))->init(asU64);
 }
 
 Leb128Obj::Leb128Obj(int64_t asI64)
 {
-    new (reinterpret_cast<Leb128*>(this)) Leb128{asI64};
+    (reinterpret_cast<Leb128*>(this))->init(asI64);
 }
 
 } // namespace dmit::wsm
