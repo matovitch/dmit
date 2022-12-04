@@ -290,7 +290,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
 
         _writer.write(0x10);
 
-        if (IS_OBJECT && get(function._relocation)._type != RelocationType::NONE)
+        if (IS_OBJECT && get(instCall._relocation)._type != RelocationType::NONE)
         {
             Leb128Obj funcIdxAsLeb128Obj{instCall._funcIdx};
             _writer.write(funcIdxAsLeb128Obj);
