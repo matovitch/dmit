@@ -290,7 +290,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
 
         _writer.write(0x10);
 
-        if constexpr (IS_OBJECT)
+        if (IS_OBJECT && get(function._relocation)._type != RelocationType::NONE)
         {
             Leb128Obj funcIdxAsLeb128Obj{instCall._funcIdx};
             _writer.write(funcIdxAsLeb128Obj);
@@ -1710,7 +1710,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
             Leb128 relocSizeCode128{module._relocSizeCode};
             _writer.write(relocSizeCode128);
 
-            while (relocPtr->_type != wsm::RelocationType::NONE)
+            while (relocPtr->_type != RelocationType::NONE)
             {
                 emitRelocation(*relocPtr);
                 relocPtr = &(get(relocPtr->_next));
@@ -1737,7 +1737,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
             Leb128 relocSizeData128{module._relocSizeData};
             _writer.write(relocSizeData128);
 
-            while (relocPtr->_type != wsm::RelocationType::NONE)
+            while (relocPtr->_type != RelocationType::NONE)
             {
                 emitRelocation(*relocPtr);
                 relocPtr = &(get(relocPtr->_next));
@@ -1763,7 +1763,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
         _writer.write(0x0B);
     }
 
-    void emitRelocation(wsm::TNode<node::Kind::RELOCATION>& relocation)
+    void emitRelocation(TNode<node::Kind::RELOCATION>& relocation)
     {
         _writer.write(relocation._type._asInt);
 
@@ -1773,11 +1773,11 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
         _writer.write(offsetAsLeb128);
         _writer.write( indexAsLeb128);
 
-        if (relocation._type == wsm::RelocationType::FUNCTION_OFFSET_I32 ||
-            relocation._type == wsm::RelocationType::SECTION_OFFSET_I32  ||
-            relocation._type == wsm::RelocationType::MEMORY_ADDR_SLEB    ||
-            relocation._type == wsm::RelocationType::MEMORY_ADDR_LEB     ||
-            relocation._type == wsm::RelocationType::MEMORY_ADDR_I32)
+        if (relocation._type == RelocationType::FUNCTION_OFFSET_I32 ||
+            relocation._type == RelocationType::SECTION_OFFSET_I32  ||
+            relocation._type == RelocationType::MEMORY_ADDR_SLEB    ||
+            relocation._type == RelocationType::MEMORY_ADDR_LEB     ||
+            relocation._type == RelocationType::MEMORY_ADDR_I32)
         {
             Leb128 addendAsLeb128{relocation._addend};
             _writer.write(addendAsLeb128);
@@ -1809,22 +1809,22 @@ void emit(node::TIndex<node::Kind::MODULE> module, NodePool& nodePool, uint8_t* 
 {
     if (dmit::com::Endianness{} == dmit::com::Endianness::LITTLE)
     {
-        dmit::wsm::writer::TScribe<dmit::com::Endianness::LITTLE> scribe{buffer};
-        dmit::wsm::emit<IS_OBJECT, NodePool, decltype(scribe)>(module, nodePool, scribe);
+        writer::TScribe<dmit::com::Endianness::LITTLE> scribe{buffer};
+        emit<IS_OBJECT, NodePool, decltype(scribe)>(module, nodePool, scribe);
     }
     else if (dmit::com::Endianness{} == dmit::com::Endianness::BIG)
     {
-        dmit::wsm::writer::TScribe<dmit::com::Endianness::BIG> scribe{buffer};
-        dmit::wsm::emit<IS_OBJECT, NodePool, decltype(scribe)>(module, nodePool, scribe);
+        writer::TScribe<dmit::com::Endianness::BIG> scribe{buffer};
+        emit<IS_OBJECT, NodePool, decltype(scribe)>(module, nodePool, scribe);
     }
 }
 
 template <bool IS_OBJECT, class NodePool>
 uint32_t emitSize(node::TIndex<node::Kind::MODULE> module, NodePool& nodePool)
 {
-    dmit::wsm::writer::Bematist bematist;
+    writer::Bematist bematist;
 
-    dmit::wsm::emit<IS_OBJECT, NodePool>(module, nodePool, bematist);
+    emit<IS_OBJECT, NodePool>(module, nodePool, bematist);
 
     return bematist._size;
 }

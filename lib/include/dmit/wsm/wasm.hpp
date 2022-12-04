@@ -603,6 +603,7 @@ template<> struct TNode<node::Kind::INST_RETURN> {};
 template<>
 struct TNode<node::Kind::INST_CALL>
 {
+    node::TIndex<node::Kind::RELOCATION> _relocation;
     uint32_t _funcIdx;
 };
 
