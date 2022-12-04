@@ -284,14 +284,17 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
 
     void operator()(node::TIndex<node::Kind::INST_CALL> instCallIdx)
     {
-        auto& instCall = get(instCallIdx);
+        auto& instCall   = get(instCallIdx);
+        auto& relocation = get(instCall._relocation); 
 
         Leb128 funcIdxAsLeb128{instCall._funcIdx};
 
         _writer.write(0x10);
 
-        if (IS_OBJECT && get(instCall._relocation)._type != RelocationType::NONE)
+        if (IS_OBJECT && relocation._type != RelocationType::NONE)
         {
+            relocation._offset = _writer.diff(_writerSection);
+
             Leb128Obj funcIdxAsLeb128Obj{instCall._funcIdx};
             _writer.write(funcIdxAsLeb128Obj);
         }
@@ -756,11 +759,14 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
     void operator()(node::TIndex<node::Kind::INST_CONST_I32> instConstI32Idx)
     {
         auto& instConstI32 = get(instConstI32Idx);
+        auto& relocation   = get(instConstI32._relocation);
 
         _writer.write(0x41);
 
-        if (IS_OBJECT && get(instConstI32._relocation)._type != RelocationType::NONE)
+        if (IS_OBJECT && relocation._type != RelocationType::NONE)
         {
+            relocation._offset = _writer.diff(_writerSection);
+
             Leb128Obj valueAsLeb128Obj{instConstI32._value};
             _writer.write(valueAsLeb128Obj);
         }
@@ -1592,7 +1598,6 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
             TFixUpSection<Writer> fixupSection(SectionId::TYPE, _writer);
 
             Leb128 rangeSizeAsLeb128{module._types._size + 1};
-
             _writer.write(rangeSizeAsLeb128);
 
             fixupType();
@@ -1611,7 +1616,6 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
             TFixUpSection<Writer> fixupSection(SectionId::FUNCTION, _writer);
 
             Leb128 rangeSizeAsLeb128{module._funcs._size << 1};
-
             _writer.write(rangeSizeAsLeb128);
 
             for (uint32_t i = 0; i < module._funcs._size; i++)
@@ -1674,16 +1678,15 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
             TFixUpSection<Writer> fixupSection(SectionId::DATA_COUNT, _writer);
 
             Leb128 datasSizeAsLeb128{module._datas._size};
-
             _writer.write(datasSizeAsLeb128);
         }
 
         if (module._funcs._size)
         {
             TFixUpSection<Writer> fixupSection(SectionId::CODE, _writer);
+            _writerSection = _writer.fork();
 
             Leb128 rangeSizeAsLeb128{module._funcs._size << 1};
-
             _writer.write(rangeSizeAsLeb128);
 
             for (uint32_t i = 0; i < module._funcs._size; i++)
@@ -1720,6 +1723,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
         if (module._datas._size)
         {
             TFixUpSection<Writer> fixupSection(SectionId::DATA, _writer);
+            _writerSection = _writer.fork();
             emitRangeWithSize(module._datas);
         }
 
@@ -1749,7 +1753,6 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
     void emitRangeWithSize(node::TRange<KIND>& range)
     {
         Leb128 rangeSizeAsLeb128{range._size};
-
         _writer.write(rangeSizeAsLeb128);
 
         base()(range);
@@ -1787,6 +1790,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
     DMIT_COM_TREE_VISITOR_SIMPLE(node, Kind);
 
     Writer& _writer;
+    Writer  _writerSection;
 
     TImportDescriptorEmitter <NodePool, Writer> _importDescriptorEmitter;
     TExportDescriptorEmitter <NodePool, Writer> _exportDescriptorEmitter;
