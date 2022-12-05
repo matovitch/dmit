@@ -56,16 +56,18 @@ RUN set -ex                                                                     
     ln -s /usr/bin/clang++-$LLVM_VERSION /usr/bin/clang++                                                       &&\
     ln -s /usr/bin/ld.lld-$LLVM_VERSION /usr/bin/ld.lld                                                         &&\
     ln -s /usr/bin/lld-$LLVM_VERSION /usr/bin/lld                                                               &&\
+    ln -s /usr/bin/wasm-ld-$LLVM_VERSION /usr/bin/wasm-ld                                                       &&\
     rm llvm.sh                                                                                                  &&\
-    git clone --progress --depth 1 https://github.com/gittup/tup                                                &&\
+    git clone --progress https://github.com/gittup/tup                                                          &&\
     cd tup                                                                                                      &&\
-    git checkout 7149db11be1728580f1ddcf760208d2ca85e7558                                                       &&\
+    git checkout e0e48ef68174e5078a6ad00f15ef91813f7ecc72                                                       &&\
     ./bootstrap-nofuse.sh                                                                                       &&\
     mv tup /usr/bin                                                                                             &&\
     cd ..                                                                                                       &&\
     rm -r tup                                                                                                   &&\
-    git clone --progress --depth 1 --branch 1.2 https://github.com/ymattw/ydiff.git                             &&\
+    git clone --progress --depth 1 https://github.com/ymattw/ydiff.git                                          &&\
     cd ydiff                                                                                                    &&\
+    git checkout b6662c7646763151a52b67bc126fcd0979eaf5b3                                                       &&\
     /usr/bin/python2 setup.py install                                                                           &&\
     cd ..                                                                                                       &&\
     rm -r ydiff                                                                                                 &&\
@@ -85,7 +87,7 @@ RUN set -ex                                                                     
     rm -r sqlite-autoconf-3390200 sqlite-autoconf-3390200.tar.gz                                                &&\
     git clone --progress --depth 1 https://github.com/nanomsg/nng.git                                           &&\
     cd nng                                                                                                      &&\
-    git checkout d065bab35a614d394d21b87aba44879f3ecb977d                                                       &&\
+    git checkout 5385b788d28f42078b7fd342ab241e2043e158f5                                                       &&\
     cmake -G Ninja                                                                                              &&\
     ninja                                                                                                       &&\
     mv libnng.a /usr/lib                                                                                        &&\
@@ -99,17 +101,19 @@ RUN set -ex                                                                     
     mv libcmp.a /usr/lib                                                                                        &&\
     cd ..                                                                                                       &&\
     rm -r cmp                                                                                                   &&\
-    git clone --recursive --progress --depth 1 https://github.com/matovitch/wasp.git                            &&\
-    cd wasp                                                                                                     &&\
-    git checkout 18ca152d274f1056fccf5ea0fe93794f0058c17e                                                       &&\
-    cmake -G Ninja -DBUILD_TESTING=OFF                                                                          &&\
+    git clone --recursive --progress --depth 1 https://github.com/WebAssembly/wabt                              &&\
+    cd wabt                                                                                                     &&\
+    git checkout ed0b720c97ec6cc70b1dc33151b5dcadf12c31f4                                                       &&\
+    mkdir build                                                                                                 &&\
+    cd build                                                                                                    &&\
+    cmake .. -G Ninja -DBUILD_TESTS=OFF                                                                         &&\
     ninja                                                                                                       &&\
-    mv src/tools/wasp /usr/bin                                                                                  &&\
-    cd ..                                                                                                       &&\
-    rm -r wasp                                                                                                  &&\
-    git clone --progress --depth 1 https://github.com/matovitch/wasm3.git                                       &&\
+    find -maxdepth 1 -executable -type f -exec mv -t /usr/bin {} +                                              &&\
+    cd ../..                                                                                                    &&\
+    rm -r wabt                                                                                                  &&\
+    git clone --progress --depth 1 https://github.com/wasm3/wasm3.git                                           &&\
     cd wasm3                                                                                                    &&\
-    git checkout f3e179a26c82707df3dfba5a4b652c7b641ea6e3                                                       &&\
+    git checkout 045040a97345e636b8be4f3086e6db59cdcc785f                                                       &&\
     cmake -G Ninja                                                                                              &&\
     ninja                                                                                                       &&\
     mv source/libm3.a /usr/lib                                                                                  &&\
