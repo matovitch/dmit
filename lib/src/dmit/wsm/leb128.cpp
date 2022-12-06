@@ -7,7 +7,11 @@
 namespace dmit::wsm
 {
 
-void Leb128::init(int64_t asI64)
+namespace
+{
+
+template <uint32_t SIZE>
+void init(int64_t asI64, uint8_t bytes[SIZE], uint8_t& size)
 {
     bool more;
 
@@ -25,12 +29,13 @@ void Leb128::init(int64_t asI64)
             byte |= 0x80; // Mark this byte to show that more bytes will follow.
         }
 
-        _asBytes[_size++] |= byte;
+        bytes[size++] |= byte;
     }
     while (more);
 }
 
-void Leb128::init(uint64_t asU64)
+template <uint32_t SIZE>
+void init(uint64_t asU64, uint8_t bytes[SIZE], uint8_t& size)
 {
     do
     {
@@ -43,35 +48,29 @@ void Leb128::init(uint64_t asU64)
             byte |= 0x80; // Mark this byte to show that more bytes will follow.
         }
 
-        _asBytes[_size++] |= byte;
+        bytes[size++] |= byte;
     }
     while (asU64 != 0);
 }
 
-Leb128::Leb128(uint64_t asU64) { init(asU64); }
-Leb128::Leb128( int64_t asI64) { init(asI64); }
-
-Leb128::Leb128(uint32_t asU32) : Leb128{static_cast<uint64_t>(asU32)} {}
-Leb128::Leb128( int32_t asI32) : Leb128{static_cast< int64_t>(asI32)} {}
-
-Leb128Obj::Leb128Obj(uint32_t asU32)
-{
-    (reinterpret_cast<Leb128*>(this))->init(static_cast<uint64_t>(asU32));
-}
-
-Leb128Obj::Leb128Obj(int32_t asI32)
-{
-    (reinterpret_cast<Leb128*>(this))->init(static_cast<int64_t>(asI32));
-}
+} // namespace
 
 Leb128Obj::Leb128Obj(uint64_t asU64)
 {
-    (reinterpret_cast<Leb128*>(this))->init(asU64);
+    init<K_LEB128_OBJ_SIZE>(asU64, _asBytes, _size);
 }
 
 Leb128Obj::Leb128Obj(int64_t asI64)
 {
-    (reinterpret_cast<Leb128*>(this))->init(asI64);
+    init<K_LEB128_OBJ_SIZE>(asI64, _asBytes, _size);
 }
+
+Leb128::Leb128(uint64_t asU64) { init<K_LEB128_MAX_SIZE>(asU64, _asBytes, _size); }
+Leb128::Leb128( int64_t asI64) { init<K_LEB128_MAX_SIZE>(asI64, _asBytes, _size); }
+
+Leb128::Leb128(uint32_t asU32) : Leb128{static_cast<uint64_t>(asU32)} {}
+Leb128::Leb128( int32_t asI32) : Leb128{static_cast< int64_t>(asI32)} {}
+Leb128Obj::Leb128Obj(uint32_t asU32) : Leb128Obj{static_cast<uint64_t>(asU32)} {}
+Leb128Obj::Leb128Obj( int32_t asI32) : Leb128Obj{static_cast< int64_t>(asI32)} {}
 
 } // namespace dmit::wsm

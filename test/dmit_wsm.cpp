@@ -66,7 +66,7 @@ TEST_CASE("wsm_add")
 
     auto& function = nodePool.get(module._funcs[0]);
 
-    function._typeIdx = 1;
+    function._typeIdx = 0;
 
     nodePool.make(function._locals , 0);
     nodePool.make(function._body   , 3);
@@ -91,7 +91,7 @@ TEST_CASE("wsm_add")
 
     dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_REF_FUNC> funcRefIdx;
 
-    nodePool.makeGet(funcRefIdx)._funcIdx = 1;
+    nodePool.makeGet(funcRefIdx)._funcIdx = 0;
 
     auto& name = nodePool.makeGet(export_._name);
 
@@ -193,7 +193,7 @@ TEST_CASE("wsm_increment")
 
     auto& function = nodePool.get(module._funcs[0]);
 
-    function._typeIdx = 1;
+    function._typeIdx = 0;
 
     nodePool.make(function._locals , 1);
     nodePool.make(function._body   , 5);
@@ -229,7 +229,7 @@ TEST_CASE("wsm_increment")
 
     dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_REF_FUNC> funcRefIdx;
 
-    nodePool.makeGet(funcRefIdx)._funcIdx = 1;
+    nodePool.makeGet(funcRefIdx)._funcIdx = 0;
 
     auto& name = nodePool.makeGet(export_._name);
 

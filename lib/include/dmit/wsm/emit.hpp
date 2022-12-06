@@ -1,8 +1,8 @@
 #pragma once
 
 #include "dmit/wsm/emit_block_type.hpp"
-#include "dmit/wsm/emit_section.hpp"
 #include "dmit/wsm/emit_port.hpp"
+#include "dmit/wsm/emit_size.hpp"
 #include "dmit/wsm/leb128.hpp"
 #include "dmit/wsm/writer.hpp"
 #include "dmit/wsm/wasm.hpp"
@@ -18,6 +18,28 @@
 
 namespace dmit::wsm
 {
+
+struct SectionId : com::TEnum<uint8_t>
+{
+    enum : uint8_t
+    {
+        CUSTOM,
+        TYPE,
+        IMPORT,
+        FUNCTION,
+        TABLE,
+        MEMORY,
+        GLOBAL,
+        EXPORT,
+        START,
+        ELEMENT,
+        CODE,
+        DATA,
+        DATA_COUNT
+    };
+
+    DMIT_COM_ENUM_IMPLICIT_FROM_INT(SectionId);
+};
 
 template <class Derived, class NodePool>
 using TBaseVisitor = typename com::tree::TTMetaVisitor<node::Kind,
@@ -1556,10 +1578,14 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
         }
     }
 
-    void operator()(node::TIndex<node::Kind::SYMBOL_IMPORT> symbolImportIdx)
+    void operator()(node::TIndex<node::Kind::SYMBOL_OBJECT> symbolObjectIdx)
     {
-        Leb128 importIndexAsLeb128{get(symbolImportIdx)._importIdx};
+        auto& symbolObject = get(symbolObjectIdx);
+
+        Leb128 importIndexAsLeb128{symbolObject._index};
         _writer.write(importIndexAsLeb128);
+
+        base()(symbolObject._name);
     }
 
     void operator()(node::TIndex<node::Kind::SYMBOL_DATA> symbolDataIdx)
@@ -1598,66 +1624,47 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
         _writer.write(0x00);
     }
 
-    void fixupFunction()
-    {
-        for (uint32_t i = 0; i < K_LEB128_MAX_SIZE; i++)
-        {
-            _writer.write(0x00);
-        }
-
-        _writer.write(0x00); // future code size
-        _writer.write(0x00); // empty locals
-        _writer.write(0x00); // future end byte
-    }
-
-    void fixupFunction(Writer fork)
-    {
-        Leb128 codeSize{_writer.diff(fork) - K_LEB128_MAX_SIZE - 1 - 1 - 1};
-
-        uint32_t fixupSize = K_LEB128_MAX_SIZE + 1 + 1 - codeSize._size;
-
-        fork.write(Leb128{fixupSize});
-        fork.skip(fixupSize - 1);
-        fork.write(0x0B);
-        fork.write(codeSize);
-    }
-
     void operator()(node::TIndex<node::Kind::MODULE> moduleIdx)
     {
         _writer.write(K_MAGIC   , sizeof(K_MAGIC   ));
         _writer.write(K_VERSION , sizeof(K_VERSION ));
 
+        uint8_t sectionCount = 0;
+
         auto& module = get(moduleIdx);
 
         if (module._types._size)
         {
-            TFixUpSection<Writer> fixupSection(SectionId::TYPE, _writer);
+            _writer.write(SectionId::TYPE);
+            TFixUpSize<Writer> _fixupSize{_writer};
+            sectionCount++;
 
-            Leb128 rangeSizeAsLeb128{module._types._size + 1};
+            Leb128 rangeSizeAsLeb128{module._types._size};
             _writer.write(rangeSizeAsLeb128);
-
-            fixupType();
 
             base()(module._types);
         }
 
         if (module._imports._size)
         {
-            TFixUpSection<Writer> fixupSection(SectionId::IMPORT, _writer);
+            _writer.write(SectionId::IMPORT);
+            TFixUpSize<Writer> _fixupSize{_writer};
+            sectionCount++;
+
             emitRangeWithSize(module._imports);
         }
 
         if (module._funcs._size)
         {
-            TFixUpSection<Writer> fixupSection(SectionId::FUNCTION, _writer);
+            _writer.write(SectionId::FUNCTION);
+            TFixUpSize<Writer> _fixupSize{_writer};
+            sectionCount++;
 
-            Leb128 rangeSizeAsLeb128{module._funcs._size << 1};
+            Leb128 rangeSizeAsLeb128{module._funcs._size};
             _writer.write(rangeSizeAsLeb128);
 
             for (uint32_t i = 0; i < module._funcs._size; i++)
             {
-                _writer.write(Leb128{0u}); // fixup function signature (0th type)
-
                 if constexpr (IS_OBJECT)
                 {
                     Leb128Obj typeIdxAsLeb128Obj{get(module._funcs[i])._typeIdx};
@@ -1673,45 +1680,65 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
 
         if (module._tables._size)
         {
-            TFixUpSection<Writer> fixupSection(SectionId::TABLE, _writer);
+            _writer.write(SectionId::TABLE);
+            TFixUpSize<Writer> _fixupSize{_writer};
+            sectionCount++;
+
             emitRangeWithSize(module._tables);
         }
 
         if (module._mems._size)
         {
-            TFixUpSection<Writer> fixupSection(SectionId::MEMORY, _writer);
+            _writer.write(SectionId::MEMORY);
+            TFixUpSize<Writer> _fixupSize{_writer};
+            sectionCount++;
+
             emitRangeWithSize(module._mems);
         }
 
         if (module._globalConsts ._size ||
             module._globalVars   ._size)
         {
-            TFixUpSection<Writer> fixupSection(SectionId::GLOBAL, _writer);
+            _writer.write(SectionId::GLOBAL);
+            TFixUpSize<Writer> _fixupSize{_writer};
+            sectionCount++;
+
             emitRangeWithSize(module._globalConsts);
             emitRangeWithSize(module._globalVars);
         }
 
         if (module._exports._size)
         {
-            TFixUpSection<Writer> fixupSection(SectionId::EXPORT, _writer);
+            _writer.write(SectionId::EXPORT);
+            TFixUpSize<Writer> _fixupSize{_writer};
+            sectionCount++;
+
             emitRangeWithSize(module._exports);
         }
 
         if (module._startOpt)
         {
-            TFixUpSection<Writer> fixupSection(SectionId::START, _writer);
+            _writer.write(SectionId::START);
+            TFixUpSize<Writer> _fixupSize{_writer};
+            sectionCount++;
+
             base()(module._startOpt.value());
         }
 
         if (module._elems._size)
         {
-            TFixUpSection<Writer> fixupSection(SectionId::ELEMENT, _writer);
+            _writer.write(SectionId::ELEMENT);
+            TFixUpSize<Writer> _fixupSize{_writer};
+            sectionCount++;
+
             emitRangeWithSize(module._elems);
         }
 
         if (module._datas._size)
         {
-            TFixUpSection<Writer> fixupSection(SectionId::DATA_COUNT, _writer);
+            _writer.write(SectionId::DATA_COUNT);
+            TFixUpSize<Writer> _fixupSize{_writer};
+            sectionCount++;
 
             Leb128 datasSizeAsLeb128{module._datas._size};
             _writer.write(datasSizeAsLeb128);
@@ -1719,19 +1746,19 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
 
         if (module._funcs._size)
         {
-            TFixUpSection<Writer> fixupSection(SectionId::CODE, _writer);
+            _writer.write(SectionId::CODE);
+            TFixUpSize<Writer> _fixupSize{_writer};
+            sectionCount++;
+
             _writerSection = _writer.fork();
 
-            Leb128 rangeSizeAsLeb128{module._funcs._size << 1};
+            Leb128 rangeSizeAsLeb128{module._funcs._size};
             _writer.write(rangeSizeAsLeb128);
 
             for (uint32_t i = 0; i < module._funcs._size; i++)
             {
-                auto fork = _writer.fork();
-
-                fixupFunction();
+                TFixUpSize<Writer> _fixupFuncSize{_writer};
                 base()(module._funcs[i]);
-                fixupFunction(fork);
             }
         }
 
@@ -1739,12 +1766,14 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
 
         if (module._relocSizeCode)
         {
-            TFixUpSection<Writer> fixupSection(SectionId::CUSTOM, _writer);
+            _writer.write(SectionId::CUSTOM);
+            TFixUpSize<Writer> _fixupSize{_writer};
+            sectionCount++;
 
             _writer.write(Leb128{sizeof("reloc.CODE") - 1});
             _writer.write(reinterpret_cast<const uint8_t*>("reloc.CODE"), sizeof("reloc.CODE") - 1);
 
-            Leb128 sectionAsLeb128{_writer._sectionCount - 1};
+            Leb128 sectionAsLeb128{sectionCount - 1};
             _writer.write(sectionAsLeb128);
 
             Leb128 relocSizeCode128{module._relocSizeCode};
@@ -1759,7 +1788,10 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
 
         if (module._datas._size)
         {
-            TFixUpSection<Writer> fixupSection(SectionId::DATA, _writer);
+            _writer.write(SectionId::DATA);
+            TFixUpSize<Writer> _fixupSize{_writer};
+            sectionCount++;
+
             _writerSection = _writer.fork();
             emitRangeWithSize(module._datas);
         }
@@ -1768,12 +1800,14 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
 
         if (module._relocSizeData)
         {
-            TFixUpSection<Writer> fixupSection(SectionId::CUSTOM, _writer);
+            _writer.write(SectionId::CUSTOM);
+            TFixUpSize<Writer> _fixupSize{_writer};
+            sectionCount++;
 
             _writer.write(Leb128{sizeof("reloc.DATA") - 1});
             _writer.write(reinterpret_cast<const uint8_t*>("reloc.DATA"), sizeof("reloc.DATA") - 1);
 
-            Leb128 sectionAsLeb128{_writer._sectionCount - 1};
+            Leb128 sectionAsLeb128{sectionCount - 1};
             _writer.write(sectionAsLeb128);
 
             Leb128 relocSizeData128{module._relocSizeData};
@@ -1788,7 +1822,9 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
 
         if (module._symbols._size)
         {
-            TFixUpSection<Writer> fixupSection(SectionId::CUSTOM, _writer);
+            _writer.write(SectionId::CUSTOM);
+            TFixUpSize<Writer> _fixupSize{_writer};
+            sectionCount++;
 
             _writer.write(Leb128{sizeof("linking") - 1});
             _writer.write(reinterpret_cast<const uint8_t*>("linking"), sizeof("linking") - 1);
@@ -1797,6 +1833,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
             _writer.write(versionAsLeb128);
             _writer.write(K_SYMBOL_TABLE);
 
+            TFixUpSize<Writer> _fixupSizeSymbols{_writer};
             emitRangeWithSize(module._symbols);
         }
     }

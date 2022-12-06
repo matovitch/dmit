@@ -15,9 +15,6 @@ struct Leb128
     Leb128( int64_t);
     Leb128( int32_t);
 
-    void init(uint64_t asI64);
-    void init( int64_t asI64);
-
     uint8_t _asBytes[K_LEB128_MAX_SIZE] = {0};
     uint8_t _size = 0;
 };

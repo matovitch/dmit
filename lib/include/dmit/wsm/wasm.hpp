@@ -103,7 +103,7 @@ struct Kind : com::TEnum<uint8_t>
         RELOCATION         ,
         SYMBOL             ,
         SYMBOL_DATA        ,
-        SYMBOL_IMPORT      ,
+        SYMBOL_OBJECT      ,
         MODULE
     };
 
@@ -643,8 +643,8 @@ struct SymbolKind : com::TEnum<uint8_t>
 {
     enum : uint8_t
     {
-        DATA,
         FUNCTION,
+        DATA,
         GLOBAL,
         EVENT,
         TABLE,
@@ -669,9 +669,10 @@ struct SymbolFlag
 };
 
 template<>
-struct TNode<node::Kind::SYMBOL_IMPORT>
+struct TNode<node::Kind::SYMBOL_OBJECT>
 {
-    uint32_t _importIdx;
+    uint32_t _index;
+    std::optional<node::TIndex<node::Kind::NAME>> _name;
 };
 
 template<>
@@ -688,7 +689,7 @@ struct TNode<node::Kind::SYMBOL>
 {
     SymbolKind _kind;
     uint32_t   _flags;
-    std::variant<node::TIndex<node::Kind::SYMBOL_IMPORT>,
+    std::variant<node::TIndex<node::Kind::SYMBOL_OBJECT>,
                  node::TIndex<node::Kind::SYMBOL_DATA>> _asVariant;
 };
 
