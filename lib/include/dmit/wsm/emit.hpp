@@ -1762,6 +1762,23 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
             }
         }
 
+        if (module._symbols._size)
+        {
+            _writer.write(SectionId::CUSTOM);
+            TFixUpSize<Writer> _fixupSize{_writer};
+            sectionCount++;
+
+            _writer.write(Leb128{sizeof("linking") - 1});
+            _writer.write(reinterpret_cast<const uint8_t*>("linking"), sizeof("linking") - 1);
+
+            Leb128 versionAsLeb128{K_LINK_VERSION};
+            _writer.write(versionAsLeb128);
+            _writer.write(K_SYMBOL_TABLE);
+
+            TFixUpSize<Writer> _fixupSizeSymbols{_writer};
+            emitRangeWithSize(module._symbols);
+        }
+
         auto relocPtr = &(get(get(module._relocCode)._next));
 
         if (module._relocSizeCode)
@@ -1773,7 +1790,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
             _writer.write(Leb128{sizeof("reloc.CODE") - 1});
             _writer.write(reinterpret_cast<const uint8_t*>("reloc.CODE"), sizeof("reloc.CODE") - 1);
 
-            Leb128 sectionAsLeb128{sectionCount - 1};
+            Leb128 sectionAsLeb128{sectionCount - 3};
             _writer.write(sectionAsLeb128);
 
             Leb128 relocSizeCode128{module._relocSizeCode};
@@ -1807,7 +1824,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
             _writer.write(Leb128{sizeof("reloc.DATA") - 1});
             _writer.write(reinterpret_cast<const uint8_t*>("reloc.DATA"), sizeof("reloc.DATA") - 1);
 
-            Leb128 sectionAsLeb128{sectionCount - 1};
+            Leb128 sectionAsLeb128{sectionCount - 2};
             _writer.write(sectionAsLeb128);
 
             Leb128 relocSizeData128{module._relocSizeData};
@@ -1818,23 +1835,6 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
                 emitRelocation(*relocPtr);
                 relocPtr = &(get(relocPtr->_next));
             }
-        }
-
-        if (module._symbols._size)
-        {
-            _writer.write(SectionId::CUSTOM);
-            TFixUpSize<Writer> _fixupSize{_writer};
-            sectionCount++;
-
-            _writer.write(Leb128{sizeof("linking") - 1});
-            _writer.write(reinterpret_cast<const uint8_t*>("linking"), sizeof("linking") - 1);
-
-            Leb128 versionAsLeb128{K_LINK_VERSION};
-            _writer.write(versionAsLeb128);
-            _writer.write(K_SYMBOL_TABLE);
-
-            TFixUpSize<Writer> _fixupSizeSymbols{_writer};
-            emitRangeWithSize(module._symbols);
         }
     }
 
