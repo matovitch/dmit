@@ -3,7 +3,15 @@
 {
 	"name": "dmit",
 	"image": "docker.io/matovitch/dmit:env",
-	"runArgs": ["--privileged", "--cap-add", "ALL", "--device", "/dev/fuse", "--security-opt", "apparmor:unconfined", "--env", "HOST_ROOT=."]
+	"runArgs": ["--privileged", "--cap-add", "ALL", "--device", "/dev/fuse", "--security-opt", "apparmor:unconfined", "--env", "HOST_ROOT=."],
+	"customizations": {
+		// Configure properties specific to VS Code.
+		"vscode": {
+			"extensions": [
+				"vadimcn.vscode-lldb"
+			]
+		}
+	}
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
