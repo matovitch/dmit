@@ -1,6 +1,7 @@
 #pragma once
 
 #include "dmit/com/tree_node.hpp"
+#include "dmit/com/assert.hpp"
 
 #include "dmit/com/blit.hpp"
 #include "dmit/com/enum.hpp"
@@ -136,6 +137,23 @@ struct TTMetaPool
         void trim(TRange<KIND>& range, const uint32_t size)
         {
             std::get<KIND>(_subs).trim(range, size);
+        }
+
+        template <TEnumIntegerType<Kind> KIND>
+        TNode<KIND>& grow(TRange<KIND>& range)
+        {
+            TIndex<KIND> index;
+            make<KIND>(index);
+
+            if (!range._size)
+            {
+                range._index = index;
+            }
+
+            DMIT_COM_ASSERT(index._value == range._index._value + range._size);
+            range._size++;
+
+            return get<KIND>(index);
         }
 
         SubPoolTuple _subs;
