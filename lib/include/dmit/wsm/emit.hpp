@@ -1790,7 +1790,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
             _writer.write(Leb128{sizeof("reloc.CODE") - 1});
             _writer.write(reinterpret_cast<const uint8_t*>("reloc.CODE"), sizeof("reloc.CODE") - 1);
 
-            Leb128 sectionAsLeb128{sectionCount - 3};
+            Leb128 sectionAsLeb128{sectionCount - K_RELOC_CODE_SECTION_OFFSET};
             _writer.write(sectionAsLeb128);
 
             Leb128 relocSizeCode128{module._relocSizeCode};
@@ -1824,7 +1824,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
             _writer.write(Leb128{sizeof("reloc.DATA") - 1});
             _writer.write(reinterpret_cast<const uint8_t*>("reloc.DATA"), sizeof("reloc.DATA") - 1);
 
-            Leb128 sectionAsLeb128{sectionCount - 2};
+            Leb128 sectionAsLeb128{sectionCount - K_RELOC_DATA_SECTION_OFFSET};
             _writer.write(sectionAsLeb128);
 
             Leb128 relocSizeData128{module._relocSizeData};
@@ -1887,10 +1887,12 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
 
     bool _isCurrentSymbolDefined;
 
-    static constexpr uint8_t  K_MAGIC   []   = {0x00, 0x61, 0x73, 0x6D};
-    static constexpr uint8_t  K_VERSION []   = {0x01, 0x00, 0x00, 0x00};
-    static constexpr uint8_t  K_SYMBOL_TABLE = 8;
-    static constexpr uint32_t K_LINK_VERSION = 2;
+    static constexpr uint8_t  K_MAGIC   []                = {0x00, 0x61, 0x73, 0x6D};
+    static constexpr uint8_t  K_VERSION []                = {0x01, 0x00, 0x00, 0x00};
+    static constexpr uint8_t  K_SYMBOL_TABLE              = 8;
+    static constexpr uint32_t K_LINK_VERSION              = 2;
+    static constexpr uint32_t K_RELOC_CODE_SECTION_OFFSET = 3;
+    static constexpr uint32_t K_RELOC_DATA_SECTION_OFFSET = 2;
 };
 
 template <bool IS_OBJECT, class NodePool, class Writer>
