@@ -54,6 +54,7 @@ RUN set -ex                                                                     
     chmod +x llvm.sh                                                                                            &&\
     ./llvm.sh $LLVM_VERSION                                                                                     &&\
     ln -s /usr/bin/clang++-$LLVM_VERSION /usr/bin/clang++                                                       &&\
+    ln -s /usr/bin/clangd-$LLVM_VERSION /usr/bin/clangd                                                         &&\
     ln -s /usr/bin/ld.lld-$LLVM_VERSION /usr/bin/ld.lld                                                         &&\
     ln -s /usr/bin/lld-$LLVM_VERSION /usr/bin/lld                                                               &&\
     ln -s /usr/bin/wasm-ld-$LLVM_VERSION /usr/bin/wasm-ld                                                       &&\
