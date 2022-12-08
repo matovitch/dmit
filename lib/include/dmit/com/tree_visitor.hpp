@@ -5,6 +5,7 @@
 #include "dmit/com/assert.hpp"
 #include "dmit/com/enum.hpp"
 
+#include <optional>
 #include <utility>
 
 namespace dmit::com::tree
@@ -16,7 +17,8 @@ struct TTMetaVisitor
     struct StackDummy{};
 
     template <class Derived, class StackIn  = StackDummy,
-                             class StackOut = StackDummy>
+                             class StackOut = StackDummy,
+                             bool REVERSE_LIST = false>
     struct TVisitor
     {
         template <class... Args>
@@ -72,6 +74,50 @@ struct TTMetaVisitor
             static_cast<Derived*>(this)->template loopConclusion<KIND>(nodeRange);
         }
 
+        template <TEnumIntegerType<Kind> KIND>
+        void operator()(typename TMetaNode<Kind>::template TList<KIND>& nodeList)
+        {
+
+            if constexpr (REVERSE_LIST)
+            {
+                auto prev = nodeList._begin;
+                auto curr = get(prev)._next;
+                auto next = get(curr)._next;
+
+                auto nodePtr = &(get(curr));
+
+                while (curr != nodeList._begin)
+                {
+                    nodePtr->_next = prev;
+
+                    prev = curr;
+                    curr = next;
+                    next = get(next)._next;
+
+                    nodePtr = &(get(curr));
+                }
+
+                nodePtr->_next = prev;
+            }
+
+            auto curr = nodeList._begin;
+            auto nodePtr = &(get(curr));
+
+            static_cast<Derived*>(this)->template loopPreamble<KIND>(nodeList);
+
+            while (nodePtr->_next != nodeList._begin)
+            {
+                curr = nodePtr->_next;
+                nodePtr = &(get(curr));
+
+                static_cast<Derived*>(this)->template loopIterationPreamble<KIND>(curr);
+                (*this)(curr);
+                static_cast<Derived*>(this)->template loopIterationConclusion<KIND>(curr);
+            }
+
+            static_cast<Derived*>(this)->template loopConclusion<KIND>(nodeList);
+        }
+
         template <class... Types>
         void operator()(std::variant<Types...>& variant)
         {
@@ -96,7 +142,13 @@ struct TTMetaVisitor
             return _nodePool.get(nodeIndex);
         }
 
-        TVisitor<Derived, StackIn, StackOut>& base()
+        template <TEnumIntegerType<Kind> KIND>
+        bool empty(const typename TMetaNode<Kind>::template TList<KIND> nodeList)
+        {
+            return _nodePool.empty(nodeList);
+        }
+
+        TVisitor<Derived, StackIn, StackOut, REVERSE_LIST>& base()
         {
             return (*this);
         }
@@ -118,6 +170,12 @@ struct TTMetaVisitor
                                                                 \
     template <dmit::com::TEnumIntegerType<prefix::Kind> KIND>   \
     void loopPreamble(prefix::TRange<KIND>&) {}                 \
+                                                                \
+    template <dmit::com::TEnumIntegerType<prefix::Kind> KIND>   \
+    void loopConclusion(prefix::TList<KIND>&) {}                \
+                                                                \
+    template <dmit::com::TEnumIntegerType<prefix::Kind> KIND>   \
+    void loopPreamble(prefix::TList<KIND>&) {}                  \
                                                                 \
     template <dmit::com::TEnumIntegerType<prefix::Kind> KIND>   \
     void loopIterationConclusion(prefix::TIndex<KIND>) {}       \

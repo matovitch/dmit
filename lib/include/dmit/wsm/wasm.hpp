@@ -68,7 +68,6 @@ struct Kind : com::TEnum<uint8_t>
         INST_UNREACHABLE   ,
         INSTRUCTION        ,
         MEMARG             ,
-        TYPE_EXTERN        ,
         TYPE_GLOBAL_CONST  ,
         TYPE_GLOBAL_VAR    ,
         TYPE_F32           ,
@@ -114,6 +113,9 @@ struct Kind : com::TEnum<uint8_t>
 
 template <com::TEnumIntegerType<Kind> KIND>
 using TRange = typename com::tree::TMetaNode<Kind>::template TRange<KIND>;
+
+template <com::TEnumIntegerType<Kind> KIND>
+using TList = typename com::tree::TMetaNode<Kind>::template TList<KIND>;
 
 template <com::TEnumIntegerType<Kind> KIND>
 using TIndex = typename com::tree::TMetaNode<Kind>::template TIndex<KIND>;
@@ -209,17 +211,6 @@ template <>
 struct TNode<node::Kind::TYPE_GLOBAL_CONST>
 {
     node::TIndex<node::Kind::TYPE_VAL> _valType;
-};
-
-using ExternType = std::variant<node::TIndex<node::Kind::TYPE_GLOBAL_CONST>,
-                                node::TIndex<node::Kind::TYPE_GLOBAL_VAR>,
-                                node::TIndex<node::Kind::TYPE_FUNC>,
-                                node::TIndex<node::Kind::TYPE_MEM>,
-                                node::TIndex<node::Kind::TYPE_TABLE>>;
-template <>
-struct TNode<node::Kind::TYPE_EXTERN>
-{
-    ExternType _asVariant;
 };
 
 struct RelocationType : com::TEnum<int8_t>
@@ -551,6 +542,7 @@ using Instruction = std::variant<
 template <>
 struct TNode<node::Kind::INSTRUCTION>
 {
+    node::TIndex<node::Kind::INSTRUCTION> _next;
     Instruction _asVariant;
 };
 
@@ -558,22 +550,22 @@ template<>
 struct TNode<node::Kind::INST_BLOCK>
 {
     BlockType _type;
-    node::TRange<node::Kind::INSTRUCTION> _instructions;
+    node::TList<node::Kind::INSTRUCTION> _instructions;
 };
 
 template<>
 struct TNode<node::Kind::INST_LOOP>
 {
     BlockType _type;
-    node::TRange<node::Kind::INSTRUCTION> _instructions;
+    node::TList<node::Kind::INSTRUCTION> _instructions;
 };
 
 template<>
 struct TNode<node::Kind::INST_IF>
 {
     BlockType _type;
-    node::TRange<node::Kind::INSTRUCTION> _then;
-    node::TRange<node::Kind::INSTRUCTION> _else;
+    node::TList<node::Kind::INSTRUCTION> _then;
+    node::TList<node::Kind::INSTRUCTION> _else;
 };
 
 template<>
@@ -621,22 +613,22 @@ template<>
 struct TNode<node::Kind::FUNCTION>
 {
     uint32_t                               _typeIdx;
-    node::TRange<node::Kind::TYPE_VAL    > _locals;
-    node::TRange<node::Kind::INSTRUCTION > _body;
+    node::TRange <node::Kind::TYPE_VAL    > _locals;
+    node::TList  <node::Kind::INSTRUCTION > _body;
 };
 
 template<>
 struct TNode<node::Kind::GLOBAL_CONST>
 {
-    node::TIndex<node::Kind::TYPE_GLOBAL_CONST > _type;
-    node::TRange<node::Kind::INSTRUCTION       > _init;
+    node::TIndex <node::Kind::TYPE_GLOBAL_CONST > _type;
+    node::TList  <node::Kind::INSTRUCTION       > _init;
 };
 
 template<>
 struct TNode<node::Kind::GLOBAL_VAR>
 {
-    node::TIndex<node::Kind::TYPE_GLOBAL_VAR > _type;
-    node::TRange<node::Kind::INSTRUCTION     > _init;
+    node::TIndex <node::Kind::TYPE_GLOBAL_VAR > _type;
+    node::TList  <node::Kind::INSTRUCTION     > _init;
 };
 
 struct SymbolKind : com::TEnum<uint8_t>
@@ -708,8 +700,8 @@ struct TNode<node::Kind::MODULE>
     node::TRange<node::Kind::EXPORT       > _exports;
 
     std::optional<node::TIndex<node::Kind::START>> _startOpt;
-    node::TIndex<node::Kind::RELOCATION> _relocCode;
-    node::TIndex<node::Kind::RELOCATION> _relocData;
+    node::TList<node::Kind::RELOCATION> _relocCode;
+    node::TList<node::Kind::RELOCATION> _relocData;
 
     uint32_t _relocSizeCode;
     uint32_t _relocSizeData;
@@ -724,7 +716,7 @@ template <>
 struct TNode<node::Kind::ELEM_ACTIVE>
 {
     uint32_t                              _tableIdx;
-    node::TRange<node::Kind::INSTRUCTION> _offset;
+    node::TList<node::Kind::INSTRUCTION> _offset;
 };
 
 using ElementMode = std::variant<node::TIndex<node::Kind::ELEM_ACTIVE>,
@@ -733,7 +725,7 @@ using ElementMode = std::variant<node::TIndex<node::Kind::ELEM_ACTIVE>,
 template <>
 struct TNode<node::Kind::EXPRESSION>
 {
-    node::TRange<node::Kind::INSTRUCTION> _instructions;
+    node::TList<node::Kind::INSTRUCTION> _instructions;
 };
 
 template <>
@@ -750,7 +742,7 @@ template <>
 struct TNode<node::Kind::DATA_ACTIVE>
 {
     uint32_t _memIdx;
-    node::TRange<node::Kind::INSTRUCTION> _offset;
+    node::TList<node::Kind::INSTRUCTION> _offset;
 };
 
 using DataMode = std::variant<node::TIndex<node::Kind::DATA_PASSIVE>,

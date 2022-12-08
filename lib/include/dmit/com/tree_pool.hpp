@@ -80,6 +80,9 @@ struct TTMetaPool
         using TRange = typename TMetaNode<Kind>::template TRange<KIND>;
 
         template <TEnumIntegerType<Kind> KIND>
+        using TList = typename TMetaNode<Kind>::template TList<KIND>;
+
+        template <TEnumIntegerType<Kind> KIND>
         const TNode<KIND>& get(const TIndex<KIND> index) const
         {
             return std::get<KIND>(_subs).get(index);
@@ -143,7 +146,7 @@ struct TTMetaPool
         TNode<KIND>& grow(TRange<KIND>& range)
         {
             TIndex<KIND> index;
-            make<KIND>(index);
+            auto& node = makeGet<KIND>(index);
 
             if (!range._size)
             {
@@ -153,7 +156,38 @@ struct TTMetaPool
             DMIT_COM_ASSERT(index._value == range._index._value + range._size);
             range._size++;
 
-            return get<KIND>(index);
+            return node;
+        }
+
+        template <TEnumIntegerType<Kind> KIND>
+        void make(TList<KIND>& list)
+        {
+            makeGet<KIND>(list._begin)._next = list._begin;
+        }
+
+        template <TEnumIntegerType<Kind> KIND>
+        TNode<KIND>& grow(TList<KIND> list)
+        {
+            TIndex<KIND> index;
+            auto& node = makeGet<KIND>(index);
+
+            auto& nextBegin = get<KIND>(list._begin)._next;
+            node._next = nextBegin;
+            nextBegin = index;
+
+            return node;
+        }
+
+        template <TEnumIntegerType<Kind> KIND>
+        TIndex<KIND> last(const TList<KIND> list)
+        {
+            return get<KIND>(list._begin)._next;
+        }
+
+        template <TEnumIntegerType<Kind> KIND>
+        bool empty(const TList<KIND> list)
+        {
+            return get<KIND>(list._begin)._next == list._begin;
         }
 
         SubPoolTuple _subs;

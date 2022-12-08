@@ -61,17 +61,13 @@ struct Scribe : ast::TVisitor<Scribe, scribe::Stack>
         _wsmPool.make(wsmModule._imports      , 0);
         _wsmPool.make(wsmModule._exports      , 0);
         _wsmPool.make(wsmModule._symbols      , 0);
+        _wsmPool.make(wsmModule._relocCode);
+        _wsmPool.make(wsmModule._relocData);
 
         dmit::com::blitDefault(wsmModule._startOpt);
         dmit::com::blitDefault(wsmModule._relocCode);
         dmit::com::blitDefault(wsmModule._relocData);
 
-        auto& relocCode = _wsmPool.makeGet(wsmModule._relocCode);
-        auto& relocData = _wsmPool.makeGet(wsmModule._relocData);
-        relocCode._type = dmit::wsm::RelocationType::NONE;
-        relocData._type = dmit::wsm::RelocationType::NONE;
-        relocCode._next = wsmModule._relocCode;
-        relocData._next = wsmModule._relocData;
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DEF_CLASS>){}
@@ -152,8 +148,8 @@ struct Scribe : ast::TVisitor<Scribe, scribe::Stack>
 
         wsmFunction._typeIdx = _idxFunc;
 
-        _wsmPool.make(wsmFunction._locals , 0);
-        _wsmPool.make(wsmFunction._body   , 0);
+        _wsmPool.make(wsmFunction._locals, 0);
+        _wsmPool.make(wsmFunction._body);
 
         // TODO make the wasm function
 
@@ -290,6 +286,12 @@ struct Bematist : ast::TVisitor<Bematist, bematist::Stack,
 
     template <com::TEnumIntegerType<ast::node::Kind> KIND>
     void loopPreamble(ast::node::TRange<KIND>&) {}
+
+    template <com::TEnumIntegerType<ast::node::Kind> KIND>
+    void loopConclusion(ast::node::TList<KIND>& range) {}
+
+    template <com::TEnumIntegerType<ast::node::Kind> KIND>
+    void loopPreamble(ast::node::TList<KIND>&) {}
 
     template <class Type>
     void emptyOption() {}

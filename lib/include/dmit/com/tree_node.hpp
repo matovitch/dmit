@@ -88,6 +88,12 @@ struct TMetaNode
         uint32_t _size;
     };
 
+    template <TEnumIntegerType<Kind> KIND>
+    struct TList
+    {
+        TIndex<KIND> _begin;
+    };
+
     using VIndex = typename TTVector<TIndex, std::variant>::Type;
 };
 

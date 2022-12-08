@@ -41,20 +41,26 @@ struct SectionId : com::TEnum<uint8_t>
     DMIT_COM_ENUM_IMPLICIT_FROM_INT(SectionId);
 };
 
-template <class Derived, class NodePool>
+struct StackDummy {};
+
+template <class Derived, class NodePool, bool REVERSE_LIST>
 using TBaseVisitor = typename com::tree::TTMetaVisitor<node::Kind,
                                                        TNode,
-                                                       NodePool>::template TVisitor<Derived>;
+                                                       NodePool>::template TVisitor<Derived,
+                                                                                    StackDummy,
+                                                                                    StackDummy,
+                                                                                    REVERSE_LIST>;
 
 template <bool IS_OBJECT, class NodePool, class Writer>
-struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
+struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, Writer::REVERSE_LIST>
 {
-    using TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>::_nodePool;
-    using TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>::base;
-    using TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>::get;
+    using TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, Writer::REVERSE_LIST>::_nodePool;
+    using TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, Writer::REVERSE_LIST>::base;
+    using TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, Writer::REVERSE_LIST>::get;
+    using TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, Writer::REVERSE_LIST>::empty;
 
     TEmitter(NodePool& nodePool, Writer& writer) :
-        TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>{nodePool},
+        TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, Writer::REVERSE_LIST>{nodePool},
         _writer{writer},
         _importDescriptorEmitter{nodePool, writer},
         _exportDescriptorEmitter{nodePool, writer},
@@ -161,7 +167,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
             base()(function._locals[i]);
         }
 
-        emitRangeWithSentinel(function._body);
+        emitListWithSentinel(function._body);
     }
 
     void operator()(node::TIndex<node::Kind::TYPE_TABLE> typeTableIdx)
@@ -237,7 +243,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
 
         std::visit(_blockTypeEmitter, instBlock._type);
 
-        emitRangeWithSentinel(instBlock._instructions);
+        emitListWithSentinel(instBlock._instructions);
     }
 
     void operator()(node::TIndex<node::Kind::INST_LOOP> instLoopIdx)
@@ -248,7 +254,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
 
         std::visit(_blockTypeEmitter, instLoop._type);
 
-        emitRangeWithSentinel(instLoop._instructions);
+        emitListWithSentinel(instLoop._instructions);
     }
 
     void operator()(node::TIndex<node::Kind::INST_IF> instIfIdx)
@@ -263,7 +269,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
 
         base()(instIf._then);
 
-        if (instIf._else._size)
+        if (!empty(instIf._else))
         {
             _writer.write(0x05);
             base()(instIf._else);
@@ -1410,10 +1416,10 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
     {
         auto& expression = get(expressionIdx);
 
-        emitRangeWithSentinel(expression._instructions);
+        emitListWithSentinel(expression._instructions);
     }
 
-    bool isFuncRef(node::TIndex<node::Kind::EXPRESSION> expressionIdx)
+    /*bool isFuncRef(node::TIndex<node::Kind::EXPRESSION> expressionIdx)
     {
         auto& expression = get(expressionIdx);
 
@@ -1537,7 +1543,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
             base()(element._type);
             base()(element._init);
         }
-    }
+    }*/
 
     void operator()(node::TIndex<node::Kind::DATA> dataIdx)
     {
@@ -1572,7 +1578,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
 
             _writer.write(memIdxAsLeb128);
 
-            emitRangeWithSentinel(mode._offset);
+            emitListWithSentinel(mode._offset);
 
             base()(data._init);
         }
@@ -1617,11 +1623,27 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
         base()(symbol._asVariant);
     }
 
-    void fixupType()
+    void operator()(node::TIndex<node::Kind::RELOCATION>& relocationIdx)
     {
-        _writer.write(0x60);
-        _writer.write(0x00);
-        _writer.write(0x00);
+        auto& relocation = get(relocationIdx);
+
+        _writer.write(relocation._type._asInt);
+
+        Leb128 offsetAsLeb128{relocation._offset};
+        Leb128  indexAsLeb128{relocation._index};
+
+        _writer.write(offsetAsLeb128);
+        _writer.write( indexAsLeb128);
+
+        if (relocation._type == RelocationType::FUNCTION_OFFSET_I32 ||
+            relocation._type == RelocationType::SECTION_OFFSET_I32  ||
+            relocation._type == RelocationType::MEMORY_ADDR_SLEB    ||
+            relocation._type == RelocationType::MEMORY_ADDR_LEB     ||
+            relocation._type == RelocationType::MEMORY_ADDR_I32)
+        {
+            Leb128 addendAsLeb128{relocation._addend};
+            _writer.write(addendAsLeb128);
+        }
     }
 
     void operator()(node::TIndex<node::Kind::MODULE> moduleIdx)
@@ -1779,8 +1801,6 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
             emitRangeWithSize(module._symbols);
         }
 
-        auto relocPtr = &(get(get(module._relocCode)._next));
-
         if (module._relocSizeCode)
         {
             _writer.write(SectionId::CUSTOM);
@@ -1796,11 +1816,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
             Leb128 relocSizeCode128{module._relocSizeCode};
             _writer.write(relocSizeCode128);
 
-            while (relocPtr->_type != RelocationType::NONE)
-            {
-                emitRelocation(*relocPtr);
-                relocPtr = &(get(relocPtr->_next));
-            }
+            base()(module._relocCode);
         }
 
         if (module._datas._size)
@@ -1812,8 +1828,6 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
             _writerSection = _writer.fork();
             emitRangeWithSize(module._datas);
         }
-
-        relocPtr = &(get(get(module._relocData)._next));
 
         if (module._relocSizeData)
         {
@@ -1830,11 +1844,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
             Leb128 relocSizeData128{module._relocSizeData};
             _writer.write(relocSizeData128);
 
-            while (relocPtr->_type != RelocationType::NONE)
-            {
-                emitRelocation(*relocPtr);
-                relocPtr = &(get(relocPtr->_next));
-            }
+            base()(module._relocData);
         }
     }
 
@@ -1848,32 +1858,11 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool>
     }
 
     template <com::TEnumIntegerType<node::Kind> KIND>
-    void emitRangeWithSentinel(node::TRange<KIND>& range)
+    void emitListWithSentinel(node::TList<KIND>& list)
     {
-        base()(range);
+        base()(list);
 
         _writer.write(0x0B);
-    }
-
-    void emitRelocation(TNode<node::Kind::RELOCATION>& relocation)
-    {
-        _writer.write(relocation._type._asInt);
-
-        Leb128 offsetAsLeb128{relocation._offset};
-        Leb128  indexAsLeb128{relocation._index};
-
-        _writer.write(offsetAsLeb128);
-        _writer.write( indexAsLeb128);
-
-        if (relocation._type == RelocationType::FUNCTION_OFFSET_I32 ||
-            relocation._type == RelocationType::SECTION_OFFSET_I32  ||
-            relocation._type == RelocationType::MEMORY_ADDR_SLEB    ||
-            relocation._type == RelocationType::MEMORY_ADDR_LEB     ||
-            relocation._type == RelocationType::MEMORY_ADDR_I32)
-        {
-            Leb128 addendAsLeb128{relocation._addend};
-            _writer.write(addendAsLeb128);
-        }
     }
 
     DMIT_COM_TREE_VISITOR_SIMPLE(node, Kind);

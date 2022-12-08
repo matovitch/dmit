@@ -73,6 +73,9 @@ template <com::TEnumIntegerType<Kind> KIND>
 using TRange = typename com::tree::TMetaNode<Kind>::template TRange<KIND>;
 
 template <com::TEnumIntegerType<Kind> KIND>
+using TList = typename com::tree::TMetaNode<Kind>::template TList<KIND>;
+
+template <com::TEnumIntegerType<Kind> KIND>
 using TIndex = typename com::tree::TMetaNode<Kind>::template TIndex<KIND>;
 
 using VIndex = typename com::tree::TMetaNode<Kind>::VIndex;

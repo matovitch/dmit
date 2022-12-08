@@ -32,6 +32,8 @@ struct Bematist
 
     uint32_t _size = 0;
     uint32_t _sectionCount = 0;
+
+    static constexpr bool REVERSE_LIST = false;
 };
 
 template <uint8_t ENDIANNESS>
@@ -121,6 +123,8 @@ struct TScribe
 
     uint8_t* _data;
     uint8_t _sectionCount = 0;
+
+    static constexpr bool REVERSE_LIST = true;
 };
 
 } // namespace dmit::wsm::writer

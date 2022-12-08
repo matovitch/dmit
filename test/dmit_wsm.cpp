@@ -32,17 +32,12 @@ TEST_CASE("wsm_add")
     nodePool.make(module._imports      , 0);
     nodePool.make(module._exports      , 1);
     nodePool.make(module._symbols      , 0);
+    nodePool.make(module._relocCode);
+    nodePool.make(module._relocData);
 
     dmit::com::blitDefault(module._startOpt);
     dmit::com::blitDefault(module._relocSizeCode);
     dmit::com::blitDefault(module._relocSizeData);
-
-    auto& relocCode = nodePool.makeGet(module._relocCode);
-    auto& relocData = nodePool.makeGet(module._relocData);
-    relocCode._type = dmit::wsm::RelocationType::NONE;
-    relocData._type = dmit::wsm::RelocationType::NONE;
-    relocCode._next = module._relocCode;
-    relocData._next = module._relocData;
 
     auto& typeFunc = nodePool.get(module._types[0]);
 
@@ -69,11 +64,11 @@ TEST_CASE("wsm_add")
     function._typeIdx = 0;
 
     nodePool.make(function._locals , 0);
-    nodePool.make(function._body   , 3);
+    nodePool.make(function._body);
 
-    auto& localsGet_0 = nodePool.get(function._body[0]);
-    auto& localsGet_1 = nodePool.get(function._body[1]);
-    auto& add         = nodePool.get(function._body[2]);
+    auto& localsGet_0 = nodePool.grow(function._body);
+    auto& localsGet_1 = nodePool.grow(function._body);
+    auto& add         = nodePool.grow(function._body);
 
     dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_LOCAL_GET > instLocalGet_0;
     dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_LOCAL_GET > instLocalGet_1;
@@ -161,17 +156,13 @@ TEST_CASE("wsm_increment")
     nodePool.make(module._imports      , 0);
     nodePool.make(module._exports      , 1);
     nodePool.make(module._symbols      , 0);
+    nodePool.make(module._relocCode);
+    nodePool.make(module._relocData);
 
     dmit::com::blitDefault(module._startOpt);
     dmit::com::blitDefault(module._relocSizeCode);
     dmit::com::blitDefault(module._relocSizeData);
 
-    auto& relocCode = nodePool.makeGet(module._relocCode);
-    auto& relocData = nodePool.makeGet(module._relocData);
-    relocCode._type = dmit::wsm::RelocationType::NONE;
-    relocData._type = dmit::wsm::RelocationType::NONE;
-    relocCode._next = module._relocCode;
-    relocData._next = module._relocData;
 
     auto& typeFunc = nodePool.get(module._types[0]);
 
@@ -196,16 +187,16 @@ TEST_CASE("wsm_increment")
     function._typeIdx = 0;
 
     nodePool.make(function._locals , 1);
-    nodePool.make(function._body   , 5);
+    nodePool.make(function._body);
 
     auto& local_1 = nodePool.get(function._locals[0]);
     dmit::com::blit(i32Idx, local_1._asVariant);
 
-    auto& localGet_0 = nodePool.get(function._body[0]);
-    auto& i32const_1 = nodePool.get(function._body[1]);
-    auto& i32add     = nodePool.get(function._body[2]);
-    auto& localSet_1 = nodePool.get(function._body[3]);
-    auto& localGet_1 = nodePool.get(function._body[4]);
+    auto& localGet_0 = nodePool.grow(function._body);
+    auto& i32const_1 = nodePool.grow(function._body);
+    auto& i32add     = nodePool.grow(function._body);
+    auto& localSet_1 = nodePool.grow(function._body);
+    auto& localGet_1 = nodePool.grow(function._body);
 
     dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_LOCAL_GET > instLocalGet_0;
     dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_CONST_I32 > instConst;
