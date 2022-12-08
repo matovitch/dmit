@@ -41,12 +41,10 @@ struct Scribe : ast::TVisitor<Scribe, scribe::Stack>
 
     Scribe(ast::State::NodePool  & poolAst,
            sem::InterfaceMap     & interfaceMap,
-           PoolWasm              & poolWasm,
-           std::vector<uint32_t> & measures) :
+           PoolWasm              & poolWasm) :
         TVisitor<Scribe, scribe::Stack>{poolAst},
         _interfaceMap{interfaceMap},
-        _wsmPool{poolWasm},
-        _measures{measures}
+        _wsmPool{poolWasm}
     {
         auto& wsmModule = _wsmPool.makeGet(_wsmModuleIdx);
 
@@ -83,20 +81,7 @@ struct Scribe : ast::TVisitor<Scribe, scribe::Stack>
 
         auto& wsmModule = _wsmPool.get(_wsmModuleIdx);
 
-        if (!_idxFunc)
-        {
-            auto nbFunction = _measures[_measuresIdx++];
-            _wsmPool.make(wsmModule._types, nbFunction);
-            _wsmPool.make(wsmModule._funcs, nbFunction);
-        }
-
-        if (!_idxExport)
-        {
-            auto nbExport = _measures[_measuresIdx++];
-            _wsmPool.make(wsmModule._exports, nbExport);
-        }
-
-        auto& wsmTypeFunc = _wsmPool.get(wsmModule._types[_idxFunc]);
+        auto& wsmTypeFunc = _wsmPool.grow(wsmModule._types);
 
         auto& wsmDomain   = _wsmPool.makeGet(wsmTypeFunc.   _domain);
         auto& wsmCodomain = _wsmPool.makeGet(wsmTypeFunc. _codomain);
@@ -144,7 +129,7 @@ struct Scribe : ast::TVisitor<Scribe, scribe::Stack>
 
         // Now build the function
 
-        auto& wsmFunction = _wsmPool.get(wsmModule._funcs[_idxFunc++]);
+        auto& wsmFunction = _wsmPool.grow(wsmModule._funcs);
 
         wsmFunction._typeIdx = _idxFunc;
 
@@ -155,11 +140,11 @@ struct Scribe : ast::TVisitor<Scribe, scribe::Stack>
 
         if (_stackPtrIn->_isExport)
         {
-            auto& export_ = _wsmPool.get(wsmModule._exports[_idxExport++]);
+            auto& export_ = _wsmPool.grow(wsmModule._exports);
 
             wsm::node::TIndex<wsm::node::Kind::INST_REF_FUNC> funcRefIdx;
 
-            _wsmPool.makeGet(funcRefIdx)._funcIdx = (_idxFunc << 1) - 1;
+            _wsmPool.makeGet(funcRefIdx)._funcIdx = _idxFunc;
 
             com::blit(funcRefIdx, export_._descriptor);
 
@@ -174,6 +159,8 @@ struct Scribe : ast::TVisitor<Scribe, scribe::Stack>
                 _wsmPool.get(name._bytes[i])._value = functionIdAsString[i];
             }
         }
+
+        _idxFunc++;
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DEFINITION> definitionIdx)
@@ -201,105 +188,7 @@ struct Scribe : ast::TVisitor<Scribe, scribe::Stack>
     wsm::node::TIndex<wsm::node::Kind::MODULE> _wsmModuleIdx;
 
     uint32_t _idxFunc   = 0;
-    uint32_t _idxExport = 0;
-
-    uint32_t              _measuresIdx = 0;
-    std::vector<uint32_t> _measures;
 };
-
-namespace bematist
-{
-
-struct Stack
-{
-    bool     _isExport   = false;
-    uint32_t _nbFunction = 0;
-    uint32_t _nbExport   = 0;
-};
-
-} // namespace bematist
-
-struct Bematist : ast::TVisitor<Bematist, bematist::Stack,
-                                          bematist::Stack>
-{
-    Bematist(ast::State::NodePool & poolAst,
-             sem::InterfaceMap    & interfaceMap) :
-        TVisitor<Bematist, bematist::Stack,
-                           bematist::Stack>{poolAst},
-        _interfaceMap{interfaceMap}
-    {}
-
-    void operator()(ast::node::TIndex<ast::node::Kind::DEF_CLASS>)
-    {
-        *_stackPtrOut = *_stackPtrIn;
-    }
-
-    void operator()(ast::node::TIndex<ast::node::Kind::DEF_FUNCTION> functionIdx)
-    {
-        *_stackPtrOut = *_stackPtrIn;
-
-        _stackPtrOut->_nbFunction += 1;
-        _stackPtrOut->_nbExport   += _stackPtrOut->_isExport;
-    }
-
-    void operator()(ast::node::TIndex<ast::node::Kind::DEFINITION> definitionIdx)
-    {
-        auto& definition = get(definitionIdx);
-
-        _stackPtrIn->_isExport = (definition._role == ast::DefinitionRole::EXPORTED);
-
-        base()(definition._value);
-    }
-
-    void operator()(ast::node::TIndex<ast::node::Kind::MODULE> moduleIdx)
-    {
-        auto indexFunction = _measures.size();
-                             _measures.push_back(0);
-        auto indexExport   = _measures.size();
-                             _measures.push_back(0);
-
-        _stackPtrIn->_nbFunction = 0;
-        _stackPtrIn->_nbExport   = 0;
-
-        base()(get(moduleIdx)._definitions);
-
-        _measures[indexFunction ] = _stackPtrOut->_nbFunction;
-        _measures[indexExport   ] = _stackPtrOut->_nbExport;
-    }
-
-    void operator()(ast::node::TIndex<ast::node::Kind::VIEW> viewIdx)
-    {
-        base()(get(viewIdx)._modules);
-    }
-
-    template <com::TEnumIntegerType<ast::node::Kind> KIND>
-    void loopIterationConclusion(ast::node::TIndex<KIND>)
-    {
-        *_stackPtrIn = *_stackPtrOut;
-    }
-
-    template <com::TEnumIntegerType<ast::node::Kind> KIND>
-    void loopIterationPreamble(ast::node::TIndex<KIND>) {}
-
-    template <com::TEnumIntegerType<ast::node::Kind> KIND>
-    void loopConclusion(ast::node::TRange<KIND>& range) {}
-
-    template <com::TEnumIntegerType<ast::node::Kind> KIND>
-    void loopPreamble(ast::node::TRange<KIND>&) {}
-
-    template <com::TEnumIntegerType<ast::node::Kind> KIND>
-    void loopConclusion(ast::node::TList<KIND>& range) {}
-
-    template <com::TEnumIntegerType<ast::node::Kind> KIND>
-    void loopPreamble(ast::node::TList<KIND>&) {}
-
-    template <class Type>
-    void emptyOption() {}
-
-    sem::InterfaceMap&    _interfaceMap;
-    std::vector<uint32_t> _measures;
-};
-
 
 } // namespace
 
@@ -307,11 +196,7 @@ com::TStorage<uint8_t> make(sem::InterfaceMap& interfaceMap,
                             ast::Bundle& bundle,
                             PoolWasm& poolWasm)
 {
-    Bematist bematist{bundle._nodePool, interfaceMap};
-
-    bematist.base()(bundle._views);
-
-    Scribe scribe{bundle._nodePool, interfaceMap, poolWasm, bematist._measures};
+    Scribe scribe{bundle._nodePool, interfaceMap, poolWasm};
 
     scribe.base()(bundle._views);
 

@@ -77,7 +77,6 @@ struct TTMetaVisitor
         template <TEnumIntegerType<Kind> KIND>
         void operator()(typename TMetaNode<Kind>::template TList<KIND>& nodeList)
         {
-
             if constexpr (REVERSE_LIST)
             {
                 auto prev = nodeList._begin;
