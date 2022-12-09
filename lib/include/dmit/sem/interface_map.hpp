@@ -30,7 +30,6 @@ struct InterfaceMap : fmt::Formatable
                       com::unique_id::Comparator, 4, 3> _asSimpleMap;
 
     ast::State::NodePool  _astNodePool;
-    ast::State::NodePool& _astNodePoolRef;
 
     pool::TMake<ast::node::TRange<ast::node::Kind::VIEW>, 1> _viewsPool;
 };

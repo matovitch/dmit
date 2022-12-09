@@ -157,8 +157,6 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
 
 } // namespace
 
-InterfaceMap::InterfaceMap() : _astNodePoolRef{_astNodePool} {}
-
 void InterfaceMap::registerBundle(ast::Bundle& bundle, Context& context)
 {
     // 0. Skip empty bundle

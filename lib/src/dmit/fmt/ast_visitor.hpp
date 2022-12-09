@@ -25,20 +25,20 @@ namespace
 
 struct AstVisitor : ast::TVisitor<AstVisitor>
 {
-    AstVisitor(const ast::State& ast, std::ostringstream& oss) :
+    AstVisitor(ast::State& ast, std::ostringstream& oss) :
         ast::TVisitor<AstVisitor>{ast._nodePool},
         _interfacePoolOpt{},
         _oss{oss}
     {}
 
-    AstVisitor(const ast::Bundle& bundle, std::ostringstream& oss) :
+    AstVisitor(ast::Bundle& bundle, std::ostringstream& oss) :
         ast::TVisitor<AstVisitor>{bundle._nodePool},
         _interfacePoolOpt{bundle._interfacePoolOpt},
         _oss{oss}
     {}
 
-    AstVisitor(const sem::InterfaceMap& interfaceMap, std::ostringstream& oss) :
-        ast::TVisitor<AstVisitor>{interfaceMap._astNodePoolRef},
+    AstVisitor(sem::InterfaceMap& interfaceMap, std::ostringstream& oss) :
+        ast::TVisitor<AstVisitor>{interfaceMap._astNodePool},
         _interfacePoolOpt{},
         _oss{oss}
     {}
