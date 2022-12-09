@@ -22,7 +22,7 @@ struct TExportDescriptorEmitter
     {
         auto& instGlobalGet = _nodePool.get(instGlobalGetIdx);
 
-        Leb128 globalIdxAsLeb128{instGlobalGet._globalIdx};
+        Leb128</*IS_OBJECT=*/false> globalIdxAsLeb128{instGlobalGet._globalIdx};
 
         _writer.write(0x03);
         _writer.write(globalIdxAsLeb128);
@@ -32,7 +32,7 @@ struct TExportDescriptorEmitter
     {
         auto& instTableGet = _nodePool.get(instTableGetIdx);
 
-        Leb128 tableIdxAsLeb128{instTableGet._tableIdx};
+        Leb128</*IS_OBJECT=*/false> tableIdxAsLeb128{instTableGet._tableIdx};
 
         _writer.write(0x01);
         _writer.write(tableIdxAsLeb128);
@@ -42,7 +42,7 @@ struct TExportDescriptorEmitter
     {
         auto& instRefFunc = _nodePool.get(instRefFuncIdx);
 
-        Leb128 funcIdxAsLeb128{instRefFunc._funcIdx};
+        Leb128</*IS_OBJECT=*/false> funcIdxAsLeb128{instRefFunc._funcIdx};
 
         _writer.write(0x00);
         _writer.write(funcIdxAsLeb128);
@@ -50,7 +50,7 @@ struct TExportDescriptorEmitter
 
     void operator()(uint32_t memIdx)
     {
-        Leb128 memIdxAsLeb128{memIdx};
+        Leb128</*IS_OBJECT=*/false> memIdxAsLeb128{memIdx};
 
         _writer.write(0x02);
         _writer.write(memIdxAsLeb128);
@@ -74,11 +74,11 @@ struct TImportDescriptorEmitter
     {
         auto& limits = _nodePool.get(limitsIdx);
 
-        Leb128 limitsMinAsLeb128{limits._min};
+        Leb128</*IS_OBJECT=*/false> limitsMinAsLeb128{limits._min};
 
         if (limits._maxOpt)
         {
-            Leb128 limitsMaxAsLeb128{limits._maxOpt.value()};
+            Leb128</*IS_OBJECT=*/false> limitsMaxAsLeb128{limits._maxOpt.value()};
 
             _writer.write(0x01);
             _writer.write(limitsMinAsLeb128);
@@ -149,7 +149,7 @@ struct TImportDescriptorEmitter
 
     void operator()(uint32_t funcIdx)
     {
-        Leb128 funcIdxAsLeb128{funcIdx};
+        Leb128</*IS_OBJECT=*/false> funcIdxAsLeb128{funcIdx};
 
         _writer.write(0x00);
         _writer.write(funcIdxAsLeb128);

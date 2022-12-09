@@ -41,7 +41,7 @@ struct TBlockTypeEmitter
 
     void operator()(uint32_t typeIdx)
     {
-        Leb128 typeIdxAsLeb128{static_cast<int64_t>(typeIdx)};
+        Leb128</*IS_OBJECT=*/false> typeIdxAsLeb128{static_cast<int64_t>(typeIdx)};
 
         _writer.write(typeIdxAsLeb128);
     }

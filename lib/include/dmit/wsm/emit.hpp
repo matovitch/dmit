@@ -72,11 +72,11 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
     {
         auto& limits = _nodePool.get(limitsIdx);
 
-        Leb128 limitsMinAsLeb128{limits._min};
+        Leb128</*IS_OBJECT=*/false> limitsMinAsLeb128{limits._min};
 
         if (limits._maxOpt)
         {
-            Leb128 limitsMaxAsLeb128{limits._maxOpt.value()};
+            Leb128</*IS_OBJECT=*/false> limitsMaxAsLeb128{limits._maxOpt.value()};
 
             _writer.write(0x01);
             _writer.write(limitsMinAsLeb128);
@@ -157,7 +157,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
     {
         auto& function = get(functionIdx);
 
-        Leb128 sizeLocalsAsLeb128{function._locals._size};
+        Leb128</*IS_OBJECT=*/false> sizeLocalsAsLeb128{function._locals._size};
 
         _writer.write(sizeLocalsAsLeb128);
 
@@ -203,23 +203,15 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
     {
         auto& start = get(startIdx);
 
-        if constexpr (IS_OBJECT)
-        {
-            Leb128Obj funcIdxAsLeb128Obj{start._funcIdx};
-            _writer.write(funcIdxAsLeb128Obj);
-        }
-        else
-        {
-            Leb128 funcIdxAsLeb128{start._funcIdx};
-            _writer.write(funcIdxAsLeb128);
-        }
+        Leb128<IS_OBJECT> funcIdxAsLeb128{start._funcIdx};
+        _writer.write(funcIdxAsLeb128);
     }
 
     void operator()(node::TIndex<node::Kind::LABEL> labelIdx)
     {
         auto& label = get(labelIdx);
 
-        Leb128 labelIdxAsLeb128{label._labelIdx};
+        Leb128</*IS_OBJECT=*/false> labelIdxAsLeb128{label._labelIdx};
 
         _writer.write(labelIdxAsLeb128);
     }
@@ -228,8 +220,8 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
     {
         auto& memarg = get(memargIdx);
 
-        Leb128  alignAsLeb128{memarg._align  };
-        Leb128 offsetAsLeb128{memarg._offset };
+        Leb128</*IS_OBJECT=*/false>  alignAsLeb128{memarg._align  };
+        Leb128</*IS_OBJECT=*/false> offsetAsLeb128{memarg._offset };
 
         _writer.write( alignAsLeb128);
         _writer.write(offsetAsLeb128);
@@ -282,7 +274,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
     {
         auto& instBr = get(instBrIdx);
 
-        Leb128 labelIdxAsLeb128{instBr._labelIdx};
+        Leb128</*IS_OBJECT=*/false> labelIdxAsLeb128{instBr._labelIdx};
 
         _writer.write(0x0C);
         _writer.write(labelIdxAsLeb128);
@@ -292,7 +284,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
     {
         auto& instBrIf = get(instBrIfIdx);
 
-        Leb128 labelIdxAsLeb128{instBrIf._labelIdx};
+        Leb128</*IS_OBJECT=*/false> labelIdxAsLeb128{instBrIf._labelIdx};
 
         _writer.write(0x0D);
         _writer.write(labelIdxAsLeb128);
@@ -304,7 +296,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
 
         emitRangeWithSize(instBrTable._labels);
 
-        Leb128 labelIdxAsLeb128{instBrTable._labelIdx};
+        Leb128</*IS_OBJECT=*/false> labelIdxAsLeb128{instBrTable._labelIdx};
 
         _writer.write(0x0E);
         _writer.write(labelIdxAsLeb128);
@@ -315,22 +307,15 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
         auto& instCall   = get(instCallIdx);
         auto& relocation = get(instCall._relocation);
 
-        Leb128 funcIdxAsLeb128{instCall._funcIdx};
-
         _writer.write(0x10);
 
         if (IS_OBJECT && relocation._type != RelocationType::NONE)
         {
             relocation._offset = _writer.diff(_writerSection);
+        }
 
-            Leb128Obj funcIdxAsLeb128Obj{instCall._funcIdx};
-            _writer.write(funcIdxAsLeb128Obj);
-        }
-        else
-        {
-            Leb128 funcIdxAsLeb128{instCall._funcIdx};
-            _writer.write(funcIdxAsLeb128);
-        }
+        Leb128<IS_OBJECT> funcIdxAsLeb128{instCall._funcIdx};
+        _writer.write(funcIdxAsLeb128);
     }
 
     void operator()(node::TIndex<node::Kind::INST_CALL_INDIRECT> instCallIndirectIdx)
@@ -339,20 +324,10 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
 
         _writer.write(0x11);
 
-        if constexpr (IS_OBJECT)
-        {
-            Leb128Obj  typeIdxAsLeb128Obj{instCallIndirect._typeIdx  };
-            Leb128Obj tableIdxAsLeb128Obj{instCallIndirect._tableIdx };
-            _writer.write( typeIdxAsLeb128Obj);
-            _writer.write(tableIdxAsLeb128Obj);
-        }
-        else
-        {
-            Leb128  typeIdxAsLeb128{instCallIndirect._typeIdx  };
-            Leb128 tableIdxAsLeb128{instCallIndirect._tableIdx };
-            _writer.write( typeIdxAsLeb128);
-            _writer.write(tableIdxAsLeb128);
-        }
+        Leb128<IS_OBJECT>  typeIdxAsLeb128{instCallIndirect._typeIdx  };
+        Leb128<IS_OBJECT> tableIdxAsLeb128{instCallIndirect._tableIdx };
+        _writer.write( typeIdxAsLeb128);
+        _writer.write(tableIdxAsLeb128);
     }
 
     void operator()(node::TIndex<node::Kind::INST_REF_NULL> instRefNullIdx)
@@ -370,16 +345,8 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
 
         _writer.write(0xD2);
 
-        if constexpr (IS_OBJECT)
-        {
-            Leb128Obj funcIdxAsLeb128Obj{instRefFunc._funcIdx};
-            _writer.write(funcIdxAsLeb128Obj);
-        }
-        else
-        {
-            Leb128 funcIdxAsLeb128{instRefFunc._funcIdx};
-            _writer.write(funcIdxAsLeb128);
-        }
+        Leb128<IS_OBJECT> funcIdxAsLeb128{instRefFunc._funcIdx};
+        _writer.write(funcIdxAsLeb128);
     }
 
     void operator()(node::TIndex<node::Kind::INST_SELECT> instSelectIdx)
@@ -400,7 +367,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
     {
         auto& instLocalGet = get(instLocalGetIdx);
 
-        Leb128 localIdxAsLeb128{instLocalGet._localIdx};
+        Leb128</*IS_OBJECT=*/false> localIdxAsLeb128{instLocalGet._localIdx};
 
         _writer.write(0x20);
         _writer.write(localIdxAsLeb128);
@@ -410,7 +377,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
     {
         auto& instLocalSet = get(instLocalSetIdx);
 
-        Leb128 localIdxAsLeb128{instLocalSet._localIdx};
+        Leb128</*IS_OBJECT=*/false> localIdxAsLeb128{instLocalSet._localIdx};
 
         _writer.write(0x21);
         _writer.write(localIdxAsLeb128);
@@ -420,7 +387,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
     {
         auto& instLocalTee = get(instLocalTeeIdx);
 
-        Leb128 localIdxAsLeb128{instLocalTee._localIdx};
+        Leb128</*IS_OBJECT=*/false> localIdxAsLeb128{instLocalTee._localIdx};
 
         _writer.write(0x22);
         _writer.write(localIdxAsLeb128);
@@ -432,16 +399,8 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
 
         _writer.write(0x23);
 
-        if constexpr (IS_OBJECT)
-        {
-            Leb128Obj localIdxAsLeb128Obj{instGlobalGet._globalIdx};
-            _writer.write(localIdxAsLeb128Obj);
-        }
-        else
-        {
-            Leb128 localIdxAsLeb128{instGlobalGet._globalIdx};
-            _writer.write(localIdxAsLeb128);
-        }
+        Leb128<IS_OBJECT> localIdxAsLeb128{instGlobalGet._globalIdx};
+        _writer.write(localIdxAsLeb128);
     }
 
     void operator()(node::TIndex<node::Kind::INST_GLOBAL_SET> instGlobalSetIdx)
@@ -450,16 +409,8 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
 
         _writer.write(0x24);
 
-        if constexpr (IS_OBJECT)
-        {
-            Leb128Obj localIdxAsLeb128Obj{instGlobalSet._globalIdx};
-            _writer.write(localIdxAsLeb128Obj);
-        }
-        else
-        {
-            Leb128 localIdxAsLeb128{instGlobalSet._globalIdx};
-            _writer.write(localIdxAsLeb128);
-        }
+        Leb128<IS_OBJECT> localIdxAsLeb128{instGlobalSet._globalIdx};
+        _writer.write(localIdxAsLeb128);
     }
 
     void operator()(node::TIndex<node::Kind::INST_TABLE_GET> instTableGetIdx)
@@ -468,16 +419,8 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
 
         _writer.write(0x25);
 
-        if constexpr (IS_OBJECT)
-        {
-            Leb128Obj tableIdxAsLeb128Obj{instTableGet._tableIdx};
-            _writer.write(tableIdxAsLeb128Obj);
-        }
-        else
-        {
-            Leb128 tableIdxAsLeb128{instTableGet._tableIdx};
-            _writer.write(tableIdxAsLeb128);
-        }
+        Leb128<IS_OBJECT> tableIdxAsLeb128{instTableGet._tableIdx};
+        _writer.write(tableIdxAsLeb128);
     }
 
     void operator()(node::TIndex<node::Kind::INST_TABLE_SET> instTableSetIdx)
@@ -486,55 +429,19 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
 
         _writer.write(0x26);
 
-        if constexpr (IS_OBJECT)
-        {
-            Leb128Obj tableIdxAsLeb128Obj{instTableSet._tableIdx};
-            _writer.write(tableIdxAsLeb128Obj);
-        }
-        else
-        {
-            Leb128 tableIdxAsLeb128{instTableSet._tableIdx};
-            _writer.write(tableIdxAsLeb128);
-        }
-    }
-
-    void operator()(node::TIndex<node::Kind::INST_TABLE_INIT> instTableInitIdx)
-    {
-        DMIT_COM_ASSERT(!IS_OBJECT && "INST_TABLE_INIT not supported in object mode");
-
-        auto& instTableInit = get(instTableInitIdx);
-
-        Leb128 tableIdxAsLeb128{instTableInit._tableIdx };
-        Leb128  elemIdxAsLeb128{instTableInit._elemIdx  };
-
-        _writer.write(0xFC);
-        _writer.write(Leb128{12u});
-        _writer.write( elemIdxAsLeb128);
+        Leb128<IS_OBJECT> tableIdxAsLeb128{instTableSet._tableIdx};
         _writer.write(tableIdxAsLeb128);
-    }
-
-    void operator()(node::TIndex<node::Kind::INST_ELEM_DROP> instElemDropIdx)
-    {
-        DMIT_COM_ASSERT(!IS_OBJECT && "INST_ELEM_DROP not supported in object mode");
-
-        auto& instElemDrop = get(instElemDropIdx);
-
-        Leb128 elemIdxAsLeb128{instElemDrop._elemIdx};
-
-        _writer.write(0xFC);
-        _writer.write(Leb128{13u});
-        _writer.write(elemIdxAsLeb128);
     }
 
     void operator()(node::TIndex<node::Kind::INST_TABLE_COPY> instTableCopyIdx)
     {
         auto& instTableCopy = get(instTableCopyIdx);
 
-        Leb128 srceIdxAsLeb128{instTableCopy._srceIdx };
-        Leb128 destIdxAsLeb128{instTableCopy._destIdx };
+        Leb128</*IS_OBJECT=*/false> srceIdxAsLeb128{instTableCopy._srceIdx };
+        Leb128</*IS_OBJECT=*/false> destIdxAsLeb128{instTableCopy._destIdx };
 
         _writer.write(0xFC);
-        _writer.write(Leb128{14u});
+        _writer.write(Leb128</*IS_OBJECT=*/false>{14u});
         _writer.write(srceIdxAsLeb128);
         _writer.write(destIdxAsLeb128);
     }
@@ -545,18 +452,10 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
 
 
         _writer.write(0xFC);
-        _writer.write(Leb128{15u});
+        _writer.write(Leb128</*IS_OBJECT=*/false>{15u});
 
-        if constexpr (IS_OBJECT)
-        {
-            Leb128Obj tableIdxAsLeb128Obj{instTableGrow._tableIdx};
-            _writer.write(tableIdxAsLeb128Obj);
-        }
-        else
-        {
-            Leb128 tableIdxAsLeb128{instTableGrow._tableIdx};
-            _writer.write(tableIdxAsLeb128);
-        }
+        Leb128<IS_OBJECT> tableIdxAsLeb128{instTableGrow._tableIdx};
+        _writer.write(tableIdxAsLeb128);
     }
 
     void operator()(node::TIndex<node::Kind::INST_TABLE_SIZE> instTableSizeIdx)
@@ -564,18 +463,10 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
         auto& instTableSize = get(instTableSizeIdx);
 
         _writer.write(0xFC);
-        _writer.write(Leb128{16u});
+        _writer.write(Leb128</*IS_OBJECT=*/false>{16u});
 
-        if constexpr (IS_OBJECT)
-        {
-            Leb128Obj tableIdxAsLeb128Obj{instTableSize._tableIdx};
-            _writer.write(tableIdxAsLeb128Obj);
-        }
-        else
-        {
-            Leb128 tableIdxAsLeb128{instTableSize._tableIdx};
-            _writer.write(tableIdxAsLeb128);
-        }
+        Leb128<IS_OBJECT> tableIdxAsLeb128{instTableSize._tableIdx};
+        _writer.write(tableIdxAsLeb128);
     }
 
     void operator()(node::TIndex<node::Kind::INST_TABLE_FILL> instTableFillIdx)
@@ -583,19 +474,10 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
         auto& instTableFill = get(instTableFillIdx);
 
         _writer.write(0xFC);
-        _writer.write(Leb128{17u});
+        _writer.write(Leb128</*IS_OBJECT=*/false>{17u});
 
-        if constexpr (IS_OBJECT)
-        {
-            Leb128Obj tableIdxAsLeb128Obj{instTableFill._tableIdx};
-            _writer.write(tableIdxAsLeb128Obj);
-        }
-        else
-        {
-            Leb128 tableIdxAsLeb128{instTableFill._tableIdx};
-            _writer.write(tableIdxAsLeb128);
-        }
-
+        Leb128<IS_OBJECT> tableIdxAsLeb128{instTableFill._tableIdx};
+        _writer.write(tableIdxAsLeb128);
     }
 
     void operator()(node::TIndex<node::Kind::INST_MEM_SIZE>)
@@ -610,37 +492,10 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
         _writer.write(0x00);
     }
 
-    void operator()(node::TIndex<node::Kind::INST_MEM_INIT> instMemInitIdx)
-    {
-        DMIT_COM_ASSERT(!IS_OBJECT && "INST_MEM_INIT not supported in object mode");
-
-        auto& instMemInit = get(instMemInitIdx);
-
-        Leb128 dataIdxAsLeb128{instMemInit._dataIdx};
-
-        _writer.write(0xFC);
-        _writer.write(Leb128{8u});
-        _writer.write(dataIdxAsLeb128);
-        _writer.write(0x00);
-    }
-
-    void operator()(node::TIndex<node::Kind::INST_DATA_DROP> instDataDropIdx)
-    {
-        DMIT_COM_ASSERT(!IS_OBJECT && "INST_DATA_DROP not supported in object mode");
-
-        auto& instDataDrop = get(instDataDropIdx);
-
-        Leb128 dataIdxAsLeb128{instDataDrop._dataIdx};
-
-        _writer.write(0xFC);
-        _writer.write(Leb128{9u});
-        _writer.write(dataIdxAsLeb128);
-    }
-
     void operator()(node::TIndex<node::Kind::INST_MEM_COPY>)
     {
         _writer.write(0xFC);
-        _writer.write(Leb128{10u});
+        _writer.write(Leb128</*IS_OBJECT=*/false>{10u});
         _writer.write(0x00);
         _writer.write(0x00);
     }
@@ -648,7 +503,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
     void operator()(node::TIndex<node::Kind::INST_MEM_FILL>)
     {
         _writer.write(0xFC);
-        _writer.write(Leb128{11u});
+        _writer.write(Leb128</*IS_OBJECT=*/false>{11u});
         _writer.write(0x00);
     }
 
@@ -794,22 +649,17 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
         if (IS_OBJECT && relocation._type != RelocationType::NONE)
         {
             relocation._offset = _writer.diff(_writerSection);
+        }
 
-            Leb128Obj valueAsLeb128Obj{instConstI32._value};
-            _writer.write(valueAsLeb128Obj);
-        }
-        else
-        {
-            Leb128 valueAsLeb128{instConstI32._value};
-            _writer.write(valueAsLeb128);
-        }
+        Leb128<IS_OBJECT> valueAsLeb128{instConstI32._value};
+        _writer.write(valueAsLeb128);
     }
 
     void operator()(node::TIndex<node::Kind::INST_CONST_I64> instConstI64Idx)
     {
         auto& instConstI64 = get(instConstI64Idx);
 
-        Leb128 valueAsLeb128{instConstI64._value};
+        Leb128</*IS_OBJECT=*/false> valueAsLeb128{instConstI64._value};
 
         _writer.write(0x41);
         _writer.write(valueAsLeb128);
@@ -1412,139 +1262,6 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
         base()(instruction._asVariant);
     }
 
-    void operator()(node::TIndex<node::Kind::EXPRESSION> expressionIdx)
-    {
-        auto& expression = get(expressionIdx);
-
-        emitListWithSentinel(expression._instructions);
-    }
-
-    /*bool isFuncRef(node::TIndex<node::Kind::EXPRESSION> expressionIdx)
-    {
-        auto& expression = get(expressionIdx);
-
-        return std::holds_alternative<node::TIndex<node::Kind::INST_REF_FUNC>>(get(expression._instructions[0])._asVariant);
-    }
-
-    bool isOnlyFuncRefs(const node::TRange<node::Kind::EXPRESSION>& expressions)
-    {
-        for (uint32_t i = 0; i < expressions._size; i++)
-        {
-            if (!isFuncRef(expressions[i]))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    void operator()(node::TIndex<node::Kind::ELEMENT> elementIdx)
-    {
-        DMIT_COM_ASSERT(!IS_OBJECT && "Elements are not supported in object mode");
-
-        auto& element = get(elementIdx);
-
-        // 1. Compute and write the flag
-
-        uint8_t flags = 0;
-
-        flags |= 0b001 * std::holds_alternative<node::TIndex<node::Kind::ELEM_PASSIVE     >>(element._mode);
-        flags |= 0b011 * std::holds_alternative<node::TIndex<node::Kind::ELEM_DECLARATIVE >>(element._mode);
-        flags |= 0b010 * (!flags && get(std::get<node::TIndex<node::Kind::ELEM_ACTIVE>>(element._mode))._tableIdx != 0);
-        flags |= 0b100 * !isOnlyFuncRefs(element._init);
-
-        _writer.write(flags);
-
-        // 2. Create small helper to write the list of function ids
-
-        auto writeFuncIds = [this, &element]()
-        {
-            Leb128 elemInitSizeAsLeb128{element._init._size};
-
-            _writer.write(elemInitSizeAsLeb128);
-
-            for (uint32_t i = 0; i < element._init._size; i++)
-            {
-                Leb128 funcIdxAsLeb128
-                {
-                    get(std::
-                        get<node::TIndex<node::Kind::INST_REF_FUNC>>(
-                            get(
-                                get(element._init[i])._instructions[0])._asVariant))._funcIdx
-                };
-
-                _writer.write(funcIdxAsLeb128);
-            }
-        };
-
-        auto writeOffset = [this, &element]()
-        {
-            auto& offset = get(std::get<node::TIndex<node::Kind::ELEM_ACTIVE>>(element._mode))._offset;
-
-            emitRangeWithSentinel(offset);
-        };
-
-        // 3. Write the element segment according to its flags value
-
-        if (flags == 0x00)
-        {
-            writeOffset();
-            writeFuncIds();
-        }
-        else if (flags == 0x01)
-        {
-            _writer.write(0x00);
-            writeFuncIds();
-        }
-        else if (flags == 0x02)
-        {
-            auto& mode = get(std::get<node::TIndex<node::Kind::ELEM_ACTIVE>>(element._mode));
-
-            Leb128 tableIdxAsLeb128{mode._tableIdx};
-
-            _writer.write(tableIdxAsLeb128);
-
-            writeOffset();
-
-            _writer.write(0x00);
-            writeFuncIds();
-        }
-        else if (flags == 0x03)
-        {
-            _writer.write(0x00);
-            writeFuncIds();
-        }
-        else if (flags == 0x04)
-        {
-            writeOffset();
-            base()(element._init);
-        }
-        else if (flags == 0x05)
-        {
-            base()(element._type);
-            base()(element._init);
-        }
-        else if (flags == 0x06)
-        {
-            auto& mode = get(std::get<node::TIndex<node::Kind::ELEM_ACTIVE>>(element._mode));
-
-            Leb128 tableIdxAsLeb128{mode._tableIdx};
-
-            _writer.write(tableIdxAsLeb128);
-
-            writeOffset();
-
-            base()(element._type);
-            base()(element._init);
-        }
-        else if (flags == 0x07)
-        {
-            base()(element._type);
-            base()(element._init);
-        }
-    }*/
-
     void operator()(node::TIndex<node::Kind::DATA> dataIdx)
     {
         auto& data = get(dataIdx);
@@ -1574,7 +1291,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
         {
             auto& mode = get(std::get<node::TIndex<node::Kind::DATA_ACTIVE>>(data._mode));
 
-            Leb128 memIdxAsLeb128{mode._memIdx};
+            Leb128</*IS_OBJECT=*/false> memIdxAsLeb128{mode._memIdx};
 
             _writer.write(memIdxAsLeb128);
 
@@ -1588,7 +1305,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
     {
         auto& symbolObject = get(symbolObjectIdx);
 
-        Leb128 importIndexAsLeb128{symbolObject._index};
+        Leb128</*IS_OBJECT=*/false> importIndexAsLeb128{symbolObject._index};
         _writer.write(importIndexAsLeb128);
 
         base()(symbolObject._name);
@@ -1601,11 +1318,11 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
 
         if (_isCurrentSymbolDefined)
         {
-            Leb128 indexAsLeb128{symbolData._index};
+            Leb128</*IS_OBJECT=*/false> indexAsLeb128{symbolData._index};
             _writer.write(indexAsLeb128);
-            Leb128 offsetAsLeb128{symbolData._offset};
+            Leb128</*IS_OBJECT=*/false> offsetAsLeb128{symbolData._offset};
             _writer.write(offsetAsLeb128);
-            Leb128 sizeAsLeb128{symbolData._size};
+            Leb128</*IS_OBJECT=*/false> sizeAsLeb128{symbolData._size};
             _writer.write(sizeAsLeb128);
         }
     }
@@ -1616,7 +1333,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
 
         _writer.write(symbol._kind._asInt);
 
-        Leb128 flagsAsLeb128{symbol._flags};
+        Leb128</*IS_OBJECT=*/false> flagsAsLeb128{symbol._flags};
         _writer.write(flagsAsLeb128);
 
         _isCurrentSymbolDefined = symbol._flags ^ SymbolFlag::UNDEFINED;
@@ -1629,8 +1346,8 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
 
         _writer.write(relocation._type._asInt);
 
-        Leb128 offsetAsLeb128{relocation._offset};
-        Leb128  indexAsLeb128{relocation._index};
+        Leb128</*IS_OBJECT=*/false> offsetAsLeb128{relocation._offset};
+        Leb128</*IS_OBJECT=*/false>  indexAsLeb128{relocation._index};
 
         _writer.write(offsetAsLeb128);
         _writer.write( indexAsLeb128);
@@ -1641,7 +1358,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
             relocation._type == RelocationType::MEMORY_ADDR_LEB     ||
             relocation._type == RelocationType::MEMORY_ADDR_I32)
         {
-            Leb128 addendAsLeb128{relocation._addend};
+            Leb128</*IS_OBJECT=*/false> addendAsLeb128{relocation._addend};
             _writer.write(addendAsLeb128);
         }
     }
@@ -1661,7 +1378,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
             TFixUpSize<Writer> _fixupSize{_writer};
             sectionCount++;
 
-            Leb128 rangeSizeAsLeb128{module._types._size};
+            Leb128</*IS_OBJECT=*/false> rangeSizeAsLeb128{module._types._size};
             _writer.write(rangeSizeAsLeb128);
 
             base()(module._types);
@@ -1682,21 +1399,13 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
             TFixUpSize<Writer> _fixupSize{_writer};
             sectionCount++;
 
-            Leb128 rangeSizeAsLeb128{module._funcs._size};
+            Leb128</*IS_OBJECT=*/false> rangeSizeAsLeb128{module._funcs._size};
             _writer.write(rangeSizeAsLeb128);
 
             for (uint32_t i = 0; i < module._funcs._size; i++)
             {
-                if constexpr (IS_OBJECT)
-                {
-                    Leb128Obj typeIdxAsLeb128Obj{get(module._funcs[i])._typeIdx};
-                    _writer.write(typeIdxAsLeb128Obj);
-                }
-                else
-                {
-                    Leb128 typeIdxAsLeb128{get(module._funcs[i])._typeIdx};
-                    _writer.write(typeIdxAsLeb128);
-                }
+                Leb128<IS_OBJECT> typeIdxAsLeb128{get(module._funcs[i])._typeIdx};
+                _writer.write(typeIdxAsLeb128);
             }
         }
 
@@ -1747,22 +1456,13 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
             base()(module._startOpt.value());
         }
 
-        if (module._elems._size)
-        {
-            _writer.write(SectionId::ELEMENT);
-            TFixUpSize<Writer> _fixupSize{_writer};
-            sectionCount++;
-
-            emitRangeWithSize(module._elems);
-        }
-
         if (module._datas._size)
         {
             _writer.write(SectionId::DATA_COUNT);
             TFixUpSize<Writer> _fixupSize{_writer};
             sectionCount++;
 
-            Leb128 datasSizeAsLeb128{module._datas._size};
+            Leb128</*IS_OBJECT=*/false> datasSizeAsLeb128{module._datas._size};
             _writer.write(datasSizeAsLeb128);
         }
 
@@ -1774,7 +1474,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
 
             _writerSection = _writer.fork();
 
-            Leb128 rangeSizeAsLeb128{module._funcs._size};
+            Leb128</*IS_OBJECT=*/false> rangeSizeAsLeb128{module._funcs._size};
             _writer.write(rangeSizeAsLeb128);
 
             for (uint32_t i = 0; i < module._funcs._size; i++)
@@ -1790,10 +1490,10 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
             TFixUpSize<Writer> _fixupSize{_writer};
             sectionCount++;
 
-            _writer.write(Leb128{sizeof("linking") - 1});
+            _writer.write(Leb128</*IS_OBJECT=*/false>{sizeof("linking") - 1});
             _writer.write(reinterpret_cast<const uint8_t*>("linking"), sizeof("linking") - 1);
 
-            Leb128 versionAsLeb128{K_LINK_VERSION};
+            Leb128</*IS_OBJECT=*/false> versionAsLeb128{K_LINK_VERSION};
             _writer.write(versionAsLeb128);
             _writer.write(K_SYMBOL_TABLE);
 
@@ -1807,13 +1507,13 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
             TFixUpSize<Writer> _fixupSize{_writer};
             sectionCount++;
 
-            _writer.write(Leb128{sizeof("reloc.CODE") - 1});
+            _writer.write(Leb128</*IS_OBJECT=*/false>{sizeof("reloc.CODE") - 1});
             _writer.write(reinterpret_cast<const uint8_t*>("reloc.CODE"), sizeof("reloc.CODE") - 1);
 
-            Leb128 sectionAsLeb128{sectionCount - K_RELOC_CODE_SECTION_OFFSET};
+            Leb128</*IS_OBJECT=*/false> sectionAsLeb128{sectionCount - K_RELOC_CODE_SECTION_OFFSET};
             _writer.write(sectionAsLeb128);
 
-            Leb128 relocSizeCode128{module._relocSizeCode};
+            Leb128</*IS_OBJECT=*/false> relocSizeCode128{module._relocSizeCode};
             _writer.write(relocSizeCode128);
 
             base()(module._relocCode);
@@ -1835,13 +1535,13 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
             TFixUpSize<Writer> _fixupSize{_writer};
             sectionCount++;
 
-            _writer.write(Leb128{sizeof("reloc.DATA") - 1});
+            _writer.write(Leb128</*IS_OBJECT=*/false>{sizeof("reloc.DATA") - 1});
             _writer.write(reinterpret_cast<const uint8_t*>("reloc.DATA"), sizeof("reloc.DATA") - 1);
 
-            Leb128 sectionAsLeb128{sectionCount - K_RELOC_DATA_SECTION_OFFSET};
+            Leb128</*IS_OBJECT=*/false> sectionAsLeb128{sectionCount - K_RELOC_DATA_SECTION_OFFSET};
             _writer.write(sectionAsLeb128);
 
-            Leb128 relocSizeData128{module._relocSizeData};
+            Leb128</*IS_OBJECT=*/false> relocSizeData128{module._relocSizeData};
             _writer.write(relocSizeData128);
 
             base()(module._relocData);
@@ -1851,7 +1551,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
     template <com::TEnumIntegerType<node::Kind> KIND>
     void emitRangeWithSize(node::TRange<KIND>& range)
     {
-        Leb128 rangeSizeAsLeb128{range._size};
+        Leb128</*IS_OBJECT=*/false> rangeSizeAsLeb128{range._size};
         _writer.write(rangeSizeAsLeb128);
 
         base()(range);

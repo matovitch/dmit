@@ -54,7 +54,6 @@ struct Scribe : ast::TVisitor<Scribe, scribe::Stack>
         _wsmPool.make(wsmModule._mems         , 0);
         _wsmPool.make(wsmModule._globalConsts , 0);
         _wsmPool.make(wsmModule._globalVars   , 0);
-        _wsmPool.make(wsmModule._elems        , 0);
         _wsmPool.make(wsmModule._datas        , 0);
         _wsmPool.make(wsmModule._imports      , 0);
         _wsmPool.make(wsmModule._exports      , 0);

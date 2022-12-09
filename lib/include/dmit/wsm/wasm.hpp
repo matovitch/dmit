@@ -32,9 +32,7 @@ struct Kind : com::TEnum<uint8_t>
         INST_CONST_I64     ,
         INST_CONST_F32     ,
         INST_CONST_F64     ,
-        INST_DATA_DROP     ,
         INST_DROP          ,
-        INST_ELEM_DROP     ,
         INST_GLOBAL_GET    ,
         INST_GLOBAL_SET    ,
         INST_LOCAL_GET     ,
@@ -52,7 +50,6 @@ struct Kind : com::TEnum<uint8_t>
         INST_MEM_GROW      ,
         INST_MEM_FILL      ,
         INST_MEM_COPY      ,
-        INST_MEM_INIT      ,
         INST_NOP           ,
         INST_REF_FUNC      ,
         INST_REF_NULL      ,
@@ -63,7 +60,6 @@ struct Kind : com::TEnum<uint8_t>
         INST_TABLE_SET     ,
         INST_TABLE_FILL    ,
         INST_TABLE_GROW    ,
-        INST_TABLE_INIT    ,
         INST_TABLE_SIZE    ,
         INST_UNREACHABLE   ,
         INSTRUCTION        ,
@@ -87,11 +83,6 @@ struct Kind : com::TEnum<uint8_t>
         BYTE_              ,
         LABEL              ,
         FUNCTION           ,
-        ELEMENT            ,
-        ELEM_ACTIVE        ,
-        ELEM_PASSIVE       ,
-        ELEM_DECLARATIVE   ,
-        EXPRESSION         ,
         DATA               ,
         DATA_PASSIVE       ,
         DATA_ACTIVE        ,
@@ -398,19 +389,6 @@ struct TNode<node::Kind::INST_TABLE_COPY>
 };
 
 template <>
-struct TNode<node::Kind::INST_TABLE_INIT>
-{
-    uint32_t _tableIdx;
-    uint32_t _elemIdx;
-};
-
-template <>
-struct TNode<node::Kind::INST_ELEM_DROP>
-{
-    uint32_t _elemIdx;
-};
-
-template <>
 struct TNode<node::Kind::MEMARG>
 {
     uint32_t _offset;
@@ -470,19 +448,6 @@ template <> struct TNode<node::Kind::INST_MEM_GROW> {};
 template <> struct TNode<node::Kind::INST_MEM_FILL> {};
 template <> struct TNode<node::Kind::INST_MEM_COPY> {};
 
-template <>
-struct TNode<node::Kind::INST_MEM_INIT>
-{
-    uint32_t _dataIdx;
-};
-
-template <>
-struct TNode<node::Kind::INST_DATA_DROP>
-{
-    uint32_t _dataIdx;
-};
-
-
 template <> struct TNode<node::Kind::INST_NOP         > {};
 template <> struct TNode<node::Kind::INST_UNREACHABLE > {};
 
@@ -503,9 +468,7 @@ using Instruction = std::variant<
     node::TIndex<node::Kind::INST_CONST_I64     > ,
     node::TIndex<node::Kind::INST_CONST_F32     > ,
     node::TIndex<node::Kind::INST_CONST_F64     > ,
-    node::TIndex<node::Kind::INST_DATA_DROP     > ,
     node::TIndex<node::Kind::INST_DROP          > ,
-    node::TIndex<node::Kind::INST_ELEM_DROP     > ,
     node::TIndex<node::Kind::INST_GLOBAL_GET    > ,
     node::TIndex<node::Kind::INST_GLOBAL_SET    > ,
     node::TIndex<node::Kind::INST_LOCAL_GET     > ,
@@ -523,7 +486,6 @@ using Instruction = std::variant<
     node::TIndex<node::Kind::INST_MEM_GROW      > ,
     node::TIndex<node::Kind::INST_MEM_FILL      > ,
     node::TIndex<node::Kind::INST_MEM_COPY      > ,
-    node::TIndex<node::Kind::INST_MEM_INIT      > ,
     node::TIndex<node::Kind::INST_NOP           > ,
     node::TIndex<node::Kind::INST_REF_FUNC      > ,
     node::TIndex<node::Kind::INST_REF_NULL      > ,
@@ -534,7 +496,6 @@ using Instruction = std::variant<
     node::TIndex<node::Kind::INST_TABLE_SET     > ,
     node::TIndex<node::Kind::INST_TABLE_FILL    > ,
     node::TIndex<node::Kind::INST_TABLE_GROW    > ,
-    node::TIndex<node::Kind::INST_TABLE_INIT    > ,
     node::TIndex<node::Kind::INST_TABLE_SIZE    > ,
     node::TIndex<node::Kind::INST_UNREACHABLE   >
 >;
@@ -694,7 +655,6 @@ struct TNode<node::Kind::MODULE>
     node::TRange<node::Kind::TYPE_MEM     > _mems;
     node::TRange<node::Kind::GLOBAL_CONST > _globalConsts;
     node::TRange<node::Kind::GLOBAL_VAR   > _globalVars;
-    node::TRange<node::Kind::ELEMENT      > _elems;
     node::TRange<node::Kind::DATA         > _datas;
     node::TRange<node::Kind::IMPORT       > _imports;
     node::TRange<node::Kind::EXPORT       > _exports;
@@ -707,33 +667,6 @@ struct TNode<node::Kind::MODULE>
     uint32_t _relocSizeData;
 
     node::TRange<node::Kind::SYMBOL> _symbols;
-};
-
-template<> struct TNode<node::Kind::ELEM_PASSIVE     > {};
-template<> struct TNode<node::Kind::ELEM_DECLARATIVE > {};
-
-template <>
-struct TNode<node::Kind::ELEM_ACTIVE>
-{
-    uint32_t                              _tableIdx;
-    node::TList<node::Kind::INSTRUCTION> _offset;
-};
-
-using ElementMode = std::variant<node::TIndex<node::Kind::ELEM_ACTIVE>,
-                                 node::TIndex<node::Kind::ELEM_PASSIVE>,
-                                 node::TIndex<node::Kind::ELEM_DECLARATIVE>>;
-template <>
-struct TNode<node::Kind::EXPRESSION>
-{
-    node::TList<node::Kind::INSTRUCTION> _instructions;
-};
-
-template <>
-struct TNode<node::Kind::ELEMENT>
-{
-    RefType _type;
-    node::TRange<node::Kind::EXPRESSION> _init;
-    ElementMode _mode;
 };
 
 template <> struct TNode<node::Kind::DATA_PASSIVE> {};

@@ -88,13 +88,13 @@ TEST_CASE("gen")
 
     auto&& bins = emit(groupAB);
 
-    uint8_t buffer[1024] = {0};
+    /*uint8_t buffer[1024] = {0};
 
     for (auto& bin : bins)
     {
         dmit::com::base64::encode(bin.data(), bin._size, buffer);
         std::cout << std::string{buffer, buffer + dmit::com::base64::encodeBufferSize(bin._size)} << '\n';
-    }
+    }*/
 
     wasm3::Environment env;
 

@@ -27,7 +27,6 @@ TEST_CASE("wsm_add")
     nodePool.make(module._mems         , 0);
     nodePool.make(module._globalConsts , 0);
     nodePool.make(module._globalVars   , 0);
-    nodePool.make(module._elems        , 0);
     nodePool.make(module._datas        , 0);
     nodePool.make(module._imports      , 0);
     nodePool.make(module._exports      , 1);
@@ -151,7 +150,6 @@ TEST_CASE("wsm_increment")
     nodePool.make(module._mems         , 0);
     nodePool.make(module._globalConsts , 0);
     nodePool.make(module._globalVars   , 0);
-    nodePool.make(module._elems        , 0);
     nodePool.make(module._datas        , 0);
     nodePool.make(module._imports      , 0);
     nodePool.make(module._exports      , 1);

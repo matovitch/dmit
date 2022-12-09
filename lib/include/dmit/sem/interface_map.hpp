@@ -18,8 +18,6 @@ namespace dmit::sem
 
 struct InterfaceMap : fmt::Formatable
 {
-    InterfaceMap();
-
     void registerBundle(ast::Bundle& bundle, Context& context);
 
     ast::node::TIndex<ast::node::Kind::VIEW> getView(const com::UniqueId&) const;

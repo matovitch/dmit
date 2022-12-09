@@ -13,15 +13,21 @@ namespace dmit::wsm::writer
 
 struct Bematist
 {
+    void write(const Leb128</*IS_OBJECT=*/false>& leb128)
+    {
+        _size += leb128._size;
+    }
+
+    void write(const Leb128</*IS_OBJECT=*/true>&)
+    {
+        _size += K_LEB128_OBJ_SIZE;
+    }
+
     void skip(const uint32_t);
 
     void write(const uint8_t* const data, uint32_t size);
 
     void write(const uint8_t);
-
-    void write(const Leb128&);
-
-    void write(const Leb128Obj&);
 
     void writeF32(const flt32_t);
     void writeF64(const flt64_t);
@@ -61,14 +67,14 @@ struct TScribe
         *_data++ = byte;
     }
 
-    void write(const Leb128& leb128)
+    void write(const Leb128</*IS_OBJECT=*/false>& leb128)
     {
         write(leb128._asBytes, leb128._size);
     }
 
-    void write(const Leb128Obj& leb128Obj)
+    void write(const Leb128</*IS_OBJECT=*/true>& leb128)
     {
-        write(leb128Obj._asBytes, K_LEB128_OBJ_SIZE);
+        write(leb128._asBytes, K_LEB128_OBJ_SIZE);
     }
 
     uint32_t diff(const TScribe<ENDIANNESS> scribe) const

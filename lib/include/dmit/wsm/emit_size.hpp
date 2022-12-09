@@ -11,13 +11,13 @@ struct TFixUpSize
     TFixUpSize(Writer& writer) : _writer{writer}
     {
         _fork = writer.fork();
-        Leb128Obj size{0u};
+        Leb128</*IS_OBJECT=*/true> size{0u};
         writer.write(size);
     }
 
     ~TFixUpSize()
     {
-        Leb128Obj size{_writer.diff(_fork) - K_LEB128_OBJ_SIZE};
+        Leb128</*IS_OBJECT=*/true> size{_writer.diff(_fork) - K_LEB128_OBJ_SIZE};
         _fork.write(size);
     }
 

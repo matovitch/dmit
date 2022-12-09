@@ -25,13 +25,13 @@ namespace
 
 struct AstVisitor : ast::TVisitor<AstVisitor>
 {
-    AstVisitor(ast::State& ast, std::ostringstream& oss) :
+    AstVisitor(const ast::State& ast, std::ostringstream& oss) :
         ast::TVisitor<AstVisitor>{ast._nodePool},
         _interfacePoolOpt{},
         _oss{oss}
     {}
 
-    AstVisitor(ast::Bundle& bundle, std::ostringstream& oss) :
+    AstVisitor(const ast::Bundle& bundle, std::ostringstream& oss) :
         ast::TVisitor<AstVisitor>{bundle._nodePool},
         _interfacePoolOpt{bundle._interfacePoolOpt},
         _oss{oss}
