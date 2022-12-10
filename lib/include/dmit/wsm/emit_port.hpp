@@ -1,5 +1,6 @@
 #pragma once
 
+#include "dmit/wsm/v_index.hpp"
 #include "dmit/wsm/leb128.hpp"
 #include "dmit/wsm/wasm.hpp"
 
@@ -42,7 +43,7 @@ struct TExportDescriptorEmitter
     {
         auto& instRefFunc = _nodePool.get(instRefFuncIdx);
 
-        Leb128</*IS_OBJECT=*/false> funcIdxAsLeb128{instRefFunc._funcIdx};
+        Leb128</*IS_OBJECT=*/false> funcIdxAsLeb128{node::v_index::makeId(_nodePool, instRefFunc._function)};
 
         _writer.write(0x00);
         _writer.write(funcIdxAsLeb128);

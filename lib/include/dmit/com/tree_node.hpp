@@ -84,6 +84,11 @@ struct TMetaNode
             return index;
         }
 
+        TIndex<KIND> back() const
+        {
+            return this->operator[](_size - 1);
+        }
+
         TIndex<KIND> _index;
         uint32_t _size;
     };

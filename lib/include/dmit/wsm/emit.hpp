@@ -4,6 +4,7 @@
 #include "dmit/wsm/emit_port.hpp"
 #include "dmit/wsm/emit_size.hpp"
 #include "dmit/wsm/leb128.hpp"
+#include "dmit/wsm/v_index.hpp"
 #include "dmit/wsm/writer.hpp"
 #include "dmit/wsm/wasm.hpp"
 
@@ -50,17 +51,14 @@ using TBaseVisitor = typename com::tree::TTMetaVisitor<node::Kind,
                                                                                     StackDummy,
                                                                                     StackDummy,
                                                                                     REVERSE_LIST>;
-
 template <bool IS_OBJECT, class NodePool, class Writer>
 struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, Writer::REVERSE_LIST>
 {
-    using TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, Writer::REVERSE_LIST>::_nodePool;
-    using TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, Writer::REVERSE_LIST>::base;
-    using TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, Writer::REVERSE_LIST>::get;
-    using TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, Writer::REVERSE_LIST>::empty;
+    using Base = TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, Writer::REVERSE_LIST>;
+    using Base::_nodePool, Base::base, Base::get, Base::empty;
 
     TEmitter(NodePool& nodePool, Writer& writer) :
-        TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, Writer::REVERSE_LIST>{nodePool},
+        Base{nodePool},
         _writer{writer},
         _importDescriptorEmitter{nodePool, writer},
         _exportDescriptorEmitter{nodePool, writer},
@@ -70,7 +68,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
     template <class LimitsIdx>
     void writeLimits(LimitsIdx limitsIdx)
     {
-        auto& limits = _nodePool.get(limitsIdx);
+        auto& limits = get(limitsIdx);
 
         Leb128</*IS_OBJECT=*/false> limitsMinAsLeb128{limits._min};
 
@@ -203,7 +201,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
     {
         auto& start = get(startIdx);
 
-        Leb128<IS_OBJECT> funcIdxAsLeb128{start._funcIdx};
+        Leb128<IS_OBJECT> funcIdxAsLeb128{node::v_index::makeId(_nodePool, start._function)};
         _writer.write(funcIdxAsLeb128);
     }
 
@@ -314,7 +312,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
             relocation._offset = _writer.diff(_writerSection);
         }
 
-        Leb128<IS_OBJECT> funcIdxAsLeb128{instCall._funcIdx};
+        Leb128<IS_OBJECT> funcIdxAsLeb128{node::v_index::makeId(_nodePool, instCall._function)};
         _writer.write(funcIdxAsLeb128);
     }
 
@@ -345,7 +343,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
 
         _writer.write(0xD2);
 
-        Leb128<IS_OBJECT> funcIdxAsLeb128{instRefFunc._funcIdx};
+        Leb128<IS_OBJECT> funcIdxAsLeb128{node::v_index::makeId(_nodePool, instRefFunc._function)};
         _writer.write(funcIdxAsLeb128);
     }
 

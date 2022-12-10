@@ -179,7 +179,7 @@ struct TTMetaPool
         }
 
         template <TEnumIntegerType<Kind> KIND>
-        TIndex<KIND> last(const TList<KIND> list)
+        TIndex<KIND> back(const TList<KIND> list)
         {
             return get<KIND>(list._begin)._next;
         }

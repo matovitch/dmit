@@ -355,7 +355,7 @@ struct TNode<node::Kind::INST_REF_IS_NULL>
 template <>
 struct TNode<node::Kind::INST_REF_FUNC>
 {
-    uint32_t _funcIdx;
+    node::VIndex _function;
 };
 
 template <>
@@ -560,7 +560,7 @@ template<>
 struct TNode<node::Kind::INST_CALL>
 {
     node::TIndex<node::Kind::RELOCATION> _relocation;
-    uint32_t _funcIdx;
+    node::VIndex _function;
 };
 
 template<>
@@ -576,6 +576,8 @@ struct TNode<node::Kind::FUNCTION>
     uint32_t                               _typeIdx;
     node::TRange <node::Kind::TYPE_VAL    > _locals;
     node::TList  <node::Kind::INSTRUCTION > _body;
+
+    uint32_t _id;
 };
 
 template<>
@@ -696,7 +698,7 @@ struct TNode<node::Kind::DATA>
 template <>
 struct TNode<node::Kind::START>
 {
-    uint32_t _funcIdx;
+    node::VIndex _function;
 };
 
 using ImportDescriptor = std::variant<uint32_t, // typeidx
@@ -716,6 +718,8 @@ struct TNode<node::Kind::IMPORT>
     node::TIndex<node::Kind::NAME> _module;
     node::TIndex<node::Kind::NAME> _name;
     ImportDescriptor               _descriptor;
+
+    uint32_t _id;
 };
 
 using ExportDescriptor = std::variant<uint32_t, // memidx
