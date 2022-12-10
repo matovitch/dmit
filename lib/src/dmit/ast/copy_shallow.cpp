@@ -38,9 +38,33 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
     }
 
     template <com::TEnumIntegerType<node::Kind> KIND>
+    void copyList(node::TList<KIND>& srceList,
+                  node::TList<KIND>& destList)
+    {
+        _destNodePool.make(destList);
+
+        auto curr = srceList._begin;
+
+        while (get(curr)._next != srceList._begin)
+        {
+            curr = get(curr)._next;
+            grow(destList);
+        }
+
+        _stackPtrIn->_index = _destNodePool.back(destList);
+        base()(srceList);
+    }
+
+    template <com::TEnumIntegerType<node::Kind> KIND>
     void loopIterationConclusion(node::TIndex<KIND>)
     {
         _stackPtrIn->_index._value++;
+    }
+
+    template <com::TEnumIntegerType<node::Kind> KIND>
+    void loopIterationConclusionList(node::TIndex<KIND> index)
+    {
+        _stackPtrIn->_index = get(index)._next;
     }
 
     template <com::TEnumIntegerType<node::Kind> KIND>
@@ -50,7 +74,16 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
     void loopConclusion(node::TRange<KIND>&){}
 
     template <com::TEnumIntegerType<node::Kind> KIND>
+    void loopPreamble(node::TList<KIND>&){}
+
+    template <com::TEnumIntegerType<node::Kind> KIND>
+    void loopConclusion(node::TList<KIND>&){}
+
+    template <com::TEnumIntegerType<node::Kind> KIND>
     void loopIterationPreamble(node::TIndex<KIND>) {}
+
+    template <com::TEnumIntegerType<node::Kind> KIND>
+    void loopIterationPreambleList(node::TIndex<KIND>) {}
 
     template <class Type>
     void emptyOption() {}
@@ -80,6 +113,13 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
     auto makeBlitter(Type& value)
     {
         return blitter::make<Type, K_IS_INTERFACE>(_destNodePool, value);
+    }
+
+    template <com::TEnumIntegerType<node::Kind> KIND>
+    void grow(node::TList<KIND>& list)
+    {
+        _destNodePool.grow(list);
+        _destNodePool.back(list)._isInterface = true;
     }
 
     template <com::TEnumIntegerType<node::Kind> NODE_KIND>
@@ -255,7 +295,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
 
     void operator()(node::TIndex<node::Kind::PARENT_PATH> srceParentPathIdx)
     {
-        auto& srceParentPath = get(srceParentPathIdx)   ;
+        auto& srceParentPath = get(srceParentPathIdx);
         auto& destParentPath = _destNodePool.get(
             node::as<node::Kind::PARENT_PATH>(_stackPtrIn->_index)
         );
@@ -263,17 +303,6 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
         auto blitter = makeBlitter(destParentPath._expression);
         _stackPtrIn->_index = blitter(srceParentPath._expression);
         base()(srceParentPath._expression);
-
-        if (srceParentPath._next)
-        {
-            auto blitter = makeBlitter(destParentPath._next);
-            _stackPtrIn->_index = blitter(srceParentPath._next.value());
-            base()(srceParentPath._next);
-        }
-        else
-        {
-            com::blitDefault(destParentPath._next);
-        }
     }
 
     void operator()(node::TIndex<node::Kind::DEFINITION> srceDefinitionIdx)
@@ -320,16 +349,8 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
         copyRange(srceModule._definitions,
                   destModule._definitions);
 
-        if (srceModule._parentPath)
-        {
-            auto blitter = makeBlitter(destModule._parentPath);
-            _stackPtrIn->_index = blitter(srceModule._parentPath.value());
-            base()(srceModule._parentPath);
-        }
-        else
-        {
-            com::blitDefault(destModule._parentPath);
-        }
+        copyList(srceModule._parentPath,
+                 destModule._parentPath);
 
         make(destModule._modules, 0);
 

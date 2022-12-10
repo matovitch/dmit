@@ -257,9 +257,7 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
     {
         auto& parentPath = get(parentPathIdx);
 
-        _oss << "{\"node\":\"ParentPath\",";
-        _oss << "\"expression\":" ; base()(parentPath._expression ); _oss << ',';
-        _oss << "\"next\":"       ; base()(parentPath._next       ); _oss << '}';
+        base()(parentPath._expression);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DEFINITION> definitionIdx)
@@ -318,7 +316,21 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
     }
 
     template <com::TEnumIntegerType<ast::node::Kind> KIND>
+    void loopConclusion(ast::node::TList<KIND>& list)
+    {
+        _oss.seekp(empty(list) ? 0 : -1, std::ios_base::end);
+
+        _oss << "]";
+    }
+
+    template <com::TEnumIntegerType<ast::node::Kind> KIND>
     void loopPreamble(ast::node::TRange<KIND>&)
+    {
+        _oss << "[";
+    }
+
+    template <com::TEnumIntegerType<ast::node::Kind> KIND>
+    void loopPreamble(ast::node::TList<KIND>&)
     {
         _oss << "[";
     }
@@ -330,7 +342,16 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
     }
 
     template <com::TEnumIntegerType<ast::node::Kind> KIND>
+    void loopIterationConclusionList(ast::node::TIndex<KIND>)
+    {
+        _oss << ',';
+    }
+
+    template <com::TEnumIntegerType<ast::node::Kind> KIND>
     void loopIterationPreamble(ast::node::TIndex<KIND>) {}
+
+    template <com::TEnumIntegerType<ast::node::Kind> KIND>
+    void loopIterationPreambleList(ast::node::TIndex<KIND>) {}
 
     com::OptionRef<ast::State::NodePool> _interfacePoolOpt;
 

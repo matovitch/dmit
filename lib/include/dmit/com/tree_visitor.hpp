@@ -109,9 +109,9 @@ struct TTMetaVisitor
                 curr = nodePtr->_next;
                 nodePtr = &(get(curr));
 
-                static_cast<Derived*>(this)->template loopIterationPreamble<KIND>(curr);
+                static_cast<Derived*>(this)->template loopIterationPreambleList<KIND>(curr);
                 (*this)(curr);
-                static_cast<Derived*>(this)->template loopIterationConclusion<KIND>(curr);
+                static_cast<Derived*>(this)->template loopIterationConclusionList<KIND>(curr);
             }
 
             static_cast<Derived*>(this)->template loopConclusion<KIND>(nodeList);
@@ -181,6 +181,12 @@ struct TTMetaVisitor
                                                                 \
     template <dmit::com::TEnumIntegerType<prefix::Kind> KIND>   \
     void loopIterationPreamble(prefix::TIndex<KIND>) {}         \
+                                                                \
+    template <dmit::com::TEnumIntegerType<prefix::Kind> KIND>   \
+    void loopIterationConclusionList(prefix::TIndex<KIND>) {}   \
+                                                                \
+    template <dmit::com::TEnumIntegerType<prefix::Kind> KIND>   \
+    void loopIterationPreambleList(prefix::TIndex<KIND>) {}     \
                                                                 \
     template <class Type>                                       \
     void emptyOption() {}                                       \

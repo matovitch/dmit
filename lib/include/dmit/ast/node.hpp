@@ -1,15 +1,16 @@
 #pragma once
 
-#include "dmit/com/tree_node.hpp"
-#include "dmit/com/tree_pool.hpp"
-
 #include "dmit/ast/definition_role.hpp"
+
+#include "dmit/wsm/wasm.hpp"
+
+#include "dmit/lex/token.hpp"
 
 #include "dmit/src/line_index.hpp"
 #include "dmit/src/slice.hpp"
 
-#include "dmit/lex/token.hpp"
-
+#include "dmit/com/tree_node.hpp"
+#include "dmit/com/tree_pool.hpp"
 #include "dmit/com/unique_id.hpp"
 #include "dmit/com/enum.hpp"
 
@@ -123,9 +124,9 @@ using ScopeVariant = std::variant<Statement,
 template <>
 struct TNode<node::Kind::PARENT_PATH>
 {
-    Expression _expression;
+    node::TIndex<node::Kind::PARENT_PATH> _next;
 
-    std::optional<node::TIndex<node::Kind::PARENT_PATH>> _next;
+    Expression _expression;
 };
 
 template <>
@@ -150,7 +151,7 @@ struct TNode<node::Kind::MODULE>
     node::TIndex<node::Kind::MODULE> _parent;
     com::UniqueId                    _id;
 
-    std::optional<node::TIndex<node::Kind::PARENT_PATH>> _parentPath;
+    node::TList<node::Kind::PARENT_PATH> _parentPath;
 
     node::Status _status;
 };
@@ -209,6 +210,8 @@ struct TNode<node::Kind::DEF_FUNCTION>
     std::optional<node::TIndex<node::Kind::TYPE>> _returnType;
 
     node::VIndex _parent;
+
+    std::optional<wsm::node::VIndex> _asWsm;
 
     com::UniqueId _id;
 

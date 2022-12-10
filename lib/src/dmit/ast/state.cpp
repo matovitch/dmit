@@ -405,8 +405,8 @@ void Builder::makeModule(dmit::prs::Reader& reader,
     auto readerCopy = reader;
 
     com::blitDefault(module._path);
-    com::blitDefault(module._parentPath);
 
+    _nodePool.make(module._parentPath);
     _nodePool.make(module._definitions , reader.size());
     _nodePool.make(module._imports     , reader.size());
 

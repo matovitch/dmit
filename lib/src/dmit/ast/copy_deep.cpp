@@ -41,10 +41,22 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
     }
 
     template <com::TEnumIntegerType<node::Kind> KIND>
+    void loopIterationConclusionList(node::TIndex<KIND> index)
+    {
+        _stackPtrIn->_index = get(index)._next;
+    }
+
+    template <com::TEnumIntegerType<node::Kind> KIND>
     void loopPreamble(node::TRange<KIND>&){}
 
     template <com::TEnumIntegerType<node::Kind> KIND>
     void loopConclusion(node::TRange<KIND>&){}
+
+    template <com::TEnumIntegerType<node::Kind> KIND>
+    void loopPreamble(node::TList<KIND>&){}
+
+    template <com::TEnumIntegerType<node::Kind> KIND>
+    void loopConclusion(node::TList<KIND>&){}
 
     template <com::TEnumIntegerType<node::Kind> KIND>
     void loopIterationPreamble(node::TIndex<KIND>) {}
@@ -71,6 +83,14 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
     {
         _destNodePool.make(range, size);
         range._index._isInterface = false;
+    }
+
+    template <com::TEnumIntegerType<node::Kind> KIND>
+    TNode<KIND>& grow(node::TList<KIND>& list)
+    {
+        auto& node = _destNodePool.grow(list);
+        _destNodePool.back(list)._isInterface = false;
+        return node;
     }
 
     template <com::TEnumIntegerType<node::Kind> NODE_KIND>
@@ -402,23 +422,20 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
 
         // Copy parent path
 
-        com::blitDefault(destModule._parentPath);
+        _destNodePool.make(destModule._parentPath);
 
         auto parent = srceModule._parent;
 
         while (get(parent)._path)
         {
             auto& parentPath = get(parent)._path;
-            auto  prefix     = destModule._parentPath;
 
-                                                       make (destModule._parentPath);
-            auto& destModuleParentPath = _destNodePool.get  (destModule._parentPath);
+            auto& destModuleParentPath = grow(destModule._parentPath);
 
             auto blitter = blitter::make(_destNodePool, destModuleParentPath._expression);
             _stackPtrIn->_index = blitter(parentPath.value());
             base()(parentPath);
 
-            destModuleParentPath._next = prefix;
             parent = get(parent)._parent;
         }
 
