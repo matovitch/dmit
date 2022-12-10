@@ -116,6 +116,11 @@ struct Resolver : ast::TVisitor<Resolver>
         base()(function._parent);
     }
 
+    void operator()(ast::node::TIndex<ast::node::Kind::DEFINITION> definitionIdx)
+    {
+        base()(get(definitionIdx)._parent);
+    }
+
     void operator()(ast::node::TIndex<ast::node::Kind::MODULE> moduleIdx)
     {
         auto& module = get(moduleIdx);
@@ -270,7 +275,12 @@ struct Binder : ast::TVisitor<Binder, Stack>
 
     void operator()(ast::node::TIndex<ast::node::Kind::DEFINITION> definitionIdx)
     {
-        base()(get(definitionIdx)._value);
+        auto& definition = get(definitionIdx);
+
+        definition._parent = _stackPtrIn->_parent;
+        _stackPtrIn->_parent = definitionIdx;
+
+        base()(definition._value);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DCL_IMPORT> importIdx)

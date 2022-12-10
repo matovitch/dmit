@@ -1,5 +1,9 @@
 #include "dmit/gen/emitter.hpp"
 
+#include "dmit/ast/definition_role.hpp"
+#include "dmit/ast/v_index.hpp"
+#include "dmit/ast/node.hpp"
+
 #include "dmit/wsm/emit.hpp"
 #include "dmit/wsm/wasm.hpp"
 
@@ -10,6 +14,7 @@
 
 #include "dmit/fmt/com/unique_id.hpp"
 
+#include "dmit/com/unique_id.hpp"
 #include "dmit/com/storage.hpp"
 #include "dmit/com/assert.hpp"
 
@@ -25,24 +30,14 @@ namespace
 const com::UniqueId K_TYPE_I64             {0x7d516e355461f852, 0xeb2349989392e0bb};
 const com::UniqueId K_FUNC_ADD_I64_LIT_INT {0xce6a2caefab56273, 0xbedcc1c288a680af};
 
-namespace scribe
-{
-
-struct Stack
-{
-    bool _isExport = false;
-};
-
-} // namespace scribe
-
-struct Scribe : ast::TVisitor<Scribe, scribe::Stack>
+struct Scribe : ast::TVisitor<Scribe>
 {
     DMIT_AST_VISITOR_SIMPLE();
 
     Scribe(ast::State::NodePool  & poolAst,
            sem::InterfaceMap     & interfaceMap,
            PoolWasm              & poolWasm) :
-        TVisitor<Scribe, scribe::Stack>{poolAst},
+        TVisitor<Scribe>{poolAst},
         _interfaceMap{interfaceMap},
         _wsmPool{poolWasm}
     {
@@ -64,7 +59,12 @@ struct Scribe : ast::TVisitor<Scribe, scribe::Stack>
         dmit::com::blitDefault(wsmModule._startOpt);
         dmit::com::blitDefault(wsmModule._relocCode);
         dmit::com::blitDefault(wsmModule._relocData);
+    }
 
+    com::UniqueId id(const ast::node::VIndex& vIndex)
+    {
+        return isInterface(vIndex) ? ast::node::v_index::makeId(_interfaceMap._astNodePool, vIndex)
+                                   : ast::node::v_index::makeId(_nodePool, vIndex);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DEF_CLASS>){}
@@ -93,9 +93,7 @@ struct Scribe : ast::TVisitor<Scribe, scribe::Stack>
         {
             auto vIndex = get(get(get(get(function._arguments[i])._typeClaim)._type)._name)._asVIndex;
 
-            auto id = isInterface(vIndex) ? ast::node::v_index::makeId(_interfaceMap._astNodePool, vIndex)
-                                          : ast::node::v_index::makeId(_nodePool, vIndex);
-            if (id == K_TYPE_I64)
+            if (id(vIndex) == K_TYPE_I64)
             {
                 wsm::node::TIndex<wsm::node::Kind::TYPE_I64> wsmI64Idx;
                 _wsmPool.make(wsmI64Idx);
@@ -113,9 +111,7 @@ struct Scribe : ast::TVisitor<Scribe, scribe::Stack>
 
         auto vIndex = get(get(function._returnType.value())._name)._asVIndex;
 
-        auto id = isInterface(vIndex) ? ast::node::v_index::makeId(_interfaceMap._astNodePool, vIndex)
-                                      : ast::node::v_index::makeId(_nodePool, vIndex);
-        if (id == K_TYPE_I64)
+        if (id(vIndex) == K_TYPE_I64)
         {
             wsm::node::TIndex<wsm::node::Kind::TYPE_I64> wsmI64Idx;
             _wsmPool.make(wsmI64Idx);
@@ -137,7 +133,9 @@ struct Scribe : ast::TVisitor<Scribe, scribe::Stack>
 
         // TODO make the wasm function
 
-        if (_stackPtrIn->_isExport)
+        auto defRole = ast::node::v_index::makeDefinitionRole(_nodePool, function._parent);
+
+        if (defRole == ast::DefinitionRole::EXPORTED)
         {
             auto& export_ = _wsmPool.grow(wsmModule._exports);
 
@@ -165,8 +163,6 @@ struct Scribe : ast::TVisitor<Scribe, scribe::Stack>
     void operator()(ast::node::TIndex<ast::node::Kind::DEFINITION> definitionIdx)
     {
         auto& definition = get(definitionIdx);
-
-        _stackPtrIn->_isExport = (definition._role == ast::DefinitionRole::EXPORTED);
 
         base()(definition._value);
     }

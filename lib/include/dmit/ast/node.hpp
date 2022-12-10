@@ -182,6 +182,8 @@ struct TNode<node::Kind::DEFINITION>
     DefinitionRole _role;
 
     Definition _value;
+
+    node::VIndex _parent;
 };
 
 template <>

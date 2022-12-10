@@ -1,5 +1,6 @@
 #include "dmit/ast/v_index.hpp"
 
+#include "dmit/ast/definition_role.hpp"
 #include "dmit/ast/state.hpp"
 
 #include "dmit/com/unique_id.hpp"
@@ -52,6 +53,25 @@ struct IdVisitor
     State::NodePool& _pool;
 };
 
+struct DefinitionRoleVisitor
+{
+    DefinitionRoleVisitor(State::NodePool& pool) : _pool{pool} {}
+
+    template <com::TEnumIntegerType<Kind> KIND>
+    DefinitionRole operator()(TIndex<KIND>)
+    {
+        DMIT_COM_ASSERT(!"[AST] Not implemented");
+        return DefinitionRole::LOCAL;
+    }
+
+    DefinitionRole operator()(TIndex<Kind::DEFINITION> definitionIdx)
+    {
+        return _pool.get(definitionIdx)._role;
+    }
+
+    State::NodePool& _pool;
+};
+
 } // namespace
 
 com::UniqueId makeId(State::NodePool& pool, const VIndex vIndex)
@@ -59,6 +79,13 @@ com::UniqueId makeId(State::NodePool& pool, const VIndex vIndex)
     IdVisitor idVisitor{pool};
 
     return std::visit(idVisitor, vIndex);
+}
+
+DefinitionRole makeDefinitionRole(State::NodePool& pool, const VIndex vIndex)
+{
+    DefinitionRoleVisitor defRoleVisitor{pool};
+
+    return std::visit(defRoleVisitor, vIndex);
 }
 
 } // namespace dmit::ast::node::v_index
