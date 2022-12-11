@@ -26,16 +26,18 @@ public:
 
     using PoolTask = typename TTask<SIZE>::Pool;
 
-    TScheduler(TaskGraphPoolSet& taskGraphPoolSet) :
+    TScheduler(TaskGraphPoolSet& taskGraphPoolSet,
+               PoolTask& taskPool) :
         _coroutine {_coroutinePool.make(nullptr)},
-        _taskGraph {taskGraphPoolSet}
+        _taskGraph {taskGraphPoolSet},
+        _taskPool  {taskPool}
     {}
 
     template <class CoroutinePool, class Function>
-    TaskNode makeTask(PoolTask& taskPool, CoroutinePool& coroutinePool, Function&& function)
+    TaskNode makeTask(Function&& function, CoroutinePool& coroutinePool)
     {
         TaskNode taskNode{_taskGraph.makeNode(nullptr)};
-        auto& task = taskPool.make(*this, coroutinePool, std::forward<Function>(function), taskNode);
+        auto& task = _taskPool.make(*this, coroutinePool, std::forward<Function>(function), taskNode);
         taskNode._value->_value = &task;
 
         return taskNode;
@@ -125,6 +127,7 @@ private:
 
     schmit_details::coroutine::Abstract& _coroutine;
     TaskGraph _taskGraph;
+    PoolTask& _taskPool;
 
     static thread_local schmit_details::TCoroutine<0, 1>::Pool _coroutinePool;
 };

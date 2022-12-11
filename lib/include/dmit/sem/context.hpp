@@ -37,15 +37,6 @@ struct Context
     void run();
 
     template <class Function, class CoroutinePool>
-    SchmitTaskNode makeTaskFromWork(Function&& function,
-                                    CoroutinePool& coroutinePool)
-    {
-        auto task = _scheduler.makeTask(_poolTask, coroutinePool, std::forward<Function>(function));
-
-        return task;
-    }
-
-    template <class Function, class CoroutinePool>
     void makeTask(Function&& function,
                   CoroutinePool& coroutinePool,
                   const ast::node::VIndex& astNodeVIndex,
@@ -58,7 +49,7 @@ struct Context
             return;
         }
 
-        auto task = makeTaskFromWork
+        auto task = _scheduler.makeTask
         (
             [this, astNodeVIndex, function, comUniqueId]
             {
@@ -103,9 +94,9 @@ struct Context
     }
 
     SchmitTaskGraphPoolSet _taskGraphPoolSet;
+    SchmitPoolTask         _taskPool;
     SchmitScheduler        _scheduler;
 
-    SchmitPoolTask _poolTask;
 
     SchmitCoroutinePool<0x2222 /*stack size*/> _coroutinePoolSmall;
     SchmitCoroutinePool<0x5555 /*stack size*/> _coroutinePoolMedium;

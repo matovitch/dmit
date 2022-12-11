@@ -186,7 +186,7 @@ void InterfaceMap::registerBundle(ast::Bundle& bundle, Context& context)
 
     InterfaceMaker interfaceMaker{_astNodePool, context};
 
-    context.makeTaskFromWork
+    context._scheduler.makeTask
     (
         [&interfaceMaker, &views]
         {

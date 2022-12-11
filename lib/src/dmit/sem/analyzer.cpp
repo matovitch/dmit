@@ -29,7 +29,7 @@ void analyze(com::TParallelFor<Analyzer>& parallelAnalyzer)
 
 int8_t analyze(ast::Bundle& bundle, Context& context, InterfaceMap& interfaceMap)
 {
-    context.makeTaskFromWork(
+    context._scheduler.makeTask(
         [&]()
         {
             bind  (bundle, context, interfaceMap);
