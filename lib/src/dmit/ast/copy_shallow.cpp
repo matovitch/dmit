@@ -62,9 +62,9 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
     }
 
     template <com::TEnumIntegerType<node::Kind> KIND>
-    void loopIterationConclusionList(node::TIndex<KIND> index)
+    void loopIterationConclusionList(node::TIndex<KIND>)
     {
-        _stackPtrIn->_index = get(index)._next;
+        _stackPtrIn->_index._value--;
     }
 
     template <com::TEnumIntegerType<node::Kind> KIND>
