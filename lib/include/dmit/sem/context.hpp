@@ -19,7 +19,6 @@ using SchmitTaskGraphPoolSet = typename SchmitScheduler::TaskGraphPoolSet;
 using SchmitDependency       = typename SchmitScheduler::Dependency;
 using SchmitTaskNode         = typename SchmitScheduler::TaskNode;
 using SchmitPoolTask         = typename SchmitScheduler::PoolTask;
-using SchmitPoolWork         = typename SchmitScheduler::PoolWork;
 
 template <std::size_t STACK_SIZE>
 using SchmitCoroutinePool = typename SchmitScheduler::TCoroutinePool<STACK_SIZE>;
@@ -41,9 +40,7 @@ struct Context
     SchmitTaskNode makeTaskFromWork(Function&& function,
                                     CoroutinePool& coroutinePool)
     {
-        auto task = _scheduler.makeTask(_poolTask, coroutinePool);
-
-        task().assignWork(_poolWork.make(std::forward<Function>(function)));
+        auto task = _scheduler.makeTask(_poolTask, coroutinePool, std::forward<Function>(function));
 
         return task;
     }
@@ -109,7 +106,6 @@ struct Context
     SchmitScheduler        _scheduler;
 
     SchmitPoolTask _poolTask;
-    SchmitPoolWork _poolWork;
 
     SchmitCoroutinePool<0x2222 /*stack size*/> _coroutinePoolSmall;
     SchmitCoroutinePool<0x5555 /*stack size*/> _coroutinePoolMedium;

@@ -13,7 +13,7 @@ namespace schmit
 template <std::size_t SIZE>
 class TScheduler
 {
-    using TaskGraph = topo::graph::TMake<task::TAbstract<SIZE>*, SIZE>;
+    using TaskGraph = topo::graph::TMake<TTask<SIZE>*, SIZE>;
 
 public:
 
@@ -25,19 +25,18 @@ public:
     using TCoroutinePool = typename schmit_details::TCoroutine<STACK_SIZE, 0>::Pool;
 
     using PoolTask = typename TTask<SIZE>::Pool;
-    using PoolWork = typename TWork<SIZE>::Pool;
 
     TScheduler(TaskGraphPoolSet& taskGraphPoolSet) :
         _coroutine {_coroutinePool.make(nullptr)},
         _taskGraph {taskGraphPoolSet}
     {}
 
-    template <class CoroutinePool>
-    TaskNode makeTask(PoolTask& taskPool, CoroutinePool& coroutinePool)
+    template <class CoroutinePool, class Function>
+    TaskNode makeTask(PoolTask& taskPool, CoroutinePool& coroutinePool, Function&& function)
     {
-        auto& task = taskPool.make(*this, coroutinePool);
-        TaskNode taskNode{_taskGraph.makeNode(&task)};
-        task.setNode(taskNode);
+        TaskNode taskNode{_taskGraph.makeNode(nullptr)};
+        auto& task = taskPool.make(*this, coroutinePool, std::forward<Function>(function), taskNode);
+        taskNode._value->_value = &task;
 
         return taskNode;
     }

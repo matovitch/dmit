@@ -18,7 +18,8 @@ SchmitTaskNode Context::getOrMakeLock(const ast::node::VIndex& astNodeVIndex)
 
     auto lock = (fitLock != _lockMap.end()) ? fitLock->second
                                             : _scheduler.makeTask(_poolTask,
-                                                                  _coroutinePoolSmall);
+                                                                  _coroutinePoolSmall,
+                                                                  []{});
     if (fitLock == _lockMap.end())
     {
         _scheduler.attach(lock, lock);
@@ -34,7 +35,8 @@ SchmitTaskNode Context::getOrMakeEvent(const com::UniqueId& uniqueId)
 
     auto event = (fitEvent != _eventMap.end()) ? fitEvent->second
                                                : _scheduler.makeTask(_poolTask,
-                                                                     _coroutinePoolSmall);
+                                                                     _coroutinePoolSmall,
+                                                                     []{});
     if (fitEvent == _eventMap.end())
     {
         _eventMap.emplace(uniqueId, event);

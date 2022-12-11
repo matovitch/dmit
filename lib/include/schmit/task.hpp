@@ -1,7 +1,6 @@
 #pragma once
 
 #include "schmit/details/coroutine.hpp"
-#include "schmit/work.hpp"
 
 #include "topo/graph.hpp"
 
@@ -9,6 +8,7 @@
 
 #include <functional>
 #include <optional>
+#include <utility>
 
 namespace schmit
 {
@@ -22,19 +22,16 @@ class TScheduler;
 namespace task
 {
 
-template <std::size_t>
-struct TAbstract;
-
 template <std::size_t SIZE>
 struct TNode
 {
-    using NodeItType = typename topo::graph::TMake<task::TAbstract<SIZE>*, SIZE>::NodeListIt;
+    using NodeItType = typename topo::graph::TMake<TTask<SIZE>*, SIZE>::NodeListIt;
 
     TNode(NodeItType value) : _value{value} {}
 
     TTask<SIZE>& operator()()
     {
-        return reinterpret_cast<TTask<SIZE>&>(*(_value->_value));
+        return *(_value->_value);
     }
 
     bool isPending() const
@@ -69,30 +66,37 @@ struct TEntryPoint
 template <std::size_t SIZE>
 thread_local std::optional<TNode<SIZE>> TEntryPoint<SIZE>::_next;
 
+} // namespace task
+
 template <std::size_t SIZE>
-struct TAbstract
+class TTask
 {
     friend TScheduler<SIZE>;
 
-    using Dependency = typename topo::graph::TMake<TAbstract<SIZE>*, SIZE>::EdgeListIt;
+    using Dependency = typename topo::graph::TMake<TTask<SIZE>*, SIZE>::EdgeListIt;
 
-    template <std::size_t STACK_SIZE, std::size_t POOL_SIZE>
-    TAbstract(TScheduler<SIZE>& scheduler,
-              pool::TIntrusive<pool::intrusive::TTraits<schmit_details::TCoroutine<STACK_SIZE, POOL_SIZE>, POOL_SIZE>>& coroutinePool) :
+    using Pool = pool::intrusive::TMake<TTask<SIZE>, SIZE>;
+
+public:
+
+    template <std::size_t STACK_SIZE, std::size_t POOL_SIZE, class Function>
+    TTask(Pool& pool,
+          schmit::TScheduler<SIZE> & scheduler,
+          pool::intrusive::TMake<schmit_details::TCoroutine<STACK_SIZE, POOL_SIZE>, POOL_SIZE>& coroutinePool,
+          Function&& function,
+          task::TNode<SIZE> node) :
         _scheduler{scheduler},
-        _coroutine{coroutinePool.make(TEntryPoint<SIZE>::address())}
+        _coroutine{coroutinePool.make(task::TEntryPoint<SIZE>::address())},
+        _function{std::move(function)},
+        _node{node},
+        _pool{pool}
     {}
 
-    void setNode(TNode<SIZE>& node)
+    void attach(task::TNode<SIZE>& task, Dependency& dependency)
     {
-        _nodeOpt = node;
-    }
+        dependency = _scheduler.attach(_node, task);
 
-    void attach(TNode<SIZE>& task, Dependency& dependency)
-    {
-        dependency = _scheduler.attach(_nodeOpt.value(), task);
-
-        _scheduler.releaseThread(_nodeOpt.value());
+        _scheduler.releaseThread(_node);
     }
 
     bool isRunning() const
@@ -107,66 +111,29 @@ struct TAbstract
         #endif
 
         _isRunning = true;
-        runImpl();
+
+        _function();
+
         _isRunning = false;
 
-        _scheduler.pop(_nodeOpt.value());
+        _scheduler.pop(_node);
         _coroutine.recycle();
     }
 
-    virtual void recycle()     = 0;
-    virtual void runImpl()     = 0;
-
-    virtual ~TAbstract() {}
-
-private:
-
-    TScheduler<SIZE>&                    _scheduler;
-    std::optional<TNode<SIZE>>           _nodeOpt;
-    schmit_details::coroutine::Abstract& _coroutine;
-    bool                                 _isRunning = false;
-};
-
-} // namespace task
-
-template <std::size_t SIZE>
-class TTask : public task::TAbstract<SIZE>
-{
-
-public:
-
-    using Pool = pool::intrusive::TMake<TTask<SIZE>, SIZE>;
-
-    template <std::size_t STACK_SIZE, std::size_t POOL_SIZE>
-    TTask(Pool& pool,
-          schmit::TScheduler<SIZE> & scheduler,
-          pool::TIntrusive<pool::intrusive::TTraits<schmit_details::TCoroutine<STACK_SIZE, POOL_SIZE>, POOL_SIZE>>& coroutinePool) :
-        task::TAbstract<SIZE>(scheduler, coroutinePool),
-        _pool{pool}
-    {}
-
-    void assignWork(TWork<SIZE>& work)
-    {
-        _workOpt = work;
-    }
-
-    void runImpl() override
-    {
-        if (_workOpt)
-        {
-            _workOpt.value().get().run();
-        }
-    }
-
-    void recycle() override
+    void recycle()
     {
         _pool.recycle(*this);
     }
 
 private:
 
-    std::optional<std::reference_wrapper<TWork<SIZE>>> _workOpt;
-    Pool&                                              _pool;
+    TScheduler<SIZE>&                    _scheduler;
+    schmit_details::coroutine::Abstract& _coroutine;
+    bool                                 _isRunning = false;
+
+    std::function<void()> _function;
+    task::TNode<SIZE>     _node;
+    Pool&                 _pool;
 };
 
 } // namespace schmit
