@@ -169,6 +169,8 @@ struct TNode<node::Kind::TYPE_FUNC>
 {
     node::TIndex<node::Kind::TYPE_RESULT>   _domain;
     node::TIndex<node::Kind::TYPE_RESULT> _codomain;
+
+    uint32_t _id;
 };
 
 template <>
@@ -567,15 +569,15 @@ template<>
 struct TNode<node::Kind::INST_CALL_INDIRECT>
 {
     uint32_t _tableIdx;
-    uint32_t _typeIdx;
+    node::VIndex _type;
 };
 
 template<>
 struct TNode<node::Kind::FUNCTION>
 {
-    uint32_t                               _typeIdx;
     node::TRange <node::Kind::TYPE_VAL    > _locals;
     node::TList  <node::Kind::INSTRUCTION > _body;
+    node::VIndex                            _type;
 
     uint32_t _id;
 };

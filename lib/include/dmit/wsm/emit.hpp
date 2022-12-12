@@ -322,7 +322,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
 
         _writer.write(0x11);
 
-        Leb128<IS_OBJECT>  typeIdxAsLeb128{instCallIndirect._typeIdx  };
+        Leb128<IS_OBJECT>  typeIdxAsLeb128{node::v_index::makeId(_nodePool, instCallIndirect._type)};
         Leb128<IS_OBJECT> tableIdxAsLeb128{instCallIndirect._tableIdx };
         _writer.write( typeIdxAsLeb128);
         _writer.write(tableIdxAsLeb128);
@@ -1402,7 +1402,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
 
             for (uint32_t i = 0; i < module._funcs._size; i++)
             {
-                Leb128<IS_OBJECT> typeIdxAsLeb128{get(module._funcs[i])._typeIdx};
+                Leb128<IS_OBJECT> typeIdxAsLeb128{node::v_index::makeId(_nodePool, get(module._funcs[i])._type)};
                 _writer.write(typeIdxAsLeb128);
             }
         }

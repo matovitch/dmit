@@ -40,6 +40,8 @@ TEST_CASE("wsm_add")
 
     auto& typeFunc = nodePool.get(module._types[0]);
 
+    typeFunc._id = 0;
+
     auto&   domain = nodePool.makeGet(typeFunc.   _domain);
     auto& codomain = nodePool.makeGet(typeFunc. _codomain);
 
@@ -61,7 +63,7 @@ TEST_CASE("wsm_add")
     auto& function = nodePool.get(module._funcs[0]);
 
     function._id = 0;
-    function._typeIdx = 0;
+    function._type = module._types[0];
 
     nodePool.make(function._locals , 0);
     nodePool.make(function._body);
@@ -165,6 +167,8 @@ TEST_CASE("wsm_increment")
 
     auto& typeFunc = nodePool.get(module._types[0]);
 
+    typeFunc._id = 0;
+
     auto&   domain = nodePool.makeGet(typeFunc.   _domain);
     auto& codomain = nodePool.makeGet(typeFunc. _codomain);
 
@@ -184,7 +188,7 @@ TEST_CASE("wsm_increment")
     auto& function = nodePool.get(module._funcs[0]);
 
     function._id = 0;
-    function._typeIdx = 0;
+    function._type = module._types[0];
 
     nodePool.make(function._locals , 1);
     nodePool.make(function._body);

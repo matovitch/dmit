@@ -82,6 +82,8 @@ struct Scribe : ast::TVisitor<Scribe>
 
         auto& wsmTypeFunc = _wsmPool.grow(wsmModule._types);
 
+        wsmTypeFunc._id = wsmModule._types._size - 1; // FIXME, type ids should be set later
+
         auto& wsmDomain   = _wsmPool.makeGet(wsmTypeFunc.   _domain);
         auto& wsmCodomain = _wsmPool.makeGet(wsmTypeFunc. _codomain);
 
@@ -126,7 +128,7 @@ struct Scribe : ast::TVisitor<Scribe>
 
         auto& wsmFunction = _wsmPool.grow(wsmModule._funcs);
 
-        wsmFunction._typeIdx = _idxFunc;
+        wsmFunction._type = wsmModule._types.back();
 
         _wsmPool.make(wsmFunction._locals, 0);
         _wsmPool.make(wsmFunction._body);
