@@ -60,12 +60,7 @@ CriticalSection::CriticalSection(std::atomic<bool>& flag) : _flag{flag}
 
 CriticalSection::~CriticalSection()
 {
-    #if defined(SCHMIT_USE_TSAN)
-        __tsan_release(&_flag);
-    #endif
-
-    std::atomic_thread_fence(std::memory_order_release);
-    _flag.store(false, std::memory_order_relaxed);
+    _flag.store(false, std::memory_order_release);
 }
 
 } // namespace dmit::com
