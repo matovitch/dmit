@@ -90,6 +90,7 @@ struct Kind : com::TEnum<uint8_t>
         IMPORT             ,
         EXPORT             ,
         NAME               ,
+        LOCAL              ,
         RELOCATION         ,
         SYMBOL             ,
         SYMBOL_DATA        ,
@@ -232,9 +233,10 @@ template <>
 struct TNode<node::Kind::RELOCATION>
 {
     node::TIndex<node::Kind::RELOCATION> _next;
-    uint32_t _addend;
-    uint32_t _offset;
-    uint32_t _index;
+    
+    uint32_t       _addend;
+    uint32_t       _offset;
+    node::VIndex   _index;
     RelocationType _type;
 };
 
@@ -370,8 +372,8 @@ struct TNode<node::Kind::INST_SELECT>
     node::TRange<node::Kind::TYPE_VAL> _valTypes;
 };
 
-template <> struct TNode<node::Kind::INST_LOCAL_GET> { uint32_t _localIdx; };
-template <> struct TNode<node::Kind::INST_LOCAL_SET> { uint32_t _localIdx; };
+template <> struct TNode<node::Kind::INST_LOCAL_GET> { node::VIndex _local; };
+template <> struct TNode<node::Kind::INST_LOCAL_SET> { node::VIndex _local; };
 template <> struct TNode<node::Kind::INST_LOCAL_TEE> { uint32_t _localIdx; };
 
 template <> struct TNode<node::Kind::INST_GLOBAL_GET> { uint32_t _globalIdx; };
@@ -572,12 +574,22 @@ struct TNode<node::Kind::INST_CALL_INDIRECT>
     node::VIndex _type;
 };
 
+template <>
+struct TNode<node::Kind::LOCAL>
+{
+    node::TIndex<node::Kind::LOCAL    > _next;
+    node::TIndex<node::Kind::TYPE_VAL > _type;
+    uint32_t _id;
+};
+
 template<>
 struct TNode<node::Kind::FUNCTION>
 {
-    node::TRange <node::Kind::TYPE_VAL    > _locals;
-    node::TList  <node::Kind::INSTRUCTION > _body;
-    node::VIndex                            _type;
+    node::TList <node::Kind::LOCAL       > _locals;
+    node::TList <node::Kind::INSTRUCTION > _body;
+    node::VIndex                           _type;
+
+    uint32_t _localsSize;
 
     uint32_t _id;
 };
@@ -628,7 +640,7 @@ struct SymbolFlag
 template<>
 struct TNode<node::Kind::SYMBOL_OBJECT>
 {
-    uint32_t _index;
+    node::VIndex _index;
     std::optional<node::TIndex<node::Kind::NAME>> _name;
 };
 

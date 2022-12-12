@@ -38,6 +38,11 @@ struct VisitorId
         return _pool.get(typeFuncIdx)._id;
     }
 
+    uint32_t operator()(TIndex<Kind::LOCAL> localIdx)
+    {
+        return _pool.get(localIdx)._id;
+    }
+
     Pool& _pool;
 };
 

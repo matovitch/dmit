@@ -359,6 +359,8 @@ void Builder::makeFunction(const dmit::prs::Reader& supReader,
     makeIdentifier(reader, _nodePool.makeGet(function._name));
 
     function._status = node::Status::ASTED;
+
+    com::blitDefault(function._asWsm);
 }
 
 void Builder::makeImport(const dmit::prs::Reader& supReader,

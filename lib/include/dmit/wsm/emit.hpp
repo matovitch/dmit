@@ -151,19 +151,21 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
         std::visit(_exportDescriptorEmitter, export_._descriptor);
     }
 
+    void operator()(node::TIndex<node::Kind::LOCAL> localIdx)
+    {
+        _writer.write(0x01);
+        base()(get(localIdx)._type);
+    }
+
     void operator()(node::TIndex<node::Kind::FUNCTION> functionIdx)
     {
         auto& function = get(functionIdx);
 
-        Leb128</*IS_OBJECT=*/false> sizeLocalsAsLeb128{function._locals._size};
+        Leb128</*IS_OBJECT=*/false> sizeLocalsAsLeb128{function._localsSize};
 
         _writer.write(sizeLocalsAsLeb128);
 
-        for (uint32_t i = 0; i < function._locals._size; i++)
-        {
-            _writer.write(0x01);
-            base()(function._locals[i]);
-        }
+        base()(function._locals);
 
         emitListWithSentinel(function._body);
     }
@@ -365,7 +367,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
     {
         auto& instLocalGet = get(instLocalGetIdx);
 
-        Leb128</*IS_OBJECT=*/false> localIdxAsLeb128{instLocalGet._localIdx};
+        Leb128</*IS_OBJECT=*/false> localIdxAsLeb128{wsm::node::v_index::makeId(_nodePool, instLocalGet._local)};
 
         _writer.write(0x20);
         _writer.write(localIdxAsLeb128);
@@ -375,7 +377,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
     {
         auto& instLocalSet = get(instLocalSetIdx);
 
-        Leb128</*IS_OBJECT=*/false> localIdxAsLeb128{instLocalSet._localIdx};
+        Leb128</*IS_OBJECT=*/false> localIdxAsLeb128{wsm::node::v_index::makeId(_nodePool, instLocalSet._local)};
 
         _writer.write(0x21);
         _writer.write(localIdxAsLeb128);
@@ -659,7 +661,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
 
         Leb128</*IS_OBJECT=*/false> valueAsLeb128{instConstI64._value};
 
-        _writer.write(0x41);
+        _writer.write(0x42);
         _writer.write(valueAsLeb128);
     }
 
@@ -667,7 +669,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
     {
         auto& instConstF32 = get(instConstF32Idx);
 
-        _writer.write(0x41);
+        _writer.write(0x43);
         _writer.writeF32(instConstF32._value);
     }
 
@@ -675,7 +677,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
     {
         auto& instConstF64 = get(instConstF64Idx);
 
-        _writer.write(0x41);
+        _writer.write(0x44);
         _writer.writeF64(instConstF64._value);
     }
 
@@ -1303,7 +1305,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
     {
         auto& symbolObject = get(symbolObjectIdx);
 
-        Leb128</*IS_OBJECT=*/false> importIndexAsLeb128{symbolObject._index};
+        Leb128</*IS_OBJECT=*/false> importIndexAsLeb128{node::v_index::makeId(_nodePool, symbolObject._index)};
         _writer.write(importIndexAsLeb128);
 
         base()(symbolObject._name);
@@ -1345,7 +1347,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
         _writer.write(relocation._type._asInt);
 
         Leb128</*IS_OBJECT=*/false> offsetAsLeb128{relocation._offset};
-        Leb128</*IS_OBJECT=*/false>  indexAsLeb128{relocation._index};
+        Leb128</*IS_OBJECT=*/false>  indexAsLeb128{node::v_index::makeId(_nodePool, relocation._index)};
 
         _writer.write(offsetAsLeb128);
         _writer.write( indexAsLeb128);

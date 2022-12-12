@@ -4,6 +4,8 @@
 #include "dmit/ast/state.hpp"
 #include "dmit/ast/node.hpp"
 
+#include "dmit/wsm/wasm.hpp"
+
 #include "dmit/com/tree_node.hpp"
 #include "dmit/com/unique_id.hpp"
 
@@ -16,5 +18,7 @@ using Comparator = com::tree::v_index::TComparator <Kind>;
 com::UniqueId makeId(State::NodePool&, const VIndex);
 
 DefinitionRole makeDefinitionRole(State::NodePool&, const VIndex);
+
+std::optional<wsm::node::VIndex> makeWsm(State::NodePool&, const VIndex);
 
 } // namespace dmit::ast::node::v_index

@@ -315,6 +315,8 @@ struct TNode<node::Kind::DCL_VARIABLE>
     com::UniqueId _id;
 
     node::Status _status;
+
+    wsm::node::VIndex _asWsm;
 };
 
 template<>

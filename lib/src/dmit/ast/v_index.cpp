@@ -2,10 +2,14 @@
 
 #include "dmit/ast/definition_role.hpp"
 #include "dmit/ast/state.hpp"
+#include "dmit/ast/node.hpp"
+
+#include "dmit/wsm/wasm.hpp"
 
 #include "dmit/com/unique_id.hpp"
 #include "dmit/com/assert.hpp"
 
+#include <optional>
 #include <cstdint>
 
 namespace dmit::ast::node::v_index
@@ -72,6 +76,30 @@ struct DefinitionRoleVisitor
     State::NodePool& _pool;
 };
 
+struct WsmVisitor
+{
+    WsmVisitor(State::NodePool& pool) : _pool{pool} {}
+
+    template <com::TEnumIntegerType<Kind> KIND>
+    std::optional<wsm::node::VIndex> operator()(TIndex<KIND>)
+    {
+        DMIT_COM_ASSERT(!"[AST] Not implemented");
+        return std::nullopt;
+    }
+
+    std::optional<wsm::node::VIndex> operator()(TIndex<Kind::DCL_VARIABLE> dclVariableIdx)
+    {
+        return _pool.get(dclVariableIdx)._asWsm;
+    }
+
+    std::optional<wsm::node::VIndex> operator()(TIndex<Kind::DEF_FUNCTION> functionIdx)
+    {
+        return _pool.get(functionIdx)._asWsm;
+    }
+
+    State::NodePool& _pool;
+};
+
 } // namespace
 
 com::UniqueId makeId(State::NodePool& pool, const VIndex vIndex)
@@ -86,6 +114,13 @@ DefinitionRole makeDefinitionRole(State::NodePool& pool, const VIndex vIndex)
     DefinitionRoleVisitor defRoleVisitor{pool};
 
     return std::visit(defRoleVisitor, vIndex);
+}
+
+std::optional<wsm::node::VIndex> makeWsm(State::NodePool& pool, const VIndex vIndex)
+{
+    WsmVisitor wsmVisitor{pool};
+
+    return std::visit(wsmVisitor, vIndex);
 }
 
 } // namespace dmit::ast::node::v_index
