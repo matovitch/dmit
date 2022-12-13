@@ -118,6 +118,7 @@ RUN set -ex                                                                     
     cmake -G Ninja                                                                                              &&\
     ninja                                                                                                       &&\
     mv source/libm3.a /usr/lib                                                                                  &&\
+    mv wasm3 /usr/bin                                                                                           &&\
     cd ..                                                                                                       &&\
     rm -r wasm3                                                                                                 &&\
     apt-get remove -y $TO_REMOVE                                                                                &&\
