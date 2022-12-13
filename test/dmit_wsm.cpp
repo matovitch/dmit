@@ -65,8 +65,14 @@ TEST_CASE("wsm_add")
     function._id = 0;
     function._type = module._types[0];
 
-    nodePool.make(function._locals , 0);
+    nodePool.make(function._locals);
     nodePool.make(function._body);
+
+    auto& local_1 = nodePool.grow(function._locals);
+    auto& local_2 = nodePool.grow(function._locals);
+
+    local_1._id = 0;
+    local_2._id = 1;
 
     auto& localsGet_0 = nodePool.grow(function._body);
     auto& localsGet_1 = nodePool.grow(function._body);
@@ -76,9 +82,11 @@ TEST_CASE("wsm_add")
     dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_LOCAL_GET > instLocalGet_1;
     dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_I32       > instAdd;
 
-    nodePool.makeGet(instLocalGet_0)._localIdx = 0;
-    nodePool.makeGet(instLocalGet_1)._localIdx = 1;
+    nodePool.makeGet(instLocalGet_0)._local = nodePool.get(nodePool.back(function._locals))._next;
+    nodePool.makeGet(instLocalGet_1)._local =              nodePool.back(function._locals);
     nodePool.makeGet(instAdd)._asEnum = dmit::wsm::NumericInstruction::ADD;
+
+    nodePool.make(function._locals);
 
     dmit::com::blit(instLocalGet_0 , localsGet_0._asVariant);
     dmit::com::blit(instLocalGet_1 , localsGet_1._asVariant);
@@ -190,11 +198,16 @@ TEST_CASE("wsm_increment")
     function._id = 0;
     function._type = module._types[0];
 
-    nodePool.make(function._locals , 1);
+    nodePool.make(function._locals);
     nodePool.make(function._body);
 
-    auto& local_1 = nodePool.get(function._locals[0]);
-    dmit::com::blit(i32Idx, local_1._asVariant);
+    auto& local_1 = nodePool.grow(function._locals);
+    auto& local_2 = nodePool.grow(function._locals);
+
+    local_1._id = 0;
+    local_2._id = 1;
+
+    dmit::com::blit(i32Idx, nodePool.makeGet(local_2._type)._asVariant);
 
     auto& localGet_0 = nodePool.grow(function._body);
     auto& i32const_1 = nodePool.grow(function._body);
@@ -208,11 +221,14 @@ TEST_CASE("wsm_increment")
     dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_LOCAL_SET > instLocalSet_1;
     dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_LOCAL_GET > instLocalGet_1;
 
-    nodePool.makeGet(instLocalGet_0)._localIdx = 0;
+    nodePool.makeGet(instLocalGet_0)._local = nodePool.get(nodePool.back(function._locals))._next;
     nodePool.makeGet(instConst)._value = 1;
     nodePool.makeGet(instAdd)._asEnum = dmit::wsm::NumericInstruction::ADD;
-    nodePool.makeGet(instLocalSet_1)._localIdx = 1;
-    nodePool.makeGet(instLocalGet_1)._localIdx = 1;
+    nodePool.makeGet(instLocalSet_1)._local = nodePool.back(function._locals);
+    nodePool.makeGet(instLocalGet_1)._local = nodePool.back(function._locals);
+
+    nodePool.get(nodePool.back(function._locals))._next = function._locals._begin;
+    function._localsSize = 1;
 
     dmit::com::blit(instLocalGet_0 , localGet_0._asVariant);
     dmit::com::blit(instLocalGet_1 , localGet_1._asVariant);
@@ -254,7 +270,7 @@ TEST_CASE("wsm_increment")
 
     wasm3::Environment env;
 
-    wasm3::Runtime runtime = env.makeRuntime(0x100 /*stackSize*/);
+    wasm3::Runtime runtime = env.makeRuntime(0x100);
 
     wasm3::Result result = m3Err_none;
 
