@@ -75,7 +75,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::LIT_INTEGER> litIntegerIdx)
-    {   
+    {
         auto slice = ast::lexeme::getSlice(get(litIntegerIdx)._lexeme, _nodePool);
 
         std::string_view sliceAsStringView{reinterpret_cast<const char*>(slice._head), slice.size()};
@@ -219,7 +219,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
                 auto& import = _wsmPool.grow(wsmModule._imports);
 
                 import._id = wsmModule._imports._size - 1;
-                
+
                 auto& nameModule = _wsmPool.makeGet(import._module);
                 auto& nameImport = _wsmPool.makeGet(import._name);
 

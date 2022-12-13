@@ -233,7 +233,7 @@ template <>
 struct TNode<node::Kind::RELOCATION>
 {
     node::TIndex<node::Kind::RELOCATION> _next;
-    
+
     uint32_t       _addend;
     uint32_t       _offset;
     node::VIndex   _index;
