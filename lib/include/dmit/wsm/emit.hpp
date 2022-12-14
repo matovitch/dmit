@@ -1466,7 +1466,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
             _writer.write(datasSizeAsLeb128);
         }
 
-        if (module._funcs._size)
+        //if (module._funcs._size)
         {
             _writer.write(SectionId::CODE);
             TFixUpSize<Writer> _fixupSize{_writer};
@@ -1484,7 +1484,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
             }
         }
 
-        if (module._symbols._size)
+        //if (module._symbols._size)
         {
             _writer.write(SectionId::CUSTOM);
             TFixUpSize<Writer> _fixupSize{_writer};
@@ -1501,7 +1501,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
             emitRangeWithSize(module._symbols);
         }
 
-        if (module._relocSizeCode)
+        //if (module._relocSizeCode)
         {
             _writer.write(SectionId::CUSTOM);
             TFixUpSize<Writer> _fixupSize{_writer};

@@ -16,4 +16,5 @@ compile_commands.json
 core
 *.c
 *.o
+*.a
 draft/

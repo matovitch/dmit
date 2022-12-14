@@ -3,6 +3,7 @@
 #include "wasm3/wasm3.hpp"
 
 #include "dmit/gen/emitter.hpp"
+#include "dmit/gen/archive.hpp"
 
 #include "dmit/sem/interface_map.hpp"
 #include "dmit/sem/import_graph.hpp"
@@ -88,13 +89,18 @@ TEST_CASE("gen")
 
     auto&& bins = emit(groupAB);
 
-    uint8_t buffer[1024] = {0};
+    uint8_t buffer[4096] = {0};
 
     for (auto& bin : bins)
     {
         dmit::com::base64::encode(bin.data(), bin._size, buffer);
         std::cout << std::string{buffer, buffer + dmit::com::base64::encodeBufferSize(bin._size)} << '\n';
     }
+
+    auto archive = dmit::gen::makeArchive(bins);
+
+    dmit::com::base64::encode(archive.data(), archive._size, buffer);
+    std::cout << std::string{buffer, buffer + dmit::com::base64::encodeBufferSize(archive._size)} << '\n';
 
     wasm3::Environment env;
 
