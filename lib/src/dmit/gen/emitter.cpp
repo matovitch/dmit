@@ -73,6 +73,13 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
                                    : ast::node::v_index::makeId(_nodePool, vIndex);
     }
 
+    template <com::TEnumIntegerType<ast::node::Kind> KIND>
+    ast::TNode<KIND>& get(const ast::node::TIndex<KIND> nodeIndex)
+    {
+        return nodeIndex._isInterface ? _interfacePoolOpt.value().get().get(nodeIndex)
+                                      : _nodePool.get(nodeIndex);
+    }
+
     void operator()(ast::node::TIndex<ast::node::Kind::LIT_INTEGER> litIntegerIdx)
     {
         auto slice = ast::lexeme::getSlice(get(litIntegerIdx)._lexeme, _nodePool);
@@ -179,7 +186,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
                 auto& wsmCodomain = _wsmPool.makeGet(wsmTypeFunc. _codomain);
 
                 auto vIndexAsFunc = std::get<ast::node::TIndex<ast::node::Kind::DEF_FUNCTION>>(expBinop._asVIndex);
-                auto& function = _interfacePoolOpt.value().get().get(vIndexAsFunc);
+                auto& function = get(vIndexAsFunc);
 
                 _wsmPool.make(wsmDomain._valTypes, function._arguments._size);
 
