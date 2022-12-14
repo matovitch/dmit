@@ -49,6 +49,7 @@ struct ShallowCopier : TVisitor<ShallowCopier, Stack>
         {
             curr = get(curr)._next;
             grow(destList);
+            _destNodePool.back(destList)._isInterface = true;
         }
 
         _stackPtrIn->_index = _destNodePool.back(destList);

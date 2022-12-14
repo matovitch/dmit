@@ -43,11 +43,10 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
 {
     DMIT_AST_VISITOR_SIMPLE();
 
-    Scribe(ast::State::NodePool  & poolAst,
-           sem::InterfaceMap     & interfaceMap,
-           PoolWasm              & poolWasm) :
-        TVisitor<Scribe, Stack>{poolAst},
-        _interfaceMap{interfaceMap},
+    Scribe(ast::Bundle & bundle,
+           PoolWasm    & poolWasm) :
+        TVisitor<Scribe, Stack>{bundle._nodePool},
+        _interfacePoolOpt{bundle._interfacePoolOpt},
         _wsmPool{poolWasm}
     {
         auto& wsmModule = _wsmPool.makeGet(_wsmModuleIdx);
@@ -70,7 +69,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
 
     com::UniqueId id(const ast::node::VIndex& vIndex)
     {
-        return isInterface(vIndex) ? ast::node::v_index::makeId(_interfaceMap._astNodePool, vIndex)
+        return isInterface(vIndex) ? ast::node::v_index::makeId(_interfacePoolOpt.value().get(), vIndex)
                                    : ast::node::v_index::makeId(_nodePool, vIndex);
     }
 
@@ -130,7 +129,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
     {
         auto vIndex = get(identifierIdx)._asVIndex;
 
-        auto wsm = isInterface(vIndex) ? ast::node::v_index::makeWsm(_interfaceMap._astNodePool, vIndex)
+        auto wsm = isInterface(vIndex) ? ast::node::v_index::makeWsm(_interfacePoolOpt.value().get(), vIndex)
                                        : ast::node::v_index::makeWsm(_nodePool, vIndex);
         DMIT_COM_ASSERT(wsm);
 
@@ -180,7 +179,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
                 auto& wsmCodomain = _wsmPool.makeGet(wsmTypeFunc. _codomain);
 
                 auto vIndexAsFunc = std::get<ast::node::TIndex<ast::node::Kind::DEF_FUNCTION>>(expBinop._asVIndex);
-                auto& function = _interfaceMap._astNodePool.get(vIndexAsFunc);
+                auto& function = _interfacePoolOpt.value().get().get(vIndexAsFunc);
 
                 _wsmPool.make(wsmDomain._valTypes, function._arguments._size);
 
@@ -465,8 +464,8 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
         base()(get(viewIdx)._modules);
     }
 
-    sem::InterfaceMap & _interfaceMap;
-    PoolWasm          & _wsmPool;
+    com::OptionRef<ast::State::NodePool> _interfacePoolOpt;
+    PoolWasm&                            _wsmPool;
 
     wsm::node::TIndex<wsm::node::Kind::MODULE> _wsmModuleIdx;
 };
@@ -504,11 +503,10 @@ struct Bematist : TWsmVisitor<Bematist>
 
 } // namespace
 
-com::TStorage<uint8_t> make(sem::InterfaceMap& interfaceMap,
-                            ast::Bundle& bundle,
+com::TStorage<uint8_t> make(ast::Bundle& bundle,
                             PoolWasm& poolWasm)
 {
-    Scribe scribe{bundle._nodePool, interfaceMap, poolWasm};
+    Scribe scribe{bundle, poolWasm};
 
     scribe.base()(bundle._views);
 

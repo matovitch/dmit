@@ -96,8 +96,7 @@ void make(nng::Socket& socket, db::Database& database)
 
     // 7. Code generation
 
-    com::TParallelFor<gen::Emitter> parallelGenerationEmitter{interfaceMap,
-                                                              bundles};
+    com::TParallelFor<gen::Emitter> parallelGenerationEmitter{bundles};
     auto&& bins = parallelGenerationEmitter.makeVector();
 
     // 8. Write reply

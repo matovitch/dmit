@@ -1466,7 +1466,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
             _writer.write(datasSizeAsLeb128);
         }
 
-        //if (module._funcs._size)
+        if (IS_OBJECT || module._funcs._size)
         {
             _writer.write(SectionId::CODE);
             TFixUpSize<Writer> _fixupSize{_writer};
@@ -1484,7 +1484,17 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
             }
         }
 
-        //if (module._symbols._size)
+        if (IS_OBJECT || module._datas._size)
+        {
+            _writer.write(SectionId::DATA);
+            TFixUpSize<Writer> _fixupSize{_writer};
+            sectionCount++;
+
+            _writerSection = _writer.fork();
+            emitRangeWithSize(module._datas);
+        }
+
+        if (IS_OBJECT)
         {
             _writer.write(SectionId::CUSTOM);
             TFixUpSize<Writer> _fixupSize{_writer};
@@ -1501,7 +1511,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
             emitRangeWithSize(module._symbols);
         }
 
-        //if (module._relocSizeCode)
+        if (IS_OBJECT)
         {
             _writer.write(SectionId::CUSTOM);
             TFixUpSize<Writer> _fixupSize{_writer};
@@ -1510,7 +1520,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
             _writer.write(Leb128</*IS_OBJECT=*/false>{sizeof("reloc.CODE") - 1});
             _writer.write(reinterpret_cast<const uint8_t*>("reloc.CODE"), sizeof("reloc.CODE") - 1);
 
-            Leb128</*IS_OBJECT=*/false> sectionAsLeb128{sectionCount - K_RELOC_CODE_SECTION_OFFSET};
+            Leb128</*IS_OBJECT=*/false> sectionAsLeb128{sectionCount - K_RELOC_SECTION_OFFSET};
             _writer.write(sectionAsLeb128);
 
             Leb128</*IS_OBJECT=*/false> relocSizeCode128{module._relocSizeCode};
@@ -1519,17 +1529,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
             base()(module._relocCode);
         }
 
-        if (module._datas._size)
-        {
-            _writer.write(SectionId::DATA);
-            TFixUpSize<Writer> _fixupSize{_writer};
-            sectionCount++;
-
-            _writerSection = _writer.fork();
-            emitRangeWithSize(module._datas);
-        }
-
-        if (module._relocSizeData)
+        if (IS_OBJECT)
         {
             _writer.write(SectionId::CUSTOM);
             TFixUpSize<Writer> _fixupSize{_writer};
@@ -1538,7 +1538,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
             _writer.write(Leb128</*IS_OBJECT=*/false>{sizeof("reloc.DATA") - 1});
             _writer.write(reinterpret_cast<const uint8_t*>("reloc.DATA"), sizeof("reloc.DATA") - 1);
 
-            Leb128</*IS_OBJECT=*/false> sectionAsLeb128{sectionCount - K_RELOC_DATA_SECTION_OFFSET};
+            Leb128</*IS_OBJECT=*/false> sectionAsLeb128{sectionCount - K_RELOC_SECTION_OFFSET};
             _writer.write(sectionAsLeb128);
 
             Leb128</*IS_OBJECT=*/false> relocSizeData128{module._relocSizeData};
@@ -1580,8 +1580,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
     static constexpr uint8_t  K_VERSION []                = {0x01, 0x00, 0x00, 0x00};
     static constexpr uint8_t  K_SYMBOL_TABLE              = 8;
     static constexpr uint32_t K_LINK_VERSION              = 2;
-    static constexpr uint32_t K_RELOC_CODE_SECTION_OFFSET = 3;
-    static constexpr uint32_t K_RELOC_DATA_SECTION_OFFSET = 2;
+    static constexpr uint32_t K_RELOC_SECTION_OFFSET      = 4;
 };
 
 template <bool IS_OBJECT, class NodePool, class Writer>

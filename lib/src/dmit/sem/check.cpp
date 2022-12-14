@@ -88,7 +88,6 @@ struct Checker : ast::TVisitor<Checker>
 
     void operator()(ast::node::TIndex<ast::node::Kind::DEF_CLASS    >){}
     void operator()(ast::node::TIndex<ast::node::Kind::IDENTIFIER   >){}
-    void operator()(ast::node::TIndex<ast::node::Kind::STM_RETURN   >){}
     void operator()(ast::node::TIndex<ast::node::Kind::LIT_INTEGER  >){}
     void operator()(ast::node::TIndex<ast::node::Kind::DCL_VARIABLE >){}
 
@@ -114,6 +113,11 @@ struct Checker : ast::TVisitor<Checker>
 
         base()(binop._lhs);
         base()(binop._rhs);
+    }
+
+    void operator()(ast::node::TIndex<ast::node::Kind::STM_RETURN> stmReturnIdx)
+    {
+        base()(get(stmReturnIdx)._expression);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::SCOPE_VARIANT> scopeVariantIdx)

@@ -1,7 +1,5 @@
 #include "test.hpp"
 
-#include "wasm3/wasm3.hpp"
-
 #include "dmit/gen/emitter.hpp"
 #include "dmit/gen/archive.hpp"
 
@@ -20,12 +18,15 @@
 #include "dmit/com/assert.hpp"
 #include "dmit/com/base64.hpp"
 
+#include "subprocess/subprocess.hpp"
+
+#include "wasm3/wasm3.hpp"
+
 #include <cstdint>
-#include <cstring>
 #include <string>
 #include <vector>
 
-std::vector<dmit::com::TStorage<uint8_t>> emit(const std::vector<const char*>& filePaths)
+std::vector<dmit::com::TStorage<uint8_t>> makeObjects(const std::vector<const char*>& filePaths)
 {
     // 1. Prepare the sources
 
@@ -72,8 +73,7 @@ std::vector<dmit::com::TStorage<uint8_t>> emit(const std::vector<const char*>& f
 
     // 3. Generate wasm
 
-    dmit::com::TParallelFor<dmit::gen::Emitter> parallelGenerationEmitter{interfaceMap,
-                                                                          bundles};
+    dmit::com::TParallelFor<dmit::gen::Emitter> parallelGenerationEmitter{bundles};
     return parallelGenerationEmitter.makeVector();
 }
 
@@ -82,43 +82,35 @@ TEST_SUITE("inout")
 
 TEST_CASE("gen")
 {
-    std::vector<const char*> groupAB = {
+    std::vector<const char*> sourceFiles = {
         "test/data/sem/moduleA.in",
         "test/data/sem/moduleB.in"
     };
 
-    auto&& bins = emit(groupAB);
+    auto&& objects = makeObjects(sourceFiles);
 
-    uint8_t buffer[4096] = {0};
+    auto archive = dmit::gen::makeArchive(objects);
+    std::string archiveAsString{archive.data(), archive.data() + archive._size};
 
-    for (auto& bin : bins)
-    {
-        dmit::com::base64::encode(bin.data(), bin._size, buffer);
-        std::cout << std::string{buffer, buffer + dmit::com::base64::encodeBufferSize(bin._size)} << '\n';
-    }
+    using namespace subprocess::literals;
 
-    auto archive = dmit::gen::makeArchive(bins);
-
-    dmit::com::base64::encode(archive.data(), archive._size, buffer);
-    std::cout << std::string{buffer, buffer + dmit::com::base64::encodeBufferSize(archive._size)} << '\n';
+    std::string wasmModule;
+    ("wasm-ld --export-all --no-entry --whole-archive /dev/stdin -o -"_cmd < archiveAsString > wasmModule).run();
 
     wasm3::Environment env;
 
-    wasm3::Runtime runtime = env.makeRuntime(0x100 /*stackSize*/);
+    wasm3::Runtime runtime = env.makeRuntime(0x100); // stack size
 
-    /*wasm3::Result result = m3Err_none;
+    wasm3::Result result = m3Err_none;
 
-    for (auto& bin : bins)
-    {
-        wasm3::Module module;
-        result = wasm3::parseModule(env, module, bin.data(), bin._size);
-        DMIT_COM_ASSERT(!result && "Could not parse wasm module");
-        result = wasm3::loadModule(runtime, module);
-        DMIT_COM_ASSERT(!result && "Could not load wasm module");
-    }*/
+    wasm3::Module module;
+    result = wasm3::parseModule(env, module, reinterpret_cast<uint8_t*>(wasmModule.data()), wasmModule.size());
+    DMIT_COM_ASSERT(!result && "Could not parse wasm module");
+    result = wasm3::loadModule(runtime, module);
+    DMIT_COM_ASSERT(!result && "Could not load wasm module");
 
-    /*wasm3::Function increment;
-    result = wasm3::findFunction(increment, runtime, "increment");
+    wasm3::Function increment;
+    result = wasm3::findFunction(increment, runtime, mangle("X.Y.Z.B.increment").c_str());
     CHECK(!result);
 
     result = wasm3::call(increment, 41);
@@ -128,7 +120,7 @@ TEST_CASE("gen")
     result = wasm3::getResults(increment, &value);
     CHECK(!result);
 
-    CHECK(value == 42);*/
+    CHECK(value == 42);
 }
 
 } // TEST_SUITE("inout")

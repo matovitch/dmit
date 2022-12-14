@@ -12,8 +12,8 @@
 namespace dmit::gen
 {
 
-static const char     K_MAGIC  [] = "!<arch>\n";
-static const char     K_HEADER [] = "#1/17           0           0     0     777     ";
+static const char K_MAGIC  [] = "!<arch>\n";
+static const char K_HEADER [] = "#1/17           0           0     0     777     ";
 
 static const uint32_t K_HEADER_FILE_SIZE_SIZE = 10;
 static const uint32_t K_HEADER_FILE_NAME_SIZE = 17;
@@ -32,12 +32,14 @@ com::TStorage<uint8_t> makeArchive(const std::vector<com::TStorage<uint8_t>>& ob
 
     com::TStorage<uint8_t> archive{totalSize};
 
-    // Write header
+    // Write magic
 
     uint8_t* cursor = archive.data();
 
     std::memcpy(cursor, K_MAGIC, sizeof(K_MAGIC) - 1);
     cursor += sizeof(K_MAGIC) - 1;
+
+    // Write object files
 
     com::UniqueId name;
 
