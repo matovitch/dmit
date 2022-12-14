@@ -88,10 +88,10 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
 
         auto toInt = [](std::string_view s) -> std::optional<int>
         {
-            if (int value; std::from_chars(s.begin(), s.end(), value).ec == std::errc{})
-                return value;
-            else
-                return std::nullopt;
+            int value;
+
+            return (std::from_chars(s.begin(), s.end(), value).ec == std::errc{}) ? std::optional<int>{value}
+                                                                                  : std::nullopt;
         };
 
         auto sliceAsIntOpt = toInt(sliceAsStringView);
