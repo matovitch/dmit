@@ -5,9 +5,11 @@
 namespace dmit::ast
 {
 
-void SourceRegister::add(TNode<node::Kind::SOURCE>& source)
+void SourceRegister::add(TNode<node::Kind::SOURCE>& source,
+                         const std::filesystem::path& path,
+                         const com::TStorage<uint8_t>& content)
 {
-    new (&source) (TNode<node::Kind::SOURCE>)();
+    new (&source) (TNode<node::Kind::SOURCE>)(path, content);
 
     _sources.push_back(&source);
 }

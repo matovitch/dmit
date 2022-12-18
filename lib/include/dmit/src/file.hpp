@@ -1,6 +1,8 @@
 #pragma once
 
+#include "dmit/com/constant_reference.hpp"
 #include "dmit/com/option_error.hpp"
+#include "dmit/com/storage.hpp"
 
 #include "dmit/fmt/formatable.hpp"
 
@@ -36,17 +38,20 @@ class File : fmt::Formatable
 
 public:
 
-    const std::vector<uint8_t>& content() const;
+    File(File&&);
 
-    const std::filesystem::path _path;
+    File(const File&) = delete;
+
+    File(const std::vector<uint8_t>& path,
+         const std::vector<uint8_t>& content);
+
+    std::filesystem::path _path;
+
+    com::TStorage<uint8_t> _content;
 
 private:
 
-    File(const std::filesystem::path& filePath);
-
-    com::OptionError<std::unique_ptr<std::ifstream>, file::Error> makeFileStream() const;
-
-    std::vector<uint8_t> _content;
+    File(const std::filesystem::path& path, com::TStorage<uint8_t>&& content);
 };
 
 } // namespace dmit::src

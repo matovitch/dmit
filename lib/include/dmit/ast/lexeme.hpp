@@ -25,7 +25,7 @@ src::Slice getSlice(const node::TIndex<ast::node::Kind::LEXEME>& lexemeIdx,
 
     DMIT_COM_ASSERT(lexIdxBis > 1);
 
-    const auto head   = source._srcContent.data() + lexOffsets[0];
+    const auto head   = source._srcContent.value().data() + lexOffsets[0];
     const auto offset = lexOffsets.data() + lexOffsets.size() - 1 - lexIdxBis;
 
     // Mutable member write

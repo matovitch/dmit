@@ -3,6 +3,7 @@
 #include "dmit/src/file.hpp"
 
 #include "dmit/com/unique_id.hpp"
+#include "dmit/com/storage.hpp"
 #include "dmit/com/assert.hpp"
 #include "dmit/com/murmur.hpp"
 
@@ -50,20 +51,18 @@ std::string fileAsString(const std::string& filePath)
         return oss.str();
     }
 
-    const auto& content = fileErrOpt.value().content();
+    const auto& content = fileErrOpt.value()._content;
 
-    return std::string{reinterpret_cast<const char*>(content.data()), content.size()};
+    return std::string{reinterpret_cast<const char*>(content.data()), content._size};
 }
 
-std::vector<uint8_t> fileAsVector(const std::string& filePath)
+dmit::src::File fileFromPath(const std::string& filePath)
 {
-    const auto& fileErrOpt = dmit::src::file::make(filePath);
-
-    std::ostringstream oss;
+    auto&& fileErrOpt = dmit::src::file::make(filePath);
 
     DMIT_COM_ASSERT(!fileErrOpt.hasError());
 
-    return fileErrOpt.value().content();
+    return std::move(fileErrOpt.value());
 }
 
 std::string mangle(const char* symbolName)

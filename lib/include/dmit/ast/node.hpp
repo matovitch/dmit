@@ -9,11 +9,14 @@
 #include "dmit/src/line_index.hpp"
 #include "dmit/src/slice.hpp"
 
+#include "dmit/com/constant_reference.hpp"
 #include "dmit/com/tree_node.hpp"
 #include "dmit/com/tree_pool.hpp"
 #include "dmit/com/unique_id.hpp"
+#include "dmit/com/storage.hpp"
 #include "dmit/com/enum.hpp"
 
+#include <filesystem>
 #include <optional>
 #include <cstdint>
 #include <variant>
@@ -159,11 +162,17 @@ struct TNode<node::Kind::MODULE>
 template <>
 struct TNode<node::Kind::SOURCE>
 {
-    std::vector<uint8_t    > _srcPath;
-    std::vector<uint8_t    > _srcContent;
-    std::vector<uint32_t   > _srcOffsets;
-    std::vector<uint32_t   > _lexOffsets;
-    std::vector<lex::Token > _lexTokens;
+    TNode(const std::filesystem::path& path,
+          const com::TStorage<uint8_t>& content) :
+        _srcPath{path},
+        _srcContent{content}
+    {}
+
+    std::filesystem::path                  _srcPath;
+    com::TConstRef<com::TStorage<uint8_t> > _srcContent;
+    std::vector<uint32_t                  > _srcOffsets;
+    std::vector<uint32_t                  > _lexOffsets;
+    std::vector<lex::Token                > _lexTokens;
 };
 
 template <>

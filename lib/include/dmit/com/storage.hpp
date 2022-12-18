@@ -32,6 +32,17 @@ public:
         return reinterpret_cast<Type*>(_buckets);
     }
 
+    Type& operator[](const uint64_t index)
+    {
+        return reinterpret_cast<Type&>(_buckets[index]);
+    }
+
+    const Type& operator[](const uint64_t index) const
+    {
+        return reinterpret_cast<const Type&>(_buckets[index]);
+    }
+
+
     ~TStorage()
     {
         delete[] _buckets;

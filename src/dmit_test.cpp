@@ -141,8 +141,8 @@ int main(int argc, char** argv)
     {
         dmit::lex::state::Builder lexer;
 
-        const auto& lex = lexer(file.content().data(),
-                                file.content().size());
+        const auto& lex = lexer(file._content.data(),
+                                file._content._size);
 
         DMIT_COM_LOG_OUT << lex << '\n';
     }
@@ -152,8 +152,8 @@ int main(int argc, char** argv)
         dmit::lex::state::Builder lexer;
         dmit::prs::state::Builder parser;
 
-        const auto& lex = lexer(file.content().data(),
-                                file.content().size());
+        const auto& lex = lexer(file._content.data(),
+                                file._content._size);
 
         const auto& prs = parser(lex._tokens);
 
@@ -164,12 +164,7 @@ int main(int argc, char** argv)
     {
         dmit::ast::FromPathAndSource astFromPathAndSource;
 
-        const auto& toParse = file.content();
-
-        std::vector<uint8_t> filePathAsVector{reinterpret_cast<const uint8_t*>(filePath),
-                                              reinterpret_cast<const uint8_t*>(filePath) + sizeof(filePath)};
-
-        DMIT_COM_LOG_OUT << astFromPathAndSource.make(filePathAsVector, toParse) << '\n';
+        DMIT_COM_LOG_OUT << astFromPathAndSource.make(file) << '\n';
     }
 
     return EXIT_SUCCESS;

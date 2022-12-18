@@ -13,6 +13,9 @@
 #include "dmit/ast/builder.hpp"
 #include "dmit/ast/state.hpp"
 
+#include "dmit/src/file.hpp"
+
+#include "dmit/com/constant_reference.hpp"
 #include "dmit/com/parallel_for.hpp"
 #include "dmit/com/storage.hpp"
 #include "dmit/com/assert.hpp"
@@ -30,21 +33,17 @@ std::vector<dmit::com::TStorage<uint8_t>> makeObjects(const std::vector<const ch
 {
     // 1. Prepare the sources
 
-    std::vector<std::vector<uint8_t>> sources;
+    std::vector<dmit::src::File> sources;
 
     for (const auto& path : filePaths)
     {
-        sources.emplace_back(fileAsVector(std::string{path,
+        sources.emplace_back(fileFromPath(std::string{path,
                                                       path + std::strlen(path)}));
     }
 
-    std::vector<std::vector<uint8_t>> paths;
-
-    paths.resize(sources.size());
-
     // 2. Perform the parsing and semantic analysis
 
-    dmit::com::TParallelFor<dmit::ast::Builder> parallelAstBuilder{paths, sources};
+    dmit::com::TParallelFor<dmit::ast::Builder> parallelAstBuilder{sources};
 
     auto&& asts = parallelAstBuilder.makeVector();
 

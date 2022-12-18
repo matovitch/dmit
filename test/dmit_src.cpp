@@ -6,14 +6,21 @@
 #include "dmit/fmt/src/line_index.hpp"
 #include "dmit/fmt/src/location.hpp"
 
-dmit::src::Location src(const std::string& sourceAsString, uint32_t offset)
+#include "dmit/com/storage.hpp"
+
+#include <string_view>
+#include <cstdint>
+#include <cstring>
+
+dmit::src::Location src(const std::string_view sourceAsString, uint32_t offset)
 {
-    std::vector<uint8_t> sourceAsByte{reinterpret_cast<const uint8_t*>(sourceAsString.data()),
-                                      reinterpret_cast<const uint8_t*>(sourceAsString.data()) +
-                                                                       sourceAsString.size()};
+    dmit::com::TStorage<uint8_t> sourceAsStorage{sourceAsString.size()};
+
+    std::memcpy(sourceAsStorage.data(), sourceAsString.data(), sourceAsString.size());
+
     dmit::src::LineIndex lineIndex;
 
-    lineIndex.init(dmit::src::line_index::makeOffsets(sourceAsByte));
+    lineIndex.init(dmit::src::line_index::makeOffsets(sourceAsStorage));
 
     return dmit::src::Location{lineIndex, offset};
 }

@@ -1,10 +1,13 @@
 #include "dmit/src/file.hpp"
 
+#include "dmit/com/constant_reference.hpp"
 #include "dmit/com/option_error.hpp"
+#include "dmit/com/storage.hpp"
 
 #include <filesystem>
 #include <fstream>
 #include <cstdint>
+#include <cstring>
 #include <utility>
 #include <memory>
 #include <vector>
@@ -18,20 +21,28 @@ namespace file
 namespace
 {
 
-std::optional<Error> load(const File& file, std::ifstream& ifs, std::vector<uint8_t>& data)
+com::OptionError<com::TStorage<uint8_t>, Error> load(const std::filesystem::path &path)
 {
-    const std::size_t fileSize = std::filesystem::file_size(file._path);
+    std::ifstream ifs{path.string().c_str(), std::ios_base::binary |
+                                             std::ios_base::in};
 
-    data.resize(fileSize);
+    if (ifs.fail())
+    {
+      return Error::FILE_OPEN_FAIL;
+    }
 
-    ifs.read(reinterpret_cast<char*>(data.data()), fileSize);
+    const std::size_t fileSize = std::filesystem::file_size(path);
+
+    com::TStorage<uint8_t> content{fileSize};
+
+    ifs.read(reinterpret_cast<char*>(content.data()), fileSize);
 
     if (ifs.fail())
     {
         return Error::FILE_READ_FAIL;
     }
 
-    return {};
+    return content;
 }
 
 } // namespace
@@ -48,50 +59,36 @@ com::OptionError<File, Error> make(const std::filesystem::path& path)
         return Error::FILE_NOT_REGULAR;
     }
 
-    File file{path};
+    auto&& contentOpt = load(path);
 
-    auto&& ifsOpt = file.makeFileStream();
-
-    if (ifsOpt.hasError())
+    if (contentOpt.hasError())
     {
-        return ifsOpt.error();
+        return contentOpt.error();
     }
 
-    const auto& errOpt = load(file, *(ifsOpt.value()), file._content);
-
-    if (errOpt)
-    {
-        return errOpt.value();
-    }
-
-    return file;
+    return File{path, std::move(contentOpt.value())};
 }
 
 } // namespace file
 
-File::File(const std::filesystem::path& path) :
-    _path{path}
+File::File(const std::filesystem::path& path, com::TStorage<uint8_t>&& content) :
+    _path{path},
+    _content{std::move(content)}
 {}
 
-const std::vector<uint8_t>& File::content() const
+File::File(File&& file) :
+    _path    {std::move(file._path    )},
+    _content {std::move(file._content )}
+{}
+
+File::File(const std::vector<uint8_t>& path,
+           const std::vector<uint8_t>& content) :
+    _path{reinterpret_cast<const char*>(path.data()),
+          reinterpret_cast<const char*>(path.data()) + path.size()},
+    _content{content.size()}
 {
-    return _content;
-}
-
-com::OptionError<std::unique_ptr<std::ifstream>, file::Error> File::makeFileStream() const
-{
-    auto&& ifsPtr = std::make_unique<std::ifstream>
-    (
-        _path.string().c_str(), std::ios_base::binary |
-                                std::ios_base::in
-    );
-
-    if (ifsPtr->fail())
-    {
-        return file::Error::FILE_OPEN_FAIL;
-    }
-
-    return std::move(ifsPtr);
+    // FIXME: should not have to copy the content of the vector
+    std::memcpy(_content.data(), content.data(), content.size());
 }
 
 } // namespace dmit::src

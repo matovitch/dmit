@@ -15,8 +15,8 @@ bool write(cmp_ctx_t* context, const src::File& file)
         return false;
     }
 
-    if (!writeBin(context, file.content().data(),
-                           file.content().size()))
+    if (!writeBin(context, file._content.data(),
+                           file._content._size))
     {
         return false;
     }

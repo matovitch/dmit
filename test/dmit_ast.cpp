@@ -3,7 +3,11 @@
 #include "dmit/ast/from_path_and_source.hpp"
 #include "dmit/ast/state.hpp"
 
+#include "dmit/src/file.hpp"
+
 #include "dmit/fmt/ast/state.hpp"
+
+#include "dmit/com/constant_reference.hpp"
 
 #include <cstring>
 
@@ -11,16 +15,18 @@ struct Aster
 {
     dmit::ast::State operator()(const char* const filePath)
     {
-        const auto& toParse = fileAsVector(filePath);
+      _files.emplace_back(fileFromPath(filePath));
 
-        std::vector<uint8_t> path;
+      std::vector<uint8_t> path;
 
-        return _astFromPathAndSource.make(path, toParse);
+      return _astFromPathAndSource.make(_files.back());
     }
 
     dmit::ast::FromPathAndSource _astFromPathAndSource;
 
     dmit::ast::SourceRegister _sourceRegister;
+
+    std::vector<dmit::src::File> _files;
 };
 
 TEST_SUITE("inout")

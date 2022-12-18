@@ -48,9 +48,16 @@ void make(nng::Socket& socket, db::Database& database)
         return;
     }
 
+    std::vector<src::File > files;
+
+    for (int i = 0; i < paths.size(); i++)
+    {
+        files.emplace_back(paths[i], sources[i]);
+    }
+
     // 2. Make the ASTs
 
-    com::TParallelFor<ast::Builder> parallelAstBuilder{paths, sources};
+    com::TParallelFor<ast::Builder> parallelAstBuilder{files};
 
     auto&& asts = parallelAstBuilder.makeVector();
 

@@ -19,10 +19,10 @@ std::string asString(const src::File& file)
 
     std::vector<uint8_t> base64Buffer;
 
-    base64Buffer.resize(dmit::com::base64::encodeBufferSize(file.content().size()));
+    base64Buffer.resize(dmit::com::base64::encodeBufferSize(file._content._size));
 
-    dmit::com::base64::encode(file.content().data(),
-                              file.content().size(), base64Buffer.data());
+    dmit::com::base64::encode(file._content.data(),
+                              file._content._size,  base64Buffer.data());
 
     for (const auto byte : base64Buffer)
     {

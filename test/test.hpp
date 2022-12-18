@@ -13,6 +13,6 @@ void getError(const dmit::src::file::Error& fileError,
 
 std::string fileAsString(const std::string& filePath);
 
-std::vector<uint8_t> fileAsVector(const std::string& filePath);
+dmit::src::File fileFromPath(const std::string& filePath);
 
 std::string mangle(const char* symbolName);

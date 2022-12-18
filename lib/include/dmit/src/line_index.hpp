@@ -2,6 +2,8 @@
 
 #include "dmit/fmt/formatable.hpp"
 
+#include "dmit/com/storage.hpp"
+
 #include <cstdint>
 #include <vector>
 
@@ -11,7 +13,7 @@ namespace dmit::src
 namespace line_index
 {
 
-std::vector<uint32_t> makeOffsets(const std::vector<uint8_t>&);
+std::vector<uint32_t> makeOffsets(const com::TStorage<uint8_t>&);
 
 } // namespace line_index
 
