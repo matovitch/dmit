@@ -8,20 +8,20 @@ namespace dmit::com
 
 template <class ValueType,
           class ErrorType>
-class OptionError
+class TOptionError
 {
 
 public:
 
-    OptionError(ValueType&& value) :
+    TOptionError(ValueType&& value) :
         _variant{std::move(value)}
     {}
 
-    OptionError(const ValueType& value) :
+    TOptionError(const ValueType& value) :
         _variant{value}
     {}
 
-    OptionError(const ErrorType& error) :
+    TOptionError(const ErrorType& error) :
         _variant{error}
     {}
 

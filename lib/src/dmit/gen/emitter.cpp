@@ -471,8 +471,8 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
         base()(get(viewIdx)._modules);
     }
 
-    com::OptionRef<ast::State::NodePool> _interfacePoolOpt;
-    PoolWasm&                            _wsmPool;
+    com::TOptionRef<ast::State::NodePool> _interfacePoolOpt;
+    PoolWasm&                             _wsmPool;
 
     wsm::node::TIndex<wsm::node::Kind::MODULE> _wsmModuleIdx;
 };

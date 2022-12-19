@@ -4,7 +4,6 @@
 #include "dmit/vm/process.hpp"
 #include "dmit/vm/memory.hpp"
 
-#include "dmit/com/option_reference.hpp"
 #include "dmit/com/unique_id.hpp"
 
 #include <cstring>

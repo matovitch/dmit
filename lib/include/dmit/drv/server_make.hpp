@@ -21,8 +21,10 @@
 
 #include "dmit/com/parallel_for.hpp"
 #include "dmit/com/unique_id.hpp"
+#include "dmit/com/storage.hpp"
 #include "dmit/com/logger.hpp"
 
+#include <filesystem>
 #include <cstdint>
 #include <vector>
 
@@ -35,9 +37,9 @@ void make(nng::Socket& socket, db::Database& database)
 
     int errorCode;
 
-    std::vector<com::UniqueId        > unitIds ;
-    std::vector<std::vector<uint8_t> > paths   ;
-    std::vector<std::vector<uint8_t> > sources ;
+    std::vector<com::UniqueId          > unitIds ;
+    std::vector<std::filesystem::path  > paths   ;
+    std::vector<com::TStorage<uint8_t >> sources ;
 
     if ((errorCode = database.selectUnitIdsPathsSources(unitIds,
                                                         paths,
@@ -48,16 +50,9 @@ void make(nng::Socket& socket, db::Database& database)
         return;
     }
 
-    std::vector<src::File > files;
-
-    for (int i = 0; i < paths.size(); i++)
-    {
-        files.emplace_back(paths[i], sources[i]);
-    }
-
     // 2. Make the ASTs
 
-    com::TParallelFor<ast::Builder> parallelAstBuilder{files};
+    com::TParallelFor<ast::Builder> parallelAstBuilder{paths, sources};
 
     auto&& asts = parallelAstBuilder.makeVector();
 

@@ -7,8 +7,6 @@
 
 #include "dmit/fmt/ast/state.hpp"
 
-#include "dmit/com/constant_reference.hpp"
-
 #include <cstring>
 
 struct Aster
@@ -19,7 +17,8 @@ struct Aster
 
       std::vector<uint8_t> path;
 
-      return _astFromPathAndSource.make(_files.back());
+      return _astFromPathAndSource.make(_files.back()._path,
+                                        _files.back()._content);
     }
 
     dmit::ast::FromPathAndSource _astFromPathAndSource;

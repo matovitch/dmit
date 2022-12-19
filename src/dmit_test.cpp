@@ -164,7 +164,8 @@ int main(int argc, char** argv)
     {
         dmit::ast::FromPathAndSource astFromPathAndSource;
 
-        DMIT_COM_LOG_OUT << astFromPathAndSource.make(file) << '\n';
+        DMIT_COM_LOG_OUT << astFromPathAndSource.make(file._path,
+                                                      file._content) << '\n';
     }
 
     return EXIT_SUCCESS;

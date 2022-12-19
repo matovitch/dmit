@@ -12,7 +12,7 @@
 
 #include "dmit/sem/interface_map.hpp"
 
-#include "dmit/com/option_reference.hpp"
+#include "dmit/com/reference.hpp"
 #include "dmit/com/tree_node.hpp"
 
 #include <sstream>
@@ -353,7 +353,7 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
     template <com::TEnumIntegerType<ast::node::Kind> KIND>
     void loopIterationPreambleList(ast::node::TIndex<KIND>) {}
 
-    com::OptionRef<ast::State::NodePool> _interfacePoolOpt;
+    com::TOptionRef<ast::State::NodePool> _interfacePoolOpt;
 
     std::ostringstream& _oss;
 };

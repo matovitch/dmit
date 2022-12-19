@@ -6,12 +6,14 @@
 #include "dmit/nng/nng.hpp"
 
 #include "dmit/com/unique_id.hpp"
+#include "dmit/com/storage.hpp"
 
 extern "C"
 {
     #include "sqlite3/sqlite3.h"
 }
 
+#include <filesystem>
 #include <optional>
 #include <cstdint>
 #include <cstring>
@@ -157,9 +159,9 @@ int Database::hasUnit(const com::UniqueId& unitId, bool& result)
     return SQLITE_OK;
 }
 
-int Database::updateFileAndInsertUnit(const com::UniqueId        & fileId,
-                                      const com::UniqueId        & unitId,
-                                      const std::vector<uint8_t> & unitSource)
+int Database::updateFileAndInsertUnit(const com::UniqueId          & fileId,
+                                      const com::UniqueId          & unitId,
+                                      const com::TStorage<uint8_t> & unitSource)
 {
     int errorCodeRollback;
     int errorCode;
@@ -205,10 +207,10 @@ int Database::updateFileAndInsertUnit(const com::UniqueId        & fileId,
     return SQLITE_OK;
 }
 
-int Database::insertFileAndUnit(const com::UniqueId        & fileId,
-                                const com::UniqueId        & unitId,
-                                const std::string          & filePath,
-                                const std::vector<uint8_t> & unitSource)
+int Database::insertFileAndUnit(const com::UniqueId          & fileId,
+                                const com::UniqueId          & unitId,
+                                const std::string            & filePath,
+                                const com::TStorage<uint8_t> & unitSource)
 {
     int errorCodeRollback;
     int errorCode;
@@ -334,8 +336,8 @@ int Database::updateFile(const com::UniqueId & fileId,
     return SQLITE_OK;
 }
 
-int Database::insertUnit(const com::UniqueId        & unitId,
-                         const std::vector<uint8_t> & unitSource)
+int Database::insertUnit(const com::UniqueId          & unitId,
+                         const com::TStorage<uint8_t> & unitSource)
 {
     auto query = _queryRegister[QueryRegister::INSERT_UNIT];
 
@@ -353,7 +355,7 @@ int Database::insertUnit(const com::UniqueId        & unitId,
     if ((errorCode = sqlite3_bind_blob(query,
                                        QueryRegister::UNIT_SOURCE,
                                        unitSource.data(),
-                                       unitSource.size(),
+                                       unitSource._size,
                                        nullptr)) != SQLITE_OK)
     {
         return errorCode;
@@ -369,9 +371,9 @@ int Database::insertUnit(const com::UniqueId        & unitId,
     return SQLITE_OK;
 }
 
-int Database::selectUnitIdsPathsSources(std::vector<com::UniqueId        >& unitIds,
-                                        std::vector<std::vector<uint8_t> >& paths,
-                                        std::vector<std::vector<uint8_t> >& sources)
+int Database::selectUnitIdsPathsSources(std::vector<com::UniqueId          >& unitIds,
+                                        std::vector<std::filesystem::path  >& paths,
+                                        std::vector<com::TStorage<uint8_t >>& sources)
 {
     auto query =
         _queryRegister[QueryRegister::K_QUERY_SELECT_UNIT_IDS_PATHS_SOURCES];
@@ -398,15 +400,15 @@ int Database::selectUnitIdsPathsSources(std::vector<com::UniqueId        >& unit
         const uint8_t* pathAsBytes = sqlite3_column_text  (query, 1 /*path*/);
         int            pathSize    = sqlite3_column_bytes (query, 1 /*path*/);
 
-        paths.emplace_back(pathAsBytes, pathAsBytes + pathSize);
-
+        paths.emplace_back(reinterpret_cast<const char*>(pathAsBytes),
+                           reinterpret_cast<const char*>(pathAsBytes) + pathSize);
         // 3. Source
 
         const void* sourceAsVoidStar = sqlite3_column_blob  (query, 2 /*source*/);
         int         sourceSize       = sqlite3_column_bytes (query, 2 /*source*/);
 
-        sources.emplace_back(reinterpret_cast<const uint8_t*>(sourceAsVoidStar),
-                             reinterpret_cast<const uint8_t*>(sourceAsVoidStar) + sourceSize);
+        sources.emplace_back(sourceSize);
+        std::memcpy(sources.back().data(), sourceAsVoidStar, sourceSize);
 
         resultCode = sqlite3_step(query);
     }

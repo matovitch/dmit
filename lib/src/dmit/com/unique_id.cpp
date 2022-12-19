@@ -28,19 +28,19 @@ bool Comparator::operator()(const UniqueId& lhs,
 
 UniqueId::UniqueId(const std::string_view stringView)
 {
-    dmit::com::murmur::hash(reinterpret_cast<const uint8_t*>(stringView.data()),
-                                                             stringView.size(),
-                                                             *this);
+    com::murmur::hash(reinterpret_cast<const uint8_t*>(stringView.data()),
+                                                       stringView.size(),
+                                                       *this);
 }
 
-UniqueId::UniqueId(const std::vector<uint8_t>& bytes)
+UniqueId::UniqueId(const com::TStorage<uint8_t>& bytes)
 {
-    dmit::com::murmur::hash(bytes.data(), bytes.size(), *this);
+    com::murmur::hash(bytes.data(), bytes._size, *this);
 }
 
 UniqueId::UniqueId(const uint8_t* const data, const uint64_t size)
 {
-    dmit::com::murmur::hash(data, size, *this);
+    com::murmur::hash(data, size, *this);
 }
 
 UniqueId::UniqueId(const uint64_t halfL,

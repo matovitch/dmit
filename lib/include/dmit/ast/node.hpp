@@ -9,7 +9,7 @@
 #include "dmit/src/line_index.hpp"
 #include "dmit/src/slice.hpp"
 
-#include "dmit/com/constant_reference.hpp"
+#include "dmit/com/reference.hpp"
 #include "dmit/com/tree_node.hpp"
 #include "dmit/com/tree_pool.hpp"
 #include "dmit/com/unique_id.hpp"
@@ -162,13 +162,13 @@ struct TNode<node::Kind::MODULE>
 template <>
 struct TNode<node::Kind::SOURCE>
 {
-    TNode(const std::filesystem::path& path,
-          const com::TStorage<uint8_t>& content) :
+    TNode(const std::filesystem::path  & path,
+          const com::TStorage<uint8_t> & content) :
         _srcPath{path},
         _srcContent{content}
     {}
 
-    std::filesystem::path                  _srcPath;
+    std::filesystem::path                   _srcPath;
     com::TConstRef<com::TStorage<uint8_t> > _srcContent;
     std::vector<uint32_t                  > _srcOffsets;
     std::vector<uint32_t                  > _lexOffsets;

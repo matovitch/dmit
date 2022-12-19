@@ -6,7 +6,9 @@
 #include "dmit/nng/nng.hpp"
 
 #include "dmit/com/unique_id.hpp"
+#include "dmit/com/storage.hpp"
 
+#include <filesystem>
 #include <optional>
 #include <cstdint>
 #include <string>
@@ -29,18 +31,18 @@ public:
                    const com::UniqueId & fileUnitId,
                    const std::string   & filePath);
 
-    int insertFileAndUnit(const com::UniqueId        & fileId,
-                          const com::UniqueId        & unitId,
-                          const std::string          & filePath,
-                          const std::vector<uint8_t> & unitSource);
+    int insertFileAndUnit(const com::UniqueId          & fileId,
+                          const com::UniqueId          & unitId,
+                          const std::string            & filePath,
+                          const com::TStorage<uint8_t> & unitSource);
 
-    int updateFileAndInsertUnit(const com::UniqueId        & fileId,
-                                const com::UniqueId        & unitId,
-                                const std::vector<uint8_t> & unitSource);
+    int updateFileAndInsertUnit(const com::UniqueId          & fileId,
+                                const com::UniqueId          & unitId,
+                                const com::TStorage<uint8_t> & unitSource);
 
-    int selectUnitIdsPathsSources(std::vector<com::UniqueId        >& unitIds,
-                                  std::vector<std::vector<uint8_t> >& paths,
-                                  std::vector<std::vector<uint8_t> >& sources);
+    int selectUnitIdsPathsSources(std::vector<com::UniqueId          >& unitIds,
+                                  std::vector<std::filesystem::path  >& paths,
+                                  std::vector<com::TStorage<uint8_t >>& sources);
 
     int clean();
 
@@ -55,8 +57,8 @@ private:
     int updateFile(const com::UniqueId & fileId,
                    const com::UniqueId & fileUnitId);
 
-    int insertUnit(const com::UniqueId        & unitId,
-                   const std::vector<uint8_t> & source);
+    int insertUnit(const com::UniqueId          & unitId,
+                   const com::TStorage<uint8_t> & source);
 
     Connection _connection;
     QueryRegister _queryRegister;

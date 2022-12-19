@@ -2,7 +2,7 @@
 
 #include "dmit/prs/tree.hpp"
 
-#include "dmit/com/option_reference.hpp"
+#include "dmit/com/reference.hpp"
 
 #include <cstdint>
 
@@ -16,7 +16,7 @@ struct Stack
     uint32_t _readerOffset;
     uint32_t _childCount = 0;
     std::optional<state::tree::node::Kind> _treeNodeKindOpt;
-    dmit::com::OptionRef<Stack> _parent;
+    dmit::com::TOptionRef<Stack> _parent;
 };
 
 } // namespace dmit::prs

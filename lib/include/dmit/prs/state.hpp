@@ -9,7 +9,7 @@
 
 #include "dmit/fmt/formatable.hpp"
 
-#include "dmit/com/option_reference.hpp"
+#include "dmit/com/reference.hpp"
 
 #include <optional>
 #include <vector>
@@ -25,7 +25,7 @@ struct State : fmt::Formatable
     state::error::SetOfSet _errors;
 
     std::optional<state::tree::node::Kind> _treeNodeKindOpt;
-    dmit::com::OptionRef<Stack>            _stackRefOpt;
+    dmit::com::TOptionRef<Stack>           _stackRefOpt;
 };
 
 namespace state

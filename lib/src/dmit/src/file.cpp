@@ -1,6 +1,5 @@
 #include "dmit/src/file.hpp"
 
-#include "dmit/com/constant_reference.hpp"
 #include "dmit/com/option_error.hpp"
 #include "dmit/com/storage.hpp"
 
@@ -21,7 +20,7 @@ namespace file
 namespace
 {
 
-com::OptionError<com::TStorage<uint8_t>, Error> load(const std::filesystem::path &path)
+com::TOptionError<com::TStorage<uint8_t>, Error> load(const std::filesystem::path &path)
 {
     std::ifstream ifs{path.string().c_str(), std::ios_base::binary |
                                              std::ios_base::in};
@@ -47,7 +46,7 @@ com::OptionError<com::TStorage<uint8_t>, Error> load(const std::filesystem::path
 
 } // namespace
 
-com::OptionError<File, Error> make(const std::filesystem::path& path)
+com::TOptionError<File, Error> make(const std::filesystem::path& path)
 {
     if (!std::filesystem::exists(path))
     {
@@ -80,15 +79,5 @@ File::File(File&& file) :
     _path    {std::move(file._path    )},
     _content {std::move(file._content )}
 {}
-
-File::File(const std::vector<uint8_t>& path,
-           const std::vector<uint8_t>& content) :
-    _path{reinterpret_cast<const char*>(path.data()),
-          reinterpret_cast<const char*>(path.data()) + path.size()},
-    _content{content.size()}
-{
-    // FIXME: should not have to copy the content of the vector
-    std::memcpy(_content.data(), content.data(), content.size());
-}
 
 } // namespace dmit::src

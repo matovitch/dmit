@@ -7,31 +7,30 @@
 
 #include "dmit/lex/state.hpp"
 
-#include "dmit/com/constant_reference.hpp"
-
 #include <cstdint>
 #include <vector>
 
 namespace dmit::ast
 {
 
-State FromPathAndSource::make(const src::File& file)
+State FromPathAndSource::make(const std::filesystem::path  & path,
+                              const com::TStorage<uint8_t> & source)
 {
-    auto&& lex = _lexer(file._content.data(),
-                        file._content._size);
+    auto&& lex = _lexer(source.data(),
+                        source._size);
 
     auto&& prs = _parser(lex._tokens);
 
     auto&& ast = _aster(prs._tree);
 
-    auto& source = ast._nodePool.get(ast._source);
+    auto& astSource = ast._nodePool.get(ast._source);
 
-    _sourceRegister.add(source, file._path, file._content);
+    _sourceRegister.add(astSource, path, source);
 
-    source._srcOffsets = dmit::src::line_index::makeOffsets(source._srcContent.value());
+    astSource._srcOffsets = dmit::src::line_index::makeOffsets(source);
 
-    source._lexOffsets .swap(lex._offsets );
-    source._lexTokens  .swap(lex._tokens  );
+    astSource._lexOffsets .swap(lex._offsets );
+    astSource._lexTokens  .swap(lex._tokens  );
 
     _lexer  .clearState();
     _parser .clearState();

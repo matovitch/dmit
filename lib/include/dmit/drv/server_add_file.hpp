@@ -11,6 +11,7 @@
 #include "dmit/cmp/cmp.hpp"
 
 #include "dmit/com/unique_id.hpp"
+#include "dmit/com/storage.hpp"
 
 extern "C"
 {
@@ -24,15 +25,15 @@ extern "C"
 namespace dmit::drv::srv
 {
 
-void addFile(dmit::nng::Socket& socket,
+void addFile(nng::Socket& socket,
              cmp_ctx_t* context,
-             dmit::db::Database& database)
+             db::Database& database)
 {
     // 1. Deserialize query
 
     uint32_t filePathSize;
 
-    if (!dmit::cmp::readStrSize(context, &filePathSize)) {
+    if (!cmp::readStrSize(context, &filePathSize)) {
         DMIT_COM_LOG_ERR << "error: badly formed query\n";
         replyWith(socket, Reply::KO);
         return;
@@ -42,7 +43,7 @@ void addFile(dmit::nng::Socket& socket,
 
     filePath.resize(filePathSize);
 
-    if (!dmit::cmp::readBytes(context, filePath.data(), filePathSize))
+    if (!cmp::readBytes(context, filePath.data(), filePathSize))
     {
         DMIT_COM_LOG_ERR << "error: badly formed query\n";
         replyWith(socket, Reply::KO);
@@ -51,15 +52,15 @@ void addFile(dmit::nng::Socket& socket,
 
     uint32_t unitSourceSize;
 
-    if (!dmit::cmp::readBinSize(context, &unitSourceSize)) {
+    if (!cmp::readBinSize(context, &unitSourceSize)) {
         DMIT_COM_LOG_ERR << "error: badly formed query\n";
         replyWith(socket, Reply::KO);
         return;
     }
 
-    std::vector<uint8_t> unitSource(unitSourceSize);
+    com::TStorage<uint8_t> unitSource{unitSourceSize};
 
-    if (!dmit::cmp::readBytes(context, unitSource.data(), unitSourceSize))
+    if (!cmp::readBytes(context, unitSource.data(), unitSourceSize))
     {
         DMIT_COM_LOG_ERR << "error: badly formed query\n";
         replyWith(socket, Reply::KO);
@@ -68,8 +69,8 @@ void addFile(dmit::nng::Socket& socket,
 
     // 2. Update database
 
-    const dmit::com::UniqueId unitId {unitSource};
-    const dmit::com::UniqueId fileId {filePath};
+    const com::UniqueId unitId {unitSource};
+    const com::UniqueId fileId {filePath};
 
     bool isUnitInDb;
     bool isFileInDb;

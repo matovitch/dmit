@@ -5,7 +5,7 @@
 
 #include "dmit/fmt/formatable.hpp"
 
-#include "dmit/com/option_reference.hpp"
+#include "dmit/com/reference.hpp"
 
 #include <cstdint>
 
@@ -24,7 +24,7 @@ struct Bundle : fmt::Formatable
 
     node::TRange<node::Kind::VIEW> _views;
 
-    com::OptionRef<ast::State::NodePool> _interfacePoolOpt;
+    com::TOptionRef<ast::State::NodePool> _interfacePoolOpt;
 };
 
 } // namespace dmit::ast
