@@ -120,6 +120,15 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
         _oss << "}";
     }
 
+    void operator()(ast::node::TIndex<ast::node::Kind::PATTERN> patternIdx)
+    {
+        auto& pattern = get(patternIdx);
+
+        _oss << "{\"node\":\"Pattern\",";
+        _oss << "\"variable\":"; base()(pattern._variable);
+        _oss << "}";
+    }
+
     void operator()(ast::node::TIndex<ast::node::Kind::EXP_MONOP> expMonopIdx)
     {
         auto& expMonop = get(expMonopIdx);

@@ -163,6 +163,18 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
         srceIdentifier._status;
     }
 
+    void operator()(node::TIndex<node::Kind::PATTERN> srcePatternIdx)
+    {
+        auto& srcePattern = get(srcePatternIdx);
+        auto& destPattern = _destNodePool.get(
+            node::as<node::Kind::PATTERN>(_stackPtrIn->_index)
+        );
+
+        make(destPattern._variable);
+        _stackPtrIn->_index = destPattern._variable;
+        base()(srcePattern._variable);
+    }
+
     void operator()(node::TIndex<node::Kind::EXP_MONOP> srceMonopIdx)
     {
         auto& srceMonop = get(srceMonopIdx);

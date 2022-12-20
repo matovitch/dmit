@@ -36,7 +36,6 @@ const com::UniqueId K_FUNC_ADD_I64_LIT_INT {0xce6a2caefab56273, 0xbedcc1c288a680
 struct Stack
 {
     wsm::node::TIndex<wsm::node::Kind::FUNCTION> _wsmFuncIdx;
-    bool _isAssign = false;
 };
 
 struct Scribe : ast::TVisitor<Scribe, Stack>
@@ -142,30 +141,31 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
 
         auto& inst = _wsmPool.grow(_wsmPool.get(_stackPtrIn->_wsmFuncIdx)._body);
 
-        if (_stackPtrIn->_isAssign)
-        {
-            dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_LOCAL_SET> instLocalSet;
-            _wsmPool.makeGet(instLocalSet)._local = wsm.value();
-            dmit::com::blit(instLocalSet , inst._asVariant);
-        }
-        else
-        {
-            dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_LOCAL_GET> instLocalGet;
-            _wsmPool.makeGet(instLocalGet)._local = wsm.value();
-            dmit::com::blit(instLocalGet , inst._asVariant);
-        }
+        dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_LOCAL_GET> instLocalGet;
+        _wsmPool.makeGet(instLocalGet)._local = wsm.value();
+        dmit::com::blit(instLocalGet , inst._asVariant);
+    }
+
+    void operator()(ast::node::TIndex<ast::node::Kind::PATTERN> patternIdx)
+    {
+        auto identifierIdx = get(patternIdx)._variable;
+
+        auto vIndex = get(identifierIdx)._asVIndex;
+
+        auto wsm = isInterface(vIndex) ? ast::node::v_index::makeWsm(_interfacePoolOpt.value().get(), vIndex)
+                                       : ast::node::v_index::makeWsm(_nodePool, vIndex);
+        DMIT_COM_ASSERT(wsm);
+
+        auto& inst = _wsmPool.grow(_wsmPool.get(_stackPtrIn->_wsmFuncIdx)._body);
+
+        dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_LOCAL_SET> instLocalSet;
+        _wsmPool.makeGet(instLocalSet)._local = wsm.value();
+        dmit::com::blit(instLocalSet , inst._asVariant);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::EXP_BINOP> expBinopIdx)
     {
         auto& expBinop = get(expBinopIdx);
-
-        if (getToken(expBinop._operator) == lex::Token::EQUAL)
-        {
-            base()(expBinop._rhs);
-            _stackPtrIn->_isAssign = true;
-            base()(expBinop._lhs);
-        }
 
         if (expBinop._status == ast::node::Status::BOUND)
         {
@@ -289,6 +289,11 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
             {
                 // TODO much later
             }
+        }
+        else
+        {
+            base()(expBinop._rhs);
+            base()(expBinop._lhs);
         }
     }
 

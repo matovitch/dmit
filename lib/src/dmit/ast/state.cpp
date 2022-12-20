@@ -157,7 +157,24 @@ void Builder::makeAssignment(dmit::prs::Reader& reader,
     DMIT_COM_ASSERT(reader.isValid());
 
     // LHS
-    makeExpression(reader, expAssign._lhs);
+    makePattern(reader, expAssign._lhs);
+}
+
+void Builder::makePattern(const dmit::prs::Reader& reader,
+                          Expression& expression)
+{
+    auto parseNodeKind = reader.look()._kind;
+
+    if (parseNodeKind == ParseNodeKind::IDENTIFIER)
+    {
+        node::TIndex<node::Kind::PATTERN> pattern;
+        makeIdentifier(reader, _nodePool.makeGet(_nodePool.makeGet(pattern)._variable));
+        com::blit(pattern, expression);
+    }
+    else
+    {
+        DMIT_COM_ASSERT(!"[AST] Unknown pattern node");
+    }
 }
 
 void Builder::makeFunctionCall(dmit::prs::Reader& reader,

@@ -57,6 +57,7 @@ struct Kind : com::TEnum<uint8_t>
         IDENTIFIER     ,
         LIT_DECIMAL    ,
         LIT_INTEGER    ,
+        PATTERN        ,
         SCOPE          ,
         SCOPE_VARIANT  ,
         STM_RETURN     ,
@@ -117,6 +118,7 @@ using Expression = std::variant<node::TIndex<node::Kind::IDENTIFIER  >,
                                 node::TIndex<node::Kind::LIT_INTEGER >,
                                 node::TIndex<node::Kind::EXP_BINOP   >,
                                 node::TIndex<node::Kind::EXP_MONOP   >,
+                                node::TIndex<node::Kind::PATTERN     >,
                                 node::TIndex<node::Kind::FUN_CALL    >>;
 
 using ScopeVariant = std::variant<Statement,
@@ -314,6 +316,12 @@ struct TNode<node::Kind::EXP_MONOP>
     node::TIndex<node::Kind::LEXEME> _operator;
 
     Expression _expression;
+};
+
+template <>
+struct TNode<node::Kind::PATTERN>
+{
+    node::TIndex<node::Kind::IDENTIFIER> _variable;
 };
 
 template<>

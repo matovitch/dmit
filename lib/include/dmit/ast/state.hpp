@@ -81,6 +81,9 @@ private:
     void makeExpression(const dmit::prs::Reader& reader,
                         Expression& expression);
 
+    void makePattern(const dmit::prs::Reader& reader,
+                     Expression& expression);
+
     void makeType(const dmit::prs::Reader& reader,
                        TNode<node::Kind::TYPE>& type);
 

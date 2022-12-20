@@ -48,6 +48,11 @@ struct Typer : ast::TVisitor<Typer, StackDummy, Stack>
         }
     }
 
+    void operator()(ast::node::TIndex<ast::node::Kind::PATTERN> patternIdx)
+    {
+        base()(get(patternIdx)._variable);
+    }
+
     void operator()(ast::node::TIndex<ast::node::Kind::IDENTIFIER> identifierIdx)
     {
         base()(get(identifierIdx)._asVIndex);
@@ -86,6 +91,7 @@ struct Checker : ast::TVisitor<Checker>
         _interfaceMap{interfaceMap}
     {}
 
+    void operator()(ast::node::TIndex<ast::node::Kind::PATTERN      >){}
     void operator()(ast::node::TIndex<ast::node::Kind::DEF_CLASS    >){}
     void operator()(ast::node::TIndex<ast::node::Kind::IDENTIFIER   >){}
     void operator()(ast::node::TIndex<ast::node::Kind::LIT_INTEGER  >){}

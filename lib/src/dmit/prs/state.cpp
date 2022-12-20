@@ -377,11 +377,17 @@ Builder::Builder() :
     rawModule = seq(keyModule, path, alt(seq(semiColon , rep(alt(rcvDefinition, rcvImport, rawModule))),
                                          seq(braLeft   , rep(alt(rcvDefinition, rcvImport, rawModule)), braRight)));
 
-    skpModule = seq(opt(tok<lex::Token::MODULE>()), skp(alt(tok<lex::Token::FUNC>(),
-                                                            tok<lex::Token::CLASS>(),
-                                                            tok<lex::Token::MODULE>(),
-                                                            tok<lex::Token::EXPORT>(),
-                                                            tok<lex::Token::IMPORT>())));
+    skpModule = seq(opt(tok<lex::Token::MODULE>()),
+                    skp(alt(tok<lex::Token::SEMI_COLON >(),
+                            tok<lex::Token::FUNC       >(),
+                            tok<lex::Token::CLASS      >(),
+                            tok<lex::Token::MODULE     >(),
+                            tok<lex::Token::EXPORT     >(),
+                            tok<lex::Token::IMPORT     >(),
+                            tok<lex::Token::BRA_RIGHT  >())),
+                    opt(alt(tok<lex::Token::SEMI_COLON >(),
+                            tok<lex::Token::BRA_RIGHT  >())));
+
     rcvModule = alt(rawModule,
                     skpModule);
     // Full parser

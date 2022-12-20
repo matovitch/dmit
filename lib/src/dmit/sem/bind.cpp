@@ -180,6 +180,11 @@ struct Binder : ast::TVisitor<Binder, Stack>
         base()(get(stmReturnIdx)._expression);
     }
 
+    void operator()(ast::node::TIndex<ast::node::Kind::PATTERN> patternIdx)
+    {
+        base()(get(patternIdx)._variable);
+    }
+
     void operator()(ast::node::TIndex<ast::node::Kind::EXP_BINOP> expBinopIdx)
     {
         auto& expBinop = get(expBinopIdx);
