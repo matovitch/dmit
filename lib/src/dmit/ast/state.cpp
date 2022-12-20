@@ -354,11 +354,18 @@ void Builder::makeFunction(const dmit::prs::Reader& supReader,
     auto reader = supReader.makeSubReader();
 
     // Body
-    makeScope(reader, _nodePool.makeGet(function._body));
-    reader.advance();
+    if (reader.look()._kind == prs::state::tree::node::Kind::SCOPE)
+    {
+        makeScope(reader, _nodePool.makeGet(function._body));
+        reader.advance();
+    }
+    else
+    {
+        _nodePool.make(_nodePool.makeGet(function._body)._variants, 0);
+    }
 
     // Return type
-    if (reader.look()._kind == dmit::prs::state::tree::node::Kind::IDENTIFIER)
+    if (reader.look()._kind == prs::state::tree::node::Kind::IDENTIFIER)
     {
         makeType(reader, _nodePool.makeGet(function._returnType));
         reader.advance();

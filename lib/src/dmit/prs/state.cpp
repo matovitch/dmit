@@ -307,16 +307,18 @@ Builder::Builder() :
 
     funArguments = seq(parLeft, opt(seq(typeClaim, rep(seq(comma, typeClaim)))), parRight);
 
-    rawFunction = seq(keyFunc, identifier, funArguments, opt(seq(minusKetRight, identifier)), scope);
+    rawFunction = seq(keyFunc, identifier, funArguments, opt(seq(minusKetRight, identifier)), alt(scope, semiColon));
 
     skpFunction = seq(opt(tok<lex::Token::FUNC>()),
-                      skp(alt(tok<lex::Token::FUNC>(),
-                              tok<lex::Token::CLASS>(),
-                              tok<lex::Token::MODULE>(),
-                              tok<lex::Token::EXPORT>(),
-                              tok<lex::Token::IMPORT>(),
-                              tok<lex::Token::BRA_RIGHT>())),
-                      opt(tok<lex::Token::BRA_RIGHT>()));
+                      skp(alt(tok<lex::Token::FUNC       >(),
+                              tok<lex::Token::CLASS      >(),
+                              tok<lex::Token::MODULE     >(),
+                              tok<lex::Token::EXPORT     >(),
+                              tok<lex::Token::IMPORT     >(),
+                              tok<lex::Token::BRA_RIGHT  >(),
+                              tok<lex::Token::SEMI_COLON >())),
+                      opt(alt(tok<lex::Token::SEMI_COLON >(),
+                              tok<lex::Token::BRA_RIGHT  >())));
 
     rcvFunction = alt(rawFunction,
                       skpFunction);
