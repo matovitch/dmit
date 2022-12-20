@@ -4,4 +4,5 @@ export class u64 {}
 export class i64 {}
 export class int {}
 
-export func add_i64_int(x : i64, y: int) -> i64;
+export func add_i64_int(_: i64, _: int) -> i64;
+export func add_int_i64(_: int, _: i64) -> i64;
