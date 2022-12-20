@@ -8,6 +8,11 @@ function make()
     tup && $HOST_ROOT/test/data/diff.sh && $HOST_ROOT/bin/test/test -tse=inout
 }
 
+function base64id2u64pair()
+{
+    echo $1 | if read id; then echo "${id}==" | base64 -d | xxd -e -g8; fi | awk '{print "{0x"$2", 0x"$3"};"}'
+}
+
 function cleanSource()
 {
     find $HOST_ROOT -type f \( -name "*.cpp"   -o \

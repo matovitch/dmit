@@ -17,6 +17,7 @@ ENV TO_INSTALL "               \
     libpcre3-dev               \
     ninja-build                \
     cmake                      \
+    xxd                        \
 "
 
 ENV TO_REMOVE "                \
@@ -50,7 +51,8 @@ RUN set -ex                                                                     
     apt-get update                                                                                              &&\
     apt-get install -y $TO_INSTALL                                                                              &&\
     apt-get update                                                                                              &&\
-    curl https://apt.llvm.org/llvm.sh > llvm.sh                                                                 &&\
+    echo 'Acquire { https::Verify-Peer false }' >> /etc/apt/apt.conf.d/99verify-peer.conf                       &&\
+    curl -k https://apt.llvm.org/llvm.sh | sed 's/wget -/wget --no-check-certificate -/' > llvm.sh              &&\
     chmod +x llvm.sh                                                                                            &&\
     ./llvm.sh $LLVM_VERSION                                                                                     &&\
     ln -s /usr/bin/clang++-$LLVM_VERSION /usr/bin/clang++                                                       &&\
@@ -104,7 +106,7 @@ RUN set -ex                                                                     
     rm -r cmp                                                                                                   &&\
     git clone --recursive --progress --depth 1 https://github.com/WebAssembly/wabt                              &&\
     cd wabt                                                                                                     &&\
-    git checkout ed0b720c97ec6cc70b1dc33151b5dcadf12c31f4                                                       &&\
+    git checkout 4dd8b6ac322c93db20e8c40867c2cd6bb454589a                                                       &&\
     mkdir build                                                                                                 &&\
     cd build                                                                                                    &&\
     cmake .. -G Ninja -DBUILD_TESTS=OFF                                                                         &&\
