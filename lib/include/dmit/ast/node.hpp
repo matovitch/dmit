@@ -216,9 +216,9 @@ struct TNode<node::Kind::DEF_FUNCTION>
 {
     node::TIndex<node::Kind::IDENTIFIER   > _name;
     node::TRange<node::Kind::DCL_VARIABLE > _arguments;
-    node::TIndex<node::Kind::SCOPE        > _body;
 
-    std::optional<node::TIndex<node::Kind::TYPE>> _returnType;
+    std::optional<node::TIndex<node::Kind::SCOPE >> _body;
+    std::optional<node::TIndex<node::Kind::TYPE  >> _returnType;
 
     node::VIndex _parent;
 

@@ -361,7 +361,7 @@ void Builder::makeFunction(const dmit::prs::Reader& supReader,
     }
     else
     {
-        _nodePool.make(_nodePool.makeGet(function._body)._variants, 0);
+        com::blitDefault(function._body);
     }
 
     // Return type

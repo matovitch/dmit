@@ -369,9 +369,16 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
         copyRange(srceFunction._arguments,
                   destFunction._arguments);
 
-        make(destFunction._body);
-        _stackPtrIn->_index = destFunction._body;
-        base()(srceFunction._body);
+        if (srceFunction._body)
+        {
+            auto blitter = blitter::make(_destNodePool, destFunction._body);
+            _stackPtrIn->_index = blitter(srceFunction._body.value());
+            base()(srceFunction._body);
+        }
+        else
+        {
+            com::blitDefault(destFunction._body);
+        }
 
         if (srceFunction._returnType)
         {
