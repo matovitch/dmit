@@ -40,22 +40,40 @@ struct TNode<MATCH>
             reader.advance();
         }
 
-        if constexpr (MATCH == Token::SLASH_STAR)
+        state.push(MATCH, reader.offset());
+
+        if (!reader.isValid())
         {
-            state._count++;
+            return;
         }
 
-        if constexpr (MATCH == Token::STAR_SLASH)
-        {
-            state._count = state._count ? state._count - 1 : 0;
-        }
+        tGoto<INITIAL_NODE>(reader, state);
+    }
+};
+
+template <>
+struct TNode<Token::SLASH_STAR>
+{
+    void operator()(src::Reader& reader, State& state) const
+    {
+        state._count++;
+        return tGoto<COMMENT_BLOCK>(reader, state);
+    }
+};
+
+template <>
+struct TNode<Token::STAR_SLASH>
+{
+    void operator()(src::Reader& reader, State& state) const
+    {
+        state._count = state._count ? state._count - 1 : 0;
 
         if (state._count)
         {
             return tGoto<COMMENT_BLOCK>(reader, state);
         }
 
-        state.push(MATCH, reader.offset());
+        state.push(Token::STAR_SLASH, reader.offset());
 
         if (!reader.isValid())
         {
