@@ -70,6 +70,8 @@ static const char* const K_TOKEN_AS_CSTR[] =
     "STAR_SLASH",
     "START_OF_INPUT",
     "TILDE",
+    "DATA",
+    "QUOTE_SIMPLE",
     "UNKNOWN"
 };
 

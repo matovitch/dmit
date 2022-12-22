@@ -76,6 +76,8 @@ struct Token : com::TEnum<uint8_t>, fmt::Formatable
         STAR_SLASH,
         START_OF_INPUT,
         TILDE,
+        DATA,
+        QUOTE_SIMPLE,
         UNKNOWN
     };
 

@@ -2,6 +2,8 @@
 
 #include "dmit/lex/token.hpp"
 
+#include "dmit/com/unique_id.hpp"
+
 #include "dmit/fmt/formatable.hpp"
 
 #include <cstdint>
@@ -19,6 +21,8 @@ struct State : fmt::Formatable
     void clear();
 
     uint32_t _count = 0;
+
+    com::UniqueId _id;
 
     std::vector<Token>    _tokens;
     std::vector<uint32_t> _offsets;

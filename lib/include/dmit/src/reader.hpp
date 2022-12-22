@@ -21,9 +21,10 @@ public:
 
     uint32_t offset() const;
 
+    const uint8_t* _head;
+
 private:
 
-    const uint8_t*       _head;
     const uint8_t* const _tail;
 };
 

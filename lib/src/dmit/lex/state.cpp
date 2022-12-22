@@ -5,6 +5,8 @@
 #include "dmit/lex/token.hpp"
 #include "dmit/lex/node.hpp"
 
+#include "dmit/com/unique_id.hpp"
+
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -93,6 +95,8 @@ State& Builder::operator()(const uint8_t* const data,
                            const uint32_t size)
 {
     src::Reader reader{data, data + size};
+
+    _state._id = com::UniqueId{"#none"};
 
     _state.push(lex::Token::START_OF_INPUT, size);
 

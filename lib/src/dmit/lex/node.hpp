@@ -3,6 +3,8 @@
 #include "dmit/lex/token.hpp"
 #include "dmit/lex/state.hpp"
 
+#include "dmit/com/unique_id.hpp"
+
 #include "dmit/src/reader.hpp"
 
 #include <cstdint>
@@ -11,7 +13,8 @@ namespace dmit::lex
 {
 
 static constexpr int INITIAL_NODE  = 0;
-static constexpr int COMMENT_BLOCK = 1;
+static constexpr int BLOCK_COMMENT = 1;
+static constexpr int BLOCK_DATA    = 2;
 
 template <int INDEX>
 struct TNodeIndex;
@@ -52,12 +55,46 @@ struct TNode<MATCH>
 };
 
 template <>
+struct TNode<Token::QUOTE_SIMPLE>
+{
+    void operator()(src::Reader& reader, State& state) const
+    {
+        auto head = reader._head;
+
+        while (reader.isValid() && reader.look() != '\'')
+        {
+            reader.advance();
+        }
+
+        auto size = static_cast<uint32_t>(reader._head - head);
+        auto id = com::UniqueId{head, size};
+
+        if (reader.isValid() && state._id == id)
+        {
+            state.push(Token::DATA, reader.offset());
+            state._id = com::UniqueId{"#none"};
+            reader.advance();
+            return reader.isValid() ? tGoto<INITIAL_NODE>(reader, state)
+                                    : [](){}();
+        }
+        else if (state._id == com::UniqueId{"#none"})
+        {
+            state._id = id;
+            reader.advance();
+        }
+
+        return reader.isValid() ? tGoto<BLOCK_DATA>(reader, state)
+                                : state.push(Token::UNKNOWN, reader.offset());
+    }
+};
+
+template <>
 struct TNode<Token::SLASH_STAR>
 {
     void operator()(src::Reader& reader, State& state) const
     {
         state._count++;
-        return tGoto<COMMENT_BLOCK>(reader, state);
+        tGoto<BLOCK_COMMENT>(reader, state);
     }
 };
 
@@ -70,7 +107,7 @@ struct TNode<Token::STAR_SLASH>
 
         if (state._count)
         {
-            return tGoto<COMMENT_BLOCK>(reader, state);
+            return tGoto<BLOCK_COMMENT>(reader, state);
         }
 
         state.push(Token::COMMENT, reader.offset());
@@ -95,8 +132,7 @@ struct TNode<MATCH, Goto, Gotos...>
     {
         if (!reader.isValid())
         {
-            state.push(MATCH, reader.offset());
-            return;
+            return state.push(MATCH, reader.offset());
         }
 
         if (!Predicate{}(reader.look()))

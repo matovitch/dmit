@@ -31,6 +31,7 @@ TEST_CASE("lex")
 {
     Lexer lexer;
 
+    CHECK(dmit::fmt::asString(lexer("test/data/lex/data.in"       )) == fileAsString("test/data/lex/data.out"       ));
     CHECK(dmit::fmt::asString(lexer("test/data/lex/comment.in"    )) == fileAsString("test/data/lex/comment.out"    ));
     CHECK(dmit::fmt::asString(lexer("test/data/lex/identifier.in" )) == fileAsString("test/data/lex/identifier.out" ));
     CHECK(dmit::fmt::asString(lexer("test/data/lex/keyword.in"    )) == fileAsString("test/data/lex/keyword.out"    ));

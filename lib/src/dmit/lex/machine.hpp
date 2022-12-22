@@ -21,14 +21,14 @@ using IsMinus                = TIs<'-'>;
 using IsStar                 = TIs<'*'>;
 using IsSlash                = TIs<'/'>;
 using IsPercent              = TIs<'%'>;
-using IsBraLeft              = TIs<'{'>;
-using IsKetLeft              = TIs<'<'>;
-using IsParLeft              = TIs<'('>;
-using IsSqrLeft              = TIs<'['>;
-using IsBraRight             = TIs<'}'>;
-using IsKetRight             = TIs<'>'>;
-using IsParRight             = TIs<')'>;
-using IsSqrRight             = TIs<']'>;
+using IsLeftBra              = TIs<'{'>;
+using IsLeftKet              = TIs<'<'>;
+using IsLeftPar              = TIs<'('>;
+using IsLeftSqr              = TIs<'['>;
+using IsRightBra             = TIs<'}'>;
+using IsRightKet             = TIs<'>'>;
+using IsRightPar             = TIs<')'>;
+using IsRightSqr             = TIs<']'>;
 using IsDot                  = TIs<'.'>;
 using IsComma                = TIs<','>;
 using IsColon                = TIs<':'>;
@@ -40,6 +40,8 @@ using IsTilde                = TIs<'~'>;
 using IsCaret                = TIs<'^'>;
 using IsPipe                 = TIs<'|'>;
 using IsAmpersand            = TIs<'&'>;
+using IsQuoteDouble          = TIs<'"'>;
+using IsQuoteSimple          = TIs<'\''>;
 
 using IsUnderscoreOrAlpha    = TOr<TIsBetween <'A', 'Z'>,
                                    TIsBetween <'a', 'z'>,
@@ -51,7 +53,8 @@ using IsUnderscoreOrAlphaNum = TOr<IsUnderscoreOrAlpha,
 enum
 {
     NODE_INITIAL,
-    NODE_COMMENT_BLOCK,
+    NODE_BLOCK_COMMENT,
+    NODE_BLOCK_DATA,
     NODE_COMMENT_SLASH,
     NODE_COMMENT_LINE,
     NODE_COMMENT_STAR,
@@ -108,7 +111,10 @@ enum
     NODE_DECIMAL_2,
     NODE_DECIMAL_3,
     NODE_SLASH_STAR,
-    NODE_STAR_SLASH
+    NODE_STAR_SLASH,
+    NODE_QUOTE_DOUBLE,
+    NODE_QUOTE_SIMPLE,
+    NODE_DATA
 };
 
 template <>
@@ -117,33 +123,35 @@ struct TNodeIndex<NODE_INITIAL>
     using Type = TNode
     <
         Token::UNKNOWN,
-        TGoto<IsWhitespace        , NODE_WHITESPACE >,
-        TGoto<IsUnderscoreOrAlpha , NODE_IDENTIFIER >,
-        TGoto<IsParLeft           , NODE_PAR_LEFT   >,
-        TGoto<IsParRight          , NODE_PAR_RIGHT  >,
-        TGoto<IsSemiColon         , NODE_SEMI_COLON >,
-        TGoto<IsDot               , NODE_DOT        >,
-        TGoto<IsComma             , NODE_COMMA      >,
-        TGoto<IsEqual             , NODE_EQUAL      >,
-        TGoto<IsColon             , NODE_COLON      >,
-        TGoto<IsBraLeft           , NODE_BRA_LEFT   >,
-        TGoto<IsBraRight          , NODE_BRA_RIGHT  >,
-        TGoto<IsPlus              , NODE_PLUS       >,
-        TGoto<IsMinus             , NODE_MINUS      >,
-        TGoto<IsKetLeft           , NODE_KET_LEFT   >,
-        TGoto<IsKetRight          , NODE_KET_RIGHT  >,
-        TGoto<IsStar              , NODE_STAR       >,
-        TGoto<IsSlash             , NODE_SLASH      >,
-        TGoto<IsPercent           , NODE_PERCENT    >,
-        TGoto<IsBang              , NODE_BANG       >,
-        TGoto<IsQuestion          , NODE_QUESTION   >,
-        TGoto<IsTilde             , NODE_TILDE      >,
-        TGoto<IsCaret             , NODE_CARET      >,
-        TGoto<IsPipe              , NODE_PIPE       >,
-        TGoto<IsAmpersand         , NODE_AMPERSAND  >,
-        TGoto<IsSqrLeft           , NODE_SQR_LEFT   >,
-        TGoto<IsSqrRight          , NODE_SQR_RIGHT  >,
-        TGoto<IsDigit             , NODE_NUMBER     >
+        TGoto<IsWhitespace        , NODE_WHITESPACE   >,
+        TGoto<IsUnderscoreOrAlpha , NODE_IDENTIFIER   >,
+        TGoto<IsLeftPar           , NODE_PAR_LEFT     >,
+        TGoto<IsRightPar          , NODE_PAR_RIGHT    >,
+        TGoto<IsSemiColon         , NODE_SEMI_COLON   >,
+        TGoto<IsDot               , NODE_DOT          >,
+        TGoto<IsComma             , NODE_COMMA        >,
+        TGoto<IsEqual             , NODE_EQUAL        >,
+        TGoto<IsColon             , NODE_COLON        >,
+        TGoto<IsLeftBra           , NODE_BRA_LEFT     >,
+        TGoto<IsRightBra          , NODE_BRA_RIGHT    >,
+        TGoto<IsPlus              , NODE_PLUS         >,
+        TGoto<IsMinus             , NODE_MINUS        >,
+        TGoto<IsLeftKet           , NODE_KET_LEFT     >,
+        TGoto<IsRightKet          , NODE_KET_RIGHT    >,
+        TGoto<IsStar              , NODE_STAR         >,
+        TGoto<IsSlash             , NODE_SLASH        >,
+        TGoto<IsPercent           , NODE_PERCENT      >,
+        TGoto<IsBang              , NODE_BANG         >,
+        TGoto<IsQuestion          , NODE_QUESTION     >,
+        TGoto<IsTilde             , NODE_TILDE        >,
+        TGoto<IsCaret             , NODE_CARET        >,
+        TGoto<IsPipe              , NODE_PIPE         >,
+        TGoto<IsAmpersand         , NODE_AMPERSAND    >,
+        TGoto<IsLeftSqr           , NODE_SQR_LEFT     >,
+        TGoto<IsRightSqr          , NODE_SQR_RIGHT    >,
+        TGoto<IsDigit             , NODE_NUMBER       >,
+        TGoto<IsQuoteDouble       , NODE_QUOTE_DOUBLE >,
+        TGoto<IsQuoteSimple       , NODE_QUOTE_SIMPLE >
     >;
 };
 
@@ -179,6 +187,8 @@ template <> struct TNodeIndex<NODE_QUESTION            > { using Type = TNode<To
 template <> struct TNodeIndex<NODE_COMMENT             > { using Type = TNode<Token::COMMENT             >;};
 template <> struct TNodeIndex<NODE_COMMA               > { using Type = TNode<Token::COMMA               >;};
 template <> struct TNodeIndex<NODE_TILDE               > { using Type = TNode<Token::TILDE               >;};
+template <> struct TNodeIndex<NODE_DATA                > { using Type = TNode<Token::DATA                >;};
+template <> struct TNodeIndex<NODE_QUOTE_SIMPLE        > { using Type = TNode<Token::QUOTE_SIMPLE        >;};
 
 template <>
 struct TNodeIndex<NODE_WHITESPACE>
@@ -197,6 +207,17 @@ struct TNodeIndex<NODE_IDENTIFIER>
     <
         Token::IDENTIFIER,
         TGoto<IsUnderscoreOrAlphaNum, NODE_IDENTIFIER>
+    >;
+};
+
+template<>
+struct TNodeIndex<NODE_QUOTE_DOUBLE>
+{
+    using Type = TNode
+    <
+        Token::UNKNOWN,
+        TGoto<IsQuoteDouble , NODE_DATA         >,
+        TGoto<IsAnything    , NODE_QUOTE_DOUBLE >
     >;
 };
 
@@ -239,20 +260,31 @@ struct TNodeIndex<NODE_COMMENT_LINE>
     using Type = TNode
     <
         Token::UNKNOWN,
-        TGoto<IsNewLine  , NODE_COMMENT>,
-        TGoto<IsAnything , NODE_COMMENT_LINE>
+        TGoto<IsNewLine  , NODE_COMMENT      >,
+        TGoto<IsAnything , NODE_COMMENT_LINE >
     >;
 };
 
 template <>
-struct TNodeIndex<NODE_COMMENT_BLOCK>
+struct TNodeIndex<NODE_BLOCK_COMMENT>
 {
     using Type = TNode
     <
         Token::UNKNOWN,
         TGoto<IsSlash    , NODE_COMMENT_SLASH >,
         TGoto<IsStar     , NODE_COMMENT_STAR  >,
-        TGoto<IsAnything , NODE_COMMENT_BLOCK >
+        TGoto<IsAnything , NODE_BLOCK_COMMENT >
+    >;
+};
+
+template <>
+struct TNodeIndex<NODE_BLOCK_DATA>
+{
+    using Type = TNode
+    <
+        Token::UNKNOWN,
+        TGoto<IsQuoteSimple, NODE_QUOTE_SIMPLE >,
+        TGoto<IsAnything   , NODE_BLOCK_DATA   >
     >;
 };
 
@@ -263,7 +295,7 @@ struct TNodeIndex<NODE_COMMENT_SLASH>
     <
         Token::UNKNOWN,
         TGoto<IsStar     , NODE_SLASH_STAR   >,
-        TGoto<IsAnything , NODE_COMMENT_BLOCK >
+        TGoto<IsAnything , NODE_BLOCK_COMMENT >
     >;
 };
 
@@ -274,7 +306,7 @@ struct TNodeIndex<NODE_COMMENT_STAR>
     <
         Token::UNKNOWN,
         TGoto<IsSlash    , NODE_STAR_SLASH    >,
-        TGoto<IsAnything , NODE_COMMENT_BLOCK >
+        TGoto<IsAnything , NODE_BLOCK_COMMENT >
     >;
 };
 
@@ -304,7 +336,7 @@ struct TNodeIndex<NODE_MINUS>
     using Type = TNode
     <
         Token::MINUS,
-        TGoto<IsKetRight , NODE_MINUS_KET_RIGHT >,
+        TGoto<IsRightKet , NODE_MINUS_KET_RIGHT >,
         TGoto<IsEqual    , NODE_MINUS_EQUAL     >
     >;
 };
@@ -316,7 +348,7 @@ struct TNodeIndex<NODE_KET_LEFT>
     <
         Token::KET_LEFT,
         TGoto<IsEqual   , NODE_KET_LEFT_EQUAL >,
-        TGoto<IsKetLeft , NODE_KET_LEFT_BIS   >
+        TGoto<IsLeftKet , NODE_KET_LEFT_BIS   >
     >;
 };
 
@@ -337,7 +369,7 @@ struct TNodeIndex<NODE_KET_RIGHT>
     <
         Token::KET_RIGHT,
         TGoto<IsEqual    , NODE_KET_RIGHT_EQUAL >,
-        TGoto<IsKetRight , NODE_KET_RIGHT_BIS   >
+        TGoto<IsRightKet , NODE_KET_RIGHT_BIS   >
     >;
 };
 
