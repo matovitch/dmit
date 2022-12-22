@@ -14,8 +14,7 @@ namespace
 void advanceToRawToken(const Token*& head)
 {
     while (*head == Token::WHITESPACE ||
-           *head == Token::COMMENT    ||
-           *head == Token::STAR_SLASH)
+           *head == Token::COMMENT)
     {
         head++;
     }

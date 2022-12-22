@@ -73,7 +73,7 @@ struct TNode<Token::STAR_SLASH>
             return tGoto<COMMENT_BLOCK>(reader, state);
         }
 
-        state.push(Token::STAR_SLASH, reader.offset());
+        state.push(Token::COMMENT, reader.offset());
 
         if (!reader.isValid())
         {
