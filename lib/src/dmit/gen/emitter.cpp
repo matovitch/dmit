@@ -22,6 +22,7 @@
 #include <charconv>
 #include <cstdint>
 #include <vector>
+#include <tuple>
 
 namespace dmit::gen
 {
@@ -143,7 +144,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
         auto& inst = _wsmPool.grow(_wsmPool.get(_stackPtrIn->_wsmFuncIdx)._body);
 
         dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_LOCAL_GET> instLocalGet;
-        _wsmPool.makeGet(instLocalGet)._local = wsm.value();
+        _wsmPool.makeGet(instLocalGet)._local = std::get<wsm::node::TIndex<wsm::node::Kind::LOCAL>>(wsm.value());
         dmit::com::blit(instLocalGet , inst._asVariant);
     }
 
@@ -160,7 +161,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
         auto& inst = _wsmPool.grow(_wsmPool.get(_stackPtrIn->_wsmFuncIdx)._body);
 
         dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_LOCAL_SET> instLocalSet;
-        _wsmPool.makeGet(instLocalSet)._local = wsm.value();
+        _wsmPool.makeGet(instLocalSet)._local = std::get<wsm::node::TIndex<wsm::node::Kind::LOCAL>>(wsm.value());
         dmit::com::blit(instLocalSet , inst._asVariant);
     }
 
@@ -170,7 +171,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
 
         if (expBinop._status == ast::node::Status::BOUND)
         {
-            if (com::tree::v_index::isInterface<ast::node::Kind>(expBinop._asVIndex))
+            if (expBinop._asFunction._isInterface)
             {
                 base()(expBinop._lhs);
                 base()(expBinop._rhs);
@@ -186,8 +187,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
                 auto& wsmDomain   = _wsmPool.makeGet(wsmTypeFunc.   _domain);
                 auto& wsmCodomain = _wsmPool.makeGet(wsmTypeFunc. _codomain);
 
-                auto vIndexAsFunc = std::get<ast::node::TIndex<ast::node::Kind::DEF_FUNCTION>>(expBinop._asVIndex);
-                auto& function = get(vIndexAsFunc);
+                auto& function = get(expBinop._asFunction);
 
                 _wsmPool.make(wsmDomain._valTypes, function._arguments._size);
 
@@ -236,7 +236,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
                 _wsmPool.get(nameModule._bytes[1])._value = 'n';
                 _wsmPool.get(nameModule._bytes[2])._value = 'v';
 
-                auto functionIdAsString = fmt::asString(id(expBinop._asVIndex));
+                auto functionIdAsString = fmt::asString(id(expBinop._asFunction));
 
                 _wsmPool.make(nameImport._bytes, functionIdAsString.size());
 
@@ -245,7 +245,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
                     _wsmPool.get(nameImport._bytes[i])._value = functionIdAsString[i];
                 }
 
-                dmit::com::blit(wsmModule._types._size - 1, import._descriptor);
+                dmit::com::blit(wsmModule._types.back(), import._descriptor);
 
                 // Symbol
 

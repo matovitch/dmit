@@ -324,7 +324,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
 
         _writer.write(0x11);
 
-        Leb128<IS_OBJECT>  typeIdxAsLeb128{node::v_index::makeId(_nodePool, instCallIndirect._type)};
+        Leb128<IS_OBJECT>  typeIdxAsLeb128{get(instCallIndirect._type)._id};
         Leb128<IS_OBJECT> tableIdxAsLeb128{instCallIndirect._tableIdx };
         _writer.write( typeIdxAsLeb128);
         _writer.write(tableIdxAsLeb128);
@@ -367,7 +367,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
     {
         auto& instLocalGet = get(instLocalGetIdx);
 
-        Leb128</*IS_OBJECT=*/false> localIdxAsLeb128{wsm::node::v_index::makeId(_nodePool, instLocalGet._local)};
+        Leb128</*IS_OBJECT=*/false> localIdxAsLeb128{get(instLocalGet._local)._id};
 
         _writer.write(0x20);
         _writer.write(localIdxAsLeb128);
@@ -377,7 +377,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
     {
         auto& instLocalSet = get(instLocalSetIdx);
 
-        Leb128</*IS_OBJECT=*/false> localIdxAsLeb128{wsm::node::v_index::makeId(_nodePool, instLocalSet._local)};
+        Leb128</*IS_OBJECT=*/false> localIdxAsLeb128{get(instLocalSet._local)._id};
 
         _writer.write(0x21);
         _writer.write(localIdxAsLeb128);
@@ -387,7 +387,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
     {
         auto& instLocalTee = get(instLocalTeeIdx);
 
-        Leb128</*IS_OBJECT=*/false> localIdxAsLeb128{instLocalTee._localIdx};
+        Leb128</*IS_OBJECT=*/false> localIdxAsLeb128{get(instLocalTee._local)._id};
 
         _writer.write(0x22);
         _writer.write(localIdxAsLeb128);
@@ -1404,7 +1404,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
 
             for (uint32_t i = 0; i < module._funcs._size; i++)
             {
-                Leb128<IS_OBJECT> typeIdxAsLeb128{node::v_index::makeId(_nodePool, get(module._funcs[i])._type)};
+                Leb128<IS_OBJECT> typeIdxAsLeb128{get(get(module._funcs[i])._type)._id};
                 _writer.write(typeIdxAsLeb128);
             }
         }

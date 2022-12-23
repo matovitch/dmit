@@ -186,6 +186,8 @@ struct TNode<node::Kind::TYPE_MEM>
 {
     uint32_t                _min;
     std::optional<uint32_t> _maxOpt;
+
+    uint32_t _id;
 };
 
 template <>
@@ -359,7 +361,7 @@ struct TNode<node::Kind::INST_REF_IS_NULL>
 template <>
 struct TNode<node::Kind::INST_REF_FUNC>
 {
-    node::VIndex _function;
+    node::TIndex<node::Kind::FUNCTION> _function;
 };
 
 template <>
@@ -372,9 +374,9 @@ struct TNode<node::Kind::INST_SELECT>
     node::TRange<node::Kind::TYPE_VAL> _valTypes;
 };
 
-template <> struct TNode<node::Kind::INST_LOCAL_GET> { node::VIndex _local; };
-template <> struct TNode<node::Kind::INST_LOCAL_SET> { node::VIndex _local; };
-template <> struct TNode<node::Kind::INST_LOCAL_TEE> { uint32_t _localIdx; };
+template <> struct TNode<node::Kind::INST_LOCAL_GET> { node::TIndex<node::Kind::LOCAL> _local; };
+template <> struct TNode<node::Kind::INST_LOCAL_SET> { node::TIndex<node::Kind::LOCAL> _local; };
+template <> struct TNode<node::Kind::INST_LOCAL_TEE> { node::TIndex<node::Kind::LOCAL> _local; };
 
 template <> struct TNode<node::Kind::INST_GLOBAL_GET> { uint32_t _globalIdx; };
 template <> struct TNode<node::Kind::INST_GLOBAL_SET> { uint32_t _globalIdx; };
@@ -455,7 +457,7 @@ template <> struct TNode<node::Kind::INST_MEM_COPY> {};
 template <> struct TNode<node::Kind::INST_NOP         > {};
 template <> struct TNode<node::Kind::INST_UNREACHABLE > {};
 
-using BlockType = std::variant<uint32_t,
+using BlockType = std::variant<node::TIndex<node::Kind::TYPE_FUNC>,
                                std::optional<ValType>>;
 
 using Instruction = std::variant<
@@ -571,7 +573,7 @@ template<>
 struct TNode<node::Kind::INST_CALL_INDIRECT>
 {
     uint32_t _tableIdx;
-    node::VIndex _type;
+    node::TIndex<node::Kind::TYPE_FUNC> _type;
 };
 
 template <>
@@ -587,7 +589,7 @@ struct TNode<node::Kind::FUNCTION>
 {
     node::TList <node::Kind::LOCAL       > _locals;
     node::TList <node::Kind::INSTRUCTION > _body;
-    node::VIndex                           _type;
+    node::TIndex<node::Kind::TYPE_FUNC   > _type;
 
     uint32_t _localsSize;
 
@@ -715,7 +717,7 @@ struct TNode<node::Kind::START>
     node::VIndex _function;
 };
 
-using ImportDescriptor = std::variant<uint32_t, // typeidx
+using ImportDescriptor = std::variant<node::TIndex<node::Kind::TYPE_FUNC         >,
                                       node::TIndex<node::Kind::TYPE_GLOBAL_CONST >,
                                       node::TIndex<node::Kind::TYPE_GLOBAL_VAR   >,
                                       node::TIndex<node::Kind::TYPE_TABLE        >,
@@ -736,7 +738,7 @@ struct TNode<node::Kind::IMPORT>
     uint32_t _id;
 };
 
-using ExportDescriptor = std::variant<uint32_t, // memidx
+using ExportDescriptor = std::variant<node::VIndex, // memidx
                                       node::TIndex<node::Kind::INST_REF_FUNC   >,
                                       node::TIndex<node::Kind::INST_TABLE_GET  >,
                                       node::TIndex<node::Kind::INST_GLOBAL_GET >>;

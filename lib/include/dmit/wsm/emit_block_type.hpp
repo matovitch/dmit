@@ -39,9 +39,9 @@ struct TBlockTypeEmitter
         (*this)(typeVal._asVariant);
     }
 
-    void operator()(uint32_t typeIdx)
+    void operator()(node::TIndex<node::Kind::TYPE_FUNC> typeIdx)
     {
-        Leb128</*IS_OBJECT=*/false> typeIdxAsLeb128{static_cast<int64_t>(typeIdx)};
+        Leb128</*IS_OBJECT=*/false> typeIdxAsLeb128{typeIdx._value};
 
         _writer.write(typeIdxAsLeb128);
     }

@@ -11,6 +11,8 @@
 
 #include "dmit/com/unique_id.hpp"
 
+#include <tuple>
+
 namespace dmit::sem
 {
 
@@ -113,14 +115,14 @@ struct Checker : ast::TVisitor<Checker>
             {
                 auto factOpt = _context.getFact(K_FUNC_ADD_I64_LIT_INT);
                 DMIT_COM_ASSERT(factOpt);
-                binop._asVIndex = factOpt.value();
+                binop._asFunction = std::get<decltype(binop._asFunction)>(factOpt.value());
                 binop._status = ast::node::Status::BOUND;
             }
             if (lhsType == K_TYPE_INT && rhsType == K_TYPE_I64)
             {
                auto factOpt = _context.getFact(K_FUNC_ADD_LIT_INT_I64);
                DMIT_COM_ASSERT(factOpt);
-               binop._asVIndex = factOpt.value();
+               binop._asFunction = std::get<decltype(binop._asFunction)>(factOpt.value());
                binop._status = ast::node::Status::BOUND;
             }
         }

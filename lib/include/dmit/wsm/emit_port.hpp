@@ -49,9 +49,9 @@ struct TExportDescriptorEmitter
         _writer.write(funcIdxAsLeb128);
     }
 
-    void operator()(uint32_t memIdx)
+    void operator()(node::VIndex memIdx)
     {
-        Leb128</*IS_OBJECT=*/false> memIdxAsLeb128{memIdx};
+        Leb128</*IS_OBJECT=*/false> memIdxAsLeb128{node::v_index::makeId(_nodePool, memIdx)};
 
         _writer.write(0x02);
         _writer.write(memIdxAsLeb128);
@@ -148,12 +148,12 @@ struct TImportDescriptorEmitter
         writeLimits(typeMemIdx);
     }
 
-    void operator()(uint32_t funcIdx)
+    void operator()(node::TIndex<node::Kind::TYPE_FUNC> typeFuncIdx)
     {
-        Leb128</*IS_OBJECT=*/false> funcIdxAsLeb128{funcIdx};
+        Leb128</*IS_OBJECT=*/false> typeIdxAsLeb128{_nodePool.get(typeFuncIdx)._id};
 
         _writer.write(0x00);
-        _writer.write(funcIdxAsLeb128);
+        _writer.write(typeIdxAsLeb128);
     }
 
     NodePool & _nodePool;

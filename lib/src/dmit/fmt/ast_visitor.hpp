@@ -148,13 +148,13 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
         {
             _oss << "\"id\":\"";
 
-            if (com::tree::v_index::isInterface<ast::node::Kind>(expBinop._asVIndex) && _interfacePoolOpt)
+            if (expBinop._asFunction._isInterface && _interfacePoolOpt)
             {
-                _oss << ast::node::v_index::makeId(_interfacePoolOpt.value().get(), expBinop._asVIndex);
+                _oss << ast::node::v_index::makeId(_interfacePoolOpt.value().get(), expBinop._asFunction);
             }
             else
             {
-                _oss << ast::node::v_index::makeId(_nodePool, expBinop._asVIndex);
+                _oss << ast::node::v_index::makeId(_nodePool, expBinop._asFunction);
             }
 
             _oss << "\",";

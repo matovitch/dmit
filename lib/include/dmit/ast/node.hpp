@@ -195,7 +195,7 @@ struct TNode<node::Kind::DEFINITION>
 
     Definition _value;
 
-    node::VIndex _parent;
+    node::TIndex<node::Kind::MODULE> _parent;
 };
 
 template <>
@@ -204,7 +204,7 @@ struct TNode<node::Kind::DEF_CLASS>
     node::TIndex<node::Kind::IDENTIFIER > _name;
     node::TRange<node::Kind::TYPE_CLAIM > _members;
 
-    node::VIndex _parent;
+    node::TIndex<node::Kind::DEFINITION> _parent;
 
     com::UniqueId _id;
 
@@ -220,9 +220,9 @@ struct TNode<node::Kind::DEF_FUNCTION>
     std::optional<node::TIndex<node::Kind::SCOPE >> _body;
     std::optional<node::TIndex<node::Kind::TYPE  >> _returnType;
 
-    node::VIndex _parent;
+    node::TIndex<node::Kind::DEFINITION> _parent;
 
-    std::optional<wsm::node::VIndex> _asWsm;
+    std::optional<wsm::node::TIndex<wsm::node::Kind::FUNCTION>> _asWsm;
 
     com::UniqueId _id;
 
@@ -305,7 +305,7 @@ struct TNode<node::Kind::EXP_BINOP>
     Expression _lhs;
     Expression _rhs;
 
-    node::VIndex _asVIndex;
+    node::TIndex<node::Kind::DEF_FUNCTION> _asFunction;
 
     node::Status _status;
 };
@@ -333,7 +333,7 @@ struct TNode<node::Kind::DCL_VARIABLE>
 
     node::Status _status;
 
-    wsm::node::VIndex _asWsm;
+    wsm::node::TIndex<wsm::node::Kind::LOCAL> _asWsm;
 };
 
 template<>

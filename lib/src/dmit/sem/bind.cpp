@@ -13,6 +13,8 @@
 
 #include "dmit/fmt/src/slice.hpp"
 
+#include <tuple>
+
 namespace dmit::sem
 {
 
@@ -240,7 +242,7 @@ struct Binder : ast::TVisitor<Binder, Stack>
     {
         auto& defClass = get(defClassIdx);
 
-        defClass._parent = _stackPtrIn->_parent;
+        defClass._parent = std::get<decltype(defClass._parent)>(_stackPtrIn->_parent);
         _stackPtrIn->_parent = defClassIdx;
 
         auto&& slice = getSlice(defClass._name);
@@ -260,7 +262,7 @@ struct Binder : ast::TVisitor<Binder, Stack>
     {
         auto& function = get(functionIdx);
 
-        function._parent = _stackPtrIn->_parent;
+        function._parent = std::get<decltype(function._parent)>(_stackPtrIn->_parent);
         _stackPtrIn->_parent = functionIdx;
 
         auto&& slice = getSlice(function._name);
@@ -282,7 +284,7 @@ struct Binder : ast::TVisitor<Binder, Stack>
     {
         auto& definition = get(definitionIdx);
 
-        definition._parent = _stackPtrIn->_parent;
+        definition._parent = std::get<decltype(definition._parent)>(_stackPtrIn->_parent);
         _stackPtrIn->_parent = definitionIdx;
 
         base()(definition._value);
