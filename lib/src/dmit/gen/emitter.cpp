@@ -64,7 +64,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
         _wsmPool.make(wsmModule._relocCode);
         _wsmPool.make(wsmModule._relocData);
 
-        dmit::com::blitDefault(wsmModule._startOpt);
+        com::blitDefault(wsmModule._startOpt);
     }
 
     com::UniqueId id(const ast::node::VIndex& vIndex)
@@ -80,33 +80,32 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
                                       : _nodePool.get(nodeIndex);
     }
 
+    template <class Type>
+    std::optional<Type> intFromStringView(std::string_view intAsStringView)
+    {
+        Type value;
+
+        return (std::from_chars(intAsStringView.begin(),
+                                intAsStringView.end(), value).ec == std::errc{}) ? std::optional<int>{value}
+                                                                                 : std::nullopt;
+    }
+
     void operator()(ast::node::TIndex<ast::node::Kind::LIT_INTEGER> litIntegerIdx)
     {
         auto slice = ast::lexeme::getSlice(get(litIntegerIdx)._lexeme, _nodePool);
 
-        std::string_view sliceAsStringView{reinterpret_cast<const char*>(slice._head), slice.size()};
+        DMIT_COM_ASSERT(get(get(litIntegerIdx)._expectedType)._id == K_TYPE_I64);
 
-        auto toInt = [](std::string_view s) -> std::optional<int>
-        {
-            int value;
+        auto sliceAsIntOpt = intFromStringView<int64_t>(slice.makeStringView());
 
-            return (std::from_chars(s.begin(), s.end(), value).ec == std::errc{}) ? std::optional<int>{value}
-                                                                                  : std::nullopt;
-        };
+        DMIT_COM_ASSERT(sliceAsIntOpt);
 
-        auto sliceAsIntOpt = toInt(sliceAsStringView);
-
-        if (!sliceAsIntOpt)
-        {
-            return;
-        }
-
-        dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_CONST_I64> instConst;
+        wsm::node::TIndex<wsm::node::Kind::INST_CONST_I64> instConst;
         _wsmPool.makeGet(instConst)._value = sliceAsIntOpt.value();
 
         auto& inst = _wsmPool.grow(_wsmPool.get(_stackPtrIn->_wsmFuncIdx)._body);
 
-        dmit::com::blit(instConst , inst._asVariant);
+        com::blit(instConst , inst._asVariant);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DCL_VARIABLE> dclVariableIdx)
@@ -122,8 +121,8 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
             auto& local = _wsmPool.grow(wsmFunction._locals);
             dclVariable._asWsm = _wsmPool.back(wsmFunction._locals);
             local._id = wsmFunction._localsSize++;
-            dmit::wsm::node::TIndex<dmit::wsm::node::Kind::TYPE_I64> i64Idx;
-            dmit::com::blit(i64Idx, _wsmPool.get(local._type)._asVariant);
+            wsm::node::TIndex<wsm::node::Kind::TYPE_I64> i64Idx;
+            com::blit(i64Idx, _wsmPool.get(local._type)._asVariant);
         }
         else
         {
@@ -142,9 +141,9 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
 
         auto& inst = _wsmPool.grow(_wsmPool.get(_stackPtrIn->_wsmFuncIdx)._body);
 
-        dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_LOCAL_GET> instLocalGet;
+        wsm::node::TIndex<wsm::node::Kind::INST_LOCAL_GET> instLocalGet;
         _wsmPool.makeGet(instLocalGet)._local = std::get<wsm::node::TIndex<wsm::node::Kind::LOCAL>>(wsm.value());
-        dmit::com::blit(instLocalGet , inst._asVariant);
+        com::blit(instLocalGet , inst._asVariant);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::PATTERN> patternIdx)
@@ -159,9 +158,9 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
 
         auto& inst = _wsmPool.grow(_wsmPool.get(_stackPtrIn->_wsmFuncIdx)._body);
 
-        dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_LOCAL_SET> instLocalSet;
+        wsm::node::TIndex<wsm::node::Kind::INST_LOCAL_SET> instLocalSet;
         _wsmPool.makeGet(instLocalSet)._local = std::get<wsm::node::TIndex<wsm::node::Kind::LOCAL>>(wsm.value());
-        dmit::com::blit(instLocalSet , inst._asVariant);
+        com::blit(instLocalSet , inst._asVariant);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::EXP_BINOP> expBinopIdx)
@@ -244,30 +243,30 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
                     _wsmPool.get(nameImport._bytes[i])._value = functionIdAsString[i];
                 }
 
-                dmit::com::blit(wsmModule._types.back(), import._descriptor);
+                com::blit(wsmModule._types.back(), import._descriptor);
 
                 // Symbol
 
                 auto& symbol = _wsmPool.grow(wsmModule._symbols);
 
-                symbol._kind = dmit::wsm::SymbolKind::FUNCTION;
-                symbol._flags = dmit::wsm::SymbolFlag::UNDEFINED;
+                symbol._kind = wsm::SymbolKind::FUNCTION;
+                symbol._flags = wsm::SymbolFlag::UNDEFINED;
 
-                dmit::wsm::node::TIndex<dmit::wsm::node::Kind::SYMBOL_OBJECT> symbolImportIdx;
+                wsm::node::TIndex<wsm::node::Kind::SYMBOL_OBJECT> symbolImportIdx;
 
                 auto& symbolImport = _wsmPool.makeGet(symbolImportIdx);
 
                 symbolImport._index = wsmModule._imports.back();
 
-                dmit::com::blitDefault(symbolImport._name);
+                com::blitDefault(symbolImport._name);
 
-                dmit::com::blit(symbolImportIdx, symbol._asVariant);
+                com::blit(symbolImportIdx, symbol._asVariant);
 
                 // Relocation
 
                 auto& relocation = _wsmPool.grow(wsmModule._relocCode);
 
-                relocation._type = dmit::wsm::RelocationType::FUNCTION_INDEX_LEB;
+                relocation._type = wsm::RelocationType::FUNCTION_INDEX_LEB;
                 relocation._index = wsmModule._imports.back();
 
                 wsmModule._relocSizeCode++;
@@ -276,14 +275,14 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
 
                 auto& inst = _wsmPool.grow(_wsmPool.get(_stackPtrIn->_wsmFuncIdx)._body);
 
-                dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_CALL> instCall;
+                wsm::node::TIndex<wsm::node::Kind::INST_CALL> instCall;
 
                 auto& call_ = _wsmPool.makeGet(instCall);
 
                 call_._function  = wsmModule._imports.back();
                 call_._relocation = _wsmPool.back(wsmModule._relocCode);
 
-                dmit::com::blit(instCall, inst._asVariant);
+                com::blit(instCall, inst._asVariant);
             }
             else
             {
@@ -393,17 +392,17 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
             auto& localsGet_1     = _wsmPool.grow(wsmFunction._body);
             auto& add             = _wsmPool.grow(wsmFunction._body);
 
-            dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_LOCAL_GET > instLocalGet_0;
-            dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_LOCAL_GET > instLocalGet_1;
-            dmit::wsm::node::TIndex<dmit::wsm::node::Kind::INST_I64       > instAdd;
+            wsm::node::TIndex<wsm::node::Kind::INST_LOCAL_GET > instLocalGet_0;
+            wsm::node::TIndex<wsm::node::Kind::INST_LOCAL_GET > instLocalGet_1;
+            wsm::node::TIndex<wsm::node::Kind::INST_I64       > instAdd;
 
             _wsmPool.makeGet(instLocalGet_0)._local =              _wsmPool.back(wsmFunction._locals);
             _wsmPool.makeGet(instLocalGet_1)._local = _wsmPool.get(_wsmPool.back(wsmFunction._locals))._next;
-            _wsmPool.makeGet(instAdd)._asEnum = dmit::wsm::NumericInstruction::ADD;
+            _wsmPool.makeGet(instAdd)._asEnum = wsm::NumericInstruction::ADD;
 
-            dmit::com::blit(instLocalGet_0 , localsGet_0._asVariant);
-            dmit::com::blit(instLocalGet_1 , localsGet_1._asVariant);
-            dmit::com::blit(instAdd        ,         add._asVariant);
+            com::blit(instLocalGet_0 , localsGet_0._asVariant);
+            com::blit(instLocalGet_1 , localsGet_1._asVariant);
+            com::blit(instAdd        ,         add._asVariant);
 
             _wsmPool.make(wsmFunction._locals);
         }
@@ -444,18 +443,18 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
 
             auto& symbol = _wsmPool.grow(wsmModule._symbols);
 
-            symbol._kind = dmit::wsm::SymbolKind::FUNCTION;
-            symbol._flags = dmit::wsm::SymbolFlag::VISIBILITY_HIDDEN;
+            symbol._kind = wsm::SymbolKind::FUNCTION;
+            symbol._flags = wsm::SymbolFlag::VISIBILITY_HIDDEN;
 
-            dmit::wsm::node::TIndex<dmit::wsm::node::Kind::SYMBOL_OBJECT> symbolFunctionIdx;
+            wsm::node::TIndex<wsm::node::Kind::SYMBOL_OBJECT> symbolFunctionIdx;
 
             auto& symbolFunction = _wsmPool.makeGet(symbolFunctionIdx);
 
             symbolFunction._index = _stackPtrIn->_wsmFuncIdx;
 
-            dmit::com::blit(export_._name, symbolFunction._name);
+            com::blit(export_._name, symbolFunction._name);
 
-            dmit::com::blit(symbolFunctionIdx, symbol._asVariant);
+            com::blit(symbolFunctionIdx, symbol._asVariant);
         }
     }
 

@@ -248,7 +248,6 @@ struct TNode<node::Kind::IDENTIFIER>
     node::TIndex<node::Kind::LEXEME> _lexeme;
 
     node::VIndex _asVIndex;
-
     node::Status _status;
 };
 
@@ -264,6 +263,11 @@ template <>
 struct TNode<node::Kind::LIT_INTEGER>
 {
     node::TIndex<node::Kind::LEXEME> _lexeme;
+
+    node::TIndex<node::Kind::DEF_CLASS> _expectedType;
+
+    static node::VIndex _asVIndex;
+    static node::Status _status;
 };
 
 template <>
@@ -305,7 +309,8 @@ struct TNode<node::Kind::EXP_BINOP>
     Expression _lhs;
     Expression _rhs;
 
-    node::TIndex<node::Kind::DEF_FUNCTION> _asFunction;
+    node::TIndex<node::Kind::DEF_CLASS    > _expectedType;
+    node::TIndex<node::Kind::DEF_FUNCTION > _asFunction;
 
     node::Status _status;
 };

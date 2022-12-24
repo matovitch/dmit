@@ -6,6 +6,7 @@
 #include "dmit/ast/v_index.hpp"
 #include "dmit/ast/visitor.hpp"
 #include "dmit/ast/bundle.hpp"
+#include "dmit/ast/node.hpp"
 
 #include "dmit/lex/token.hpp"
 
@@ -27,7 +28,7 @@ struct StackDummy {};
 
 struct Stack
 {
-    com::UniqueId _id;
+    ast::node::TIndex<ast::node::Kind::DEF_CLASS> _type;
 };
 
 struct Typer : ast::TVisitor<Typer, StackDummy, Stack>
@@ -38,16 +39,6 @@ struct Typer : ast::TVisitor<Typer, StackDummy, Stack>
         TVisitor<Typer, StackDummy, Stack>{astNodePool},
         _interfaceMap{interfaceMap}
     {}
-
-    void operator()(ast::node::TIndex<ast::node::Kind::EXP_BINOP> binopIdx)
-    {
-        auto& binop = get(binopIdx);
-
-        if (getToken(binop._operator) == lex::Token::EQUAL)
-        {
-            base()(binop._lhs);
-        }
-    }
 
     void operator()(ast::node::TIndex<ast::node::Kind::PATTERN> patternIdx)
     {
@@ -63,21 +54,45 @@ struct Typer : ast::TVisitor<Typer, StackDummy, Stack>
     {
         auto vIndex = get(get(get(get(dclVariableIdx)._typeClaim)._type)._name)._asVIndex;
 
-        _stackPtrOut->_id = isInterface(vIndex) ? ast::node::v_index::makeId(_interfaceMap._astNodePool, vIndex)
-                                                : ast::node::v_index::makeId(_nodePool, vIndex);
+        _stackPtrOut->_type = std::get<ast::node::TIndex<ast::node::Kind::DEF_CLASS>>(vIndex);
     }
 
-    void operator()(ast::node::TIndex<ast::node::Kind::LIT_INTEGER>)
+    void operator()(ast::node::TIndex<ast::node::Kind::LIT_INTEGER> integerIdx)
     {
-        _stackPtrOut->_id = K_TYPE_INT;
+        auto vIndex = get(integerIdx)._asVIndex;
+
+        _stackPtrOut->_type = std::get<ast::node::TIndex<ast::node::Kind::DEF_CLASS>>(vIndex);
     }
 
-    com::UniqueId id()
+    ast::node::TIndex<ast::node::Kind::DEF_CLASS> type()
     {
-        return _stackPtrOut->_id;
+        return _stackPtrOut->_type;
     }
 
     InterfaceMap& _interfaceMap;
+};
+
+struct SetExpectedType : ast::TVisitor<SetExpectedType>
+{
+    DMIT_AST_VISITOR_SIMPLE();
+
+    SetExpectedType(ast::State::NodePool& astNodePool,
+                    ast::node::TIndex<ast::node::Kind::DEF_CLASS> expectedType) :
+        TVisitor<SetExpectedType>{astNodePool},
+        _expectedType{expectedType}
+    {}
+
+    void operator()(ast::node::TIndex<ast::node::Kind::LIT_INTEGER> integerIdx)
+    {
+        get(integerIdx)._expectedType = _expectedType;
+    }
+
+    void operator()(ast::node::TIndex<ast::node::Kind::EXP_BINOP> binopIdx)
+    {
+        get(binopIdx)._expectedType = _expectedType;
+    }
+
+    ast::node::TIndex<ast::node::Kind::DEF_CLASS> _expectedType;
 };
 
 struct Checker : ast::TVisitor<Checker>
@@ -92,6 +107,13 @@ struct Checker : ast::TVisitor<Checker>
         _interfaceMap{interfaceMap}
     {}
 
+    template <com::TEnumIntegerType<ast::node::Kind> KIND>
+    ast::TNode<KIND>& get(const ast::node::TIndex<KIND> nodeIndex)
+    {
+        return nodeIndex._isInterface ? _interfaceMap._astNodePool.get(nodeIndex)
+                                      : _nodePool.get(nodeIndex);
+    }
+
     void operator()(ast::node::TIndex<ast::node::Kind::PATTERN      >){}
     void operator()(ast::node::TIndex<ast::node::Kind::DEF_CLASS    >){}
     void operator()(ast::node::TIndex<ast::node::Kind::IDENTIFIER   >){}
@@ -102,21 +124,47 @@ struct Checker : ast::TVisitor<Checker>
     {
         auto& binop = get(binopIdx);
 
-        Typer typer{_nodePool, _interfaceMap};
-
-        typer.base()(binop._lhs); auto lhsType = typer.id();
-        typer.base()(binop._rhs); auto rhsType = typer.id();
-
         if (getToken(binop._operator) == lex::Token::PLUS)
         {
-            if ((lhsType == K_TYPE_I64 && rhsType == K_TYPE_INT) ||
-                (lhsType == K_TYPE_INT && rhsType == K_TYPE_I64))
+            if (get(binop._expectedType)._id == K_TYPE_I64)
             {
-                auto factOpt = _context.getFact(K_FUNC_ADD_I64);
-                DMIT_COM_ASSERT(factOpt);
-                binop._asFunction = std::get<decltype(binop._asFunction)>(factOpt.value());
-                binop._status = ast::node::Status::BOUND;
+                Typer typer{_nodePool, _interfaceMap};
+
+                typer.base()(binop._lhs); auto lhsType = get(typer.type())._id;
+                typer.base()(binop._rhs); auto rhsType = get(typer.type())._id;
+
+                if ((lhsType == K_TYPE_INT || lhsType == K_TYPE_I64) &&
+                    (rhsType == K_TYPE_INT || rhsType == K_TYPE_I64))
+                {
+                    auto factOpt = _context.getFact(K_FUNC_ADD_I64);
+                    DMIT_COM_ASSERT(factOpt);
+                    binop._asFunction = std::get<decltype(binop._asFunction)>(factOpt.value());
+                    binop._status = ast::node::Status::BOUND;
+                }
+
+                if (lhsType == K_TYPE_INT)
+                {
+                    SetExpectedType setExpectedType{_nodePool, binop._expectedType};
+                    std::visit(setExpectedType, binop._lhs);
+                }
+
+                if (rhsType == K_TYPE_INT)
+                {
+                    SetExpectedType setExpectedType{_nodePool, binop._expectedType};
+                    std::visit(setExpectedType, binop._rhs);
+                }
             }
+        }
+
+        if (getToken(binop._operator) == lex::Token::EQUAL)
+        {
+            Typer typer{_nodePool, _interfaceMap};
+
+            typer.base()(binop._lhs); auto lhsType = typer.type();
+
+            SetExpectedType setExpectedType{_nodePool, lhsType};
+
+            std::visit(setExpectedType, binop._rhs);
         }
 
         base()(binop._lhs);

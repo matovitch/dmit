@@ -2,6 +2,7 @@
 
 #include "dmit/ast/from_path_and_source.hpp"
 #include "dmit/ast/state.hpp"
+#include "dmit/ast/node.hpp"
 
 #include "dmit/com/storage.hpp"
 #include "dmit/src/file.hpp"
@@ -22,7 +23,9 @@ struct Builder
             const std::vector<com::TStorage<uint8_t>> & contents) :
         _paths{paths},
         _contents{contents}
-    {}
+    {
+        TNode<node::Kind::LIT_INTEGER>::_status = node::Status::ASTED;
+    }
 
     ast::State run(const uint64_t index)
     {

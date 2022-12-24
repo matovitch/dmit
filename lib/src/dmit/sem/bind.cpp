@@ -6,10 +6,12 @@
 #include "dmit/ast/visitor.hpp"
 #include "dmit/ast/bundle.hpp"
 #include "dmit/ast/state.hpp"
+#include "dmit/ast/node.hpp"
 
 #include "dmit/com/unique_id.hpp"
 #include "dmit/com/murmur.hpp"
 #include "dmit/com/blit.hpp"
+#include "dmit/com/enum.hpp"
 
 #include "dmit/fmt/src/slice.hpp"
 
@@ -20,6 +22,8 @@ namespace dmit::sem
 
 namespace
 {
+
+const com::UniqueId K_TYPE_INT{0x705a28814eebca10, 0xb928e2c4dc06b2ae};
 
 struct ExportLister : ast::TVisitor<ExportLister>
 {
@@ -64,18 +68,23 @@ struct ExportLister : ast::TVisitor<ExportLister>
     Context& _context;
 };
 
-struct Resolver : ast::TVisitor<Resolver>
+template<com::TEnumIntegerType<ast::node::Kind> KIND_>
+struct TResolver : ast::TVisitor<TResolver<KIND_>>
 {
+    using ast::TVisitor<TResolver<KIND_>>::_nodePool;
+    using ast::TVisitor<TResolver<KIND_>>::base;
+    using ast::TVisitor<TResolver<KIND_>>::get;
+
     DMIT_AST_VISITOR_SIMPLE();
 
-    Resolver(ast::State::NodePool & astNodePool,
+    TResolver(ast::State::NodePool & astNodePool,
              Context              & context,
              const com::UniqueId  & sliceId,
-             ast::node::TIndex<ast::node::Kind::IDENTIFIER> identifierIdx) :
-        TVisitor<Resolver>{astNodePool},
+             ast::node::TIndex<KIND_> solveIdx) :
+        ast::TVisitor<TResolver<KIND_>>{astNodePool},
         _context{context},
         _sliceId{sliceId},
-        _identifierIdx{identifierIdx}
+        _solveIdx{solveIdx}
     {}
 
     void resolve(com::UniqueId prefix)
@@ -84,13 +93,13 @@ struct Resolver : ast::TVisitor<Resolver>
 
         _context.makeTaskMedium
         (
-            [&nodePool = _nodePool, identifierIdx = _identifierIdx](const ast::node::VIndex& vIndex)
+            [&nodePool = _nodePool, solveIdx = _solveIdx](const ast::node::VIndex& vIndex)
             {
-                nodePool.get(identifierIdx)._status = ast::node::Status::BOUND;
+                nodePool.get(solveIdx)._status = ast::node::Status::BOUND;
 
-                com::blit(vIndex, nodePool.get(identifierIdx)._asVIndex);
+                com::blit(vIndex, nodePool.get(solveIdx)._asVIndex);
             },
-            _identifierIdx,
+            _solveIdx,
             prefix
         );
     }
@@ -139,7 +148,7 @@ struct Resolver : ast::TVisitor<Resolver>
 
     com::UniqueId _sliceId;
 
-    ast::node::TIndex<ast::node::Kind::IDENTIFIER> _identifierIdx;
+    ast::node::TIndex<KIND_> _solveIdx;
 };
 
 struct Stack
@@ -161,13 +170,25 @@ struct Binder : ast::TVisitor<Binder, Stack>
         _exportLister{interfaceMap._astNodePool, _context}
     {}
 
-    void operator()(ast::node::TIndex<ast::node::Kind::LIT_INTEGER>) {}
+    void operator()(ast::node::TIndex<ast::node::Kind::LIT_INTEGER> integerIdx)
+    {
+        if (ast::TNode<ast::node::Kind::LIT_INTEGER>::_status == ast::node::Status::BOUND)
+        {
+            return;
+        }
+
+        auto sliceId = com::UniqueId{"int"};
+
+        TResolver<ast::node::Kind::LIT_INTEGER> resolver{_nodePool, _context, sliceId, integerIdx};
+
+        resolver.base()(_stackPtrIn->_parent);
+    }
 
     void operator()(ast::node::TIndex<ast::node::Kind::IDENTIFIER> identifierIdx)
     {
         auto sliceId = getSlice(identifierIdx).makeUniqueId();
 
-        Resolver resolver{_nodePool, _context, sliceId, identifierIdx};
+        TResolver<ast::node::Kind::IDENTIFIER> resolver{_nodePool, _context, sliceId, identifierIdx};
 
         resolver.base()(_stackPtrIn->_parent);
     }
