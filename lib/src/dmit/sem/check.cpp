@@ -19,11 +19,9 @@ namespace dmit::sem
 namespace
 {
 
-const com::UniqueId K_TYPE_I64{0x7d516e355461f852, 0xeb2349989392e0bb};
-const com::UniqueId K_TYPE_INT{0x705a28814eebca10, 0xb928e2c4dc06b2ae};
-
-const com::UniqueId K_FUNC_ADD_I64_LIT_INT{0xce6a2caefab56273, 0xbedcc1c288a680af};
-const com::UniqueId K_FUNC_ADD_LIT_INT_I64{0x1f3073fb5798657d, 0x07e8af77e20ba36e};
+const com::UniqueId K_TYPE_I64     {0x7d516e355461f852, 0xeb2349989392e0bb};
+const com::UniqueId K_TYPE_INT     {0x705a28814eebca10, 0xb928e2c4dc06b2ae};
+const com::UniqueId K_FUNC_ADD_I64 {0x96b32a82826cbe73, 0xcc4f3b004472d28c};
 
 struct StackDummy {};
 
@@ -111,19 +109,13 @@ struct Checker : ast::TVisitor<Checker>
 
         if (getToken(binop._operator) == lex::Token::PLUS)
         {
-            if (lhsType == K_TYPE_I64 && rhsType == K_TYPE_INT)
+            if ((lhsType == K_TYPE_I64 && rhsType == K_TYPE_INT) ||
+                (lhsType == K_TYPE_INT && rhsType == K_TYPE_I64))
             {
-                auto factOpt = _context.getFact(K_FUNC_ADD_I64_LIT_INT);
+                auto factOpt = _context.getFact(K_FUNC_ADD_I64);
                 DMIT_COM_ASSERT(factOpt);
                 binop._asFunction = std::get<decltype(binop._asFunction)>(factOpt.value());
                 binop._status = ast::node::Status::BOUND;
-            }
-            if (lhsType == K_TYPE_INT && rhsType == K_TYPE_I64)
-            {
-               auto factOpt = _context.getFact(K_FUNC_ADD_LIT_INT_I64);
-               DMIT_COM_ASSERT(factOpt);
-               binop._asFunction = std::get<decltype(binop._asFunction)>(factOpt.value());
-               binop._status = ast::node::Status::BOUND;
             }
         }
 

@@ -30,10 +30,9 @@ namespace dmit::gen
 namespace
 {
 
-const com::UniqueId K_TYPE_I64             {0x7d516e355461f852, 0xeb2349989392e0bb};
-const com::UniqueId K_TYPE_INT             {0x705a28814eebca10, 0xb928e2c4dc06b2ae};
-const com::UniqueId K_FUNC_ADD_I64_LIT_INT {0xce6a2caefab56273, 0xbedcc1c288a680af};
-const com::UniqueId K_FUNC_ADD_LIT_INT_I64 {0x1f3073fb5798657d, 0x07e8af77e20ba36e};
+const com::UniqueId K_TYPE_I64     {0x7d516e355461f852, 0xeb2349989392e0bb};
+const com::UniqueId K_TYPE_INT     {0x705a28814eebca10, 0xb928e2c4dc06b2ae};
+const com::UniqueId K_FUNC_ADD_I64 {0x96b32a82826cbe73, 0xcc4f3b004472d28c};
 
 struct Stack
 {
@@ -388,8 +387,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
 
         base()(function._arguments);
 
-        if (function._id == K_FUNC_ADD_I64_LIT_INT ||
-            function._id == K_FUNC_ADD_LIT_INT_I64)
+        if (function._id == K_FUNC_ADD_I64)
         {
             auto& localsGet_0     = _wsmPool.grow(wsmFunction._body);
             auto& localsGet_1     = _wsmPool.grow(wsmFunction._body);
