@@ -222,7 +222,7 @@ struct TNode<node::Kind::DEF_FUNCTION>
 
     node::TIndex<node::Kind::DEFINITION> _parent;
 
-    std::optional<wsm::node::TIndex<wsm::node::Kind::FUNCTION>> _asWsm;
+    std::optional<wsm::node::VIndex> _asWsm;
 
     com::UniqueId _id;
 
@@ -309,7 +309,6 @@ struct TNode<node::Kind::EXP_BINOP>
     Expression _lhs;
     Expression _rhs;
 
-    node::TIndex<node::Kind::DEF_CLASS    > _expectedType;
     node::TIndex<node::Kind::DEF_FUNCTION > _asFunction;
 
     node::Status _status;

@@ -176,98 +176,110 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
 
                 auto& wsmModule = _wsmPool.get(_wsmModuleIdx);
 
-                // Import type
-
-                auto& wsmTypeFunc = _wsmPool.grow(wsmModule._types);
-
-                wsmTypeFunc._id = wsmModule._types._size - 1; // FIXME, type ids should be set later
-
-                auto& wsmDomain   = _wsmPool.makeGet(wsmTypeFunc.   _domain);
-                auto& wsmCodomain = _wsmPool.makeGet(wsmTypeFunc. _codomain);
-
                 auto& function = get(expBinop._asFunction);
 
-                _wsmPool.make(wsmDomain._valTypes, function._arguments._size);
+                wsm::node::VIndex symbolAsVIndex;
 
-                for (int i = 0; i < function._arguments._size; i++)
+                if (function._asWsm)
                 {
-                    auto type = id(get(get(get(get(function._arguments[i])._typeClaim)._type)._name)._asVIndex);
+                    symbolAsVIndex = function._asWsm.value();
+                }
+                else
+                {
+                    // Import type
 
-                    if (type == K_TYPE_I64 || type == K_TYPE_INT)
+                    auto& wsmTypeFunc = _wsmPool.grow(wsmModule._types);
+
+                    wsmTypeFunc._id = wsmModule._types._size - 1; // FIXME, type ids should be set later
+
+                    auto& wsmDomain   = _wsmPool.makeGet(wsmTypeFunc.   _domain);
+                    auto& wsmCodomain = _wsmPool.makeGet(wsmTypeFunc. _codomain);
+
+                    _wsmPool.make(wsmDomain._valTypes, function._arguments._size);
+
+                    for (int i = 0; i < function._arguments._size; i++)
+                    {
+                        auto type = id(get(get(get(get(function._arguments[i])._typeClaim)._type)._name)._asVIndex);
+
+                        if (type == K_TYPE_I64)
+                        {
+                            wsm::node::TIndex<wsm::node::Kind::TYPE_I64> wsmI64Idx;
+                            _wsmPool.make(wsmI64Idx);
+                            com::blit(wsmI64Idx, _wsmPool.get(wsmDomain._valTypes[i])._asVariant);
+                        }
+                        else
+                        {
+                            DMIT_COM_ASSERT(!"Unknown type!");
+                        }
+                    }
+
+                    _wsmPool.make(wsmCodomain._valTypes, 1);
+
+                    auto vIndex = get(get(function._returnType.value())._name)._asVIndex;
+
+                    if (id(vIndex) == K_TYPE_I64)
                     {
                         wsm::node::TIndex<wsm::node::Kind::TYPE_I64> wsmI64Idx;
                         _wsmPool.make(wsmI64Idx);
-                        com::blit(wsmI64Idx, _wsmPool.get(wsmDomain._valTypes[i])._asVariant);
+                        com::blit(wsmI64Idx, _wsmPool.get(wsmCodomain._valTypes[0])._asVariant);
                     }
                     else
                     {
                         DMIT_COM_ASSERT(!"Unknown type!");
                     }
+
+                    // Import
+                    auto& import = _wsmPool.grow(wsmModule._imports);
+
+                    import._id = wsmModule._imports._size - 1;
+
+                    auto& nameModule = _wsmPool.makeGet(import._module);
+                    auto& nameImport = _wsmPool.makeGet(import._name);
+
+                    _wsmPool.make(nameModule._bytes, 3);
+
+                    _wsmPool.get(nameModule._bytes[0])._value = 'e';
+                    _wsmPool.get(nameModule._bytes[1])._value = 'n';
+                    _wsmPool.get(nameModule._bytes[2])._value = 'v';
+
+                    auto functionIdAsString = fmt::asString(id(expBinop._asFunction));
+
+                    _wsmPool.make(nameImport._bytes, functionIdAsString.size());
+
+                    for (auto i = 0; i < functionIdAsString.size(); i++)
+                    {
+                        _wsmPool.get(nameImport._bytes[i])._value = functionIdAsString[i];
+                    }
+
+                    com::blit(wsmModule._types.back(), import._descriptor);
+
+                    // Symbol
+
+                    auto& symbol = _wsmPool.grow(wsmModule._symbols);
+
+                    symbol._kind = wsm::SymbolKind::FUNCTION;
+                    symbol._flags = wsm::SymbolFlag::UNDEFINED;
+
+                    wsm::node::TIndex<wsm::node::Kind::SYMBOL_OBJECT> symbolImportIdx;
+
+                    auto& symbolImport = _wsmPool.makeGet(symbolImportIdx);
+
+                    symbolImport._index = wsmModule._imports.back();
+
+                    com::blitDefault(symbolImport._name);
+
+                    com::blit(symbolImportIdx, symbol._asVariant);
+                    com::blit(symbolImport._index, function._asWsm);
+
+                    symbolAsVIndex = symbolImport._index;
                 }
-
-                _wsmPool.make(wsmCodomain._valTypes, 1);
-
-                auto vIndex = get(get(function._returnType.value())._name)._asVIndex;
-
-                if (id(vIndex) == K_TYPE_I64)
-                {
-                    wsm::node::TIndex<wsm::node::Kind::TYPE_I64> wsmI64Idx;
-                    _wsmPool.make(wsmI64Idx);
-                    com::blit(wsmI64Idx, _wsmPool.get(wsmCodomain._valTypes[0])._asVariant);
-                }
-                else
-                {
-                    DMIT_COM_ASSERT(!"Unknown type!");
-                }
-
-                // Import
-                auto& import = _wsmPool.grow(wsmModule._imports);
-
-                import._id = wsmModule._imports._size - 1;
-
-                auto& nameModule = _wsmPool.makeGet(import._module);
-                auto& nameImport = _wsmPool.makeGet(import._name);
-
-                _wsmPool.make(nameModule._bytes, 3);
-
-                _wsmPool.get(nameModule._bytes[0])._value = 'e';
-                _wsmPool.get(nameModule._bytes[1])._value = 'n';
-                _wsmPool.get(nameModule._bytes[2])._value = 'v';
-
-                auto functionIdAsString = fmt::asString(id(expBinop._asFunction));
-
-                _wsmPool.make(nameImport._bytes, functionIdAsString.size());
-
-                for (auto i = 0; i < functionIdAsString.size(); i++)
-                {
-                    _wsmPool.get(nameImport._bytes[i])._value = functionIdAsString[i];
-                }
-
-                com::blit(wsmModule._types.back(), import._descriptor);
-
-                // Symbol
-
-                auto& symbol = _wsmPool.grow(wsmModule._symbols);
-
-                symbol._kind = wsm::SymbolKind::FUNCTION;
-                symbol._flags = wsm::SymbolFlag::UNDEFINED;
-
-                wsm::node::TIndex<wsm::node::Kind::SYMBOL_OBJECT> symbolImportIdx;
-
-                auto& symbolImport = _wsmPool.makeGet(symbolImportIdx);
-
-                symbolImport._index = wsmModule._imports.back();
-
-                com::blitDefault(symbolImport._name);
-
-                com::blit(symbolImportIdx, symbol._asVariant);
 
                 // Relocation
 
                 auto& relocation = _wsmPool.grow(wsmModule._relocCode);
 
                 relocation._type = wsm::RelocationType::FUNCTION_INDEX_LEB;
-                relocation._index = wsmModule._imports.back();
+                relocation._index = symbolAsVIndex;
 
                 wsmModule._relocSizeCode++;
 
@@ -279,7 +291,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
 
                 auto& call_ = _wsmPool.makeGet(instCall);
 
-                call_._function  = wsmModule._imports.back();
+                call_._function  = symbolAsVIndex;
                 call_._relocation = _wsmPool.back(wsmModule._relocCode);
 
                 com::blit(instCall, inst._asVariant);
@@ -344,7 +356,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
         {
             auto type = id(get(get(get(get(function._arguments[i])._typeClaim)._type)._name)._asVIndex);
 
-            if (type == K_TYPE_I64 || type == K_TYPE_INT)
+            if (type == K_TYPE_I64)
             {
                 wsm::node::TIndex<wsm::node::Kind::TYPE_I64> wsmI64Idx;
                 _wsmPool.make(wsmI64Idx);
