@@ -80,9 +80,6 @@ std::vector<dmit::com::TStorage<uint8_t>> makeObjects(const std::vector<const ch
     return parallelGenerationEmitter.makeVector();
 }
 
-TEST_SUITE("inout")
-{
-
 TEST_CASE("gen")
 {
     std::vector<const char*> sourceFiles = {
@@ -125,5 +122,3 @@ TEST_CASE("gen")
 
     CHECK(value == 42);
 }
-
-} // TEST_SUITE("inout")
