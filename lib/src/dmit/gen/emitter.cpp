@@ -5,6 +5,7 @@
 #include "dmit/ast/lexeme.hpp"
 #include "dmit/ast/node.hpp"
 
+#include "dmit/wsm/v_index.hpp"
 #include "dmit/wsm/emit.hpp"
 #include "dmit/wsm/wasm.hpp"
 
@@ -128,7 +129,6 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
         {
             DMIT_COM_ASSERT(!"Unknown type!");
         }
-
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::IDENTIFIER> identifierIdx)
@@ -257,13 +257,15 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
 
                     auto& symbol = _wsmPool.grow(wsmModule._symbols);
 
+                    import._symbol = wsmModule._symbols._size;
+
                     symbol._kind = wsm::SymbolKind::FUNCTION;
                     symbol._flags = wsm::SymbolFlag::UNDEFINED;
 
                     wsm::node::TIndex<wsm::node::Kind::SYMBOL_OBJECT> symbolImportIdx;
 
                     auto& symbolImport = _wsmPool.makeGet(symbolImportIdx);
-
+                    
                     symbolImport._index = wsmModule._imports.back();
 
                     com::blitDefault(symbolImport._name);
@@ -276,12 +278,15 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
 
                 // Relocation
 
-                auto& relocation = _wsmPool.grow(wsmModule._relocCode);
+                if (auto symbol = wsm::node::v_index::makeSymbol(_wsmPool, symbolAsVIndex))
+                {
+                    auto& relocation = _wsmPool.grow(wsmModule._relocCode);
 
-                relocation._type = wsm::RelocationType::FUNCTION_INDEX_LEB;
-                relocation._index = symbolAsVIndex;
+                    relocation._type = wsm::RelocationType::FUNCTION_INDEX_LEB;
+                    relocation._index = symbol - 1;
 
-                wsmModule._relocSizeCode++;
+                    wsmModule._relocSizeCode++;
+                }
 
                 // Call
 
@@ -291,7 +296,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
 
                 auto& call_ = _wsmPool.makeGet(instCall);
 
-                call_._function  = symbolAsVIndex;
+                call_._function   = symbolAsVIndex;
                 call_._relocation = _wsmPool.back(wsmModule._relocCode);
 
                 com::blit(instCall, inst._asVariant);
@@ -306,6 +311,47 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
             base()(expBinop._rhs);
             base()(expBinop._lhs);
         }
+    }
+
+    void operator()(ast::node::TIndex<ast::node::Kind::FUN_CALL> funCallIdx)
+    {
+        auto& funCall = get(funCallIdx);
+
+        base()(funCall._arguments);
+
+        auto& inst = _wsmPool.grow(_wsmPool.get(_stackPtrIn->_wsmFuncIdx)._body);
+
+        wsm::node::TIndex<wsm::node::Kind::INST_CALL> instCall;
+
+        auto& call = _wsmPool.makeGet(instCall);
+
+        auto calleeIdx = std::get<ast::node::Kind::DEF_FUNCTION>(get(funCall._callee)._asVIndex);
+
+        auto& callee = get(calleeIdx);
+
+        if (!callee._asWsm)
+        {
+            base()(calleeIdx);
+        }
+
+        auto& wsmModule = _wsmPool.get(_wsmModuleIdx);
+
+        auto symbolAsVIndex = callee._asWsm.value();
+
+        if (auto symbol = wsm::node::v_index::makeSymbol(_wsmPool, symbolAsVIndex))
+        {
+            auto& relocation = _wsmPool.grow(wsmModule._relocCode);
+
+            relocation._type = wsm::RelocationType::FUNCTION_INDEX_LEB;
+            relocation._index = symbol - 1;
+
+            wsmModule._relocSizeCode++;
+        }
+
+        call._function   = symbolAsVIndex;
+        call._relocation = _wsmPool.back(wsmModule._relocCode);
+
+        com::blit(instCall, inst._asVariant);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::EXPRESSION> expressionIdx)
@@ -436,7 +482,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
 
             wsm::node::TIndex<wsm::node::Kind::INST_REF_FUNC> funcRefIdx;
 
-            _wsmPool.makeGet(funcRefIdx)._function = wsmModule._funcs.back();
+            _wsmPool.makeGet(funcRefIdx)._function = _stackPtrIn->_wsmFuncIdx;
 
             com::blit(funcRefIdx, export_._descriptor);
 
@@ -454,6 +500,8 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
             // Symbol
 
             auto& symbol = _wsmPool.grow(wsmModule._symbols);
+
+            wsmFunction._symbol = wsmModule._symbols._size;
 
             symbol._kind = wsm::SymbolKind::FUNCTION;
             symbol._flags = wsm::SymbolFlag::VISIBILITY_HIDDEN;

@@ -238,7 +238,7 @@ struct TNode<node::Kind::RELOCATION>
 
     uint32_t       _addend;
     uint32_t       _offset;
-    node::VIndex   _index;
+    uint32_t       _index;
     RelocationType _type;
 };
 
@@ -594,6 +594,7 @@ struct TNode<node::Kind::FUNCTION>
     uint32_t _localsSize;
 
     uint32_t _id;
+    uint32_t _symbol;
 };
 
 template<>
@@ -736,6 +737,7 @@ struct TNode<node::Kind::IMPORT>
     ImportDescriptor               _descriptor;
 
     uint32_t _id;
+    uint32_t _symbol;
 };
 
 using ExportDescriptor = std::variant<node::VIndex, // memidx

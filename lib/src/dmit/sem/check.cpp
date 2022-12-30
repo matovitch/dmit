@@ -147,6 +147,26 @@ struct Checker : ast::TVisitor<Checker, Stack>
         base()(binop._rhs);
     }
 
+    void operator()(ast::node::TIndex<ast::node::Kind::EXPRESSION> exprIdx)
+    {
+        base()(get(exprIdx)._value);
+    }
+
+    void operator()(ast::node::TIndex<ast::node::Kind::FUN_CALL> funCallIdx)
+    {
+        auto& funCall = get(funCallIdx);
+        auto& callee = get(std::get<ast::node::Kind::DEF_FUNCTION>(get(funCall._callee)._asVIndex));
+
+        DMIT_COM_ASSERT(funCall._arguments._size == callee._arguments._size);
+
+        for (uint32_t i = 0; i < funCall._arguments._size; i++)
+        {
+            auto vIndex = get(get(get(get(callee._arguments[i])._typeClaim)._type)._name)._asVIndex;
+            _stackPtrIn->_type = std::get<ast::node::Kind::DEF_CLASS>(vIndex);
+            base()(funCall._arguments[i]);
+        }
+    }
+
     void operator()(ast::node::TIndex<ast::node::Kind::STM_RETURN> stmReturnIdx)
     {
         base()(get(stmReturnIdx)._expression);

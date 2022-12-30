@@ -216,6 +216,11 @@ struct Binder : ast::TVisitor<Binder, Stack>
         base()(expBinop._rhs);
     }
 
+    void operator()(ast::node::TIndex<ast::node::Kind::FUN_CALL> funCallIdx)
+    {
+        base()(get(funCallIdx)._callee);
+    }
+
     void operator()(ast::node::TIndex<ast::node::Kind::SCOPE_VARIANT> scopeVariantIdx)
     {
         base()(get(scopeVariantIdx)._value);

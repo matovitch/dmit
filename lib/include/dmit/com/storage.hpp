@@ -49,7 +49,7 @@ public:
         _buckets = nullptr;
     }
 
-    const uint64_t _size;
+    uint64_t _size;
 
 private:
 
