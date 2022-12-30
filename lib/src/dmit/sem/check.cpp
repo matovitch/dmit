@@ -164,7 +164,15 @@ struct Checker : ast::TVisitor<Checker, Stack>
 
     void operator()(ast::node::TIndex<ast::node::Kind::DEF_FUNCTION> defFunctionIdx)
     {
-        base()(get(defFunctionIdx)._body);
+        auto& function = get(defFunctionIdx);
+
+        if (function._returnType)
+        {
+            auto vIndex = get(get(function._returnType.value())._name)._asVIndex;
+            _stackPtrIn->_type = std::get<ast::node::Kind::DEF_CLASS>(vIndex);
+        }
+
+        base()(function._body);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DEFINITION> definitionIdx)

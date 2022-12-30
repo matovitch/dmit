@@ -54,11 +54,6 @@ struct TVisitor : TBaseVisitor<Derived, StackIn, StackOut>
     {
         return getSlice(TBaseVisitor<Derived, StackIn, StackOut>::get(idenfifierIdx)._lexeme);
     }
-
-    bool isInterface(node::VIndex vIndex)
-    {
-        return com::tree::v_index::isInterface<node::Kind>(vIndex);
-    }
 };
 
 } // namespace dmit::ast

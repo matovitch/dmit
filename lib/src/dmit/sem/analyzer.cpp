@@ -32,8 +32,17 @@ int8_t analyze(ast::Bundle& bundle, Context& context, InterfaceMap& interfaceMap
     context._scheduler.makeTask(
         [&]()
         {
-            bind  (bundle, context, interfaceMap);
-            check (bundle, context, interfaceMap);
+            bind(bundle, context, interfaceMap);
+        },
+        context._coroutinePoolLarge
+    );
+
+    context.run();
+
+    context._scheduler.makeTask(
+        [&]()
+        {
+            check(bundle, context, interfaceMap);
         },
         context._coroutinePoolLarge
     );

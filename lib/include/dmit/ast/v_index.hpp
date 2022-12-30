@@ -21,4 +21,6 @@ DefinitionRole makeDefinitionRole(State::NodePool&, const VIndex);
 
 std::optional<wsm::node::VIndex> makeWsm(State::NodePool&, const VIndex);
 
+bool isInterface(const VIndex);
+
 } // namespace dmit::ast::node::v_index

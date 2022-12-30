@@ -7,6 +7,7 @@
 #include "dmit/wsm/wasm.hpp"
 
 #include "dmit/com/unique_id.hpp"
+#include "dmit/com/tree_node.hpp"
 #include "dmit/com/assert.hpp"
 
 #include <optional>
@@ -121,6 +122,11 @@ std::optional<wsm::node::VIndex> makeWsm(State::NodePool& pool, const VIndex vIn
     WsmVisitor wsmVisitor{pool};
 
     return std::visit(wsmVisitor, vIndex);
+}
+
+bool isInterface(const VIndex vIndex)
+{
+    return com::tree::v_index::isInterface<node::Kind>(vIndex);
 }
 
 } // namespace dmit::ast::node::v_index
