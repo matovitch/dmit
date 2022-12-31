@@ -62,8 +62,6 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
         _wsmPool.make(wsmModule._imports      , 0);
         _wsmPool.make(wsmModule._exports      , 0);
         _wsmPool.make(wsmModule._symbols      , 0);
-        _wsmPool.make(wsmModule._relocCode);
-        _wsmPool.make(wsmModule._relocData);
 
         com::blitDefault(wsmModule._startOpt);
     }
@@ -276,18 +274,6 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
                     symbolAsVIndex = symbolImport._index;
                 }
 
-                // Relocation
-
-                if (auto symbol = wsm::node::v_index::makeSymbol(_wsmPool, symbolAsVIndex))
-                {
-                    auto& relocation = _wsmPool.grow(wsmModule._relocCode);
-
-                    relocation._type = wsm::RelocationType::FUNCTION_INDEX_LEB;
-                    relocation._index = symbol - 1;
-
-                    wsmModule._relocSizeCode++;
-                }
-
                 // Call
 
                 auto& inst = _wsmPool.grow(_wsmPool.get(_stackPtrIn->_wsmFuncIdx)._body);
@@ -296,8 +282,22 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
 
                 auto& call_ = _wsmPool.makeGet(instCall);
 
-                call_._function   = symbolAsVIndex;
-                call_._relocation = _wsmPool.back(wsmModule._relocCode);
+                call_._function = symbolAsVIndex;
+
+                // Relocation
+
+                auto& relocation = _wsmPool.makeGet(call_._relocation);
+
+                if (auto symbol = wsm::node::v_index::makeSymbol(_wsmPool, symbolAsVIndex))
+                {
+                    relocation._type = wsm::RelocationType::FUNCTION_INDEX_LEB;
+                    relocation._index = symbol - 1;
+                    wsmModule._relocSizeCode++;
+                }
+                else
+                {
+                    relocation._type = wsm::RelocationType::NONE;
+                }
 
                 com::blit(instCall, inst._asVariant);
             }
@@ -319,14 +319,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
 
         base()(funCall._arguments);
 
-        auto& inst = _wsmPool.grow(_wsmPool.get(_stackPtrIn->_wsmFuncIdx)._body);
-
-        wsm::node::TIndex<wsm::node::Kind::INST_CALL> instCall;
-
-        auto& call = _wsmPool.makeGet(instCall);
-
-        auto calleeIdx = std::get<ast::node::Kind::DEF_FUNCTION>(get(funCall._callee)._asVIndex);
-
+        auto  calleeIdx = std::get<ast::node::Kind::DEF_FUNCTION>(get(funCall._callee)._asVIndex);
         auto& callee = get(calleeIdx);
 
         if (!callee._asWsm)
@@ -334,23 +327,26 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
             base()(calleeIdx);
         }
 
-        auto& wsmModule = _wsmPool.get(_wsmModuleIdx);
-
         auto symbolAsVIndex = callee._asWsm.value();
+
+        wsm::node::TIndex<wsm::node::Kind::INST_CALL> instCall;
+        auto& call = _wsmPool.makeGet(instCall);
+
+        call._function = symbolAsVIndex;
+        auto& relocation = _wsmPool.makeGet(call._relocation);
 
         if (auto symbol = wsm::node::v_index::makeSymbol(_wsmPool, symbolAsVIndex))
         {
-            auto& relocation = _wsmPool.grow(wsmModule._relocCode);
-
             relocation._type = wsm::RelocationType::FUNCTION_INDEX_LEB;
             relocation._index = symbol - 1;
-
-            wsmModule._relocSizeCode++;
+            _wsmPool.get(_wsmModuleIdx)._relocSizeCode++;
+        }
+        else
+        {
+            relocation._type = wsm::RelocationType::NONE;
         }
 
-        call._function   = symbolAsVIndex;
-        call._relocation = _wsmPool.back(wsmModule._relocCode);
-
+        auto& inst = _wsmPool.grow(_wsmPool.get(_stackPtrIn->_wsmFuncIdx)._body);
         com::blit(instCall, inst._asVariant);
     }
 

@@ -679,8 +679,6 @@ struct TNode<node::Kind::MODULE>
     node::TRange<node::Kind::EXPORT       > _exports;
 
     std::optional<node::TIndex<node::Kind::START>> _startOpt;
-    node::TList<node::Kind::RELOCATION> _relocCode;
-    node::TList<node::Kind::RELOCATION> _relocData;
 
     uint32_t _relocSizeCode;
     uint32_t _relocSizeData;

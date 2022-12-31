@@ -31,8 +31,6 @@ TEST_CASE("wsm_add")
     nodePool.make(module._imports      , 0);
     nodePool.make(module._exports      , 1);
     nodePool.make(module._symbols      , 0);
-    nodePool.make(module._relocCode);
-    nodePool.make(module._relocData);
 
     dmit::com::blitDefault(module._startOpt);
     dmit::com::blitDefault(module._relocSizeCode);
@@ -165,8 +163,6 @@ TEST_CASE("wsm_increment")
     nodePool.make(module._imports      , 0);
     nodePool.make(module._exports      , 1);
     nodePool.make(module._symbols      , 0);
-    nodePool.make(module._relocCode);
-    nodePool.make(module._relocData);
 
     dmit::com::blitDefault(module._startOpt);
     dmit::com::blitDefault(module._relocSizeCode);
@@ -223,6 +219,7 @@ TEST_CASE("wsm_increment")
 
     nodePool.makeGet(instLocalGet_0)._local = nodePool.get(nodePool.back(function._locals))._next;
     nodePool.makeGet(instConst)._value = 1;
+    nodePool.makeGet(nodePool.get(instConst)._relocation)._type = dmit::wsm::RelocationType::NONE;
     nodePool.makeGet(instAdd)._asEnum = dmit::wsm::NumericInstruction::ADD;
     nodePool.makeGet(instLocalSet_1)._local = nodePool.back(function._locals);
     nodePool.makeGet(instLocalGet_1)._local = nodePool.back(function._locals);

@@ -315,7 +315,7 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
         if (IS_OBJECT && relocation._type != RelocationType::NONE)
         {
             relocation._offset = _writer.diff(_writerSection);
-            (*_relocCodeOrdered)[_relocCodeOrdered->_size++] = instCall._relocation;
+            (*_relocOrderedCode)[_relocOrderedCode->_size++] = instCall._relocation;
         }
 
         Leb128<IS_OBJECT> funcIdxAsLeb128{node::v_index::makeId(_nodePool, instCall._function)};
@@ -1376,9 +1376,12 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
 
         auto& module = get(moduleIdx);
 
-        std::decay_t<decltype(*_relocCodeOrdered)> relocCodeOrdered(static_cast<uint64_t>(module._relocSizeCode));
-        relocCodeOrdered._size = 0;
-        _relocCodeOrdered = &relocCodeOrdered;
+        std::decay_t<decltype(*_relocOrderedCode)> relocOrderedCode{module._relocSizeCode};
+        std::decay_t<decltype(*_relocOrderedData)> relocOrderedData{module._relocSizeCode};
+        _relocOrderedCode = &relocOrderedCode;
+        _relocOrderedData = &relocOrderedData;
+        _relocOrderedCode->_size = 0;
+        _relocOrderedData->_size = 0;
 
         if (module._types._size)
         {
@@ -1534,9 +1537,9 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
             Leb128</*IS_OBJECT=*/false> relocSizeCode128{module._relocSizeCode};
             _writer.write(relocSizeCode128);
 
-            for (uint32_t i = 0; i < _relocCodeOrdered->_size; i++)
+            for (uint32_t i = 0; i < _relocOrderedCode->_size; i++)
             {
-                base()((*_relocCodeOrdered)[i]);
+                base()((*_relocOrderedCode)[i]);
             }
         }
 
@@ -1555,7 +1558,10 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
             Leb128</*IS_OBJECT=*/false> relocSizeData128{module._relocSizeData};
             _writer.write(relocSizeData128);
 
-            base()(module._relocData);
+            for (uint32_t i = 0; i < _relocOrderedData->_size; i++)
+            {
+                base()((*_relocOrderedData)[i]);
+            }
         }
     }
 
@@ -1580,7 +1586,8 @@ struct TEmitter : TBaseVisitor<TEmitter<IS_OBJECT, NodePool, Writer>, NodePool, 
 
     Writer& _writer;
     Writer  _writerSection;
-    com::TStorage<node::TIndex<node::Kind::RELOCATION>>* _relocCodeOrdered = nullptr;
+    com::TStorage<node::TIndex<node::Kind::RELOCATION>>* _relocOrderedCode = nullptr;
+    com::TStorage<node::TIndex<node::Kind::RELOCATION>>* _relocOrderedData = nullptr;
 
     TImportDescriptorEmitter <NodePool, Writer> _importDescriptorEmitter;
     TExportDescriptorEmitter <NodePool, Writer> _exportDescriptorEmitter;
