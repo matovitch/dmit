@@ -19,6 +19,7 @@
 #include "dmit/com/unique_id.hpp"
 #include "dmit/com/storage.hpp"
 #include "dmit/com/assert.hpp"
+#include "dmit/com/blit.hpp"
 
 #include <charconv>
 #include <cstdint>
@@ -64,6 +65,9 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
         _wsmPool.make(wsmModule._symbols      , 0);
 
         com::blitDefault(wsmModule._startOpt);
+
+        wsmModule._relocSizeCode = 0;
+        wsmModule._relocSizeData = 0;
     }
 
     com::UniqueId id(const ast::node::VIndex& vIndex)
@@ -115,7 +119,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
 
         auto type = id(get(get(get(dclVariable._typeClaim)._type)._name)._asVIndex);
 
-        if (type == K_TYPE_I64 || type == K_TYPE_INT)
+        if (type == K_TYPE_I64)
         {
             auto& local = _wsmPool.grow(wsmFunction._locals);
             dclVariable._asWsm = _wsmPool.back(wsmFunction._locals);
@@ -165,151 +169,36 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
     {
         auto& expBinop = get(expBinopIdx);
 
+        base()(expBinop._rhs);
+        base()(expBinop._lhs);
+
         if (expBinop._status == ast::node::Status::BOUND)
         {
             if (expBinop._asFunction._isInterface)
             {
-                base()(expBinop._lhs);
-                base()(expBinop._rhs);
-
-                auto& wsmModule = _wsmPool.get(_wsmModuleIdx);
-
-                auto& function = get(expBinop._asFunction);
-
-                wsm::node::VIndex symbolAsVIndex;
-
-                if (function._asWsm)
-                {
-                    symbolAsVIndex = function._asWsm.value();
-                }
-                else
-                {
-                    // Import type
-
-                    auto& wsmTypeFunc = _wsmPool.grow(wsmModule._types);
-
-                    wsmTypeFunc._id = wsmModule._types._size - 1; // FIXME, type ids should be set later
-
-                    auto& wsmDomain   = _wsmPool.makeGet(wsmTypeFunc.   _domain);
-                    auto& wsmCodomain = _wsmPool.makeGet(wsmTypeFunc. _codomain);
-
-                    _wsmPool.make(wsmDomain._valTypes, function._arguments._size);
-
-                    for (int i = 0; i < function._arguments._size; i++)
-                    {
-                        auto type = id(get(get(get(get(function._arguments[i])._typeClaim)._type)._name)._asVIndex);
-
-                        if (type == K_TYPE_I64)
-                        {
-                            wsm::node::TIndex<wsm::node::Kind::TYPE_I64> wsmI64Idx;
-                            _wsmPool.make(wsmI64Idx);
-                            com::blit(wsmI64Idx, _wsmPool.get(wsmDomain._valTypes[i])._asVariant);
-                        }
-                        else
-                        {
-                            DMIT_COM_ASSERT(!"Unknown type!");
-                        }
-                    }
-
-                    _wsmPool.make(wsmCodomain._valTypes, 1);
-
-                    auto vIndex = get(get(function._returnType.value())._name)._asVIndex;
-
-                    if (id(vIndex) == K_TYPE_I64)
-                    {
-                        wsm::node::TIndex<wsm::node::Kind::TYPE_I64> wsmI64Idx;
-                        _wsmPool.make(wsmI64Idx);
-                        com::blit(wsmI64Idx, _wsmPool.get(wsmCodomain._valTypes[0])._asVariant);
-                    }
-                    else
-                    {
-                        DMIT_COM_ASSERT(!"Unknown type!");
-                    }
-
-                    // Import
-                    auto& import = _wsmPool.grow(wsmModule._imports);
-
-                    import._id = wsmModule._imports._size - 1;
-
-                    auto& nameModule = _wsmPool.makeGet(import._module);
-                    auto& nameImport = _wsmPool.makeGet(import._name);
-
-                    _wsmPool.make(nameModule._bytes, 3);
-
-                    _wsmPool.get(nameModule._bytes[0])._value = 'e';
-                    _wsmPool.get(nameModule._bytes[1])._value = 'n';
-                    _wsmPool.get(nameModule._bytes[2])._value = 'v';
-
-                    auto functionIdAsString = fmt::asString(id(expBinop._asFunction));
-
-                    _wsmPool.make(nameImport._bytes, functionIdAsString.size());
-
-                    for (auto i = 0; i < functionIdAsString.size(); i++)
-                    {
-                        _wsmPool.get(nameImport._bytes[i])._value = functionIdAsString[i];
-                    }
-
-                    com::blit(wsmModule._types.back(), import._descriptor);
-
-                    // Symbol
-
-                    auto& symbol = _wsmPool.grow(wsmModule._symbols);
-
-                    import._symbol = wsmModule._symbols._size;
-
-                    symbol._kind = wsm::SymbolKind::FUNCTION;
-                    symbol._flags = wsm::SymbolFlag::UNDEFINED;
-
-                    wsm::node::TIndex<wsm::node::Kind::SYMBOL_OBJECT> symbolImportIdx;
-
-                    auto& symbolImport = _wsmPool.makeGet(symbolImportIdx);
-                    
-                    symbolImport._index = wsmModule._imports.back();
-
-                    com::blitDefault(symbolImport._name);
-
-                    com::blit(symbolImportIdx, symbol._asVariant);
-                    com::blit(symbolImport._index, function._asWsm);
-
-                    symbolAsVIndex = symbolImport._index;
-                }
-
-                // Call
-
-                auto& inst = _wsmPool.grow(_wsmPool.get(_stackPtrIn->_wsmFuncIdx)._body);
+                base()(expBinop._asFunction);
 
                 wsm::node::TIndex<wsm::node::Kind::INST_CALL> instCall;
-
                 auto& call_ = _wsmPool.makeGet(instCall);
 
-                call_._function = symbolAsVIndex;
-
-                // Relocation
+                call_._function = get(expBinop._asFunction)._asWsm.value();
 
                 auto& relocation = _wsmPool.makeGet(call_._relocation);
 
-                if (auto symbol = wsm::node::v_index::makeSymbol(_wsmPool, symbolAsVIndex))
+                if (auto symbol = wsm::node::v_index::makeSymbol(_wsmPool, call_._function))
                 {
                     relocation._type = wsm::RelocationType::FUNCTION_INDEX_LEB;
                     relocation._index = symbol - 1;
-                    wsmModule._relocSizeCode++;
+                    _wsmPool.get(_wsmModuleIdx)._relocSizeCode++;
                 }
                 else
                 {
                     relocation._type = wsm::RelocationType::NONE;
                 }
 
+                auto& inst = _wsmPool.grow(_wsmPool.get(_stackPtrIn->_wsmFuncIdx)._body);
                 com::blit(instCall, inst._asVariant);
             }
-            else
-            {
-                // TODO much later
-            }
-        }
-        else
-        {
-            base()(expBinop._rhs);
-            base()(expBinop._lhs);
         }
     }
 
@@ -319,15 +208,11 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
 
         base()(funCall._arguments);
 
-        auto  calleeIdx = std::get<ast::node::Kind::DEF_FUNCTION>(get(funCall._callee)._asVIndex);
-        auto& callee = get(calleeIdx);
+        auto calleeIdx = std::get<ast::node::Kind::DEF_FUNCTION>(get(funCall._callee)._asVIndex);
 
-        if (!callee._asWsm)
-        {
-            base()(calleeIdx);
-        }
+        base()(calleeIdx);
 
-        auto symbolAsVIndex = callee._asWsm.value();
+        auto symbolAsVIndex = get(calleeIdx)._asWsm.value();
 
         wsm::node::TIndex<wsm::node::Kind::INST_CALL> instCall;
         auto& call = _wsmPool.makeGet(instCall);
@@ -381,6 +266,106 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
             return;
         }
 
+        makeTypeFunc(function);
+
+        wsm::node::TRange<wsm::node::Kind::BYTE_> wsmFunctionNameAsBytes;
+
+        auto functionIdAsString = fmt::asString(function._id);
+
+        _wsmPool.make(wsmFunctionNameAsBytes, functionIdAsString.size());
+
+        for (auto i = 0; i < functionIdAsString.size(); i++)
+        {
+            _wsmPool.get(wsmFunctionNameAsBytes[i])._value = functionIdAsString[i];
+        }
+
+        auto& wsmModule = _wsmPool.get(_wsmModuleIdx);
+
+        if (functionIdx._isInterface)
+        {
+            auto& import = _wsmPool.grow(wsmModule._imports);
+
+            import._id = wsmModule._imports._size - 1;
+
+            _wsmPool.make(_wsmPool.makeGet(import._module)._bytes, 0);
+
+            _wsmPool.makeGet(import._name)._bytes = wsmFunctionNameAsBytes;
+
+            com::blit(wsmModule._types.back(), import._descriptor);
+
+            import._symbol = makeSymbolObject(import._name,
+                                              wsmModule._imports.back(),
+                                              wsm::SymbolKind::FUNCTION,
+                                              wsm::SymbolFlag::UNDEFINED);
+
+            com::blit(wsmModule._imports.back(), function._asWsm);
+        }
+        else
+        {
+            auto& wsmFunction = _wsmPool.grow(wsmModule._funcs);
+            _stackPtrIn->_wsmFuncIdx = wsmModule._funcs.back();
+            function._asWsm = _stackPtrIn->_wsmFuncIdx;
+
+            wsmFunction._type = wsmModule._types.back();
+
+            _wsmPool.make(wsmFunction._locals);
+            _wsmPool.make(wsmFunction._body);
+
+            base()(function._arguments);
+
+            if (function._id == K_FUNC_ADD_I64)
+            {
+                makeAddI64(wsmFunction);
+            }
+            else
+            {
+                _wsmPool.make(wsmFunction._locals);
+                base()(function._body);
+            }
+
+            wsmFunction._localsSize -= function._arguments._size;
+
+            // Define export
+
+            auto defRole = ast::node::v_index::makeDefinitionRole(_nodePool, function._parent);
+
+            if (defRole == ast::DefinitionRole::EXPORTED)
+            {
+                wsm::node::TIndex<wsm::node::Kind::INST_REF_FUNC> funcRefIdx;
+                _wsmPool.makeGet(funcRefIdx)._function = _stackPtrIn->_wsmFuncIdx;
+
+                auto& export_ = _wsmPool.grow(wsmModule._exports);
+                com::blit(funcRefIdx, export_._descriptor);
+
+                _wsmPool.makeGet(export_._name)._bytes = wsmFunctionNameAsBytes;
+
+                wsmFunction._symbol = makeSymbolObject(export_._name,
+                                                    _stackPtrIn->_wsmFuncIdx,
+                                                    wsm::SymbolKind::FUNCTION,
+                                                    wsm::SymbolFlag::VISIBILITY_HIDDEN);
+            }
+        }
+    }
+
+    void operator()(ast::node::TIndex<ast::node::Kind::DEFINITION> definitionIdx)
+    {
+        auto& definition = get(definitionIdx);
+
+        base()(definition._value);
+    }
+
+    void operator()(ast::node::TIndex<ast::node::Kind::MODULE> moduleIdx)
+    {
+        base()(get(moduleIdx)._definitions);
+    }
+
+    void operator()(ast::node::TIndex<ast::node::Kind::VIEW> viewIdx)
+    {
+        base()(get(viewIdx)._modules);
+    }
+
+    void makeTypeFunc(ast::TNode<ast::node::Kind::DEF_FUNCTION>& function)
+    {
         auto& wsmModule = _wsmPool.get(_wsmModuleIdx);
 
         auto& wsmTypeFunc = _wsmPool.grow(wsmModule._types);
@@ -389,8 +374,6 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
 
         auto& wsmDomain   = _wsmPool.makeGet(wsmTypeFunc.   _domain);
         auto& wsmCodomain = _wsmPool.makeGet(wsmTypeFunc. _codomain);
-
-        // Build the domain
 
         _wsmPool.make(wsmDomain._valTypes, function._arguments._size);
 
@@ -410,8 +393,6 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
             }
         }
 
-        // And the codomain
-
         _wsmPool.make(wsmCodomain._valTypes, 1);
 
         auto vIndex = get(get(function._returnType.value())._name)._asVIndex;
@@ -426,109 +407,52 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
         {
             DMIT_COM_ASSERT(!"Unknown type!");
         }
+    }
 
-        // Now build the function
+    uint32_t makeSymbolObject(wsm::node::TIndex<wsm::node::Kind::NAME> name,
+                              const wsm::node::VIndex& vIndex,
+                              wsm::SymbolKind kind,
+                              uint32_t flags)
+    {
+        wsm::node::TIndex<wsm::node::Kind::SYMBOL_OBJECT> symbolObjectIdx;
 
-        auto& wsmFunction = _wsmPool.grow(wsmModule._funcs);
-        _stackPtrIn->_wsmFuncIdx = wsmModule._funcs.back();
-        function._asWsm = _stackPtrIn->_wsmFuncIdx;
+        auto& symbolObject = _wsmPool.makeGet(symbolObjectIdx);
 
-        wsmFunction._type = wsmModule._types.back();
+        symbolObject._index = vIndex;
+
+        auto& wsmModule = _wsmPool.get(_wsmModuleIdx);
+        auto& symbol    = _wsmPool.grow(wsmModule._symbols);
+
+        symbol._kind  = kind;
+        symbol._flags = flags;
+
+        flags & wsm::SymbolFlag::UNDEFINED ? com::blitDefault(symbolObject._name)
+                                           : com::blit(name,  symbolObject._name);
+
+        com::blit(symbolObjectIdx, symbol._asVariant);
+
+        return wsmModule._symbols._size;
+    }
+
+    void makeAddI64(wsm::TNode<wsm::node::Kind::FUNCTION>& wsmFunction)
+    {
+        auto& localsGet_0     = _wsmPool.grow(wsmFunction._body);
+        auto& localsGet_1     = _wsmPool.grow(wsmFunction._body);
+        auto& add             = _wsmPool.grow(wsmFunction._body);
+
+        wsm::node::TIndex<wsm::node::Kind::INST_LOCAL_GET > instLocalGet_0;
+        wsm::node::TIndex<wsm::node::Kind::INST_LOCAL_GET > instLocalGet_1;
+        wsm::node::TIndex<wsm::node::Kind::INST_I64       > instAdd;
+
+        _wsmPool.makeGet(instLocalGet_0)._local =              _wsmPool.back(wsmFunction._locals);
+        _wsmPool.makeGet(instLocalGet_1)._local = _wsmPool.get(_wsmPool.back(wsmFunction._locals))._next;
+        _wsmPool.makeGet(instAdd)._asEnum = wsm::NumericInstruction::ADD;
+
+        com::blit(instLocalGet_0 , localsGet_0._asVariant);
+        com::blit(instLocalGet_1 , localsGet_1._asVariant);
+        com::blit(instAdd        ,         add._asVariant);
 
         _wsmPool.make(wsmFunction._locals);
-        _wsmPool.make(wsmFunction._body);
-
-        base()(function._arguments);
-
-        if (function._id == K_FUNC_ADD_I64)
-        {
-            auto& localsGet_0     = _wsmPool.grow(wsmFunction._body);
-            auto& localsGet_1     = _wsmPool.grow(wsmFunction._body);
-            auto& add             = _wsmPool.grow(wsmFunction._body);
-
-            wsm::node::TIndex<wsm::node::Kind::INST_LOCAL_GET > instLocalGet_0;
-            wsm::node::TIndex<wsm::node::Kind::INST_LOCAL_GET > instLocalGet_1;
-            wsm::node::TIndex<wsm::node::Kind::INST_I64       > instAdd;
-
-            _wsmPool.makeGet(instLocalGet_0)._local =              _wsmPool.back(wsmFunction._locals);
-            _wsmPool.makeGet(instLocalGet_1)._local = _wsmPool.get(_wsmPool.back(wsmFunction._locals))._next;
-            _wsmPool.makeGet(instAdd)._asEnum = wsm::NumericInstruction::ADD;
-
-            com::blit(instLocalGet_0 , localsGet_0._asVariant);
-            com::blit(instLocalGet_1 , localsGet_1._asVariant);
-            com::blit(instAdd        ,         add._asVariant);
-
-            _wsmPool.make(wsmFunction._locals);
-        }
-        else
-        {
-            _wsmPool.make(wsmFunction._locals);
-            base()(function._body);
-        }
-
-        wsmFunction._localsSize -= function._arguments._size;
-
-        // Define export
-
-        auto defRole = ast::node::v_index::makeDefinitionRole(_nodePool, function._parent);
-
-        if (defRole == ast::DefinitionRole::EXPORTED)
-        {
-            auto& export_ = _wsmPool.grow(wsmModule._exports);
-
-            wsm::node::TIndex<wsm::node::Kind::INST_REF_FUNC> funcRefIdx;
-
-            _wsmPool.makeGet(funcRefIdx)._function = _stackPtrIn->_wsmFuncIdx;
-
-            com::blit(funcRefIdx, export_._descriptor);
-
-            auto functionIdAsString = fmt::asString(function._id);
-
-            auto& name = _wsmPool.makeGet(export_._name);
-
-            _wsmPool.make(name._bytes, functionIdAsString.size());
-
-            for (auto i = 0; i < functionIdAsString.size(); i++)
-            {
-                _wsmPool.get(name._bytes[i])._value = functionIdAsString[i];
-            }
-
-            // Symbol
-
-            auto& symbol = _wsmPool.grow(wsmModule._symbols);
-
-            wsmFunction._symbol = wsmModule._symbols._size;
-
-            symbol._kind = wsm::SymbolKind::FUNCTION;
-            symbol._flags = wsm::SymbolFlag::VISIBILITY_HIDDEN;
-
-            wsm::node::TIndex<wsm::node::Kind::SYMBOL_OBJECT> symbolFunctionIdx;
-
-            auto& symbolFunction = _wsmPool.makeGet(symbolFunctionIdx);
-
-            symbolFunction._index = _stackPtrIn->_wsmFuncIdx;
-
-            com::blit(export_._name, symbolFunction._name);
-
-            com::blit(symbolFunctionIdx, symbol._asVariant);
-        }
-    }
-
-    void operator()(ast::node::TIndex<ast::node::Kind::DEFINITION> definitionIdx)
-    {
-        auto& definition = get(definitionIdx);
-
-        base()(definition._value);
-    }
-
-    void operator()(ast::node::TIndex<ast::node::Kind::MODULE> moduleIdx)
-    {
-        base()(get(moduleIdx)._definitions);
-    }
-
-    void operator()(ast::node::TIndex<ast::node::Kind::VIEW> viewIdx)
-    {
-        base()(get(viewIdx)._modules);
     }
 
     com::TOptionRef<ast::State::NodePool> _interfacePoolOpt;
