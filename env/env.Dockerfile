@@ -90,7 +90,7 @@ RUN set -ex                                                                     
     rm -r sqlite-autoconf-3390200 sqlite-autoconf-3390200.tar.gz                                                &&\
     git clone --progress --depth 1 https://github.com/nanomsg/nng.git                                           &&\
     cd nng                                                                                                      &&\
-    git checkout 5385b788d28f42078b7fd342ab241e2043e158f5                                                       &&\
+    git checkout a3cb9efc9563019518493dd4b3bfdb1f57acd943                                                       &&\
     cmake -G Ninja                                                                                              &&\
     ninja                                                                                                       &&\
     mv libnng.a /usr/lib                                                                                        &&\
@@ -106,7 +106,7 @@ RUN set -ex                                                                     
     rm -r cmp                                                                                                   &&\
     git clone --recursive --progress --depth 1 https://github.com/WebAssembly/wabt                              &&\
     cd wabt                                                                                                     &&\
-    git checkout 4dd8b6ac322c93db20e8c40867c2cd6bb454589a                                                       &&\
+    git checkout e4a6d92191fa5b4b1aab5643dbabbe76c93427a5                                                       &&\
     mkdir build                                                                                                 &&\
     cd build                                                                                                    &&\
     cmake .. -G Ninja -DBUILD_TESTS=OFF                                                                         &&\
@@ -116,7 +116,7 @@ RUN set -ex                                                                     
     rm -r wabt                                                                                                  &&\
     git clone --progress --depth 1 https://github.com/wasm3/wasm3.git                                           &&\
     cd wasm3                                                                                                    &&\
-    git checkout 045040a97345e636b8be4f3086e6db59cdcc785f                                                       &&\
+    git checkout 139076a98b8321b67f850a844f558b5e91b5ac83                                                       &&\
     cmake -G Ninja                                                                                              &&\
     ninja                                                                                                       &&\
     mv source/libm3.a /usr/lib                                                                                  &&\

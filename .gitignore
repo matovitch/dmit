@@ -1,5 +1,4 @@
 .tup
-.gitconfig
 bin/*
 !bin/tup.config
 vgcore.*

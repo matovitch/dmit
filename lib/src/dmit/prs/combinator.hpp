@@ -114,19 +114,11 @@ auto skp(Parser&& parser)
             return std::nullopt;
         }
 
-        reader.advance();
-
-        while (!reader.isEoi())
+        do
         {
-            const auto readerOpt = parser(reader);
-
-            if (readerOpt)
-            {
-                return reader;
-            }
-
             reader.advance();
         }
+        while (!reader.isEoi() && !parser(reader));
 
         return reader;
     };
