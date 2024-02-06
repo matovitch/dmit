@@ -6,10 +6,10 @@
 
 #include "dmit/ast/bundle.hpp"
 
+#include "dmit/com/parallel_for.hpp"
 #include "dmit/com/storage.hpp"
 
 #include <cstdint>
-#include <vector>
 
 namespace dmit::gen
 {
@@ -22,7 +22,7 @@ struct Emitter
 {
     using ReturnType = com::TStorage<uint8_t>;
 
-    Emitter(std::vector<ast::Bundle>& bundles) :
+    Emitter(com::TStorage<ast::Bundle>& bundles) :
         _bundles{bundles}
     {}
 
@@ -34,12 +34,32 @@ struct Emitter
 
     uint32_t size() const
     {
-        return _bundles.size();
+        return _bundles._size;
     }
 
-    std::vector<ast::Bundle> & _bundles;
+    com::TStorage<ast::Bundle> & _bundles;
 
     PoolWasm _poolWasm;
+};
+
+struct EmitterNew : com::parallel_for::TJob<PoolWasm, com::TStorage<uint8_t>>
+{
+    EmitterNew(com::TStorage<ast::Bundle>& bundles) :
+        _bundles{bundles}
+    {}
+
+    void run(PoolWasm& poolWasm, int32_t index, com::TStorage<uint8_t>* object) override
+    {
+        new (object) com::TStorage<uint8_t>{gen::make(_bundles[index],
+                                                      poolWasm)};
+    }
+
+    int32_t size() const override
+    {
+        return _bundles._size;
+    }
+
+    com::TStorage<ast::Bundle> & _bundles;
 };
 
 } // namespace dmit::gen

@@ -16,6 +16,8 @@
 
 #include "dmit/nng/nng.hpp"
 
+#include "dmit/com/parallel_for.hpp"
+
 extern "C"
 {
     #include "nng/nng.h"
@@ -25,6 +27,7 @@ extern "C"
 }
 
 #include <cstdlib>
+#include <thread>
 
 enum : char
 {
@@ -123,6 +126,10 @@ int main(int argc, char** argv)
     int returnCode;
 
     {
+        // 0. Create parallel_for thread pool
+
+        dmit::com::parallel_for::ThreadPool threadPool{std::thread::hardware_concurrency()};
+
         // 1. Open socket
 
         dmit::nng::Socket socket;
@@ -202,7 +209,7 @@ int main(int argc, char** argv)
             if (query == dmit::drv::Query::MAKE)
             {
                 DMIT_COM_LOG_OUT << "Compiling registered files...\n";
-                dmit::drv::srv::make(socket, database);
+                dmit::drv::srv::make(socket, database, threadPool);
             }
         }
     }

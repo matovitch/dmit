@@ -6,10 +6,10 @@
 #include "dmit/ast/node.hpp"
 
 #include "dmit/com/unique_id.hpp"
+#include "dmit/com/storage.hpp"
 #include "dmit/com/murmur.hpp"
 
 #include <cstdint>
-#include <vector>
 
 namespace dmit::sem
 {
@@ -226,7 +226,7 @@ void FactMap::solveImports(ast::State& ast)
     visitor.base()(ast._module);
 }
 
-void FactMap::solveImports(std::vector<ast::State>& asts)
+void FactMap::solveImports(com::TStorage<ast::State>& asts)
 {
     for (auto& ast : asts)
     {

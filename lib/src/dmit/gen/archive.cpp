@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <cstring>
 #include <string>
-#include <vector>
 
 namespace dmit::gen
 {
@@ -19,11 +18,11 @@ static const uint32_t K_HEADER_FILE_SIZE_SIZE = 10;
 static const uint32_t K_HEADER_FILE_NAME_SIZE = 17;
 static const uint32_t K_HEADER_SIZE           = 77;
 
-com::TStorage<uint8_t> makeArchive(const std::vector<com::TStorage<uint8_t>>& objects)
+com::TStorage<uint8_t> makeArchive(const com::TStorage<com::TStorage<uint8_t>>& objects)
 {
     // Allocate archive buffer
 
-    uint32_t totalSize  = sizeof(K_MAGIC) - 1 + K_HEADER_SIZE * objects.size();
+    uint32_t totalSize  = sizeof(K_MAGIC) - 1 + K_HEADER_SIZE * objects._size;
 
     for (const auto& object : objects)
     {

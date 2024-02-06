@@ -5,6 +5,7 @@
 #include "dmit/ast/bundle.hpp"
 #include "dmit/ast/state.hpp"
 
+#include "dmit/com/parallel_for.hpp"
 #include "dmit/com/unique_id.hpp"
 
 #include <cstdint>
@@ -19,10 +20,8 @@ ast::Bundle make(const uint64_t index,
                  const FactMap& factMap,
                  ast::State::NodePool& nodePool);
 
-struct Builder
+struct Builder : com::parallel_for::TJob<ast::State::NodePool, ast::Bundle>
 {
-    using ReturnType = ast::Bundle;
-
     Builder(const std::vector<com::UniqueId > & moduleOrder,
             const std::vector<uint32_t      > & moduleBundles,
             const sem::FactMap                & factMap) :
@@ -31,16 +30,16 @@ struct Builder
         _factMap       {factMap}
     {}
 
-    ast::Bundle run(const uint64_t index)
+    void run(ast::State::NodePool& nodePool, int32_t index, ast::Bundle* bundle) override
     {
-        return sem::bundle::make(index,
-                                 _moduleOrder,
-                                 _moduleBundles,
-                                 _factMap,
-                                 _nodePool);
+        new (bundle) ast::Bundle{sem::bundle::make(index,
+                                                   _moduleOrder,
+                                                   _moduleBundles,
+                                                   _factMap,
+                                                   nodePool)};
     }
 
-    uint32_t size() const
+    int32_t size() const override
     {
         return _moduleBundles.size() - 1;
     }
@@ -49,8 +48,6 @@ struct Builder
     const std::vector<uint32_t      >& _moduleBundles;
 
     const sem::FactMap& _factMap;
-
-    ast::State::NodePool _nodePool;
 };
 
 } // namespace dmit::sem::bundle

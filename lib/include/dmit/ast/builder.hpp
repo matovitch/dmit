@@ -4,6 +4,7 @@
 #include "dmit/ast/state.hpp"
 #include "dmit/ast/node.hpp"
 
+#include "dmit/com/parallel_for.hpp"
 #include "dmit/com/storage.hpp"
 #include "dmit/src/file.hpp"
 
@@ -15,10 +16,8 @@
 namespace dmit::ast
 {
 
-struct Builder
+struct Builder : com::parallel_for::TJob<FromPathAndSource, State>
 {
-    using ReturnType = ast::State;
-
     Builder(const std::vector<std::filesystem::path>  & paths,
             const std::vector<com::TStorage<uint8_t>> & contents) :
         _paths{paths},
@@ -27,20 +26,18 @@ struct Builder
         TNode<node::Kind::LIT_INTEGER>::_status = node::Status::ASTED;
     }
 
-    ast::State run(const uint64_t index)
+    void run(FromPathAndSource& fromPathAndSource, int32_t index, State* state) override
     {
-        return _astFromPathAndSource.make(_paths[index], _contents[index]);
+        new (state) State{fromPathAndSource.make(_paths[index], _contents[index])};
     }
 
-    uint32_t size() const
+    int32_t size() const override
     {
         return _paths.size();
     }
 
     const std::vector<std::filesystem::path>  & _paths;
     const std::vector<com::TStorage<uint8_t>> & _contents;
-
-    ast::FromPathAndSource _astFromPathAndSource;
 };
 
 } // namespace dmit::ast

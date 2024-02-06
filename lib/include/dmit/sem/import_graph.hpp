@@ -3,6 +3,7 @@
 #include "dmit/ast/state.hpp"
 
 #include "dmit/com/unique_id.hpp"
+#include "dmit/com/storage.hpp"
 
 #include "topo/pool_set.hpp"
 #include "topo/graph.hpp"
@@ -40,7 +41,7 @@ struct ImportGraph
 
     void registerAst(ast::State& ast);
 
-    void registerAsts(std::vector<ast::State>& asts);
+    void registerAsts(com::TStorage<ast::State>& asts);
 
     TopoPoolSet _topoPoolSet;
     TopoGraph   _topoGraph;

@@ -1,3 +1,5 @@
+#include "dmit/sem/context.hpp"
+#include "dmit/wsm/wasm.hpp"
 #include "test.hpp"
 
 #include "dmit/gen/emitter.hpp"
@@ -27,8 +29,10 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <thread>
 
-std::vector<dmit::com::TStorage<uint8_t>> makeObjects(const std::vector<const char*>& filePaths)
+dmit::com::TStorage<dmit::com::TStorage<uint8_t>> makeObjects(dmit::com::parallel_for::ThreadPool& threadPool,
+                                                              const std::vector<const char*>& filePaths)
 {
     // 1. Prepare the sources
 
@@ -47,9 +51,13 @@ std::vector<dmit::com::TStorage<uint8_t>> makeObjects(const std::vector<const ch
 
     // 2. Perform the parsing and semantic analysis
 
-    dmit::com::TParallelFor<dmit::ast::Builder> parallelAstBuilder{paths, contents};
+    dmit::com::parallel_for::TThreadContexts<dmit::ast::FromPathAndSource> astThreadContexts{threadPool};
 
-    auto&& asts = parallelAstBuilder.makeVector();
+    dmit::com::TParallelFor<dmit::ast::Builder> parallelAstBuilder{astThreadContexts, paths, contents};
+
+    threadPool.notify_and_wait(parallelAstBuilder);
+
+    auto&& asts = parallelAstBuilder._outputs;
 
     dmit::sem::ImportGraph importGraph;
     dmit::sem::FactMap     factMap;
@@ -63,31 +71,46 @@ std::vector<dmit::com::TStorage<uint8_t>> makeObjects(const std::vector<const ch
     importGraph.makeBundles(moduleOrder,
                             moduleBundles);
 
-    dmit::com::TParallelFor<dmit::sem::bundle::Builder> parallelBundleBuilder{moduleOrder,
+    dmit::com::parallel_for::TThreadContexts<dmit::ast::State::NodePool> bundleThreadContexts{threadPool};
+
+    dmit::com::TParallelFor<dmit::sem::bundle::Builder> parallelBundleBuilder{bundleThreadContexts,
+                                                                              moduleOrder,
                                                                               moduleBundles,
                                                                               factMap};
-    auto&& bundles = parallelBundleBuilder.makeVector();
+    threadPool.notify_and_wait(parallelBundleBuilder);
+
+    auto&& bundles = parallelBundleBuilder._outputs;
 
     dmit::sem::InterfaceMap interfaceMap;
 
-    dmit::com::TParallelFor<dmit::sem::Analyzer> parallelSemanticAnalyzer{interfaceMap,
+    dmit::com::parallel_for::TThreadContexts<dmit::sem::Context> semThreadContexts{threadPool};
+
+    dmit::com::TParallelFor<dmit::sem::Analyzer> parallelSemanticAnalyzer{semThreadContexts,
+                                                                          interfaceMap,
                                                                           bundles};
-    dmit::sem::analyze(parallelSemanticAnalyzer);
+    dmit::sem::analyze(threadPool, parallelSemanticAnalyzer);
 
     // 3. Generate wasm
 
-    dmit::com::TParallelFor<dmit::gen::Emitter> parallelGenerationEmitter{bundles};
-    return parallelGenerationEmitter.makeVector();
+    dmit::com::parallel_for::TThreadContexts<dmit::gen::PoolWasm> genThreadContexts{threadPool};
+
+    dmit::com::TParallelFor<dmit::gen::EmitterNew> parallelGenerationEmitter{genThreadContexts,
+                                                                             bundles};
+    threadPool.notify_and_wait(parallelGenerationEmitter);
+
+    return std::move(parallelGenerationEmitter._outputs);
 }
 
 TEST_CASE("gen")
 {
+    dmit::com::parallel_for::ThreadPool threadPool{std::thread::hardware_concurrency()};
+
     std::vector<const char*> sourceFiles = {
         "test/data/sem/moduleA.in",
         "test/data/sem/moduleB.in"
     };
 
-    auto&& objects = makeObjects(sourceFiles);
+    auto&& objects = makeObjects(threadPool, sourceFiles);
 
     auto archive = dmit::gen::makeArchive(objects);
     std::string archiveAsString{archive.data(), archive.data() + archive._size};

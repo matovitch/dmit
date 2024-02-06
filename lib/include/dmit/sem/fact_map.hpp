@@ -4,10 +4,9 @@
 #include "dmit/ast/node.hpp"
 
 #include "dmit/com/unique_id.hpp"
+#include "dmit/com/storage.hpp"
 
 #include "robin/map.hpp"
-
-#include <vector>
 
 namespace dmit::sem
 {
@@ -40,7 +39,7 @@ struct FactMap
 
     void solveImports(ast::State& ast);
 
-    void solveImports(std::vector<ast::State>& asts);
+    void solveImports(com::TStorage<ast::State>& asts);
 
     TMap<Fact> _asRobinMap;
 };

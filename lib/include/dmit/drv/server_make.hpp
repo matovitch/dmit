@@ -31,7 +31,7 @@
 namespace dmit::drv::srv
 {
 
-void make(nng::Socket& socket, db::Database& database)
+void make(nng::Socket& socket, db::Database& database, com::parallel_for::ThreadPool& threadPool)
 {
     // 1. Retrive sources from db
 
@@ -52,9 +52,13 @@ void make(nng::Socket& socket, db::Database& database)
 
     // 2. Make the ASTs
 
-    com::TParallelFor<ast::Builder> parallelAstBuilder{paths, sources};
+    dmit::com::parallel_for::TThreadContexts<dmit::ast::FromPathAndSource> astThreadContexts{threadPool};
 
-    auto&& asts = parallelAstBuilder.makeVector();
+    dmit::com::TParallelFor<dmit::ast::Builder> parallelAstBuilder{astThreadContexts, paths, sources};
+
+    threadPool.notify_and_wait(parallelAstBuilder);
+
+    auto&& asts = parallelAstBuilder._outputs;
 
     // 3. Resolve imports
 
@@ -76,18 +80,26 @@ void make(nng::Socket& socket, db::Database& database)
 
     // 5. Make the bundles
 
-    com::TParallelFor<sem::bundle::Builder> parallelBundleBuilder{moduleOrder,
+    com::parallel_for::TThreadContexts<ast::State::NodePool> bundleThreadContexts{threadPool};
+
+    com::TParallelFor<sem::bundle::Builder> parallelBundleBuilder{bundleThreadContexts,
+                                                                  moduleOrder,
                                                                   moduleBundles,
                                                                   factMap};
-    auto&& bundles = parallelBundleBuilder.makeVector();
+    threadPool.notify_and_wait(parallelBundleBuilder);
+
+    auto&& bundles = parallelBundleBuilder._outputs;
 
     // 6. Semantic analysis
 
     sem::InterfaceMap interfaceMap;
 
-    com::TParallelFor<sem::Analyzer> parallelSemanticAnalyzer{interfaceMap,
+    com::parallel_for::TThreadContexts<sem::Context> semThreadContexts{threadPool};
+
+    com::TParallelFor<sem::Analyzer> parallelSemanticAnalyzer{semThreadContexts,
+                                                              interfaceMap,
                                                               bundles};
-    sem::analyze(parallelSemanticAnalyzer);
+    sem::analyze(threadPool, parallelSemanticAnalyzer);
 
     DMIT_COM_LOG_OUT << interfaceMap << '\n';
 
@@ -98,8 +110,13 @@ void make(nng::Socket& socket, db::Database& database)
 
     // 7. Code generation
 
-    com::TParallelFor<gen::Emitter> parallelGenerationEmitter{bundles};
-    auto&& bins = parallelGenerationEmitter.makeVector();
+    dmit::com::parallel_for::TThreadContexts<dmit::gen::PoolWasm> genThreadContexts{threadPool};
+
+    dmit::com::TParallelFor<dmit::gen::EmitterNew> parallelGenerationEmitter{genThreadContexts,
+                                                                                bundles};
+    threadPool.notify_and_wait(parallelGenerationEmitter);
+
+    auto&& bins = parallelGenerationEmitter._outputs;
 
     // 8. Write reply
 

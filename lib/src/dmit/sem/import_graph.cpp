@@ -5,6 +5,7 @@
 #include "dmit/ast/node.hpp"
 
 #include "dmit/com/unique_id.hpp"
+#include "dmit/com/storage.hpp"
 
 namespace dmit::sem
 {
@@ -138,7 +139,7 @@ void ImportGraph::registerAst(ast::State& ast)
     visitor.base()(ast._module);
 }
 
-void ImportGraph::registerAsts(std::vector<ast::State>& asts)
+void ImportGraph::registerAsts(com::TStorage<ast::State>& asts)
 {
     for (auto& ast : asts)
     {

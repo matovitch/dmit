@@ -9,6 +9,7 @@
 #include "dmit/ast/bundle.hpp"
 #include "dmit/ast/state.hpp"
 
+#include "dmit/com/parallel_for.hpp"
 #include "dmit/com/unique_id.hpp"
 #include "dmit/com/murmur.hpp"
 #include "dmit/com/blit.hpp"
@@ -21,13 +22,13 @@ namespace dmit::sem
 
 std::atomic<int> Analyzer::_interfaceAtomCount;
 
-void analyze(com::TParallelFor<Analyzer>& parallelAnalyzer)
+void analyze(com::parallel_for::ThreadPool& threadPool, com::TParallelFor<Analyzer>& parallelAnalyzer)
 {
     Analyzer::init();
-    parallelAnalyzer.run();
+    threadPool.notify_and_wait(parallelAnalyzer);
 }
 
-int8_t analyze(ast::Bundle& bundle, Context& context, InterfaceMap& interfaceMap)
+void analyze(ast::Bundle& bundle, Context& context, InterfaceMap& interfaceMap)
 {
     context._scheduler.makeTask(
         [&]()
@@ -48,8 +49,6 @@ int8_t analyze(ast::Bundle& bundle, Context& context, InterfaceMap& interfaceMap
     );
 
     context.run();
-
-    return 0;
 }
 
 } // namespace dmit::sem

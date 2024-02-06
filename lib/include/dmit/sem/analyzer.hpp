@@ -1,10 +1,12 @@
 #pragma once
 
+#include "dmit/sem/context.hpp"
 #include "dmit/sem/interface_map.hpp"
 
 #include "dmit/ast/bundle.hpp"
 
 #include "dmit/com/parallel_for.hpp"
+#include "dmit/com/storage.hpp"
 
 #include <cstdint>
 #include <atomic>
@@ -13,14 +15,12 @@
 namespace dmit::sem
 {
 
-int8_t analyze(ast::Bundle&, Context&, InterfaceMap&);
+void analyze(ast::Bundle&, Context&, InterfaceMap&);
 
-struct Analyzer
+struct Analyzer : com::parallel_for::TJob<Context, int8_t>
 {
-    using ReturnType = int8_t;
-
-    Analyzer(sem::InterfaceMap        & interfaceMap,
-             std::vector<ast::Bundle> & bundles) :
+    Analyzer(sem::InterfaceMap          & interfaceMap,
+             com::TStorage<ast::Bundle> & bundles) :
         _interfaceMap{interfaceMap},
         _bundles{bundles}
     {}
@@ -30,40 +30,36 @@ struct Analyzer
         _interfaceAtomCount.store(0, std::memory_order_relaxed);
     }
 
-    int8_t run(const uint64_t index)
+    void run(Context& context, int32_t index, int8_t*) override
     {
         if (index)
         {
             while (_interfaceAtomCount.load(std::memory_order_acquire) < index - 1);
 
-            return sem::analyze(_bundles[index - 1], _context, _interfaceMap);
+            return sem::analyze(_bundles[index - 1], context, _interfaceMap);
         }
 
         for (auto& bundle : _bundles)
         {
-            _interfaceMap.registerBundle(bundle, _context);
+            _interfaceMap.registerBundle(bundle, context);
 
             int interfaceCount = _interfaceAtomCount.load(std::memory_order_relaxed);
 
             _interfaceAtomCount.store(interfaceCount + 1, std::memory_order_release);
         }
-
-        return 0;
     }
 
-    uint32_t size() const
+    int32_t size() const override
     {
-        return _bundles.size() + 1;
+        return _bundles._size + 1;
     }
 
     static std::atomic<int> _interfaceAtomCount;
 
-    Context _context;
-
-    sem::InterfaceMap        & _interfaceMap;
-    std::vector<ast::Bundle> & _bundles;
+    sem::InterfaceMap          & _interfaceMap;
+    com::TStorage<ast::Bundle> & _bundles;
 };
 
-void analyze(com::TParallelFor<Analyzer>& parallelAnalyzer);
+void analyze(com::parallel_for::ThreadPool& threadPool, com::TParallelFor<Analyzer>& parallelAnalyzer);
 
 } // namespace dmit::sem

@@ -24,7 +24,8 @@
 #include <string>
 #include <vector>
 
-std::vector<std::string> analyze(const std::vector<const char*>& filePaths)
+std::vector<std::string> analyze(dmit::com::parallel_for::ThreadPool& threadPool,
+                                 const std::vector<const char*>& filePaths)
 {
     // 1. Prepare the sources
 
@@ -43,9 +44,13 @@ std::vector<std::string> analyze(const std::vector<const char*>& filePaths)
 
     // 2. Perform the parsing and semantic analysis
 
-    dmit::com::TParallelFor<dmit::ast::Builder> parallelAstBuilder{paths, contents};
+    dmit::com::parallel_for::TThreadContexts<dmit::ast::FromPathAndSource> astThreadContexts{threadPool};
 
-    auto&& asts = parallelAstBuilder.makeVector();
+    dmit::com::TParallelFor<dmit::ast::Builder> parallelAstBuilder{astThreadContexts, paths, contents};
+
+    threadPool.notify_and_wait(parallelAstBuilder);
+
+    auto&& asts = parallelAstBuilder._outputs;
 
     dmit::sem::ImportGraph importGraph;
     dmit::sem::FactMap     factMap;
@@ -59,16 +64,24 @@ std::vector<std::string> analyze(const std::vector<const char*>& filePaths)
     importGraph.makeBundles(moduleOrder,
                             moduleBundles);
 
-    dmit::com::TParallelFor<dmit::sem::bundle::Builder> parallelBundleBuilder{moduleOrder,
+    dmit::com::parallel_for::TThreadContexts<dmit::ast::State::NodePool> bundleThreadContexts{threadPool};
+
+    dmit::com::TParallelFor<dmit::sem::bundle::Builder> parallelBundleBuilder{bundleThreadContexts,
+                                                                              moduleOrder,
                                                                               moduleBundles,
                                                                               factMap};
-    auto&& bundles = parallelBundleBuilder.makeVector();
+    threadPool.notify_and_wait(parallelBundleBuilder);
+
+    auto&& bundles = parallelBundleBuilder._outputs;
 
     dmit::sem::InterfaceMap interfaceMap;
 
-    dmit::com::TParallelFor<dmit::sem::Analyzer> parallelSemanticAnalyzer{interfaceMap,
-                                                                          bundles};
-    dmit::sem::analyze(parallelSemanticAnalyzer);
+    dmit::com::parallel_for::TThreadContexts<dmit::sem::Context> semThreadContexts{threadPool};
+
+    dmit::com::TParallelFor<dmit::sem::Analyzer> parallelSemanticAnalyzer{semThreadContexts,
+                                                                             interfaceMap,
+                                                                             bundles};
+    dmit::sem::analyze(threadPool, parallelSemanticAnalyzer);
 
     // 3. Create the interface and bundles strings
 
@@ -99,12 +112,14 @@ TEST_SUITE("inout")
 
 TEST_CASE("sem")
 {
+    dmit::com::parallel_for::ThreadPool threadPool{std::thread::hardware_concurrency()};
+
     std::vector<const char*> groupAB = {
         "test/data/sem/moduleA.in",
         "test/data/sem/moduleB.in"
     };
 
-    auto&& results = analyze(groupAB);
+    auto&& results = analyze(threadPool, groupAB);
 
     CHECK(results[0] == fileAsString("test/data/sem/interfaceAB.out" ));
     CHECK(results[1] == fileAsString("test/data/sem/bundlesAB.out"   ));

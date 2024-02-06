@@ -27,9 +27,34 @@ public:
         storage._buckets = nullptr;
     }
 
-    Type* data() const
+    Type* data()
     {
         return reinterpret_cast<Type*>(_buckets);
+    }
+
+    const Type* data() const
+    {
+        return reinterpret_cast<Type*>(_buckets);
+    }
+
+    Type* begin()
+    {
+        return reinterpret_cast<Type*>(_buckets);
+    }
+
+    Type* end()
+    {
+        return reinterpret_cast<Type*>(_buckets) + _size;
+    }
+
+    const Type* begin() const
+    {
+        return reinterpret_cast<Type*>(_buckets);
+    }
+
+    const Type* end() const
+    {
+        return reinterpret_cast<Type*>(_buckets) + _size;
     }
 
     Type& operator[](const uint64_t index)
@@ -42,6 +67,10 @@ public:
         return reinterpret_cast<const Type&>(_buckets[index]);
     }
 
+    bool empty() const
+    {
+        return _size == 0;
+    }
 
     ~TStorage()
     {

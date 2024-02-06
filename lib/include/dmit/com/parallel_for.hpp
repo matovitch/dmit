@@ -1,110 +1,196 @@
 #pragma once
 
-#include "dmit/com/concurrent_queue.hpp"
-#include "dmit/com/log2.hpp"
+#include "dmit/com/storage.hpp"
 
-#include <functional>
+#include <condition_variable>
+#include <type_traits>
 #include <cstdint>
-#include <utility>
+#include <atomic>
 #include <thread>
+#include <vector>
+#include <mutex>
 
 namespace dmit::com
 {
 
-template <class Body>
-class TParallelFor
+namespace parallel_for
 {
-    using Type = typename Body::ReturnType;
 
-public:
+namespace thread_pool
+{
+
+struct Job
+{
+    virtual void run(uint32_t threadId, int32_t index) = 0;
+
+    virtual int32_t size() const = 0;
+};
+
+} // namespace thread_pool
+
+struct ThreadPool
+{
+    ThreadPool(const ThreadPool&) = delete;
+
+    ThreadPool(uint32_t numThreads) : _threads{numThreads}
+    {
+        int32_t i = 0;
+
+        for (auto& thread : _threads)
+        {
+            new (&thread) std::thread{&ThreadPool::processFunction, this, i++};
+        }
+    }
+
+    uint32_t size() const
+    {
+        return _threads._size;
+    }
+
+    void processFunction(int id)
+    {
+        while (true)
+        {
+            {
+                std::unique_lock<std::mutex> lock(_mutex_todo);
+                _condition_variable_todo.wait(lock, [this] { return _todo > 0; });
+            }
+
+            if (_exit)
+            {
+                break;
+            }
+
+            while (true)
+            {
+                int32_t todo = --_todo;
+
+                if (todo < 0)
+                {
+                    break;
+                }
+
+                _job->run(id, todo);
+
+                int32_t done = --_done;
+
+                if (done == 0)
+                {
+                    _condition_variable_done.notify_one();
+                }
+            }
+        }
+    }
+
+    void notify_and_wait(thread_pool::Job& job)
+    {
+        // Notifiy
+        _job = &job;
+
+        const auto jobSize = job.size();
+
+        _done = jobSize;
+        _todo = jobSize;
+
+        _condition_variable_todo.notify_all();
+
+        // Wait
+        {
+            std::unique_lock<std::mutex> lock(_mutex_done);
+            _condition_variable_done.wait(lock, [this] { return !_done; });
+        }
+    }
+
+    ~ThreadPool()
+    {
+        _exit = true;
+
+        _todo = 1;
+        _condition_variable_todo.notify_all();
+
+        for (auto& thread : _threads)
+        {
+            thread.join();
+        }
+    }
+
+    TStorage<std::thread> _threads;
+    thread_pool::Job* _job;
+    bool _exit = false;
+
+    std::mutex _mutex_todo;
+    std::mutex _mutex_done;
+    std::condition_variable _condition_variable_todo;
+    std::condition_variable _condition_variable_done;
+    std::atomic<int32_t> _todo = 0;
+    std::atomic<int32_t> _done = 0;
+};
+
+template <class ThreadContextType, class OutputType>
+struct TJob
+{
+    using ThreadContext = ThreadContextType;
+    using Output = OutputType;
+
+    virtual void run(ThreadContext& threadContext, int32_t index, Output* output) = 0;
+
+    virtual int32_t size() const = 0;
+};
+
+template <class ThreadContext>
+struct TThreadContexts
+{
+    template <class... Args>
+    TThreadContexts(ThreadPool& threadPool, Args&&... args) :
+        _size{static_cast<uint64_t>(threadPool.size())},
+        _threadContexts{new ThreadContext[_size]{std::forward<Args>(args)...}}
+    {}
+
+    ThreadContext& operator[](const uint64_t index)
+    {
+        return _threadContexts[index];
+    }
+
+    ~TThreadContexts()
+    {
+        delete[] _threadContexts;
+    }
+
+    uint64_t        _size;
+    ThreadContext* _threadContexts;
+};
+
+} // namespace parallel_for
+
+
+template <class JobType>
+struct TParallelFor : parallel_for::thread_pool::Job
+{
+    using ThreadContext = typename JobType::ThreadContext;
+    using Output        = typename JobType::Output;
 
     template <class... Args>
-    TParallelFor(Args&&... args) :
-        _numThreads{std::thread::hardware_concurrency()},
-        _concurrentQueue{Body{std::forward<Args>(args)...}.size()}
+    TParallelFor(parallel_for::TThreadContexts<ThreadContext>& threadContexts, Args&&... args) :
+        _threadContexts{&threadContexts},
+        _job{std::forward<Args>(args)...},
+        _outputs{static_cast<uint64_t>(_job.size())}
+    {}
+
+    void run(uint32_t threadId, int32_t index) override
     {
-        for (uint64_t i = 0; i < numThreadsUpPow2(); i++)
-        {
-            _bodies.emplace_back(std::make_unique<Body>(std::forward<Args>(args)...));
-        }
+        const int32_t reversed_index = _job.size() - index - 1;
+
+        _job.run((*_threadContexts)[threadId], reversed_index, _outputs.data() + reversed_index);
     }
 
-    void run()
+    int32_t size() const override
     {
-        operator()(_numThreads, numThreadsUpPow2() >> 1, 0);
+        return _job.size();
     }
 
-    std::vector<Type> makeVector()
-    {
-        run();
-
-        std::vector<Type> bundles;
-
-        bundles.reserve(size());
-
-        for (int i = 0; i < size(); ++i)
-        {
-            bundles.emplace_back(std::move(result(i)));
-        }
-
-        return bundles;
-    }
-
-    ~TParallelFor()
-    {
-        _concurrentQueue.clean();
-    }
-
-private:
-
-    Type& result(uint64_t index)
-    {
-        return _concurrentQueue[index];
-    }
-
-    std::size_t size() const
-    {
-        return _concurrentQueue.size();
-    }
-
-    uint32_t numThreadsUpPow2() const
-    {
-        return 1 << (log2(_numThreads) + ((_numThreads & (_numThreads - 1)) != 0));
-    }
-
-    void operator()(uint32_t numThreads, uint32_t weight, uint32_t id)
-    {
-        if (numThreads > 1)
-        {
-            std::thread t1(&TParallelFor::operator(), this, numThreads >> 1               , weight >> 1, id);
-            std::thread t2(&TParallelFor::operator(), this, numThreads - (numThreads >> 1), weight >> 1, id + weight);
-
-            t1.join();
-            t2.join();
-
-            return;
-        }
-
-        if (!numThreads)
-        {
-            return;
-        }
-
-        auto index = _concurrentCounter.increment();
-
-        while (_concurrentQueue.isValid(index))
-        {
-            new (&(_concurrentQueue[index])) Type(_bodies[id]->run(index._value));
-            index = _concurrentCounter.increment();
-        }
-    }
-
-    uint32_t _numThreads;
-
-    ConcurrentCounter      _concurrentCounter;
-    TConcurrentQueue<Type> _concurrentQueue;
-
-    std::vector<std::unique_ptr<Body>> _bodies; // Bury'em deep it ain't pretty
+    parallel_for::TThreadContexts<ThreadContext>* _threadContexts;
+    JobType          _job;
+    TStorage<Output> _outputs;
 };
 
 } // namespace dmit::com
