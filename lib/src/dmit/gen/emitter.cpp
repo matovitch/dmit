@@ -70,10 +70,18 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
         wsmModule._relocSizeData = 0;
     }
 
+    // May think to factorize v_index visitors with a generic make wrapper
     com::UniqueId id(const ast::node::VIndex& vIndex)
     {
         return ast::node::v_index::isInterface(vIndex) ? ast::node::v_index::makeId(_interfacePoolOpt.value().get(), vIndex)
                                                        : ast::node::v_index::makeId(_nodePool, vIndex);
+    }
+
+    // May think to factorize v_index visitors with a generic make wrapper
+    std::optional<wsm::node::VIndex> makeWsm(const ast::node::VIndex& vIndex)
+    {
+        return ast::node::v_index::isInterface(vIndex) ? ast::node::v_index::makeWsm(_interfacePoolOpt.value().get(), vIndex)
+                                                       : ast::node::v_index::makeWsm(_nodePool, vIndex);
     }
 
     template <com::TEnumIntegerType<ast::node::Kind> KIND>
@@ -137,8 +145,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
     {
         auto vIndex = get(identifierIdx)._asVIndex;
 
-        auto wsm = ast::node::v_index::isInterface(vIndex) ? ast::node::v_index::makeWsm(_interfacePoolOpt.value().get(), vIndex)
-                                                           : ast::node::v_index::makeWsm(_nodePool, vIndex);
+        auto wsm = makeWsm(vIndex);
         DMIT_COM_ASSERT(wsm);
 
         auto& inst = _wsmPool.grow(_wsmPool.get(_stackPtrIn->_wsmFuncIdx)._body);
@@ -154,8 +161,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
 
         auto vIndex = get(identifierIdx)._asVIndex;
 
-        auto wsm = ast::node::v_index::isInterface(vIndex) ? ast::node::v_index::makeWsm(_interfacePoolOpt.value().get(), vIndex)
-                                                           : ast::node::v_index::makeWsm(_nodePool, vIndex);
+        auto wsm = makeWsm(vIndex);
         DMIT_COM_ASSERT(wsm);
 
         auto& inst = _wsmPool.grow(_wsmPool.get(_stackPtrIn->_wsmFuncIdx)._body);

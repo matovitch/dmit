@@ -21,6 +21,7 @@
 #include "dmit/com/storage.hpp"
 #include "dmit/com/assert.hpp"
 #include "dmit/com/base64.hpp"
+#include "dmit/com/clock.hpp"
 
 #include "subprocess/subprocess.hpp"
 
@@ -35,6 +36,8 @@ dmit::com::TStorage<dmit::com::TStorage<uint8_t>> makeObjects(dmit::com::paralle
                                                               const std::vector<const char*>& filePaths)
 {
     // 1. Prepare the sources
+
+    DMIT_COM_CLK_MAKE(Read sources);
 
     std::vector<dmit::src::File              > sources;
     std::vector<std::filesystem::path        > paths;
@@ -51,6 +54,8 @@ dmit::com::TStorage<dmit::com::TStorage<uint8_t>> makeObjects(dmit::com::paralle
 
     // 2. Perform the parsing and semantic analysis
 
+    DMIT_COM_CLK(Parsing);
+
     dmit::com::parallel_for::TThreadContexts<dmit::ast::FromPathAndSource> astThreadContexts{threadPool};
 
     dmit::com::TParallelFor<dmit::ast::Builder> parallelAstBuilder{astThreadContexts, paths, contents};
@@ -58,6 +63,8 @@ dmit::com::TStorage<dmit::com::TStorage<uint8_t>> makeObjects(dmit::com::paralle
     threadPool.notify_and_wait(parallelAstBuilder);
 
     auto&& asts = parallelAstBuilder._outputs;
+
+    DMIT_COM_CLK(Bundles);
 
     dmit::sem::ImportGraph importGraph;
     dmit::sem::FactMap     factMap;
@@ -81,6 +88,8 @@ dmit::com::TStorage<dmit::com::TStorage<uint8_t>> makeObjects(dmit::com::paralle
 
     auto&& bundles = parallelBundleBuilder._outputs;
 
+    DMIT_COM_CLK(Analysis);
+
     dmit::sem::InterfaceMap interfaceMap;
 
     dmit::com::parallel_for::TThreadContexts<dmit::sem::Context> semThreadContexts{threadPool};
@@ -91,6 +100,8 @@ dmit::com::TStorage<dmit::com::TStorage<uint8_t>> makeObjects(dmit::com::paralle
     dmit::sem::analyze(threadPool, parallelSemanticAnalyzer);
 
     // 3. Generate wasm
+
+    DMIT_COM_CLK(Wasm);
 
     dmit::com::parallel_for::TThreadContexts<dmit::gen::PoolWasm> genThreadContexts{threadPool};
 
@@ -103,6 +114,8 @@ dmit::com::TStorage<dmit::com::TStorage<uint8_t>> makeObjects(dmit::com::paralle
 
 TEST_CASE("gen")
 {
+    DMIT_COM_CLK_MAKE_FULL(ThreadPool);
+
     dmit::com::parallel_for::ThreadPool threadPool{std::thread::hardware_concurrency()};
 
     std::vector<const char*> sourceFiles = {
@@ -110,15 +123,21 @@ TEST_CASE("gen")
         "test/data/sem/moduleB.in"
     };
 
+    DMIT_COM_CLK(Make archive);
+
     auto&& objects = makeObjects(threadPool, sourceFiles);
 
     auto archive = dmit::gen::makeArchive(objects);
     std::string archiveAsString{archive.data(), archive.data() + archive._size};
 
+    DMIT_COM_CLK(Linking);
+
     using namespace subprocess::literals;
 
     std::string wasmModule;
     ("wasm-ld --export-all --no-entry --whole-archive /dev/stdin -o -"_cmd < archiveAsString > wasmModule).run();
+
+    DMIT_COM_CLK(Execution);
 
     wasm3::Environment env;
 
