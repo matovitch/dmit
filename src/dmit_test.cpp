@@ -9,6 +9,7 @@ extern "C"
     #include "ketopt/ketopt.h"
 }
 
+#include <cstdlib>
 #include <cstring>
 
 enum

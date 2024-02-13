@@ -112,22 +112,46 @@ dmit::com::TStorage<dmit::com::TStorage<uint8_t>> makeObjects(dmit::com::paralle
     return std::move(parallelGenerationEmitter._outputs);
 }
 
-TEST_CASE("gen")
+TEST_SUITE("wasm")
+{
+
+TEST_CASE("gen_wasm")
 {
     DMIT_COM_CLK_MAKE_FULL(ThreadPool);
 
     dmit::com::parallel_for::ThreadPool threadPool{std::thread::hardware_concurrency()};
 
     std::vector<const char*> sourceFiles = {
-        "test/data/sem/moduleA.in",
-        "test/data/sem/moduleB.in"
+        "test/data/gen/moduleA.in",
+        "test/data/gen/moduleB.in"
     };
 
-    DMIT_COM_CLK(Make archive);
+    DMIT_COM_CLK(Compilation);
 
-    auto&& objects = makeObjects(threadPool, sourceFiles);
+    auto objects = makeObjects(threadPool, sourceFiles);
 
-    auto archive = dmit::gen::makeArchive(objects);
+    DMIT_COM_CLK(Build archive string);
+
+    std::string objectsAsBase64;
+
+    for(auto& object : objects)
+    {
+        objectsAsBase64 += base64(object);
+        objectsAsBase64.push_back('|');
+    }
+
+    objectsAsBase64.pop_back();
+
+    CHECK(objectsAsBase64 == fileAsString("test/data/gen/archiveAB.out"));
+}
+
+} // TEST_SUITE(wasm)
+
+TEST_CASE("gen_run")
+{
+    DMIT_COM_CLK_MAKE_FULL(Make archive);
+
+    auto archive = archiveFromString(fileAsString("test/data/gen/archiveAB.out").c_str());
     std::string archiveAsString{archive.data(), archive.data() + archive._size};
 
     DMIT_COM_CLK(Linking);

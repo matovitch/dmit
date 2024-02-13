@@ -54,7 +54,7 @@ struct Clock
         displayHeader();
         displayDuration(diff);
 
-        std::cout << std::right << std::setw(50 - 5 * _LEVEL) << _name << '\n';
+        std::cout << std::right << std::setw(55 - 5 * _LEVEL) << _name << '\n';
     }
 
     void operator()(const std::string_view name)
@@ -83,8 +83,15 @@ struct Clock
             displayDuration(_total);
 
             std::cout << '\n';
+
+            if (!_LEVEL)
+            {
+                displayHeader();
+                std::cout << "======================================================================\n";
+            }
         }
 
+        _ORDER--;
         _LEVEL--;
     }
 

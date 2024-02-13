@@ -28,7 +28,7 @@ struct Aster
     std::vector<dmit::src::File> _files;
 };
 
-TEST_SUITE("inout")
+TEST_SUITE("json")
 {
 
 TEST_CASE("ast")
@@ -42,4 +42,4 @@ TEST_CASE("ast")
     CHECK(dmit::fmt::asString(aster("test/data/ast/module.in"    )) == fileAsString("test/data/ast/module.out"    ));
 }
 
-} // TEST_SUITE("inout")
+} // TEST_SUITE("json")

@@ -24,7 +24,7 @@ private:
     dmit::lex::state::Builder _lexer;
 };
 
-TEST_SUITE("inout")
+TEST_SUITE("json")
 {
 
 TEST_CASE("lex")
@@ -40,4 +40,4 @@ TEST_CASE("lex")
     CHECK(dmit::fmt::asString(lexer("test/data/lex/whitespace.in" )) == fileAsString("test/data/lex/whitespace.out" ));
 }
 
-} // TEST_SUITE("inout")
+} // TEST_SUITE("json")

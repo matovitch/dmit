@@ -5,12 +5,12 @@ PROJECT_NAME=$(basename $ROOT_FOLDER | perl -pe 's/([^_])([A-Z])/\1_\2/g' | tr '
 
 function make()
 {
-    tup && $HOST_ROOT/bin/test/test -fc -ni -tse=inout | grep -vP 'CLK[0-9] ' && $HOST_ROOT/test/data/diff.sh
+    tup && $HOST_ROOT/bin/test/test -fc -ni -tse=json,wasm | grep -vP 'CLK[0-9] ' && $HOST_ROOT/test/data/diff.sh
 }
 
-function base64id2u64pair()
+function path2u64pair()
 {
-    echo $1 | if read id; then echo "${id}==" | base64 -d | xxd -e -g8; fi | awk '{print "{0x"$2", 0x"$3"};"}'
+    echo -e $1 | $HOST_ROOT/bin/src/mangler.bin | { read id; echo "$id=="; } | base64 -d | xxd -g8 -e | awk '{print "{0x"$2", 0x"$3"};"}'
 }
 
 function cleanSource()

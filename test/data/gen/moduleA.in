@@ -1,0 +1,7 @@
+module builtin;
+
+export class u64 {}
+export class i64 {}
+export class int {}
+
+export func add_i64(_:i64, _:i64) -> i64;

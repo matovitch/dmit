@@ -107,7 +107,7 @@ std::vector<std::string> analyze(dmit::com::parallel_for::ThreadPool& threadPool
     return interfaceAndBundleStrings;
 }
 
-TEST_SUITE("inout")
+TEST_SUITE("json")
 {
 
 TEST_CASE("sem")
@@ -125,4 +125,4 @@ TEST_CASE("sem")
     CHECK(results[1] == fileAsString("test/data/sem/bundlesAB.out"   ));
 }
 
-} // TEST_SUITE("inout")
+} // TEST_SUITE("json")

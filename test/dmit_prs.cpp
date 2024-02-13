@@ -29,7 +29,7 @@ struct Parser
 #define VALID   "test/data/prs/valid/"
 #define INVALID "test/data/prs/invalid/"
 
-TEST_SUITE("inout")
+TEST_SUITE("json")
 {
 
 TEST_CASE("prs")
@@ -53,4 +53,4 @@ TEST_CASE("prs")
     CHECK(dmit::fmt::asString(parser(INVALID "scope.in"             )) == fileAsString(INVALID "scope.out"             ));
 }
 
-} // TEST_SUITE("inout")
+} // TEST_SUITE("json")

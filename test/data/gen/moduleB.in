@@ -1,0 +1,26 @@
+
+module X.Y
+{
+
+module Z
+{
+
+module B;
+
+import builtin;
+
+export class C
+{
+    a : u64;
+}
+
+export func increment(x : i64) -> i64
+{
+    let y : i64;
+    y = x + 1;
+    return y;
+}
+
+} // module Z
+
+} // module X.Y

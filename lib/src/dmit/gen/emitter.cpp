@@ -97,7 +97,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
         Type value;
 
         return (std::from_chars(intAsStringView.begin(),
-                                intAsStringView.end(), value).ec == std::errc{}) ? std::optional<int>{value}
+                                intAsStringView.end(), value).ec == std::errc{}) ? std::optional<Type>{value}
                                                                                  : std::nullopt;
     }
 

@@ -4,11 +4,12 @@
 #include "dmit/com/base64.hpp"
 #include "dmit/com/sha256.hpp"
 
+#include <string_view>
 #include <cstdint>
 #include <string>
 #include <vector>
 
-std::string base64Encode(const std::string& srceAsString)
+std::string base64Encode(const std::string_view srceAsString)
 {
     const uint8_t* const srce = reinterpret_cast<const uint8_t*>(srceAsString.data());
 
@@ -25,7 +26,7 @@ std::string base64Encode(const std::string& srceAsString)
     return {reinterpret_cast<char*>(dest), destBuffer.size()};
 }
 
-std::string base64Decode(const std::string& srceAsString)
+std::string base64Decode(const std::string_view srceAsString)
 {
     const uint8_t* const srce = reinterpret_cast<const uint8_t*>(srceAsString.data());
 

@@ -126,6 +126,9 @@ RUN set -ex                                                                     
     apt-get remove -y $TO_REMOVE                                                                                &&\
     apt-get autoremove -y                                                                                       &&\
     apt-get clean                                                                                               &&\
+    export LC_ALL=en_US.UTF-8                                                                                   &&\
+    export LANG=en_US.UTF-8                                                                                     &&\
+    locale-gen en_US.UTF-8                                                                                      &&\
     groupadd --gid $GUEST_GID guest                                                                             &&\
     useradd                                                                                                       \
         --uid $GUEST_UID                                                                                          \
