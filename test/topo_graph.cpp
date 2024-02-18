@@ -58,11 +58,11 @@ TEST_CASE("topo::graph_2")
 
     const auto& cycle = charGraph.makeCycle();
 
-    CHECK(cycle);
+    CHECK(!cycle.empty());
 
     const char* ptr = "CAB";
 
-    for (const auto& nodeIt : cycle.value())
+    for (const auto& nodeIt : cycle)
     {
         CHECK(nodeIt->_value == *ptr++);
     }

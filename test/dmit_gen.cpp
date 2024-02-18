@@ -138,6 +138,7 @@ TEST_CASE("gen_wasm")
     {
         objectsAsBase64 += base64(object);
         objectsAsBase64.push_back('|');
+        object.~TStorage();
     }
 
     objectsAsBase64.pop_back();
@@ -182,7 +183,7 @@ TEST_CASE("gen_run")
     result = wasm3::call(increment, 41);
     CHECK(!result);
 
-    int32_t value = 0;
+    int64_t value = 0;
     result = wasm3::getResults(increment, &value);
     CHECK(!result);
 

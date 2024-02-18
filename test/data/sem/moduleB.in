@@ -17,7 +17,7 @@ export class C
 export func increment(x : i64) -> i64
 {
     let y : i64;
-    y = x + 1;
+    y = 1 + x;
     return y;
 }
 

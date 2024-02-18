@@ -7,6 +7,8 @@
 #include "dmit/com/unique_id.hpp"
 #include "dmit/com/storage.hpp"
 
+#include "dmit/fmt/com/unique_id.hpp"
+
 namespace dmit::sem
 {
 

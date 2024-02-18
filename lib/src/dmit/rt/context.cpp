@@ -6,6 +6,7 @@
 
 #include "dmit/com/assert.hpp"
 
+#include <cstdint>
 #include <memory>
 
 namespace dmit::rt

@@ -3,7 +3,9 @@
 #include "list/iterator.hpp"
 #include "list/list.hpp"
 
+#include <sstream>
 #include <cstddef>
+#include <string>
 
 namespace topo
 {
@@ -80,6 +82,13 @@ public:
     {
         _dependerNode->_dependees.erase(_dependerEdge);
         _dependeeNode->_dependers.erase(_dependeeEdge);
+    }
+
+    std::string dot() const
+    {
+        std::ostringstream oss;
+        oss << '_' << &(*_dependerNode) << "->_" << &(*_dependeeNode);
+        return oss.str();
     }
 
 private:

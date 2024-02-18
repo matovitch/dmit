@@ -1,9 +1,9 @@
 #include "dmit/sem/interface_map.hpp"
 
 #include "dmit/sem/context.hpp"
+#include "dmit/sem/visitor.hpp"
 
 #include "dmit/ast/copy_shallow.hpp"
-#include "dmit/ast/visitor.hpp"
 #include "dmit/ast/bundle.hpp"
 #include "dmit/ast/lexeme.hpp"
 #include "dmit/ast/state.hpp"
@@ -15,6 +15,7 @@
 
 #include <optional>
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 namespace dmit::sem
@@ -29,32 +30,32 @@ struct Stack
     bool _isDeclaring;
 };
 
-struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
+struct InterfaceMaker : TVisitor<InterfaceMaker, Stack>
 {
     InterfaceMaker(ast::State::NodePool& astNodePool,
                    Context& context) :
-        TVisitor<InterfaceMaker, Stack>{astNodePool},
-        _context{context}
+        TVisitor<InterfaceMaker, Stack>{context, astNodePool}
     {}
 
     DMIT_AST_VISITOR_SIMPLE();
 
     void operator()(ast::node::TIndex<ast::node::Kind::IDENTIFIER> identifierIdx)
     {
-        auto&& slice = getSlice(identifierIdx);
+        auto& identifier = get(identifierIdx);
 
+        auto slice = getSlice(identifier._lexeme);
         auto id = com::murmur::combine(slice.makeUniqueId(), _stackPtrIn->_prefix);
 
         _context.makeTaskMedium
         (
-            [this, identifierIdx](const ast::node::VIndex& vIndex)
+            [&identifier](const ast::node::VIndex& vIndex)
             {
-                get(identifierIdx)._status = ast::node::Status::BOUND;
-
-                com::blit(vIndex, get(identifierIdx)._asVIndex);
+                identifier._status = ast::node::Status::BOUND;
+                identifier._asVIndexOrLock = vIndex;
             },
-            identifierIdx,
-            id
+            vIndexOrLock(identifierIdx),
+            id,
+            DMIT_SEM_CONTEXT_STR("interface_maker")
         );
     }
 
@@ -90,7 +91,7 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
 
         com::blit(_stackPtrIn->_prefix, defClass._id);
 
-        _context.notifyEvent(_stackPtrIn->_prefix, defClassIdx);
+        notifyEvent(_stackPtrIn->_prefix, defClassIdx);
 
         defClass._status = ast::node::Status::IDENTIFIED;
     }
@@ -112,6 +113,8 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
         com::murmur::combine(slice.makeUniqueId(), _stackPtrIn->_prefix);
 
         com::blit(_stackPtrIn->_prefix, function._id);
+
+        notifyEvent(_stackPtrIn->_prefix, functionIdx);
 
         function._status = ast::node::Status::IDENTIFIED;
     }
@@ -151,8 +154,6 @@ struct InterfaceMaker : ast::TVisitor<InterfaceMaker, Stack>
 
         base()(get(viewIdx)._modules);
     }
-
-    Context& _context;
 };
 
 } // namespace
@@ -186,14 +187,7 @@ void InterfaceMap::registerBundle(ast::Bundle& bundle, Context& context)
 
     InterfaceMaker interfaceMaker{_astNodePool, context};
 
-    context._scheduler.makeTask
-    (
-        [&interfaceMaker, &views]
-        {
-            interfaceMaker.base()(views);
-        },
-        context._coroutinePoolLarge
-    );
+    interfaceMaker.base()(views);
 
     context.run();
 

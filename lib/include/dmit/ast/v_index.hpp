@@ -15,6 +15,8 @@ namespace dmit::ast::node::v_index
 using Hasher     = com::tree::v_index::THasher     <Kind>;
 using Comparator = com::tree::v_index::TComparator <Kind>;
 
+VIndex makeVIndex(State::NodePool&, const VIndex);
+
 com::UniqueId makeId(State::NodePool&, const VIndex);
 
 DefinitionRole makeDefinitionRole(State::NodePool&, const VIndex);

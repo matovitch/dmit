@@ -2,8 +2,11 @@
 
 #include "dmit/ast/node.hpp"
 
+#include "dmit/com/logger.hpp"
 #include "dmit/com/unique_id.hpp"
 #include "dmit/com/assert.hpp"
+
+#include <dmit/fmt/sem/context.hpp>
 
 #include <optional>
 
@@ -12,19 +15,18 @@ namespace dmit::sem
 
 Context::Context() : _scheduler{_taskGraphPoolSet, _taskPool} {}
 
-SchmitTaskNode Context::getOrMakeLock(const ast::node::VIndex& astNodeVIndex)
+ast::node::VIndex Context::vIndex(ast::node::VIndexOrLock& vIndexOrLock)
 {
-    auto fitLock = _lockMap.find(astNodeVIndex);
-
-    auto lock = (fitLock != _lockMap.end()) ? fitLock->second
-                                            : _scheduler.makeTask([]{}, _coroutinePoolSmall);
-    if (fitLock == _lockMap.end())
+    if (std::holds_alternative<ast::node::VIndex>(vIndexOrLock))
     {
-        _scheduler.attach(lock, lock);
-        _lockMap.emplace(astNodeVIndex, lock);
+        return std::get<ast::node::VIndex>(vIndexOrLock);
     }
 
-    return lock;
+    DMIT_COM_ASSERT(_scheduler.isRunning());
+    SchmitDependency dependency;
+    _scheduler.top()().attach(std::get<SchmitTaskNode>(vIndexOrLock), dependency);
+
+    return std::get<ast::node::VIndex>(vIndexOrLock);
 }
 
 SchmitTaskNode Context::getOrMakeEvent(const com::UniqueId& uniqueId)
@@ -32,7 +34,7 @@ SchmitTaskNode Context::getOrMakeEvent(const com::UniqueId& uniqueId)
     auto fitEvent = _eventMap.find(uniqueId);
 
     auto event = (fitEvent != _eventMap.end()) ? fitEvent->second
-                                               : _scheduler.makeTask([]{}, _coroutinePoolSmall);
+                                               : _scheduler.makeEvent();
     if (fitEvent == _eventMap.end())
     {
         _eventMap.emplace(uniqueId, event);
@@ -64,25 +66,27 @@ std::optional<ast::node::VIndex> Context::getFact(const com::UniqueId& id)
 
 void Context::run()
 {
-    _scheduler.run();
-
-    for (auto key : _unlockSet)
+    do
     {
-        auto fit = _lockMap.find(key);
-
-        if (fit != _lockMap.end())
+        for (auto lock : _unlockSet)
         {
-            _scheduler.detachAll(fit->second);
+            _scheduler.detachAll(lock);
         }
+
+        _unlockSet.clear();
+        _scheduler.run();
+    }
+    while (!_unlockSet.empty());
+
+    if (_scheduler.isCyclic())
+    {
+        DMIT_COM_LOG_ERR << "Aborting: " << fmt::asString(*this) << "\n";
+        abort();
     }
 
-    _unlockSet.clear();
-    _scheduler.run();
+    //DMIT_COM_ASSERT(!_scheduler.isCyclic());
 
-    DMIT_COM_ASSERT(!_scheduler.isCyclic());
-
-    _eventMap .clear();
-    _lockMap  .clear();
+    _eventMap.clear();
 }
 
 } // namespace dmit::sem

@@ -139,8 +139,15 @@ dmit::com::TStorage<uint8_t> archiveFromString(const char* archiveAsString)
 
     for (int i = 0; i < objects._size; i++)
     {
-        objects[i] = std::move(objectsAsVector[i]);
+        new (objects.data() + i) dmit::com::TStorage<uint8_t>{std::move(objectsAsVector[i])};
     }
 
-    return dmit::gen::makeArchive(objects);
+    auto archive = dmit::gen::makeArchive(objects);
+
+    for (int i = 0; i < objects._size; i++)
+    {
+        objects[i].~TStorage();
+    }
+
+    return archive;
 }

@@ -18,7 +18,7 @@ public:
     template <class... Args>
     Type& make(Args&&... args)
     {
-        return _pool.make(*this, args...);
+        return _pool.make(*this, std::forward<Args>(args)...);
     }
 
     void recycle(Type& value)

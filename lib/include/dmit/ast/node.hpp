@@ -16,11 +16,21 @@
 #include "dmit/com/storage.hpp"
 #include "dmit/com/enum.hpp"
 
+#include "schmit/scheduler.hpp"
+
 #include <filesystem>
 #include <optional>
 #include <cstdint>
 #include <variant>
 #include <vector>
+
+#ifdef DMIT_SEM_CONTEXT_DEBUG
+    using SchmitScheduler = schmit::TScheduler<1, std::string>;
+#else
+    using SchmitScheduler = schmit::TScheduler<1>;
+#endif
+
+using SchmitTaskNode = typename SchmitScheduler::TaskNode;
 
 namespace dmit::ast
 {
@@ -34,7 +44,9 @@ struct Status : com::TEnum<uint8_t>
     {
         ASTED,
         IDENTIFIED,
-        BOUND
+        LOCKED,
+        BOUND,
+        WASMED
     };
 
     DMIT_COM_ENUM_IMPLICIT_FROM_INT(Status);
@@ -86,6 +98,8 @@ using TIndex = typename com::tree::TMetaNode<Kind>::template TIndex<KIND>;
 using VIndex = typename com::tree::TMetaNode<Kind>::VIndex;
 
 using Index = typename com::tree::TMetaNode<Kind>::Index;
+
+using VIndexOrLock = std::variant<VIndex, SchmitTaskNode>;
 
 template <com::TEnumIntegerType<Kind> KIND>
 auto as = [](auto value) -> TIndex<KIND>
@@ -222,7 +236,7 @@ struct TNode<node::Kind::DEF_FUNCTION>
 
     node::TIndex<node::Kind::DEFINITION> _parent;
 
-    std::optional<wsm::node::VIndex> _asWsm;
+    wsm::node::VIndex _asWsm;
 
     com::UniqueId _id;
 
@@ -247,7 +261,7 @@ struct TNode<node::Kind::IDENTIFIER>
 {
     node::TIndex<node::Kind::LEXEME> _lexeme;
 
-    node::VIndex _asVIndex;
+    node::VIndexOrLock _asVIndexOrLock;
     node::Status _status;
 };
 
@@ -266,7 +280,7 @@ struct TNode<node::Kind::LIT_INTEGER>
 
     node::TIndex<node::Kind::DEF_CLASS> _expectedType;
 
-    static node::VIndex _asVIndex;
+    static node::VIndexOrLock _asVIndexOrLock;
     static node::Status _status;
 };
 
@@ -311,6 +325,7 @@ struct TNode<node::Kind::EXP_BINOP>
 
     node::TIndex<node::Kind::DEF_FUNCTION > _asFunction;
 
+    node::VIndexOrLock _asVIndexOrLock;
     node::Status _status;
 };
 

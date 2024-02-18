@@ -5,16 +5,6 @@
 namespace dmit::com
 {
 
-namespace
-{
-    void displayDuration(const std::chrono::nanoseconds duration)
-    {
-        std::cout << std::setw(3) << std::chrono::duration_cast<std::chrono::seconds     >(duration).count()        << "s "
-                  << std::setw(3) << std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() % 1000 << "m "
-                  << std::setw(3) << std::chrono::duration_cast<std::chrono::microseconds>(duration).count() % 1000 << "u ";
-    }
-}
-
 struct Clock
 {
     Clock(const std::string_view name, bool isFull = false) :
@@ -39,23 +29,7 @@ struct Clock
         _order = _ORDER++;
     }
 
-    void display()
-    {
-        auto diff = std::chrono::steady_clock::now() - _reference;
-
-        _total += diff;
-
-        if (_order > 9999)
-        {
-            std::cout << "0000CLK0 Too many events!\n";
-            std::cout << "9999CLK9 Too many events!\n";
-        }
-
-        displayHeader();
-        displayDuration(diff);
-
-        std::cout << std::right << std::setw(55 - 5 * _LEVEL) << _name << '\n';
-    }
+    void display();
 
     void operator()(const std::string_view name)
     {
@@ -64,36 +38,7 @@ struct Clock
         _reference = std::chrono::steady_clock::now();
     }
 
-    ~Clock()
-    {
-        display();
-
-        if (_isFull)
-        {
-            displayHeader();
-
-            for (int i = 0; i < 14; i++)
-            {
-                std::cout << '-';
-            }
-
-            std::cout << '\n';
-
-            displayHeader();
-            displayDuration(_total);
-
-            std::cout << '\n';
-
-            if (!_LEVEL)
-            {
-                displayHeader();
-                std::cout << "======================================================================\n";
-            }
-        }
-
-        _ORDER--;
-        _LEVEL--;
-    }
+    ~Clock();
 
     std::chrono::time_point<std::chrono::steady_clock> _reference;
     std::string_view _name;

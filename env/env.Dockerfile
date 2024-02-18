@@ -18,6 +18,9 @@ ENV TO_INSTALL "               \
     ninja-build                \
     cmake                      \
     xxd                        \
+    locales                    \
+    graphviz                   \
+    vim                        \
 "
 
 ENV TO_REMOVE "                \
@@ -81,7 +84,7 @@ RUN set -ex                                                                     
     mv libdoctest.a /usr/lib                                                                                    &&\
     cd ..                                                                                                       &&\
     rm -r doctest-2.4.9.tar.gz doctest-2.4.9                                                                    &&\
-    curl https://www.sqlite.org/2022/sqlite-autoconf-3390200.tar.gz > sqlite-autoconf-3390200.tar.gz            &&\
+    curl -k https://www.sqlite.org/2022/sqlite-autoconf-3390200.tar.gz > sqlite-autoconf-3390200.tar.gz         &&\
     tar xvf sqlite-autoconf-3390200.tar.gz                                                                      &&\
     cd sqlite-autoconf-3390200                                                                                  &&\
     clang-${LLVM_VERSION} $FLAGS_SQLITE3 -c sqlite3.c -o libsqlite3.a                                           &&\
@@ -90,7 +93,7 @@ RUN set -ex                                                                     
     rm -r sqlite-autoconf-3390200 sqlite-autoconf-3390200.tar.gz                                                &&\
     git clone --progress --depth 1 https://github.com/nanomsg/nng.git                                           &&\
     cd nng                                                                                                      &&\
-    git checkout a3cb9efc9563019518493dd4b3bfdb1f57acd943                                                       &&\
+    git checkout 02cc3d46e283ed584592bb12055e16ed27126ee3                                                       &&\
     cmake -G Ninja                                                                                              &&\
     ninja                                                                                                       &&\
     mv libnng.a /usr/lib                                                                                        &&\
@@ -106,7 +109,7 @@ RUN set -ex                                                                     
     rm -r cmp                                                                                                   &&\
     git clone --recursive --progress --depth 1 https://github.com/WebAssembly/wabt                              &&\
     cd wabt                                                                                                     &&\
-    git checkout e4a6d92191fa5b4b1aab5643dbabbe76c93427a5                                                       &&\
+    git checkout 1471dffee8bf9939044b80d34256956a28138e96                                                       &&\
     mkdir build                                                                                                 &&\
     cd build                                                                                                    &&\
     cmake .. -G Ninja -DBUILD_TESTS=OFF                                                                         &&\
@@ -114,9 +117,8 @@ RUN set -ex                                                                     
     find -maxdepth 1 -executable -type f -exec mv -t /usr/bin {} +                                              &&\
     cd ../..                                                                                                    &&\
     rm -r wabt                                                                                                  &&\
-    git clone --progress --depth 1 https://github.com/wasm3/wasm3.git                                           &&\
+    git clone --progress --depth 1 https://github.com/matovitch/wasm3.git                                       &&\
     cd wasm3                                                                                                    &&\
-    git checkout 139076a98b8321b67f850a844f558b5e91b5ac83                                                       &&\
     cmake -G Ninja                                                                                              &&\
     ninja                                                                                                       &&\
     mv source/libm3.a /usr/lib                                                                                  &&\

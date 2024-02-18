@@ -1,5 +1,6 @@
 #include "dmit/sem/analyzer.hpp"
 
+#include "dmit/ast/node.hpp"
 #include "dmit/sem/interface_map.hpp"
 #include "dmit/sem/context.hpp"
 #include "dmit/sem/check.hpp"
@@ -14,7 +15,6 @@
 #include "dmit/com/murmur.hpp"
 #include "dmit/com/blit.hpp"
 
-#include <cstdint>
 #include <atomic>
 
 namespace dmit::sem
@@ -35,17 +35,17 @@ void analyze(ast::Bundle& bundle, Context& context, InterfaceMap& interfaceMap)
         {
             bind(bundle, context, interfaceMap);
         },
-        context._coroutinePoolLarge
+        context._coroutinePoolLarge,
+        DMIT_SEM_CONTEXT_STR("bind")
     );
-
-    context.run();
 
     context._scheduler.makeTask(
         [&]()
         {
             check(bundle, context, interfaceMap);
         },
-        context._coroutinePoolLarge
+        context._coroutinePoolLarge,
+        DMIT_SEM_CONTEXT_STR("check")
     );
 
     context.run();

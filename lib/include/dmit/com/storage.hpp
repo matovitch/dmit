@@ -18,15 +18,26 @@ public:
         _buckets{new Bucket[size]}
     {}
 
+    TStorage(const TStorage<Type>&) = delete;
+    TStorage<Type>& operator=(const TStorage<Type>&) = delete;
+
     TStorage(TStorage<Type>&& storage) :
         _size    {storage._size},
         _buckets {storage._buckets}
     {
+        _size    = storage._size;
+        _buckets = storage._buckets;
+
         storage._buckets = nullptr;
     }
 
     TStorage<Type>& operator=(TStorage<Type>&& storage)
     {
+        if (_buckets)
+        {
+            delete[] _buckets;
+        }
+
         _size    = storage._size;
         _buckets = storage._buckets;
 

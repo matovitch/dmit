@@ -125,7 +125,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
 
         auto& wsmFunction = _wsmPool.get(_stackPtrIn->_wsmFuncIdx);
 
-        auto type = id(get(get(get(dclVariable._typeClaim)._type)._name)._asVIndex);
+        auto type = id(std::get<ast::node::VIndex>(get(get(get(dclVariable._typeClaim)._type)._name)._asVIndexOrLock));
 
         if (type == K_TYPE_I64)
         {
@@ -143,7 +143,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
 
     void operator()(ast::node::TIndex<ast::node::Kind::IDENTIFIER> identifierIdx)
     {
-        auto vIndex = get(identifierIdx)._asVIndex;
+        auto vIndex = std::get<ast::node::VIndex>(get(identifierIdx)._asVIndexOrLock);
 
         auto wsm = makeWsm(vIndex);
         DMIT_COM_ASSERT(wsm);
@@ -159,7 +159,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
     {
         auto identifierIdx = get(patternIdx)._variable;
 
-        auto vIndex = get(identifierIdx)._asVIndex;
+        auto vIndex = std::get<ast::node::VIndex>(get(identifierIdx)._asVIndexOrLock);
 
         auto wsm = makeWsm(vIndex);
         DMIT_COM_ASSERT(wsm);
@@ -187,7 +187,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
                 wsm::node::TIndex<wsm::node::Kind::INST_CALL> instCall;
                 auto& call_ = _wsmPool.makeGet(instCall);
 
-                call_._function = get(expBinop._asFunction)._asWsm.value();
+                call_._function = get(expBinop._asFunction)._asWsm;
 
                 auto& relocation = _wsmPool.makeGet(call_._relocation);
 
@@ -214,11 +214,11 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
 
         base()(funCall._arguments);
 
-        auto calleeIdx = std::get<ast::node::Kind::DEF_FUNCTION>(get(funCall._callee)._asVIndex);
+        auto calleeIdx = std::get<ast::node::Kind::DEF_FUNCTION>(std::get<ast::node::VIndex>(get(funCall._callee)._asVIndexOrLock));
 
         base()(calleeIdx);
 
-        auto symbolAsVIndex = get(calleeIdx)._asWsm.value();
+        auto symbolAsVIndex = get(calleeIdx)._asWsm;
 
         wsm::node::TIndex<wsm::node::Kind::INST_CALL> instCall;
         auto& call = _wsmPool.makeGet(instCall);
@@ -267,7 +267,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
     {
         auto& function = get(functionIdx);
 
-        if (function._asWsm)
+        if (function._status == ast::node::Status::WASMED)
         {
             return;
         }
@@ -310,7 +310,9 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
         {
             auto& wsmFunction = _wsmPool.grow(wsmModule._funcs);
             _stackPtrIn->_wsmFuncIdx = wsmModule._funcs.back();
-            function._asWsm = _stackPtrIn->_wsmFuncIdx;
+
+            com::blit(_stackPtrIn->_wsmFuncIdx, function._asWsm);
+            function._status = ast::node::Status::WASMED;
 
             wsmFunction._type = wsmModule._types.back();
 
@@ -385,7 +387,8 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
 
         for (int i = 0; i < function._arguments._size; i++)
         {
-            auto type = id(get(get(get(get(function._arguments[i])._typeClaim)._type)._name)._asVIndex);
+            //std::cout << "STATUS: " << (int)(get(get(get(get(function._arguments[i])._typeClaim)._type)._name)._status._asInt) << '\n';
+            auto type = id(std::get<ast::node::VIndex>(get(get(get(get(function._arguments[i])._typeClaim)._type)._name)._asVIndexOrLock));
 
             if (type == K_TYPE_I64)
             {
@@ -401,7 +404,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
 
         _wsmPool.make(wsmCodomain._valTypes, 1);
 
-        auto vIndex = get(get(function._returnType.value())._name)._asVIndex;
+        auto vIndex = std::get<ast::node::VIndex>(get(get(function._returnType.value())._name)._asVIndexOrLock);
 
         if (id(vIndex) == K_TYPE_I64)
         {

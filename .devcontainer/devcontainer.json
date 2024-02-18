@@ -9,7 +9,9 @@
 		"vscode": {
 			"extensions": [
 				"vadimcn.vscode-lldb",
-				"llvm-vs-code-extensions.vscode-clangd"
+				"llvm-vs-code-extensions.vscode-clangd",
+				"EFanZh.graphviz-preview",
+				"ms-azuretools.vscode-docker"
 			]
 		}
 	}

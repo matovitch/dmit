@@ -14,6 +14,8 @@
 #include <cstdint>
 #include <vector>
 
+#include <iostream>
+
 namespace topo
 {
 
@@ -21,15 +23,16 @@ template <class Traits>
 class TGraph
 {
     using EdgeItPool = typename Traits::EdgeItPool;
-    using EdgeList   = typename Traits::EdgeList;
     using NodeList   = typename Traits::NodeList;
 
 public:
 
-    using EdgeListItList = typename Traits::EdgeListItList;
-    using EdgeListIt     = typename Traits::EdgeListIt;
-    using NodeListIt     = typename Traits::NodeListIt;
-    using PoolSet        = typename Traits::PoolSet;
+    using NodeListConstIt = typename Traits::NodeListConstIt;
+    using EdgeListItList  = typename Traits::EdgeListItList;
+    using NodeListIt      = typename Traits::NodeListIt;
+    using EdgeListIt      = typename Traits::EdgeListIt;
+    using EdgeList        = typename Traits::EdgeList;
+    using PoolSet         = typename Traits::PoolSet;
 
     TGraph(PoolSet& poolSet) :
         _edges    {poolSet._edges},
@@ -112,6 +115,16 @@ public:
         return _pendings.begin();
     }
 
+    NodeListConstIt ctop() const
+    {
+        return _pendings.cbegin();
+    }
+
+    NodeListConstIt cpot() const
+    {
+        return _blockeds.cbegin();
+    }
+
     bool empty() const
     {
         return _pendings.empty();
@@ -122,13 +135,13 @@ public:
         return _pendings.empty() && !_blockeds.empty();
     }
 
-    std::optional<std::vector<NodeListIt>> makeCycle()
+    std::vector<NodeListIt> makeCycle()
     {
         // 0. If not cyclic, return the empty cycle
 
         if (!isCyclic())
         {
-            return std::nullopt;
+            return std::vector<NodeListIt>{};
         }
 
         // 1. Build the cycle
@@ -150,13 +163,13 @@ public:
 
         // 2. Reset the state of the visited nodes
 
-        nodeIt = _blockeds.begin();
+        // nodeIt = _blockeds.begin();
 
-        while (nodeIt->_withinCycle)
-        {
-            nodeIt->_withinCycle = false;
-            nodeIt = (*(nodeIt->_dependees.begin()))->_dependeeNode;
-        }
+        // while (nodeIt->_withinCycle)
+        // {
+        //     nodeIt->_withinCycle = false;
+        //     nodeIt = (*(nodeIt->_dependees.begin()))->_dependeeNode;
+        // }
 
         return cycle;
     }
@@ -172,7 +185,7 @@ public:
 
         std::optional<NodeListIt> cycleFront;
 
-        auto prevIt = _blockeds.begin();
+        // auto prevIt = _blockeds.begin();
         auto nodeIt = _blockeds.begin();
 
         while (!cycleFront || nodeIt != cycleFront.value())
@@ -193,13 +206,13 @@ public:
 
         // 2. Reset the state of the visited nodes
 
-        nodeIt = prevIt;
+        // nodeIt = prevIt;
 
-        while (nodeIt->_withinCycle)
-        {
-            nodeIt->_withinCycle = false;
-            nodeIt = (*(nodeIt->_dependees.begin()))->_dependeeNode;
-        }
+        // while (nodeIt->_withinCycle)
+        // {
+        //     nodeIt->_withinCycle = false;
+        //     nodeIt = (*(nodeIt->_dependees.begin()))->_dependeeNode;
+        // }
 
         // 3. Attach depender/dependee nodes to hyperNodes and detach them from cycle
 
@@ -224,6 +237,8 @@ public:
         attach(hyperNodeClose,
                hyperNodeOpen);
     }
+
+    EdgeList _edges;
 
 private:
 
@@ -251,8 +266,6 @@ private:
         }
     }
 
-    EdgeList _edges;
-
     NodeList _pendings;
     NodeList _blockeds;
 
@@ -270,6 +283,8 @@ struct TTraits
 
     using EdgeList = list::TMake<Edge, SIZE>;
     using NodeList = list::TMake<Node, SIZE>;
+
+    using NodeListConstIt = typename NodeList::const_iterator;
 
     using NodeListIt = typename NodeList::iterator;
     using EdgeListIt = typename EdgeList::iterator;

@@ -14,6 +14,7 @@ std::string asString(const sem::InterfaceMap& interfaceMap)
 
     oss << '[';
 
+    // TODO A const_cast deserve at least an explanation
     AstVisitor astVisitor{const_cast<sem::InterfaceMap&>(interfaceMap), oss};
 
     for (const auto& idViewPair : interfaceMap._asSimpleMap)

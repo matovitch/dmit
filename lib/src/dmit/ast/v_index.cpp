@@ -101,7 +101,33 @@ struct WsmVisitor
     State::NodePool& _pool;
 };
 
+struct VIndexVisitor
+{
+    VIndexVisitor(State::NodePool& pool) : _pool{pool} {}
+
+    template <com::TEnumIntegerType<Kind> KIND>
+    VIndex operator()(TIndex<KIND>)
+    {
+        DMIT_COM_ASSERT(!"[AST] Not implemented");
+        return VIndex{};
+    }
+
+    VIndex operator()(ast::node::TIndex<ast::node::Kind::IDENTIFIER> identifierIdx)
+    {
+        return std::get<ast::node::VIndex>(_pool.get(identifierIdx)._asVIndexOrLock);
+    }
+
+    State::NodePool& _pool;
+};
+
 } // namespace
+
+VIndex makeVIndex(State::NodePool& pool, const VIndex vIndex)
+{
+    VIndexVisitor vIndexVisitor{pool};
+
+    return std::visit(vIndexVisitor, vIndex);
+}
 
 com::UniqueId makeId(State::NodePool& pool, const VIndex vIndex)
 {

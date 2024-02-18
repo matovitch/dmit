@@ -118,6 +118,12 @@ struct TTMetaVisitor
         }
 
         template <class... Types>
+        void operator()(std::variant<Types...>&& variant)
+        {
+            std::visit(*this, variant);
+        }
+
+        template <class... Types>
         void operator()(std::variant<Types...>& variant)
         {
             std::visit(*this, variant);

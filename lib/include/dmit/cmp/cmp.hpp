@@ -154,7 +154,6 @@ DMIT_CMP_ALIAS(::cmp_read_sinteger, readSinteger)
 
 cmp_ctx_t contextFromNngBuffer(nng::Buffer& nngBuffer);
 
-// TODO Make a PR onto cmp to improve this
 bool readBytes(cmp_ctx_t* ctx, void* data, uint32_t limit);
 
 template <class Serializer, class... Args>

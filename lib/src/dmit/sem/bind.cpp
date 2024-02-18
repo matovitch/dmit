@@ -2,8 +2,8 @@
 
 #include "dmit/sem/interface_map.hpp"
 #include "dmit/sem/context.hpp"
+#include "dmit/sem/visitor.hpp"
 
-#include "dmit/ast/visitor.hpp"
 #include "dmit/ast/bundle.hpp"
 #include "dmit/ast/state.hpp"
 #include "dmit/ast/node.hpp"
@@ -13,6 +13,7 @@
 #include "dmit/com/blit.hpp"
 #include "dmit/com/enum.hpp"
 
+#include "dmit/fmt/com/unique_id.hpp"
 #include "dmit/fmt/src/slice.hpp"
 
 #include <tuple>
@@ -25,24 +26,23 @@ namespace
 
 const com::UniqueId K_TYPE_INT{0x705a28814eebca10, 0xb928e2c4dc06b2ae};
 
-struct ExportLister : ast::TVisitor<ExportLister>
+struct ExportLister : TVisitor<ExportLister>
 {
     ExportLister(ast::State::NodePool& astNodePool,
                  Context& context) :
-        TVisitor<ExportLister>{astNodePool},
-        _context{context}
+        TVisitor<ExportLister>{context, astNodePool}
     {}
 
     DMIT_AST_VISITOR_SIMPLE();
 
     void operator()(ast::node::TIndex<ast::node::Kind::DEF_CLASS> defClassIdx)
     {
-        _context.notifyEvent(get(defClassIdx)._id, defClassIdx);
+        notifyEvent(get(defClassIdx)._id, defClassIdx);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DEF_FUNCTION> functionIdx)
     {
-        _context.notifyEvent(get(functionIdx)._id, functionIdx);
+        notifyEvent(get(functionIdx)._id, functionIdx);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DEFINITION> definitionIdx)
@@ -64,16 +64,16 @@ struct ExportLister : ast::TVisitor<ExportLister>
     {
         base()(get(viewIdx)._modules);
     }
-
-    Context& _context;
 };
 
 template<com::TEnumIntegerType<ast::node::Kind> KIND_>
-struct TResolver : ast::TVisitor<TResolver<KIND_>>
+struct TResolver : TVisitor<TResolver<KIND_>>
 {
-    using ast::TVisitor<TResolver<KIND_>>::_nodePool;
-    using ast::TVisitor<TResolver<KIND_>>::base;
-    using ast::TVisitor<TResolver<KIND_>>::get;
+    using TVisitor<TResolver<KIND_>>::vIndexOrLock;
+    using TVisitor<TResolver<KIND_>>::_nodePool;
+    using TVisitor<TResolver<KIND_>>::_context;
+    using TVisitor<TResolver<KIND_>>::base;
+    using TVisitor<TResolver<KIND_>>::get;
 
     DMIT_AST_VISITOR_SIMPLE();
 
@@ -81,26 +81,31 @@ struct TResolver : ast::TVisitor<TResolver<KIND_>>
              Context              & context,
              const com::UniqueId  & sliceId,
              ast::node::TIndex<KIND_> solveIdx) :
-        ast::TVisitor<TResolver<KIND_>>{astNodePool},
-        _context{context},
+        TVisitor<TResolver<KIND_>>{context, astNodePool},
         _sliceId{sliceId},
         _solveIdx{solveIdx}
     {}
 
     void resolve(com::UniqueId prefix)
     {
+        #ifdef DMIT_SEM_CONTEXT_DEBUG
+            auto debugInfo = fmt::asString(_sliceId) + ':' + fmt::asString(prefix) + ":rsv";
+        #endif
+
         com::murmur::combine(_sliceId, prefix);
+
+        auto& solve = get(_solveIdx);
 
         _context.makeTaskMedium
         (
-            [&nodePool = _nodePool, solveIdx = _solveIdx](const ast::node::VIndex& vIndex)
+            [&solve](const ast::node::VIndex& vIndex)
             {
-                nodePool.get(solveIdx)._status = ast::node::Status::BOUND;
-
-                com::blit(vIndex, nodePool.get(solveIdx)._asVIndex);
+                solve._status = ast::node::Status::BOUND;
+                solve._asVIndexOrLock = vIndex;
             },
-            _solveIdx,
-            prefix
+            vIndexOrLock(_solveIdx),
+            prefix,
+            DMIT_SEM_CONTEXT_STR(debugInfo)
         );
     }
 
@@ -144,10 +149,7 @@ struct TResolver : ast::TVisitor<TResolver<KIND_>>
         }
     }
 
-    Context& _context;
-
     com::UniqueId _sliceId;
-
     ast::node::TIndex<KIND_> _solveIdx;
 };
 
@@ -157,15 +159,14 @@ struct Stack
     com::UniqueId _prefix;
 };
 
-struct Binder : ast::TVisitor<Binder, Stack>
+struct Binder : TVisitor<Binder, Stack>
 {
     DMIT_AST_VISITOR_SIMPLE();
 
     Binder(ast::State::NodePool & astNodePool,
            Context              & context,
            InterfaceMap         & interfaceMap) :
-        TVisitor<Binder, Stack>{astNodePool},
-        _context{context},
+        TVisitor<Binder, Stack>{context, astNodePool},
         _interfaceMap{interfaceMap},
         _exportLister{interfaceMap._astNodePool, _context}
     {}
@@ -211,6 +212,16 @@ struct Binder : ast::TVisitor<Binder, Stack>
     void operator()(ast::node::TIndex<ast::node::Kind::EXP_BINOP> expBinopIdx)
     {
         auto& expBinop = get(expBinopIdx);
+
+        if (getToken(expBinop._operator) == lex::Token::PLUS)
+        {
+            // TODO need to check the types
+            auto sliceId = com::UniqueId{"add_i64"};
+
+            TResolver<ast::node::Kind::EXP_BINOP> resolver{_nodePool, _context, sliceId, expBinopIdx};
+
+            resolver.base()(_stackPtrIn->_parent);
+        }
 
         base()(expBinop._lhs);
         base()(expBinop._rhs);
@@ -258,7 +269,7 @@ struct Binder : ast::TVisitor<Binder, Stack>
 
         com::blit(_stackPtrIn->_prefix, dclVariable._id);
 
-        _context.notifyEvent(dclVariable._id, dclVariableIdx);
+        notifyEvent(dclVariable._id, dclVariableIdx);
 
         dclVariable._status = ast::node::Status::IDENTIFIED;
 
@@ -283,7 +294,7 @@ struct Binder : ast::TVisitor<Binder, Stack>
 
         com::blit(_stackPtrIn->_prefix, defClass._id);
 
-        _context.notifyEvent(defClass._id, defClassIdx);
+        notifyEvent(defClass._id, defClassIdx);
 
         defClass._status = ast::node::Status::IDENTIFIED;
 
@@ -303,7 +314,7 @@ struct Binder : ast::TVisitor<Binder, Stack>
 
         com::blit(_stackPtrIn->_prefix, function._id);
 
-        _context.notifyEvent(function._id, functionIdx);
+        notifyEvent(function._id, functionIdx);
 
         function._status = ast::node::Status::IDENTIFIED;
 
@@ -348,10 +359,8 @@ struct Binder : ast::TVisitor<Binder, Stack>
         base()(view._modules);
     }
 
-    Context      & _context;
-    InterfaceMap & _interfaceMap;
-
-    ExportLister _exportLister;
+    InterfaceMap& _interfaceMap;
+    ExportLister  _exportLister;
 };
 
 } // namespace

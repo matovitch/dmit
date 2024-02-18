@@ -18,6 +18,8 @@
 #include "dmit/com/parallel_for.hpp"
 #include "dmit/com/storage.hpp"
 
+#include "dmit/fmt/sem/import_graph.hpp"
+
 #include <cstdint>
 #include <cstring>
 #include <sstream>
@@ -57,6 +59,8 @@ std::vector<std::string> analyze(dmit::com::parallel_for::ThreadPool& threadPool
 
     factMap     .solveImports(asts);
     importGraph .registerAsts(asts);
+
+    //std::cout << importGraph << '\n';
 
     std::vector<dmit::com::UniqueId > moduleOrder;
     std::vector<uint32_t            > moduleBundles;
@@ -112,7 +116,7 @@ TEST_SUITE("json")
 
 TEST_CASE("sem")
 {
-    dmit::com::parallel_for::ThreadPool threadPool{std::thread::hardware_concurrency()};
+    dmit::com::parallel_for::ThreadPool threadPool{1 /*std::thread::hardware_concurrency()*/};
 
     std::vector<const char*> groupAB = {
         "test/data/sem/moduleA.in",

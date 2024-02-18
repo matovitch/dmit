@@ -1,8 +1,12 @@
 #pragma once
 
+#include "dmit/ast/node.hpp"
 #include "dmit/ast/v_index.hpp"
 
 #include "dmit/com/unique_id.hpp"
+#include "dmit/com/assert.hpp"
+
+#include "dmit/fmt/formatable.hpp"
 
 #include "schmit/scheduler.hpp"
 
@@ -10,11 +14,19 @@
 #include "robin/map.hpp"
 
 #include <optional>
+#include <cstdint>
+#include <memory>
+#include <variant>
 
 namespace dmit::sem
 {
 
-using SchmitScheduler        = schmit::TScheduler<1>;
+#ifdef DMIT_SEM_CONTEXT_DEBUG
+    using SchmitScheduler = schmit::TScheduler<1, std::string>;
+#else
+    using SchmitScheduler = schmit::TScheduler<1>;
+#endif
+
 using SchmitTaskGraphPoolSet = typename SchmitScheduler::TaskGraphPoolSet;
 using SchmitDependency       = typename SchmitScheduler::Dependency;
 using SchmitTaskNode         = typename SchmitScheduler::TaskNode;
@@ -23,74 +35,93 @@ using SchmitPoolTask         = typename SchmitScheduler::PoolTask;
 template <std::size_t STACK_SIZE>
 using SchmitCoroutinePool = typename SchmitScheduler::TCoroutinePool<STACK_SIZE>;
 
-struct Context
+struct Context : fmt::Formatable
 {
-    Context();
+    using DebugType = SchmitScheduler::Debug;
 
-    SchmitTaskNode getOrMakeLock  (const ast::node::VIndex & );
-    SchmitTaskNode getOrMakeEvent (const com::UniqueId     & );
+    Context();
 
     void notifyEvent(const com::UniqueId&, const ast::node::VIndex&);
 
+    ast::node::VIndex vIndex(ast::node::VIndexOrLock& vIndexOrLock);
+
     std::optional<ast::node::VIndex> getFact(const com::UniqueId&);
+
+    SchmitTaskNode getOrMakeEvent (const com::UniqueId&);
 
     void run();
 
     template <class Function, class CoroutinePool>
     void makeTask(Function&& function,
                   CoroutinePool& coroutinePool,
-                  const ast::node::VIndex& astNodeVIndex,
-                  const com::UniqueId& comUniqueId)
+                  const ast::node::VIndexOrLock& astNodeVIndexOrLock,
+                  const com::UniqueId& comUniqueId,
+                  std::unique_ptr<DebugType> debug)
     {
         if (auto factOpt = getFact(comUniqueId))
         {
+            if (std::holds_alternative<SchmitTaskNode>(astNodeVIndexOrLock))
+            {
+                _unlockSet.emplace(std::get<SchmitTaskNode>(astNodeVIndexOrLock));
+            }
             function(factOpt.value());
-            _unlockSet.emplace(astNodeVIndex);
+            return;
+        }
+
+        if (std::holds_alternative<ast::node::VIndex>(astNodeVIndexOrLock))
+        {
+            function(std::get<ast::node::VIndex>(astNodeVIndexOrLock));
             return;
         }
 
         auto task = _scheduler.makeTask
         (
-            [this, astNodeVIndex, function, comUniqueId]
+            [this, astNodeVIndexOrLock, function, comUniqueId]
             {
                 if (auto factOpt = getFact(comUniqueId))
                 {
                     function(factOpt.value());
-                    _unlockSet.emplace(astNodeVIndex);
                 }
+                _unlockSet.emplace(std::get<SchmitTaskNode>(astNodeVIndexOrLock));
             },
-            coroutinePool
+            coroutinePool,
+            std::move(debug)
         );
 
-        auto lock  = getOrMakeLock  (astNodeVIndex );
+        auto lock  = std::get<SchmitTaskNode>(astNodeVIndexOrLock);
         auto event = getOrMakeEvent (comUniqueId   );
 
         _scheduler.attach(task, event);
         _scheduler.attach(event, lock);
     }
 
+    SchmitTaskNode makeLock() { return _scheduler.makeLock(); }
+
     template <class Function>
     void makeTaskSmall(Function&& function,
-                       const ast::node::VIndex& astNodeVIndex,
-                       const com::UniqueId& comUniqueId)
+                       const ast::node::VIndexOrLock& astNodeVIndexOrLock,
+                       const com::UniqueId& comUniqueId,
+                       std::unique_ptr<DebugType> debug)
     {
-        makeTask(function, _coroutinePoolSmall, astNodeVIndex, comUniqueId);
+        makeTask(function, _coroutinePoolSmall, astNodeVIndexOrLock, comUniqueId, std::move(debug));
     }
 
     template <class Function>
     void makeTaskMedium(Function&& function,
-                       const ast::node::VIndex& astNodeVIndex,
-                       const com::UniqueId& comUniqueId)
+                       const ast::node::VIndexOrLock& astNodeVIndexOrLock,
+                       const com::UniqueId& comUniqueId,
+                       std::unique_ptr<DebugType> debug)
     {
-        makeTask(function, _coroutinePoolMedium, astNodeVIndex, comUniqueId);
+        makeTask(function, _coroutinePoolMedium, astNodeVIndexOrLock, comUniqueId, std::move(debug));
     }
 
     template <class Function>
     void makeTaskLarge(Function&& function,
-                       const ast::node::VIndex& astNodeVIndex,
-                       const com::UniqueId& comUniqueId)
+                       const ast::node::VIndexOrLock& astNodeVIndexOrLock,
+                       const com::UniqueId& comUniqueId,
+                       std::unique_ptr<DebugType> debug)
     {
-        makeTask(function, _coroutinePoolLarge, astNodeVIndex, comUniqueId);
+        makeTask(function, _coroutinePoolLarge, astNodeVIndexOrLock, comUniqueId, std::move(debug));
     }
 
     SchmitTaskGraphPoolSet _taskGraphPoolSet;
@@ -98,8 +129,8 @@ struct Context
     SchmitScheduler        _scheduler;
 
 
-    SchmitCoroutinePool<0x2222 /*stack size*/> _coroutinePoolSmall;
-    SchmitCoroutinePool<0x5555 /*stack size*/> _coroutinePoolMedium;
+    SchmitCoroutinePool<0x1111 /*stack size*/> _coroutinePoolSmall;
+    SchmitCoroutinePool<0x4444 /*stack size*/> _coroutinePoolMedium;
     SchmitCoroutinePool<0xffff /*stack size*/> _coroutinePoolLarge;
 
     robin::map::TMake<com::UniqueId,
@@ -107,14 +138,9 @@ struct Context
                       com::unique_id::Hasher,
                       com::unique_id::Comparator, 4, 3> _eventMap;
 
-    robin::map::TMake<ast::node::VIndex,
-                      SchmitTaskNode,
-                      ast::node::v_index::Hasher,
-                      ast::node::v_index::Comparator, 4, 3> _lockMap;
-
-    robin::table::TMake<ast::node::VIndex,
-                        ast::node::v_index::Hasher,
-                        ast::node::v_index::Comparator, 4, 3> _unlockSet;
+    robin::table::TMake<SchmitTaskNode,
+                        SchmitTaskNode::Hasher,
+                        SchmitTaskNode::Comparator, 4, 3> _unlockSet;
 
     robin::map::TMake<com::UniqueId,
                       ast::node::VIndex,
@@ -123,3 +149,9 @@ struct Context
 };
 
 } // namespace dmit::sem
+
+#ifdef DMIT_SEM_CONTEXT_DEBUG
+    #define DMIT_SEM_CONTEXT_STR(str) std::make_unique<std::string>(str)
+#else
+    #define DMIT_SEM_CONTEXT_STR(str) std::unique_ptr<int8_t>{nullptr}
+#endif

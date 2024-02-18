@@ -59,13 +59,15 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
         {
             _oss << "\"id\":\"";
 
-            if (com::tree::v_index::isInterface<ast::node::Kind>(identifier._asVIndex) && _interfacePoolOpt)
+            auto idenfifierVIndex = std::get<ast::node::VIndex>(identifier._asVIndexOrLock);
+
+            if (com::tree::v_index::isInterface<ast::node::Kind>(idenfifierVIndex) && _interfacePoolOpt)
             {
-                _oss << ast::node::v_index::makeId(_interfacePoolOpt.value().get(), identifier._asVIndex);
+                _oss << ast::node::v_index::makeId(_interfacePoolOpt.value().get(), idenfifierVIndex);
             }
             else
             {
-                _oss << ast::node::v_index::makeId(_nodePool, identifier._asVIndex);
+                _oss << ast::node::v_index::makeId(_nodePool, idenfifierVIndex);
             }
 
             _oss << "\",";

@@ -5,6 +5,8 @@
 #include "dmit/com/unique_id.hpp"
 #include "dmit/com/storage.hpp"
 
+#include "dmit/fmt/formatable.hpp"
+
 #include "topo/pool_set.hpp"
 #include "topo/graph.hpp"
 
@@ -16,7 +18,7 @@
 namespace dmit::sem
 {
 
-struct ImportGraph
+struct ImportGraph : fmt::Formatable
 {
     using TopoGraph   = topo::graph::TMake<com::UniqueId, 4>;
     using TopoPoolSet = typename TopoGraph::PoolSet;
