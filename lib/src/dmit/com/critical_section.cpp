@@ -1,6 +1,5 @@
 #include "dmit/com/critical_section.hpp"
 
-#include <optional>
 #include <atomic>
 #include <chrono>
 #include <thread>
@@ -17,7 +16,7 @@ static constexpr auto K_DELAY = 100us;
 CriticalSection::CriticalSection(std::atomic<bool>& flag) : _flag{flag}
 {
     uint32_t i = 0;
-    std::optional<std::chrono::time_point<std::chrono::steady_clock>> timePointOpt;
+    std::chrono::time_point<std::chrono::steady_clock>* timePointPtr = nullptr;
 
     while (_flag.exchange(true, std::memory_order_relaxed))
     {
@@ -26,25 +25,26 @@ CriticalSection::CriticalSection(std::atomic<bool>& flag) : _flag{flag}
             continue;
         }
 
-        const auto now = std::chrono::steady_clock::now();
+        auto now = std::chrono::steady_clock::now();
 
-        if (!timePointOpt)
+        if (!timePointPtr)
         {
-            timePointOpt = now + K_DELAY;
+            now += K_DELAY;
+            timePointPtr = &now;
         }
-        else if (now > timePointOpt.value())
+        else if (now > *timePointPtr)
         {
-            goto SLEEP_LOOP;
+            goto YIELD_LOOP;
         }
     }
 
     goto FENCE;
 
-    SLEEP_LOOP:
+    YIELD_LOOP:
     {
         while (_flag.exchange(true, std::memory_order_relaxed))
         {
-            std::this_thread::sleep_for(K_DELAY);
+            std::this_thread::yield();
         }
     }
 
