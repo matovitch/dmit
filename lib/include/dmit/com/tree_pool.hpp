@@ -28,6 +28,8 @@ struct TTMetaPool
 
     public:
 
+        static constexpr auto LOG2_SIZE_RATIO = LOG2_SIZE - log2(sizeof(TNode<KIND>));
+
         const TNode<KIND>& get(const Index index) const
         {
             return reinterpret_cast<const TNode<KIND>&>(_storage.get(index._value));
@@ -55,12 +57,15 @@ struct TTMetaPool
             range._size = size;
         }
 
+        uint32_t size() const
+        {
+            return _storage.size();
+        }
+
     private:
 
         using Bucket = std::aligned_storage_t< sizeof(TNode<KIND>),
                                               alignof(TNode<KIND>)>;
-
-        static constexpr auto LOG2_SIZE_RATIO = LOG2_SIZE - log2(sizeof(TNode<KIND>));
 
         stack::TMake<Bucket, LOG2_SIZE_RATIO> _storage;
     };
