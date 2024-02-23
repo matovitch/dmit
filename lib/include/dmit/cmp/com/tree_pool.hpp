@@ -33,13 +33,19 @@ bool write(cmp_ctx_t* context, const typename com::tree::TTMetaPool<Kind, TNode>
         return false;
     }
 
-    for (uint32_t i = 0; i << decltype(sub)::LOG2_SIZE_RATIO < sub.size();i++)
+    for (uint32_t i = 0; (i + 1) << decltype(sub)::LOG2_SIZE_RATIO < sub.size(); i++)
     {
         if (!writeBin(context, &(sub.get(i << decltype(sub)::LOG2_SIZE_RATIO)),
                                         (1 << decltype(sub)::LOG2_SIZE_RATIO) - 1))
         {
             return false;
         }
+    }
+
+    if (!writeBin(context, &(sub.get((sub.size() >> LOG2_SIZE) << LOG2_SIZE)),
+                             sub.size() & ((1 << LOG2_SIZE) - 1)))
+    {
+        return false;
     }
 
     return true;
