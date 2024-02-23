@@ -94,7 +94,7 @@ RUN set -ex                                                                     
     git clone https://github.com/bytecodealliance/wasm-micro-runtime                                            &&\
     cd wasm-micro-runtime/product-mini/platforms/linux                                                          &&\
     git checkout 88bfbcf89e30a530b8e30b40d942bb4f8076e8bf                                                       &&\
-    cmake -G Ninja                                                                                              &&\
+    cmake -DWAMR_DISABLE_WRITE_GS_BASE=1 -G Ninja                                                               &&\
     ninja                                                                                                       &&\
     mv libvmlib.a libiwasm.so /usr/lib                                                                          &&\
     mv iwasm /usr/bin                                                                                           &&\
@@ -121,7 +121,7 @@ RUN set -ex                                                                     
     git checkout 1471dffee8bf9939044b80d34256956a28138e96                                                       &&\
     mkdir build                                                                                                 &&\
     cd build                                                                                                    &&\
-    cmake .. -G Ninja -DBUILD_TESTS=OFF                                                                         &&\
+    cmake .. -DBUILD_TESTS=OFF -G Ninja                                                                         &&\
     ninja                                                                                                       &&\
     find -maxdepth 1 -executable -type f -exec mv -t /usr/bin {} +                                              &&\
     cd ../..                                                                                                    &&\
