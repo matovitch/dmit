@@ -1,0 +1,2 @@
+LIB_WAMR_CPP = $(LIB_SRC)/wamr/*.cpp
+LIB_WAMR_OUT = libwamr.a

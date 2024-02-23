@@ -91,9 +91,18 @@ RUN set -ex                                                                     
     mv libsqlite3.a /usr/lib                                                                                    &&\
     cd ..                                                                                                       &&\
     rm -r sqlite-autoconf-3390200 sqlite-autoconf-3390200.tar.gz                                                &&\
+    git clone https://github.com/bytecodealliance/wasm-micro-runtime                                            &&\
+    cd wasm-micro-runtime/product-mini/platforms/linux                                                          &&\
+    git checkout 88bfbcf89e30a530b8e30b40d942bb4f8076e8bf                                                       &&\
+    cmake -G Ninja                                                                                              &&\
+    ninja                                                                                                       &&\
+    mv libvmlib.a libiwasm.so /usr/lib                                                                          &&\
+    mv iwasm /usr/bin                                                                                           &&\
+    cd ../../../..                                                                                              &&\
+    rm -r wasm-micro-runtime                                                                                    &&\
     git clone --progress --depth 1 https://github.com/nanomsg/nng.git                                           &&\
     cd nng                                                                                                      &&\
-    git checkout 02cc3d46e283ed584592bb12055e16ed27126ee3                                                       &&\
+    git checkout 6a403d0d3013e6e3862f5e2292d4638bd1aba512                                                       &&\
     cmake -G Ninja                                                                                              &&\
     ninja                                                                                                       &&\
     mv libnng.a /usr/lib                                                                                        &&\
@@ -117,14 +126,6 @@ RUN set -ex                                                                     
     find -maxdepth 1 -executable -type f -exec mv -t /usr/bin {} +                                              &&\
     cd ../..                                                                                                    &&\
     rm -r wabt                                                                                                  &&\
-    git clone --progress --depth 1 https://github.com/matovitch/wasm3.git                                       &&\
-    cd wasm3                                                                                                    &&\
-    cmake -G Ninja                                                                                              &&\
-    ninja                                                                                                       &&\
-    mv source/libm3.a /usr/lib                                                                                  &&\
-    mv wasm3 /usr/bin                                                                                           &&\
-    cd ..                                                                                                       &&\
-    rm -r wasm3                                                                                                 &&\
     apt-get remove -y $TO_REMOVE                                                                                &&\
     apt-get autoremove -y                                                                                       &&\
     apt-get clean                                                                                               &&\

@@ -4,7 +4,7 @@ BIN_TEST_OUT = test
 CXFLAGS += -I $(ROOT)/test
 
 # Note: The linker need the libs in topological order
-CLFLAGS += -l wasm3
+CLFLAGS += -l wamr
 CLFLAGS += -l schmit
 CLFLAGS += -l dmit_db
 CLFLAGS += -l dmit_nng
@@ -26,10 +26,10 @@ CLFLAGS += -l cmp
 CLFLAGS += -l doctest
 CLFLAGS += -l stdc++fs
 CLFLAGS += -l pthread
-CLFLAGS += -l m3
+CLFLAGS += -l vmlib
 CLFLAGS += -l dl
 
-CLFLAGS += -L $(VARIANT)/lib/src/wasm3
+CLFLAGS += -L $(VARIANT)/lib/src/wamr
 CLFLAGS += -L $(VARIANT)/lib/src/schmit
 CLFLAGS += -L $(VARIANT)/lib/src/dmit/db
 CLFLAGS += -L $(VARIANT)/lib/src/dmit/nng

@@ -3,6 +3,7 @@ include_rules
 : foreach $(BIN_TEST_CPP) |> !cx |> %B.o <obj>
 
 : <obj> |                        \
+          $(ROOT)/<lib_wamr>     \
           $(ROOT)/<lib_wasm3>    \
           $(ROOT)/<lib_schmit>   \
           $(ROOT)/<lib_dmit_db>  \

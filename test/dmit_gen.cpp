@@ -1,3 +1,4 @@
+#include "dmit/com/logger.hpp"
 #include "dmit/sem/context.hpp"
 #include "dmit/wsm/wasm.hpp"
 #include "test.hpp"
@@ -26,6 +27,7 @@
 #include "subprocess/subprocess.hpp"
 
 #include "wasm3/wasm3.hpp"
+#include "wamr/wamr.hpp"
 
 #include <cstdint>
 #include <string>
@@ -162,30 +164,31 @@ TEST_CASE("gen_run")
     std::string wasmModule;
     ("wasm-ld --export-all --no-entry --whole-archive /dev/stdin -o -"_cmd < archiveAsString > wasmModule).run();
 
-    DMIT_COM_CLK(Execution);
+    DMIT_COM_CLK(Runtime creation);
 
-    wasm3::Environment env;
+    wamr::Runtime wamrRuntime;
 
-    wasm3::Runtime runtime = env.makeRuntime(0x100); // stack size
+    DMIT_COM_CLK(Module instance);
 
-    wasm3::Result result = m3Err_none;
+    auto wamrModuleInstance = wamrRuntime.makeModuleInstance(wasmModule);
 
-    wasm3::Module module;
-    result = wasm3::parseModule(env, module, reinterpret_cast<uint8_t*>(wasmModule.data()), wasmModule.size());
-    DMIT_COM_ASSERT(!result && "Could not parse wasm module");
-    result = wasm3::loadModule(runtime, module);
-    DMIT_COM_ASSERT(!result && "Could not load wasm module");
+    DMIT_COM_CLK(Execution environment);
 
-    wasm3::Function increment;
-    result = wasm3::findFunction(increment, runtime, mangle("X.Y.Z.B.increment").c_str());
-    CHECK(!result);
+    auto executionEnvironment = wamrRuntime.makeExecutionEnvironment(wamrModuleInstance, 0x1000 /*stackSize*/);
 
-    result = wasm3::call(increment, 41);
-    CHECK(!result);
+    DMIT_COM_CLK(Find function and call);
 
-    int64_t value = 0;
-    result = wasm3::getResults(increment, &value);
-    CHECK(!result);
+    auto function = wamrModuleInstance.findFunction(mangle("X.Y.Z.B.increment"));
 
-    CHECK(value == 42);
+    std::vector<uint32_t> argv = {41, 0};
+
+    bool result = wamr::call(executionEnvironment, function, argv.size(), argv.data());
+
+    if (!result)
+    {
+        DMIT_COM_LOG_ERR << wasm_runtime_get_exception(wamrModuleInstance._asWasmModuleInstT) << '\n';
+        DMIT_COM_ASSERT(!"Call to function failed");
+    }
+
+    CHECK(argv[0] == 42);
 }

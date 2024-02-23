@@ -8,6 +8,7 @@
 #include "dmit/com/blit.hpp"
 
 #include "wasm3/wasm3.hpp"
+#include "wamr/wamr.hpp"
 
 #include <cstdint>
 
@@ -116,31 +117,25 @@ TEST_CASE("wsm_add")
 
     // 3. Run it
 
-    wasm3::Environment env;
+    wamr::Runtime wamrRuntime;
 
-    wasm3::Runtime runtime = env.makeRuntime(0x100 /*stackSize*/);
+    auto wamrModuleInstance = wamrRuntime.makeModuleInstance(storage);
 
-    wasm3::Result result = m3Err_none;
+    auto executionEnvironment = wamrRuntime.makeExecutionEnvironment(wamrModuleInstance, 0x1000 /*stackSize*/);
 
-    wasm3::Module m3module;
-    result = wasm3::parseModule(env, m3module, storage.data(), emitSize);
-    DMIT_COM_ASSERT(!result && "Could not parse wasm module");
+    auto add_ = wamrModuleInstance.findFunction("add");
 
-    result = wasm3::loadModule(runtime, m3module);
-    DMIT_COM_ASSERT(!result && "Could not load wasm module");
+    std::vector<uint32_t> argv = {2, 3};
 
-    wasm3::Function m3add;
-    result = wasm3::findFunction(m3add, runtime, "add");
-    DMIT_COM_ASSERT(!result && "Could not find add function");
+    bool result = wamr::call(executionEnvironment, add_, argv.size(), argv.data());
 
-    result = wasm3::call(m3add, 2, 3);
-    DMIT_COM_ASSERT(!result && "Call to add failed");
+    if (!result)
+    {
+        DMIT_COM_LOG_ERR << wasm_runtime_get_exception(wamrModuleInstance._asWasmModuleInstT) << '\n';
+        DMIT_COM_ASSERT(!"Call to function failed");
+    }
 
-    int32_t value = 0;
-    result = wasm3::getResults(m3add, &value);
-    DMIT_COM_ASSERT(!result && "Could not get result from addition");
-
-    CHECK(value == 5);
+    CHECK(argv[0] == 5);
 }
 
 TEST_CASE("wsm_increment")
@@ -265,29 +260,23 @@ TEST_CASE("wsm_increment")
 
     // 3. Run it
 
-    wasm3::Environment env;
+    wamr::Runtime wamrRuntime;
 
-    wasm3::Runtime runtime = env.makeRuntime(0x100);
+    auto wamrModuleInstance = wamrRuntime.makeModuleInstance(storage);
 
-    wasm3::Result result = m3Err_none;
+    auto executionEnvironment = wamrRuntime.makeExecutionEnvironment(wamrModuleInstance, 0x1000 /*stackSize*/);
 
-    wasm3::Module m3module;
-    result = wasm3::parseModule(env, m3module, storage.data(), emitSize);
-    CHECK(!result);
+    auto increment = wamrModuleInstance.findFunction("increment");
 
-    result = wasm3::loadModule(runtime, m3module);
-    CHECK(!result);
+    std::vector<uint32_t> argv = {2};
 
-    wasm3::Function m3add;
-    result = wasm3::findFunction(m3add, runtime, "increment");
-    CHECK(!result);
+    bool result = wamr::call(executionEnvironment, increment, argv.size(), argv.data());
 
-    result = wasm3::call(m3add, 2);
-    CHECK(!result);
+    if (!result)
+    {
+        DMIT_COM_LOG_ERR << wasm_runtime_get_exception(wamrModuleInstance._asWasmModuleInstT) << '\n';
+        DMIT_COM_ASSERT(!"Call to function failed");
+    }
 
-    int32_t value = 0;
-    result = wasm3::getResults(m3add, &value);
-    CHECK(!result);
-
-    CHECK(value == 3);
+    CHECK(argv[0] == 3);
 }
