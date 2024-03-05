@@ -1,6 +1,3 @@
-#include "dmit/com/logger.hpp"
-#include "dmit/sem/context.hpp"
-#include "dmit/wsm/wasm.hpp"
 #include "test.hpp"
 
 #include "dmit/gen/emitter.hpp"

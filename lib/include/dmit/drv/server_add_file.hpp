@@ -33,7 +33,8 @@ void addFile(nng::Socket& socket,
 
     uint32_t filePathSize;
 
-    if (!cmp::readStrSize(context, &filePathSize)) {
+    if (!cmp::readStrSize(context, &filePathSize))
+    {
         DMIT_COM_LOG_ERR << "error: badly formed query\n";
         replyWith(socket, Reply::KO);
         return;
@@ -52,7 +53,8 @@ void addFile(nng::Socket& socket,
 
     uint32_t unitSourceSize;
 
-    if (!cmp::readBinSize(context, &unitSourceSize)) {
+    if (!cmp::readBinSize(context, &unitSourceSize))
+    {
         DMIT_COM_LOG_ERR << "error: badly formed query\n";
         replyWith(socket, Reply::KO);
         return;

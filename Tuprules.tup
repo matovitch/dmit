@@ -59,6 +59,7 @@ ifeq (@(IS_UBSAN),y)
 endif
 
 #CXFLAGS += -fexperimental-isel
+CXFLAGS += -ftemplate-backtrace-limit=0
 
 CXFLAGS += -I $(ROOT)/lib/include
 

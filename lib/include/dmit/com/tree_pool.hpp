@@ -23,10 +23,11 @@ struct TTMetaPool
     template <TEnumIntegerType<Kind> KIND, uint8_t LOG2_SIZE>
     class TSub
     {
-        using Index = typename TMetaNode<Kind>::template TIndex<KIND>;
-        using Range = typename TMetaNode<Kind>::template TRange<KIND>;
 
     public:
+
+        using Index = typename TMetaNode<Kind>::template TIndex<KIND>;
+        using Range = typename TMetaNode<Kind>::template TRange<KIND>;
 
         static constexpr auto LOG2_SIZE_RATIO = LOG2_SIZE - log2(sizeof(TNode<KIND>));
 

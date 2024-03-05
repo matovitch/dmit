@@ -22,44 +22,44 @@ extern "C"
 namespace dmit::drv::clt
 {
 
-bool queryCreateOrUpdateFile(cmp_ctx_t* context, const dmit::src::File& file)
+bool queryCreateOrUpdateFile(cmp_ctx_t* context, const src::File& file)
 {
-    if (!dmit::cmp::write(context, Query::ADD_FILE))
+    if (!cmp::writeU8(context, Query::ADD_FILE))
     {
         return false;
     }
 
-    return dmit::cmp::write(context, file);
+    return cmp::write(context, file);
 }
 
-void displayFileError(const dmit::src::file::Error& fileError, const char* fileName)
+void displayFileError(const src::file::Error& fileError, const char* fileName)
 {
-    if (fileError == dmit::src::file::Error::FILE_NOT_FOUND)
+    if (fileError == src::file::Error::FILE_NOT_FOUND)
     {
         DMIT_COM_LOG_ERR << "error: cannot find file '" << fileName << "'\n";
     }
 
-    if (fileError == dmit::src::file::Error::FILE_NOT_REGULAR)
+    if (fileError == src::file::Error::FILE_NOT_REGULAR)
     {
         DMIT_COM_LOG_ERR << "error: '" << fileName << "' is not a regular file\n";
     }
 
-    if (fileError == dmit::src::file::Error::FILE_OPEN_FAIL)
+    if (fileError == src::file::Error::FILE_OPEN_FAIL)
     {
         DMIT_COM_LOG_ERR << "error: cannot open '" << fileName << "'\n";
     }
 
-    if (fileError == dmit::src::file::Error::FILE_READ_FAIL)
+    if (fileError == src::file::Error::FILE_READ_FAIL)
     {
         DMIT_COM_LOG_ERR << "error: failed to read file '" << fileName << "'\n";
     }
 }
 
-int addFile(dmit::nng::Socket& socket, const char* filePath)
+int addFile(nng::Socket& socket, const char* filePath)
 {
     // Read the file
 
-    const auto& fileErrOpt = dmit::src::file::make(filePath);
+    const auto& fileErrOpt = src::file::make(filePath);
 
     if (fileErrOpt.hasError())
     {
@@ -71,7 +71,7 @@ int addFile(dmit::nng::Socket& socket, const char* filePath)
 
     // Write query
 
-    auto queryOpt = dmit::cmp::asNngBuffer(queryCreateOrUpdateFile, file);
+    auto queryOpt = cmp::asNngBuffer(queryCreateOrUpdateFile, file);
 
     if (!queryOpt)
     {
@@ -91,7 +91,7 @@ int addFile(dmit::nng::Socket& socket, const char* filePath)
 
     // Wait for reply
 
-    dmit::nng::Buffer bufferReply;
+    nng::Buffer bufferReply;
 
     if ((errorCode = nng_recv(socket._asNng, &bufferReply, 0)) != 0)
     {
@@ -101,11 +101,11 @@ int addFile(dmit::nng::Socket& socket, const char* filePath)
 
     // Decode reply
 
-    cmp_ctx_t cmpContextReply = dmit::cmp::contextFromNngBuffer(bufferReply);
+    cmp_ctx_t cmpContextReply = cmp::contextFromNngBuffer(bufferReply);
 
     uint8_t replyCode;
 
-    if (!dmit::cmp::readU8(&cmpContextReply, &replyCode) || replyCode != Reply::OK)
+    if (!cmp::readU8(&cmpContextReply, &replyCode) || replyCode != Reply::OK)
     {
         DMIT_COM_LOG_ERR << "error: badly formed reply\n";
         return EXIT_FAILURE;

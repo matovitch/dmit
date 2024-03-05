@@ -51,7 +51,7 @@ ModuleInstance Runtime::makeModuleInstance(uint8_t* moduleAsBytes, uint32_t modu
     return moduleInstance;
 }
 
-ModuleInstance::ModuleInstance(wasm_module_inst_t asWasmModuleInstT) : 
+ModuleInstance::ModuleInstance(wasm_module_inst_t asWasmModuleInstT) :
     _asWasmModuleInstT(asWasmModuleInstT)
 {}
 

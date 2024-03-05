@@ -141,11 +141,6 @@ struct Checker : TVisitor<Checker, Stack>
         base()(binop._rhs);
     }
 
-    void operator()(ast::node::TIndex<ast::node::Kind::EXPRESSION> exprIdx)
-    {
-        base()(get(exprIdx)._value);
-    }
-
     void operator()(ast::node::TIndex<ast::node::Kind::FUN_CALL> funCallIdx)
     {
         auto& funCall = get(funCallIdx);
@@ -166,7 +161,7 @@ struct Checker : TVisitor<Checker, Stack>
         base()(get(stmReturnIdx)._expression);
     }
 
-    void operator()(ast::node::TIndex<ast::node::Kind::SCOPE_VARIANT> scopeVariantIdx)
+    void operator()(ast::node::TIndex<ast::node::Kind::ANY> scopeVariantIdx)
     {
         base()(get(scopeVariantIdx)._value);
     }

@@ -260,18 +260,6 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
         base()(srceTypeClaim._type);
     }
 
-    void operator()(node::TIndex<node::Kind::EXPRESSION> srceExpressionIdx)
-    {
-        auto& srceExpression = get(srceExpressionIdx);
-        auto& destExpression = _destNodePool.get(
-            node::as<node::Kind::EXPRESSION>(_stackPtrIn->_index)
-        );
-
-        auto blitter = blitter::make(_destNodePool, destExpression._value);
-        _stackPtrIn->_index = blitter(srceExpression._value);
-        base()(srceExpression._value);
-    }
-
     void operator()(node::TIndex<node::Kind::FUN_CALL> srceFunCallIdx)
     {
         auto& srceFunCall = get(srceFunCallIdx);
@@ -314,11 +302,11 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
         base()(srceStmReturn._expression);
     }
 
-    void operator()(node::TIndex<node::Kind::SCOPE_VARIANT> srceScopeVariantIdx)
+    void operator()(node::TIndex<node::Kind::ANY> srceScopeVariantIdx)
     {
         auto& srceScopeVariant = get(srceScopeVariantIdx);
         auto& destScopeVariant = _destNodePool.get(
-            node::as<node::Kind::SCOPE_VARIANT>(_stackPtrIn->_index)
+            node::as<node::Kind::ANY>(_stackPtrIn->_index)
         );
 
         auto blitter = blitter::make(_destNodePool, destScopeVariant._value);

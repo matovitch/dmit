@@ -56,6 +56,7 @@ struct Kind : com::TEnum<uint8_t>
 {
     enum : uint8_t
     {
+        ANY            ,
         DCL_IMPORT     ,
         DCL_VARIABLE   ,
         DEF_CLASS      ,
@@ -63,21 +64,19 @@ struct Kind : com::TEnum<uint8_t>
         DEFINITION     ,
         EXP_BINOP      ,
         EXP_MONOP      ,
-        EXPRESSION     ,
         FUN_CALL       ,
         LEXEME         ,
         IDENTIFIER     ,
         LIT_DECIMAL    ,
         LIT_INTEGER    ,
+        PARENT_PATH    ,
         PATTERN        ,
         SCOPE          ,
-        SCOPE_VARIANT  ,
         STM_RETURN     ,
         TYPE           ,
         TYPE_CLAIM     ,
         MODULE         ,
         VIEW           ,
-        PARENT_PATH    ,
         SOURCE
     };
 
@@ -120,32 +119,12 @@ using TPool = typename com::tree::TTMetaPool<Kind, TNode>::TPool<LOG2_SIZE>;
 
 } // namespace node
 
-using Declaration = std::variant<node::TIndex<node::Kind::DCL_VARIABLE>>;
-
-using Statement = std::variant<node::TIndex<node::Kind::STM_RETURN>>;
-
-using Definition = std::variant<node::TIndex<node::Kind::DEF_CLASS>,
-                                node::TIndex<node::Kind::DEF_FUNCTION>>;
-
-using Expression = std::variant<node::TIndex<node::Kind::IDENTIFIER  >,
-                                node::TIndex<node::Kind::LIT_DECIMAL >,
-                                node::TIndex<node::Kind::LIT_INTEGER >,
-                                node::TIndex<node::Kind::EXP_BINOP   >,
-                                node::TIndex<node::Kind::EXP_MONOP   >,
-                                node::TIndex<node::Kind::PATTERN     >,
-                                node::TIndex<node::Kind::FUN_CALL    >>;
-
-using ScopeVariant = std::variant<Statement,
-                                  Declaration,
-                                  Expression,
-                                  node::TIndex<node::Kind::SCOPE>>;
-
 template <>
 struct TNode<node::Kind::PARENT_PATH>
 {
     node::TIndex<node::Kind::PARENT_PATH> _next;
 
-    Expression _expression;
+    node::VIndex _expression;
 };
 
 template <>
@@ -161,7 +140,7 @@ struct TNode<node::Kind::VIEW>
 template <>
 struct TNode<node::Kind::MODULE>
 {
-    std::optional<Expression> _path;
+    std::optional<node::VIndex> _path;
 
     node::TRange<node::Kind::DEFINITION > _definitions;
     node::TRange<node::Kind::DCL_IMPORT > _imports;
@@ -194,7 +173,7 @@ struct TNode<node::Kind::SOURCE>
 template <>
 struct TNode<node::Kind::DCL_IMPORT>
 {
-    Expression _path;
+    node::VIndex _path;
 
     node::TIndex<node::Kind::MODULE> _parent;
     com::UniqueId                    _id;
@@ -207,7 +186,7 @@ struct TNode<node::Kind::DEFINITION>
 {
     DefinitionRole _role;
 
-    Definition _value;
+    node::VIndex _value;
 
     node::TIndex<node::Kind::MODULE> _parent;
 };
@@ -296,7 +275,7 @@ struct TNode<node::Kind::LEXEME>
 template <>
 struct TNode<node::Kind::SCOPE>
 {
-    node::TRange<node::Kind::SCOPE_VARIANT> _variants;
+    node::TRange<node::Kind::ANY> _variants;
 
     node::VIndex _parent;
 
@@ -304,15 +283,15 @@ struct TNode<node::Kind::SCOPE>
 };
 
 template <>
-struct TNode<node::Kind::SCOPE_VARIANT>
+struct TNode<node::Kind::ANY>
 {
-    ScopeVariant _value;
+    node::VIndex _value;
 };
 
 template <>
 struct TNode<node::Kind::STM_RETURN>
 {
-    Expression _expression;
+    node::VIndex _expression;
 };
 
 template <>
@@ -320,8 +299,8 @@ struct TNode<node::Kind::EXP_BINOP>
 {
     node::TIndex<node::Kind::LEXEME> _operator;
 
-    Expression _lhs;
-    Expression _rhs;
+    node::VIndex _lhs;
+    node::VIndex _rhs;
 
     node::TIndex<node::Kind::DEF_FUNCTION > _asFunction;
 
@@ -334,7 +313,7 @@ struct TNode<node::Kind::EXP_MONOP>
 {
     node::TIndex<node::Kind::LEXEME> _operator;
 
-    Expression _expression;
+    node::VIndex _expression;
 };
 
 template <>
@@ -359,13 +338,7 @@ template<>
 struct TNode<node::Kind::FUN_CALL>
 {
     node::TIndex<node::Kind::IDENTIFIER> _callee;
-    node::TRange<node::Kind::EXPRESSION> _arguments;
-};
-
-template<>
-struct TNode<node::Kind::EXPRESSION>
-{
-    Expression _value;
+    node::TRange<node::Kind::ANY> _arguments;
 };
 
 } // namespace dmit::ast

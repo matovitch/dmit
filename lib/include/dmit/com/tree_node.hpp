@@ -58,6 +58,11 @@ struct TMetaNode
             _value       {index._value       }
         {}
 
+        TIndex(bool isInterface, uint32_t value) :
+            _isInterface {isInterface },
+            _value       {value       }
+        {}
+
         bool operator==(TIndex<KIND> tIndex) const
         {
             return _value == tIndex._value;

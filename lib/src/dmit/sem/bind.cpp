@@ -227,18 +227,13 @@ struct Binder : TVisitor<Binder, Stack>
         base()(expBinop._rhs);
     }
 
-    void operator()(ast::node::TIndex<ast::node::Kind::EXPRESSION> expressionIdx)
-    {
-        base()(get(expressionIdx)._value);
-    }
-
     void operator()(ast::node::TIndex<ast::node::Kind::FUN_CALL> funCallIdx)
     {
         base()(get(funCallIdx)._callee);
         base()(get(funCallIdx)._arguments);
     }
 
-    void operator()(ast::node::TIndex<ast::node::Kind::SCOPE_VARIANT> scopeVariantIdx)
+    void operator()(ast::node::TIndex<ast::node::Kind::ANY> scopeVariantIdx)
     {
         base()(get(scopeVariantIdx)._value);
     }

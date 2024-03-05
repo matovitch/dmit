@@ -49,7 +49,7 @@ private:
                         TNode<node::Kind::IDENTIFIER>& identifier);
 
     void makeScopeVariant(const dmit::prs::Reader& reader,
-                          TNode<node::Kind::SCOPE_VARIANT>& scopeVariant);
+                          TNode<node::Kind::ANY>& scopeVariant);
 
     void makeScope(const dmit::prs::Reader& supReader,
                    TNode<node::Kind::SCOPE>& scope);
@@ -73,16 +73,16 @@ private:
                         TNode<node::Kind::DEFINITION>& definition);
 
     void makeDeclaration(const dmit::prs::Reader& reader,
-                         Declaration& declaration);
+                         node::VIndex& declaration);
 
     void makeStatement(const dmit::prs::Reader& reader,
-                       Statement& statement);
+                       node::VIndex& statement);
 
     void makeExpression(const dmit::prs::Reader& reader,
-                        Expression& expression);
+                        node::VIndex& expression);
 
     void makePattern(const dmit::prs::Reader& reader,
-                     Expression& expression);
+                     node::VIndex& expression);
 
     void makeType(const dmit::prs::Reader& reader,
                        TNode<node::Kind::TYPE>& type);

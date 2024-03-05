@@ -1,11 +1,14 @@
 #pragma once
 
+#include "dmit/com/storage.hpp"
 #include "dmit/com/type_flag.hpp"
 
 extern "C"
 {
     #include "cmp/cmp.h"
 }
+
+#include "dmit/cmp/lex/token.hpp"
 
 #include "dmit/nng/nng.hpp"
 
@@ -153,6 +156,7 @@ DMIT_CMP_ALIAS(::cmp_read_ext32, readExt32)
 DMIT_CMP_ALIAS(::cmp_read_sinteger, readSinteger)
 
 cmp_ctx_t contextFromNngBuffer(nng::Buffer& nngBuffer);
+cmp_ctx_t contextFromBytes(com::TStorage<uint8_t>& bytes);
 
 bool readBytes(cmp_ctx_t* ctx, void* data, uint32_t limit);
 
@@ -192,6 +196,43 @@ std::optional<nng::Buffer> asNngBuffer(Serializer&& serializer, Args&&... args)
     return std::optional<nng::Buffer>{std::move(nngBuffer)};
 }
 
+
+template <class Serializer, class... Args>
+std::optional<com::TStorage<uint8_t>> asBytes(Serializer&& serializer, Args&&... args)
+{
+    // 1. Compute the buffer size
+
+    cmp_ctx_t cmpBufferSize = {0};
+
+    auto writerSize = [](cmp_ctx_t* ctx, const void *data, size_t count)
+                      {
+                          ctx->buf = (char*)(ctx->buf) + count;
+                          return count;
+                      };
+
+    cmp_init(&cmpBufferSize, nullptr, nullptr, nullptr, writerSize);
+
+    if (!serializer(&cmpBufferSize, std::forward<Args>(args)...))
+    {
+        return std::nullopt;
+    }
+
+    const size_t size = *((size_t*)(&(cmpBufferSize.buf)));
+
+    // 2. Allocate and write to the storage
+
+    com::TStorage<uint8_t> bytes{size};
+
+    cmp_ctx_t cmpBuffer = contextFromBytes(bytes);
+
+    if (!serializer(&cmpBuffer, std::forward<Args>(args)...))
+    {
+        return std::nullopt;
+    }
+
+    return std::optional<com::TStorage<uint8_t>>{std::move(bytes)};
+}
+
 template <class Iterator>
 bool write(Iterator begin, Iterator end, cmp_ctx_t* contextPtr)
 {
@@ -212,7 +253,7 @@ bool write(Iterator begin, Iterator end, cmp_ctx_t* contextPtr)
 
     for (auto it = begin; it != end; it++)
     {
-        if (!write(*it, contextPtr))
+        if (!write(contextPtr, *it))
         {
             return false;
         }
