@@ -43,6 +43,8 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
         _oss{oss}
     {}
 
+    void operator()(ast::node::TIndex<ast::node::Kind::SOURCE>) {}
+
     void operator()(ast::node::TIndex<ast::node::Kind::LEXEME> lexemeIdx)
     {
         _oss << "{\"node\":\"Lexeme\",";
@@ -167,13 +169,6 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
         _oss << "\"rhs\":"      ; base()(expBinop._rhs      ); _oss << "}";
     }
 
-    void operator()(ast::node::TIndex<ast::node::Kind::EXPRESSION> expressionIdx)
-    {
-        auto& expression = get(expressionIdx);
-
-        base()(expression._value);
-    }
-
     void operator()(ast::node::TIndex<ast::node::Kind::FUN_CALL> funCallIdx)
     {
         auto& funCall = get(funCallIdx);
@@ -198,7 +193,7 @@ struct AstVisitor : ast::TVisitor<AstVisitor>
         _oss << '}';
     }
 
-    void operator()(ast::node::TIndex<ast::node::Kind::SCOPE_VARIANT> scopeVariantIdx)
+    void operator()(ast::node::TIndex<ast::node::Kind::ANY> scopeVariantIdx)
     {
         auto& scopeVariant = get(scopeVariantIdx);
 

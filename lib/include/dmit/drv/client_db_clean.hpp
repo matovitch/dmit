@@ -23,7 +23,7 @@ namespace dmit::drv::clt
 
 bool queryDatabaseClean(cmp_ctx_t* context)
 {
-    return dmit::cmp::write(context, dmit::drv::Query::DATABASE_CLEAN);
+    return dmit::cmp::writeU8(context, Query::DATABASE_CLEAN);
 }
 
 int databaseClean(dmit::nng::Socket& socket)

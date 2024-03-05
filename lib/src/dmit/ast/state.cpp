@@ -1,6 +1,7 @@
 #include "dmit/ast/state.hpp"
 
 #include "dmit/ast/definition_role.hpp"
+#include "dmit/ast/node.hpp"
 
 #include "dmit/prs/reader.hpp"
 #include "dmit/prs/tree.hpp"
@@ -89,7 +90,7 @@ void Builder::makeTypeClaim(dmit::prs::Reader& reader,
 }
 
 void Builder::makeDeclaration(const dmit::prs::Reader& supReader,
-                              Declaration& declaration)
+                              node::VIndex& declaration)
 {
     node::TIndex<node::Kind::DCL_VARIABLE> dclVariable;
     auto reader = supReader.makeSubReader();
@@ -98,7 +99,7 @@ void Builder::makeDeclaration(const dmit::prs::Reader& supReader,
 }
 
 void Builder::makeStatement(const dmit::prs::Reader& reader,
-                            Statement& statement)
+                            node::VIndex& statement)
 {
     auto parseNodeKind = reader.look()._kind;
 
@@ -161,7 +162,7 @@ void Builder::makeAssignment(dmit::prs::Reader& reader,
 }
 
 void Builder::makePattern(const dmit::prs::Reader& reader,
-                          Expression& expression)
+                          node::VIndex& expression)
 {
     auto parseNodeKind = reader.look()._kind;
 
@@ -194,7 +195,7 @@ void Builder::makeFunctionCall(dmit::prs::Reader& reader,
 }
 
 void Builder::makeExpression(const dmit::prs::Reader& reader,
-                             Expression& expression)
+                             node::VIndex& expression)
 {
     auto parseNodeKind = reader.look()._kind;
 
@@ -238,26 +239,11 @@ void Builder::makeExpression(const dmit::prs::Reader& reader,
 }
 
 void Builder::makeScopeVariant(const dmit::prs::Reader& reader,
-                               TNode<node::Kind::SCOPE_VARIANT>& scopeVariant)
+                               TNode<node::Kind::ANY>& scopeVariant)
 {
     auto parseNodeKind = reader.look()._kind;
 
-    if (isDeclaration(parseNodeKind))
-    {
-        com::blit(Declaration{}, scopeVariant._value);
-        makeDeclaration(reader, std::get<Declaration>(scopeVariant._value));
-    }
-    else if (isStatement(parseNodeKind))
-    {
-        com::blit(Statement{}, scopeVariant._value);
-        makeStatement(reader, std::get<Statement>(scopeVariant._value));
-    }
-    else if (isExpression(parseNodeKind))
-    {
-        com::blit(Expression{}, scopeVariant._value);
-        makeExpression(reader, std::get<Expression>(scopeVariant._value));
-    }
-    else if (parseNodeKind == ParseNodeKind::SCOPE)
+    if (parseNodeKind == ParseNodeKind::SCOPE)
     {
         node::TIndex<node::Kind::SCOPE> subScope;
         makeScope(reader, _nodePool.makeGet(subScope));
@@ -265,7 +251,24 @@ void Builder::makeScopeVariant(const dmit::prs::Reader& reader,
     }
     else
     {
-        DMIT_COM_ASSERT(!"[AST] Unknown scope variant node");
+        com::blit(node::VIndex{}, scopeVariant._value);
+
+        if (isDeclaration(parseNodeKind))
+        {
+            makeDeclaration(reader, scopeVariant._value);
+        }
+        else if (isStatement(parseNodeKind))
+        {
+            makeStatement(reader, scopeVariant._value);
+        }
+        else if (isExpression(parseNodeKind))
+        {
+            makeExpression(reader, scopeVariant._value);
+        }
+        else
+        {
+            DMIT_COM_ASSERT(!"[AST] Unknown scope variant node");
+        }
     }
 }
 

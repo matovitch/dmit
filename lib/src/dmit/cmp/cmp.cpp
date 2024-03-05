@@ -2,6 +2,8 @@
 
 #include "dmit/nng/nng.hpp"
 
+#include "dmit/com/storage.hpp"
+
 extern "C"
 {
     #include "cmp/cmp.h"
@@ -40,11 +42,20 @@ bool readBytes(cmp_ctx_t* ctx, void* data, uint32_t limit)
     return ctx->read(ctx, data, limit);
 }
 
-cmp_ctx_t contextFromNngBuffer(dmit::nng::Buffer& nngBuffer)
+cmp_ctx_t contextFromNngBuffer(nng::Buffer& nngBuffer)
 {
     cmp_ctx_t cmpBuffer = {0};
 
     cmp_init(&cmpBuffer, nngBuffer._asBytes, reader, skipper, writer);
+
+    return cmpBuffer;
+}
+
+cmp_ctx_t contextFromBytes(com::TStorage<uint8_t>& bytes)
+{
+    cmp_ctx_t cmpBuffer = {0};
+
+    cmp_init(&cmpBuffer, bytes.data(), reader, skipper, writer);
 
     return cmpBuffer;
 }

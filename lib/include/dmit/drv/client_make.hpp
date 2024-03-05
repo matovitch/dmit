@@ -23,7 +23,7 @@ namespace dmit::drv::clt
 
 bool queryMake(cmp_ctx_t* context)
 {
-    return dmit::cmp::write(context, dmit::drv::Query::MAKE);
+    return dmit::cmp::writeU8(context, Query::MAKE);
 }
 
 int make(dmit::nng::Socket& socket)

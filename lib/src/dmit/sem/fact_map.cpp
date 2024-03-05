@@ -130,7 +130,7 @@ struct SolveImports : ast::TVisitor<SolveImports>
 
     DMIT_AST_VISITOR_SIMPLE();
 
-    std::optional<com::UniqueId> getId(ast::Expression path,
+    std::optional<com::UniqueId> getId(ast::node::VIndex path,
                                        ast::node::TIndex<ast::node::Kind::MODULE> parent)
     {
         auto& module = base().get(parent);

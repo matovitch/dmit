@@ -116,7 +116,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
 
         auto& inst = _wsmPool.grow(_wsmPool.get(_stackPtrIn->_wsmFuncIdx)._body);
 
-        com::blit(instConst , inst._asVariant);
+        com::blit(instConst, inst._asVariant);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::DCL_VARIABLE> dclVariableIdx)
@@ -168,7 +168,7 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
 
         wsm::node::TIndex<wsm::node::Kind::INST_LOCAL_SET> instLocalSet;
         _wsmPool.makeGet(instLocalSet)._local = std::get<wsm::node::TIndex<wsm::node::Kind::LOCAL>>(wsm.value());
-        com::blit(instLocalSet , inst._asVariant);
+        com::blit(instLocalSet, inst._asVariant);
     }
 
     void operator()(ast::node::TIndex<ast::node::Kind::EXP_BINOP> expBinopIdx)
@@ -241,17 +241,12 @@ struct Scribe : ast::TVisitor<Scribe, Stack>
         com::blit(instCall, inst._asVariant);
     }
 
-    void operator()(ast::node::TIndex<ast::node::Kind::EXPRESSION> expressionIdx)
-    {
-        base()(get(expressionIdx)._value);
-    }
-
     void operator()(ast::node::TIndex<ast::node::Kind::STM_RETURN> stmReturnIdx)
     {
         base()(get(stmReturnIdx)._expression);
     }
 
-    void operator()(ast::node::TIndex<ast::node::Kind::SCOPE_VARIANT> scopeVariantIdx)
+    void operator()(ast::node::TIndex<ast::node::Kind::ANY> scopeVariantIdx)
     {
         base()(get(scopeVariantIdx)._value);
     }
