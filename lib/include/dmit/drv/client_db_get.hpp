@@ -23,7 +23,7 @@ namespace dmit::drv::clt
 
 bool queryDatabaseGet(cmp_ctx_t* context)
 {
-    return dmit::cmp::write(context, dmit::drv::Query::DATABASE_GET);
+    return dmit::cmp::write(context, Query{Query::DATABASE_GET});
 }
 
 

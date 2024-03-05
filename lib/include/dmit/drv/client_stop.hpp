@@ -23,7 +23,7 @@ namespace dmit::drv::clt
 
 bool queryStopServer(cmp_ctx_t* context)
 {
-    return dmit::cmp::write(context, Query::STOP);
+    return dmit::cmp::write(context, Query{Query::STOP});
 }
 
 int stop(dmit::nng::Socket& socket)
