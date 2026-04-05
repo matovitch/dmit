@@ -11,7 +11,7 @@
 namespace dmit::drv::srv
 {
 
-void databaseGet(dmit::nng::Socket& socket, dmit::db::Database& database)
+inline void databaseGet(dmit::nng::Socket& socket, dmit::db::Database& database)
 {
     // 1. Write reply
 

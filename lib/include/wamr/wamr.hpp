@@ -3,7 +3,6 @@
 extern "C"
 {
     #include "wamr/wasm_export.h"
-    #include "wamr/wasm_c_api.h"
 }
 
 #include "dmit/com/storage.hpp"

@@ -4,7 +4,6 @@
 #include "dmit/drv/query.hpp"
 #include "dmit/drv/reply.hpp"
 
-#include "dmit/cmp/drv/query.hpp"
 #include "dmit/cmp/src/file.hpp"
 #include "dmit/cmp/cmp.hpp"
 
@@ -14,7 +13,7 @@
 
 extern "C"
 {
-    #include "cmp/cmp.h"
+    #include "cmp.h"
 }
 
 #include <cstdlib>
@@ -22,7 +21,7 @@ extern "C"
 namespace dmit::drv::clt
 {
 
-bool queryCreateOrUpdateFile(cmp_ctx_t* context, const src::File& file)
+inline bool queryCreateOrUpdateFile(cmp_ctx_t* context, const src::File& file)
 {
     if (!cmp::writeU8(context, Query::ADD_FILE))
     {
@@ -32,7 +31,7 @@ bool queryCreateOrUpdateFile(cmp_ctx_t* context, const src::File& file)
     return cmp::write(context, file);
 }
 
-void displayFileError(const src::file::Error& fileError, const char* fileName)
+inline void displayFileError(const src::file::Error& fileError, const char* fileName)
 {
     if (fileError == src::file::Error::FILE_NOT_FOUND)
     {
@@ -55,7 +54,7 @@ void displayFileError(const src::file::Error& fileError, const char* fileName)
     }
 }
 
-int addFile(nng::Socket& socket, const char* filePath)
+inline int addFile(nng::Socket& socket, const char* filePath)
 {
     // Read the file
 

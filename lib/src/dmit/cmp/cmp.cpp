@@ -6,7 +6,7 @@
 
 extern "C"
 {
-    #include "cmp/cmp.h"
+    #include "cmp.h"
 }
 
 #include <cstring>

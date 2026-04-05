@@ -4,7 +4,7 @@
 
 extern "C"
 {
-    #include "cmp/cmp.h"
+    #include "cmp.h"
 }
 
 namespace dmit::cmp

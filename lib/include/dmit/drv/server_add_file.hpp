@@ -15,17 +15,16 @@
 
 extern "C"
 {
-    #include "cmp/cmp.h"
+    #include "cmp.h"
 }
 
 #include <cstdint>
-#include <cstdlib>
 #include <string>
 
 namespace dmit::drv::srv
 {
 
-void addFile(nng::Socket& socket,
+inline void addFile(nng::Socket& socket,
              cmp_ctx_t* context,
              db::Database& database)
 {

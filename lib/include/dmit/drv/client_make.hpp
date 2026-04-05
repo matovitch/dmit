@@ -4,7 +4,6 @@
 #include "dmit/drv/query.hpp"
 #include "dmit/drv/reply.hpp"
 
-#include "dmit/cmp/drv/query.hpp"
 #include "dmit/cmp/cmp.hpp"
 
 #include "dmit/nng/nng.hpp"
@@ -13,7 +12,7 @@
 
 extern "C"
 {
-    #include "cmp/cmp.h"
+    #include "cmp.h"
 }
 
 #include <cstdlib>
@@ -21,12 +20,12 @@ extern "C"
 namespace dmit::drv::clt
 {
 
-bool queryMake(cmp_ctx_t* context)
+inline bool queryMake(cmp_ctx_t* context)
 {
     return dmit::cmp::writeU8(context, Query::MAKE);
 }
 
-int make(dmit::nng::Socket& socket)
+inline int make(dmit::nng::Socket& socket)
 {
     // Write query
 

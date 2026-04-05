@@ -11,7 +11,7 @@
 namespace dmit::drv::srv
 {
 
-void databaseClean(dmit::nng::Socket& socket, dmit::db::Database& database)
+inline void databaseClean(dmit::nng::Socket& socket, dmit::db::Database& database)
 {
     // 1. Process query
 

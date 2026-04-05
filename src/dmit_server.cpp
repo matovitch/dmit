@@ -6,11 +6,8 @@
 
 #include "dmit/drv/error.hpp"
 #include "dmit/drv/query.hpp"
-#include "dmit/drv/reply.hpp"
 
 #include "dmit/db/database.hpp"
-
-#include "dmit/fmt/logger.hpp"
 
 #include "dmit/cmp/cmp.hpp"
 

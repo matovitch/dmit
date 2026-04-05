@@ -6,10 +6,7 @@
 #include "dmit/fmt/formatable.hpp"
 
 #include <filesystem>
-#include <optional>
 #include <cstdint>
-#include <memory>
-#include <vector>
 
 namespace dmit::src
 {

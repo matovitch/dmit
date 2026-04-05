@@ -4,7 +4,6 @@ include_rules
 
 : <obj> |                        \
           $(ROOT)/<lib_wamr>     \
-          $(ROOT)/<lib_wasm3>    \
           $(ROOT)/<lib_schmit>   \
           $(ROOT)/<lib_dmit_db>  \
           $(ROOT)/<lib_dmit_nng> \

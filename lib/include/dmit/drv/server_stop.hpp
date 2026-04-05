@@ -16,7 +16,7 @@ extern "C"
 namespace dmit::drv::srv
 {
 
-void stop(dmit::nng::Socket& socket, int& returnCode, bool& isStopping)
+inline void stop(dmit::nng::Socket& socket, int& returnCode, bool& isStopping)
 {
     // 1. Process query
 

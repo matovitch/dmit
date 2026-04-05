@@ -7,7 +7,6 @@
 #include "dmit/com/assert.hpp"
 #include "dmit/com/blit.hpp"
 
-#include "wasm3/wasm3.hpp"
 #include "wamr/wamr.hpp"
 
 #include <cstdint>

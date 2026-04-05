@@ -17,3 +17,6 @@ core
 *.o
 *.a
 draft/
+# pixi environments
+.pixi/*
+!.pixi/config.toml

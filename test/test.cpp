@@ -1,3 +1,5 @@
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
 #include "test.hpp"
 
 #include "dmit/gen/archive.hpp"
@@ -17,6 +19,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+
 
 void getError(const dmit::src::file::Error& fileError,
               const char* filePath,

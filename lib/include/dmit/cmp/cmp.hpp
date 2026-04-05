@@ -1,11 +1,10 @@
 #pragma once
 
 #include "dmit/com/storage.hpp"
-#include "dmit/com/type_flag.hpp"
 
 extern "C"
 {
-    #include "cmp/cmp.h"
+    #include "cmp.h"
 }
 
 #include "dmit/cmp/lex/token.hpp"

@@ -23,7 +23,6 @@
 
 #include "subprocess/subprocess.hpp"
 
-#include "wasm3/wasm3.hpp"
 #include "wamr/wamr.hpp"
 
 #include <cstdint>

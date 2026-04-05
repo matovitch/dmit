@@ -10,7 +10,6 @@ extern "C"
 }
 
 #include <cstdlib>
-#include <cstring>
 
 enum
 {

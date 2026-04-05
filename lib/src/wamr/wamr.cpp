@@ -3,7 +3,6 @@
 extern "C"
 {
     #include "wamr/wasm_export.h"
-    #include "wamr/wasm_c_api.h"
 }
 
 #include "dmit/com/storage.hpp"
@@ -57,7 +56,7 @@ ModuleInstance::ModuleInstance(wasm_module_inst_t asWasmModuleInstT) :
 
 wasm_function_inst_t ModuleInstance::findFunction(const char* functionName)
 {
-    auto functionInstance = wasm_runtime_lookup_function(_asWasmModuleInstT, functionName, nullptr);
+    auto functionInstance = wasm_runtime_lookup_function(_asWasmModuleInstT, functionName);
 
     DMIT_COM_ASSERT(functionInstance && "Function could not be found in module");
 
@@ -72,7 +71,7 @@ wasm_function_inst_t ModuleInstance::findFunction(const std::string& functionNam
 ModuleInstance Runtime::makeModuleInstance(std::string& moduleAsString)
 {
     return makeModuleInstance(reinterpret_cast<uint8_t*>(moduleAsString.data()),
-                                                            moduleAsString.size());
+                                                         moduleAsString.size());
 }
 
 ModuleInstance Runtime::makeModuleInstance(dmit::com::TStorage<uint8_t>& moduleAsStorage)

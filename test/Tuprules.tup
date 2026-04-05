@@ -23,10 +23,9 @@ CLFLAGS += -l dmit_rt
 CLFLAGS += -l sqlite3
 CLFLAGS += -l nng
 CLFLAGS += -l cmp
-CLFLAGS += -l doctest
 CLFLAGS += -l stdc++fs
 CLFLAGS += -l pthread
-CLFLAGS += -l vmlib
+CLFLAGS += -l iwasm
 CLFLAGS += -l dl
 
 CLFLAGS += -L $(VARIANT)/lib/src/wamr

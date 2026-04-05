@@ -2,11 +2,6 @@
 
 #include "dmit/com/enum.hpp"
 
-extern "C"
-{
-    #include "cmp/cmp.h"
-}
-
 #include <cstdint>
 
 namespace dmit::drv

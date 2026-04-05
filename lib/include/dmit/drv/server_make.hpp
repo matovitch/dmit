@@ -12,7 +12,6 @@
 #include "dmit/sem/bundle.hpp"
 
 #include "dmit/ast/builder.hpp"
-#include "dmit/ast/bundle.hpp"
 #include "dmit/ast/state.hpp"
 
 #include "dmit/db/database.hpp"
@@ -31,7 +30,7 @@
 namespace dmit::drv::srv
 {
 
-void make(nng::Socket& socket, db::Database& database, com::parallel_for::ThreadPool& threadPool)
+inline void make(nng::Socket& socket, db::Database& database, com::parallel_for::ThreadPool& threadPool)
 {
     // 1. Retrive sources from db
 
@@ -116,7 +115,7 @@ void make(nng::Socket& socket, db::Database& database, com::parallel_for::Thread
                                                                                 bundles};
     threadPool.notify_and_wait(parallelGenerationEmitter);
 
-    auto&& bins = parallelGenerationEmitter._outputs;
+    // auto&& bins = parallelGenerationEmitter._outputs;
 
     // 8. Write reply
 

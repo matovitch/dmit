@@ -4,10 +4,24 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Launch",
+            "name": "Debug Test (Pixi Env)",
+            // 1. Point directly to your compiled binary
             "program": "${workspaceFolder}/bin/test/test",
             "args": [],
-            "cwd": "${workspaceFolder}"
+            "cwd": "${workspaceFolder}",
+            
+            // 2. Manually inject the Pixi bin folder into the PATH
+            // Replace 'default' with your environment name if different
+            "env": {
+                "PATH": "${workspaceFolder}/.pixi/envs/default/bin:${env:PATH}"
+            },
+
+            // 3. Keep the adapter running via pixi so lldb-server is happy
+            "adapter": "${userHome}/.pixi/bin/pixi",
+            "adapterArgs": ["run", "codelldb"],
+            
+            "stopOnEntry": false,
+            "console": "integratedTerminal"
         }
     ]
 }

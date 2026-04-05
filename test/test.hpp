@@ -2,13 +2,11 @@
 
 #include "dmit/com/storage.hpp"
 
-#include "doctest/doctest_fwd.h"
-#include "doctest/utils.h"
+#include "doctest/doctest.h"
 
 #include <cstdint>
 #include <sstream>
 #include <string>
-#include <vector>
 
 void getError(const dmit::src::file::Error& fileError,
               const char* filePath,

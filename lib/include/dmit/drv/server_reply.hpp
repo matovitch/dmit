@@ -12,12 +12,12 @@
 namespace dmit::drv::srv
 {
 
-bool writeReply(cmp_ctx_t* context, const dmit::drv::Reply reply)
+inline bool writeReply(cmp_ctx_t* context, const dmit::drv::Reply reply)
 {
     return dmit::cmp::write(context, reply);
 }
 
-void replyWith(dmit::nng::Socket& socket, const dmit::drv::Reply reply)
+inline void replyWith(dmit::nng::Socket& socket, const dmit::drv::Reply reply)
 {
     // 1. Write reply
 
