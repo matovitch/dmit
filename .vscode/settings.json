@@ -1,0 +1,10 @@
+{
+    "clangd.path": "pixi",
+    "clangd.arguments": [
+        "run",
+        "clangd",
+        "--compile-commands-dir=bin",
+        "--background-index"
+    ],
+    "editor.inlayHints.enabled": "offUnlessPressed"
+}
