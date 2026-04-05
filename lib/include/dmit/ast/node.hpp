@@ -6,9 +6,6 @@
 
 #include "dmit/lex/token.hpp"
 
-#include "dmit/src/line_index.hpp"
-#include "dmit/src/slice.hpp"
-
 #include "dmit/com/reference.hpp"
 #include "dmit/com/tree_node.hpp"
 #include "dmit/com/tree_pool.hpp"

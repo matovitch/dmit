@@ -1,7 +1,5 @@
 #pragma once
 
-#include "robin/details/bucket.hpp"
-
 #include <iterator>
 
 namespace robin
@@ -47,8 +45,7 @@ using TMake = TIterator<TTraits<Traits>>;
 } // namespace iterator
 
 template <class Traits>
-class TIterator : std::iterator<std::forward_iterator_tag,
-                                typename Traits::Type>
+class TIterator
 {
     using Bucket   = typename Traits::Bucket;
     using Table    = typename Traits::Table;
@@ -63,6 +60,12 @@ class TIterator : std::iterator<std::forward_iterator_tag,
     friend bool operator!=<Traits>(const Iterator& lhs,
                                    const Iterator& rhs);
 public:
+
+    using iterator_category = std::forward_iterator_tag;
+    using value_type        = Type;
+    using difference_type   = std::ptrdiff_t;
+    using pointer           = Type*;
+    using reference         = Type&;
 
     TIterator(Bucket* const bucketPtr, const Table& table) :
         _bucketPtr{bucketPtr},

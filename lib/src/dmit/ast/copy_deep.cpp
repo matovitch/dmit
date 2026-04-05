@@ -106,7 +106,9 @@ struct DeepCopier : TVisitor<DeepCopier, Stack>
             node::as<node::Kind::SOURCE>(_stackPtrIn->_index)
         );
 
-        std::memcpy(&destSource, &srceSource, sizeof(TNode<node::Kind::SOURCE>));
+        // Erase type of destSource for shallow copy to avoid warning about
+        // non-trivial copy of TNode<node::Kind::SOURCE>
+        std::memcpy((void*)&destSource, &srceSource, sizeof(TNode<node::Kind::SOURCE>));
     }
 
     void operator()(node::TIndex<node::Kind::LEXEME> srceLexemeIdx)
