@@ -2,8 +2,6 @@
 #include "schmit/details/coroutine/register.hpp"
 #include "schmit/details/coroutine.hpp"
 
-#include <cstdint>
-
 namespace schmit_details
 {
 
@@ -13,13 +11,13 @@ namespace coroutine
 void contextSwitch(schmit_details::coroutine::Abstract& srce,
                     schmit_details::coroutine::Abstract& dest)
 {
-    #if defined(SCHMIT_USE_ASAN)
+    #if defined(USE_ASAN)
         dest.asanStart();
     #endif
 
     schmitDetailsCoroutineContextSwitch(&srce, &dest);
 
-    #if defined(SCHMIT_USE_ASAN)
+    #if defined(USE_ASAN)
         srce.asanFinish();
     #endif
 }

@@ -28,7 +28,7 @@ ifeq (@(IS_USING_OPTION_REFERENCE),y)
 endif
 
 ifeq (@(IS_USING_VALGRIND),y)
-    CXFLAGS += -DSCHMIT_USE_VALGRIND
+    CXFLAGS += -DUSE_VALGRIND
 endif
 
 ifeq (@(O_LEVEL),0)
@@ -45,12 +45,12 @@ ifeq (@(O_LEVEL),3)
 endif
 
 ifeq (@(IS_ASAN),y)
-    CXFLAGS += -DSCHMIT_USE_ASAN
+    CXFLAGS += -DUSE_ASAN
     CXFLAGS += -fsanitize=address
 endif
 
 ifeq (@(IS_TSAN),y)
-    CXFLAGS += -DSCHMIT_USE_TSAN
+    CXFLAGS += -DUSE_TSAN
     CXFLAGS += -fsanitize=thread
 endif
 

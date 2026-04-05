@@ -4,7 +4,7 @@
 #include <chrono>
 #include <thread>
 
-#if defined(SCHMIT_USE_TSAN)
+#if defined(USE_TSAN)
     #include "sanitizer/tsan_interface.h"
 #endif
 
@@ -52,7 +52,7 @@ CriticalSection::CriticalSection(std::atomic<bool>& flag) : _flag{flag}
     {
         std::atomic_thread_fence(std::memory_order_acquire);
 
-        #if defined(SCHMIT_USE_TSAN)
+        #if defined(USE_TSAN)
             __tsan_acquire(&_flag);
         #endif
     }

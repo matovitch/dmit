@@ -103,7 +103,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/libstdcxx-ng-15.2.0-hdf11a46_18.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/libtiff-4.7.1-h9d88235_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/libuuid-2.42-h5347b49_0.conda
-      - conda: https://prefix.dev/libwamr/linux-64/libwamr-2.4.4-hb0f4dca_3.conda
+      - conda: https://prefix.dev/libwamr/linux-64/libwamr-2.4.4-hb0f4dca_5.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/libwebp-base-1.6.0-hd42ef1d_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/libxcb-1.17.0-h8a09558_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/libxkbcommon-1.13.1-hca5e8e5_0.conda
@@ -1351,16 +1351,16 @@ packages:
   purls: []
   size: 40297
   timestamp: 1775052476770
-- conda: https://prefix.dev/libwamr/linux-64/libwamr-2.4.4-hb0f4dca_3.conda
-  sha256: 35b36921f82ce7e98bc8abaaf6fa471a68c2f950452b26dd4d20776dc412c82c
-  md5: 898ed1d0bb9cec1479a8da59e15a89c0
+- conda: https://prefix.dev/libwamr/linux-64/libwamr-2.4.4-hb0f4dca_5.conda
+  sha256: f3bab59535cc3a70185e6960733b750c89e8b0ede60782c7a67d6ee7255afd9c
+  md5: 98fb6df9baf6cedb68790a7fbbb373a9
   depends:
   - __glibc >=2.17,<3.0.a0
   - libgcc >=15
   - libstdcxx >=15
   license: Apache-2.0
-  size: 477565
-  timestamp: 1775332000582
+  size: 470861
+  timestamp: 1775423492747
 - conda: https://conda.anaconda.org/conda-forge/linux-64/libwebp-base-1.6.0-hd42ef1d_0.conda
   sha256: 3aed21ab28eddffdaf7f804f49be7a7d701e8f0e46c856d801270b470820a37b
   md5: aea31d2e5b1091feca96fcfe945c3cf9

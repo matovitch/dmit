@@ -135,7 +135,7 @@ public:
 
     void run()
     {
-        #if defined(SCHMIT_USE_ASAN)
+        #if defined(USE_ASAN)
             _coroutine.asanFinish();
         #endif
 

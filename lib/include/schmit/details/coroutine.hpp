@@ -5,15 +5,13 @@
 
 #include "pool/intrusive.hpp"
 
-#if defined(SCHMIT_USE_VALGRIND)
+#if defined(USE_VALGRIND)
     #include "valgrind/valgrind.h"
 #endif
 
-#if defined(SCHMIT_USE_ASAN)
+#if defined(USE_ASAN)
     #include "sanitizer/common_interface_defs.h"
 #endif
-
-#include <cstdint>
 
 namespace schmit_details
 {
@@ -25,7 +23,7 @@ struct Abstract
 {
     virtual void recycle() = 0;
 
-#if defined(SCHMIT_USE_ASAN)
+#if defined(USE_ASAN)
     virtual void asanStart  () = 0;
     virtual void asanFinish () = 0;
 #endif
@@ -56,7 +54,7 @@ public:
 
         mmxFpuSave(_registers[RegisterMap::MMX_FPU_STATE]);
 
-        #if defined(SCHMIT_USE_VALGRIND)
+        #if defined(USE_VALGRIND)
             _valgrindStackId = VALGRIND_STACK_REGISTER(_stack.base() - STACK_SIZE,
                                                        _stack.base());
         #endif
@@ -69,12 +67,12 @@ public:
 
     ~TCoroutine()
     {
-        #if defined(SCHMIT_USE_VALGRIND)
+        #if defined(USE_VALGRIND)
             VALGRIND_STACK_DEREGISTER(_valgrindStackId);
         #endif
     }
 
-#if defined(SCHMIT_USE_ASAN)
+#if defined(USE_ASAN)
 
     void asanStart() override
     {
@@ -101,11 +99,11 @@ private:
 
     Pool& _pool;
 
-#if defined(SCHMIT_USE_VALGRIND)
+#if defined(USE_VALGRIND)
     unsigned _valgrindStackId;
 #endif
 
-#if defined(SCHMIT_USE_ASAN)
+#if defined(USE_ASAN)
     void*       _asanFakeStack = nullptr;
     void*       _asanStackBase = nullptr;
     std::size_t _asanStackSize;

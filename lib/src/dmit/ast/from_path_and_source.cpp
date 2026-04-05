@@ -7,6 +7,8 @@
 
 #include "dmit/lex/state.hpp"
 
+#include "dmit/src/line_index.hpp"
+
 #include <cstdint>
 #include <vector>
 
