@@ -13,7 +13,7 @@
 namespace dmit::sem
 {
 
-Context::Context() : _scheduler{_taskGraphPoolSet, _taskPool} {}
+Context::Context() {}
 
 ast::node::VIndex Context::vIndex(ast::node::VIndexOrLock& vIndexOrLock)
 {

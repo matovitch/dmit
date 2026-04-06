@@ -14,9 +14,6 @@
 #include "dmit/com/enum.hpp"
 
 #include "dmit/fmt/com/unique_id.hpp"
-#include "dmit/fmt/src/slice.hpp"
-
-#include <tuple>
 
 namespace dmit::sem
 {
@@ -96,7 +93,7 @@ struct TResolver : TVisitor<TResolver<KIND_>>
 
         auto& solve = get(_solveIdx);
 
-        _context.makeTaskMedium
+        _context.makeTask
         (
             [&solve](const ast::node::VIndex& vIndex)
             {

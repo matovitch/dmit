@@ -9,15 +9,14 @@
 #include <functional>
 #include <optional>
 #include <utility>
-#include <memory>
 
 namespace schmit
 {
 
-template <std::size_t, class>
+template <class>
 class TTask;
 
-template <std::size_t, class>
+template <class>
 class TScheduler;
 
 namespace task
@@ -48,11 +47,11 @@ struct TNode
         }
     };
 
-    using NodeItType = typename topo::graph::TMake<TTask<SIZE, DebugType>*, SIZE>::NodeListIt;
+    using NodeItType = typename topo::graph::TMake<TTask<DebugType>*, SIZE>::NodeListIt;
 
     TNode(NodeItType value) : _value{value} {}
 
-    TTask<SIZE, DebugType>& operator()()
+    TTask<DebugType>& operator()()
     {
         return *(_value->_value);
     }
@@ -91,26 +90,24 @@ thread_local std::optional<TNode<SIZE, DebugType>> TEntryPoint<SIZE, DebugType>:
 
 } // namespace task
 
-template <std::size_t SIZE, class DebugType>
+template <class DebugType>
 class TTask
 {
-    friend TScheduler<SIZE, DebugType>;
+    friend TScheduler<DebugType>;
 
-    using Dependency = typename topo::graph::TMake<TTask<SIZE, DebugType>*, SIZE>::EdgeListIt;
-
-    using Pool = pool::intrusive::TMake<TTask<SIZE, DebugType>, SIZE>;
+    using Dependency = typename topo::graph::TMake<TTask<DebugType>*, 1>::EdgeListIt;
+    using Pool       = pool::intrusive::TMake<TTask<DebugType>, 1>;
 
 public:
 
-    template <std::size_t STACK_SIZE, std::size_t POOL_SIZE, class Function>
+    template <class Function>
     TTask(Pool& pool,
-          schmit::TScheduler<SIZE, DebugType>& scheduler,
-          pool::intrusive::TMake<schmit_details::TCoroutine<STACK_SIZE, POOL_SIZE>, POOL_SIZE>& coroutinePool,
+          schmit::TScheduler<DebugType>& scheduler,
           Function&& function,
-          task::TNode<SIZE, DebugType> node,
+          task::TNode<1, DebugType> node,
           std::unique_ptr<DebugType> debug) :
         _scheduler{scheduler},
-        _coroutine{coroutinePool.make(task::TEntryPoint<SIZE, DebugType>::address())},
+        _coroutine{scheduler._coroutineStackPool, task::TEntryPoint<1, DebugType>::address()},
         _function{std::move(function)},
         _node{node},
         _pool{pool}
@@ -121,7 +118,7 @@ public:
         }
     }
 
-    void attach(task::TNode<SIZE, DebugType>& task, Dependency& dependency)
+    void attach(task::TNode<1, DebugType>& task, Dependency& dependency)
     {
         dependency = _scheduler.attach(_node, task);
 
@@ -156,13 +153,13 @@ public:
 
 private:
 
-    TScheduler<SIZE, DebugType>&         _scheduler;
-    schmit_details::coroutine::Abstract& _coroutine;
-    bool                                 _isRunning = false;
+    TScheduler<DebugType>&      _scheduler;
+    schmit_details::Coroutine   _coroutine;
+    bool                        _isRunning = false;
 
-    std::function<void()>        _function;
-    task::TNode<SIZE, DebugType> _node;
-    Pool&                        _pool;
+    std::function<void()>     _function;
+    task::TNode<1, DebugType> _node;
+    Pool&                     _pool;
 
 public:
 

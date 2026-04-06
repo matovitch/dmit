@@ -5,6 +5,5 @@
         "clangd",
         "--compile-commands-dir=bin",
         "--background-index"
-    ],
-    "editor.inlayHints.enabled": "offUnlessPressed"
+    ]
 }

@@ -8,14 +8,14 @@ namespace schmit_details
 namespace coroutine
 {
 
-void contextSwitch(schmit_details::coroutine::Abstract& srce,
-                    schmit_details::coroutine::Abstract& dest)
+void contextSwitch(schmit_details::Coroutine& srce,
+                   schmit_details::Coroutine& dest)
 {
     #if defined(USE_ASAN)
         dest.asanStart();
     #endif
 
-    schmitDetailsCoroutineContextSwitch(&srce, &dest);
+    schmitDetailsCoroutineContextSwitch(&srce._state, &dest._state);
 
     #if defined(USE_ASAN)
         srce.asanFinish();

@@ -22,9 +22,9 @@
 #include <vector>
 
 #ifdef DMIT_SEM_CONTEXT_DEBUG
-    using SchmitScheduler = schmit::TScheduler<1, std::string>;
+    using SchmitScheduler = schmit::TScheduler<std::string>;
 #else
-    using SchmitScheduler = schmit::TScheduler<1>;
+    using SchmitScheduler = schmit::TScheduler<int8_t>;
 #endif
 
 using SchmitTaskNode = typename SchmitScheduler::TaskNode;

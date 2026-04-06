@@ -1,8 +1,13 @@
 #!/bin/bash
 
-function make()
+function test()
 {
     tup && $PIXI_PROJECT_ROOT/bin/test/test -fc -ni -tse=json,wasm | grep -vP 'CLK[0-9] ' && $PIXI_PROJECT_ROOT/test/data/diff.sh
+}
+
+function vgtest()
+{
+    tup && valgrind --leak-check=full --track-origins=yes $PIXI_PROJECT_ROOT/bin/test/test
 }
 
 function base64archive2Wasm()

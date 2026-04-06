@@ -5,45 +5,39 @@
 
 #include "topo/graph.hpp"
 
-#include <cstddef>
-#include <cstdlib>
-#include <cstdint>
 #include <memory>
 
 namespace schmit
 {
 
-template <std::size_t SIZE, class DebugType = int8_t>
+template <class DebugType>
 class TScheduler
 {
-    using TaskGraph = topo::graph::TMake<TTask<SIZE, DebugType>*, SIZE>;
+    using TaskGraph = topo::graph::TMake<TTask<DebugType>*, 1>;
 
 public:
 
     using TaskGraphPoolSet = typename TaskGraph::PoolSet;
     using Dependency       = typename TaskGraph::EdgeListIt;
     using DependencyList   = typename TaskGraph::EdgeList;
-    using TaskNode         = task::TNode<SIZE, DebugType>;
+    using TaskNode         = task::TNode<1, DebugType>;
 
     using Debug = DebugType;
 
-    template <std::size_t STACK_SIZE>
-    using TCoroutinePool = typename schmit_details::TCoroutine<STACK_SIZE, 0>::Pool;
+    using PoolTask = typename TTask<DebugType>::Pool;
 
-    using PoolTask = typename TTask<SIZE, DebugType>::Pool;
+    using CoroutineStackPool = schmit_details::coroutine::stack::Pool;
 
-    TScheduler(TaskGraphPoolSet& taskGraphPoolSet,
-               PoolTask& taskPool) :
-        _coroutine {_coroutinePool.make(nullptr)},
-        _taskGraph {taskGraphPoolSet},
-        _taskPool  {taskPool}
+    TScheduler() :
+        _coroutine {_coroutineStackPool, nullptr},
+        _taskGraph {_taskGraphPoolSet}
     {}
 
-    template <class CoroutinePool, class Function>
-    TaskNode makeTask(Function&& function, CoroutinePool& coroutinePool, std::unique_ptr<DebugType> debug)
+    template <class Function>
+    TaskNode makeTask(Function&& function, std::unique_ptr<DebugType> debug)
     {
         TaskNode taskNode{_taskGraph.makeNode(nullptr)};
-        auto& task = _taskPool.make(*this, coroutinePool, std::forward<Function>(function), taskNode, std::move(debug));
+        auto& task = _taskPool.make(*this, std::forward<Function>(function), taskNode, std::move(debug));
         taskNode._value->_value = &task;
 
         return taskNode;
@@ -115,7 +109,7 @@ public:
         _taskGraph.forcePending(taskNode._value);
     }
 
-    schmit_details::coroutine::Abstract& nextCoroutine()
+    schmit_details::Coroutine& nextCoroutine()
     {
         auto top = _taskGraph.top();
 
@@ -127,7 +121,7 @@ public:
 
         if (!top->_value->isRunning())
         {
-            task::TEntryPoint<SIZE, DebugType>::_next = top;
+            task::TEntryPoint<1, DebugType>::_next = top;
         }
 
         return top->_value->_coroutine;
@@ -169,18 +163,20 @@ public:
         return _isRunning;
     }
 
+    // Keep this before the task pool: coroutine destruction recycles stacks here,
+    // so the stack pool must outlive every task-owned coroutine.
+    schmit_details::coroutine::stack::Pool _coroutineStackPool;
+
 private:
 
     bool _isRunning = false;
 
-    schmit_details::coroutine::Abstract& _coroutine;
-    TaskGraph _taskGraph;
-    PoolTask& _taskPool;
+    schmit_details::Coroutine _coroutine;
 
-    static thread_local schmit_details::TCoroutine<0, 1>::Pool _coroutinePool;
+    TaskGraphPoolSet _taskGraphPoolSet;
+    TaskGraph        _taskGraph;
+    PoolTask         _taskPool;
 };
 
-template <std::size_t SIZE, class DebugType>
-thread_local schmit_details::TCoroutine<0, 1>::Pool TScheduler<SIZE, DebugType>::_coroutinePool;
 
 } // namespace schmit

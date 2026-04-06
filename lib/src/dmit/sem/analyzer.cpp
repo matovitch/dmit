@@ -1,19 +1,13 @@
 #include "dmit/sem/analyzer.hpp"
 
-#include "dmit/ast/node.hpp"
 #include "dmit/sem/interface_map.hpp"
 #include "dmit/sem/context.hpp"
 #include "dmit/sem/check.hpp"
 #include "dmit/sem/bind.hpp"
 
-#include "dmit/ast/visitor.hpp"
 #include "dmit/ast/bundle.hpp"
-#include "dmit/ast/state.hpp"
 
 #include "dmit/com/parallel_for.hpp"
-#include "dmit/com/unique_id.hpp"
-#include "dmit/com/murmur.hpp"
-#include "dmit/com/blit.hpp"
 
 #include <atomic>
 
@@ -35,7 +29,6 @@ void analyze(ast::Bundle& bundle, Context& context, InterfaceMap& interfaceMap)
         {
             bind(bundle, context, interfaceMap);
         },
-        context._coroutinePoolLarge,
         DMIT_SEM_CONTEXT_STR("bind")
     );
 
@@ -44,7 +37,6 @@ void analyze(ast::Bundle& bundle, Context& context, InterfaceMap& interfaceMap)
         {
             check(bundle, context, interfaceMap);
         },
-        context._coroutinePoolLarge,
         DMIT_SEM_CONTEXT_STR("check")
     );
 

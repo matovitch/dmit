@@ -5,16 +5,10 @@
 #include "topo/edge.hpp"
 
 #include "list/steal.hpp"
-#include "list/cell.hpp"
 #include "list/list.hpp"
 
-#include "pool/pool.hpp"
-
 #include <optional>
-#include <cstdint>
 #include <vector>
-
-#include <iostream>
 
 namespace topo
 {

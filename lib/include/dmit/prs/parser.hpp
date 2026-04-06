@@ -9,8 +9,6 @@
 
 #include <functional>
 #include <optional>
-#include <memory>
-#include <vector>
 
 namespace dmit::prs
 {

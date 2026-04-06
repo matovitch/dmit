@@ -5,7 +5,6 @@
 
 #include "dmit/ast/copy_shallow.hpp"
 #include "dmit/ast/bundle.hpp"
-#include "dmit/ast/lexeme.hpp"
 #include "dmit/ast/state.hpp"
 #include "dmit/ast/node.hpp"
 
@@ -13,10 +12,7 @@
 #include "dmit/com/murmur.hpp"
 #include "dmit/com/blit.hpp"
 
-#include <optional>
 #include <cstdint>
-#include <memory>
-#include <vector>
 
 namespace dmit::sem
 {
@@ -46,7 +42,7 @@ struct InterfaceMaker : TVisitor<InterfaceMaker, Stack>
         auto slice = getSlice(identifier._lexeme);
         auto id = com::murmur::combine(slice.makeUniqueId(), _stackPtrIn->_prefix);
 
-        _context.makeTaskMedium
+        _context.makeTask
         (
             [&identifier](const ast::node::VIndex& vIndex)
             {
