@@ -7,9 +7,6 @@
 
 #include "dmit/fmt/ast/state.hpp"
 
-#include <cstring>
-
-
 #include "dmit/cmp/cmp.hpp"
 #include "dmit/cmp/ast/state.hpp"
 
@@ -39,21 +36,6 @@ TEST_SUITE("json")
 TEST_CASE("ast")
 {
     Aster aster;
-
-    // cmp_ctx_t cmpBufferSize = {0};
-
-    // auto writerSize = [](cmp_ctx_t* ctx, const void *data, size_t count)
-    //                   {
-    //                       ctx->buf = (char*)(ctx->buf) + count;
-    //                       return count;
-    //                   };
-
-    // cmp_init(&cmpBufferSize, nullptr, nullptr, nullptr, writerSize);
-
-    //dmit::cmp::write(&cmpBufferSize, aster("test/data/ast/add.in"));
-
-    // std::cout << *((size_t*)(&(cmpBufferSize.buf))) << '\n';
-
 
     auto astWriter = [](cmp_ctx_t* context, const dmit::ast::State& ast) -> bool
                      {

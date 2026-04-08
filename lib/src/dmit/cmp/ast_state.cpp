@@ -1,7 +1,6 @@
 #include "dmit/cmp/ast/state.hpp"
 
 #include "dmit/cmp/com/tree_pool.hpp"
-#include "dmit/cmp/lex/token.hpp"
 #include "dmit/cmp/cmp.hpp"
 
 #include "dmit/ast/source_register.hpp"

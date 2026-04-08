@@ -1,6 +1,5 @@
 #include "test.hpp"
 
-#include "topo/pool_set.hpp"
 #include "topo/graph.hpp"
 
 using CharGraph   = topo::graph::TMake<char, 4>;

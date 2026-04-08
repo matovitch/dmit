@@ -3,9 +3,6 @@
 #include "dmit/src/line_index.hpp"
 #include "dmit/src/location.hpp"
 
-#include "dmit/fmt/src/line_index.hpp"
-#include "dmit/fmt/src/location.hpp"
-
 #include "dmit/com/storage.hpp"
 
 #include <string_view>

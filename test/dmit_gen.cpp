@@ -1,7 +1,6 @@
 #include "test.hpp"
 
 #include "dmit/gen/emitter.hpp"
-#include "dmit/gen/archive.hpp"
 
 #include "dmit/sem/interface_map.hpp"
 #include "dmit/sem/import_graph.hpp"
@@ -18,7 +17,6 @@
 #include "dmit/com/parallel_for.hpp"
 #include "dmit/com/storage.hpp"
 #include "dmit/com/assert.hpp"
-#include "dmit/com/base64.hpp"
 #include "dmit/com/clock.hpp"
 
 #include "subprocess/subprocess.hpp"
